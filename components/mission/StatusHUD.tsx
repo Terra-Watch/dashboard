@@ -1,17 +1,22 @@
 'use client';
 
+/**
+ * components/mission/StatusHUD.tsx
+ *
+ * Mission Status Telemetry HUD.
+ * Critical Pass — Hero focus optimization: shows essential status pill during hero (progress < 0.08)
+ * and smoothly expands secondary telemetry rows as scrolling begins.
+ */
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, Battery, Navigation, Gauge, Clock, Radio, AlertTriangle } from 'lucide-react';
+import { Wifi, Battery, Navigation, Gauge, Clock, Radio } from 'lucide-react';
 import { useMission } from '@/context/MissionContext';
 import { fmt, fmtHeading, fmtDistance } from '@/lib/utils';
 
-/**
- * PURPOSE: Shows the visitor what Jalri is monitoring in real-time.
- * Every field is something that keeps the fisherman safe.
- * GPS lock, mesh status, battery — not features, but lifelines.
- */
 export function StatusHUD() {
-  const { telemetry, missionTime, phase, isEmergency } = useMission();
+  const { telemetry, missionTime, progress } = useMission();
+
+  const isHeroState = progress < 0.08;
 
   const meshColor =
     telemetry.meshStatus === 'emergency' ? 'text-[var(--c-orange)]' :
@@ -29,43 +34,22 @@ export function StatusHUD() {
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 1, delay: 1.0 }}
+      transition={{ duration: 1, delay: 0.8 }}
       className="fixed top-20 left-6 z-40 flex flex-col gap-1.5"
       role="status"
       aria-label="Mission telemetry"
       aria-live="polite"
     >
-      <div className="glass rounded-xl p-3.5 flex flex-col gap-3 min-w-[168px]">
+      <div className="glass rounded-xl p-3.5 flex flex-col gap-3 min-w-[168px] transition-all duration-500">
 
-        {/* Mission time */}
+        {/* Mission time — Always Visible */}
         <div className="flex items-center gap-2 pb-2 border-b border-[var(--c-cyan-border)]">
           <Clock size={11} className="text-[var(--c-dim)]" />
           <span className="hud-label">Mission Time</span>
           <span className="hud-value ml-auto font-bold text-[var(--c-cyan)]">{missionTime}</span>
         </div>
 
-        {/* Speed */}
-        <HUDRow
-          icon={<Gauge size={11} />}
-          label="Speed"
-          value={`${fmt(telemetry.speed, 1)} kts`}
-        />
-
-        {/* Heading */}
-        <HUDRow
-          icon={<Navigation size={11} />}
-          label="Heading"
-          value={fmtHeading(telemetry.heading)}
-        />
-
-        {/* Distance offshore */}
-        <HUDRow
-          icon={<Navigation size={11} className="rotate-45" />}
-          label="Offshore"
-          value={fmtDistance(telemetry.distanceOffshore)}
-        />
-
-        {/* GPS */}
+        {/* Essential status rows during Hero */}
         <HUDRow
           icon={<Radio size={11} />}
           label="GPS"
@@ -73,7 +57,6 @@ export function StatusHUD() {
           valueClass={telemetry.gpsLock ? 'text-[var(--c-green)]' : 'text-[var(--c-orange)]'}
         />
 
-        {/* Mesh */}
         <HUDRow
           icon={<Wifi size={11} />}
           label="Mesh"
@@ -81,11 +64,42 @@ export function StatusHUD() {
           valueClass={meshColor}
         />
 
-        {/* Battery bars */}
-        <div className="pt-1 border-t border-[var(--c-cyan-border)] flex flex-col gap-1.5">
-          <BatteryBar label="BOAT" value={telemetry.battery} />
-          <BatteryBar label="WRIST" value={telemetry.wristBattery} />
-        </div>
+        {/* Secondary telemetry — expands smoothly after hero scroll */}
+        <AnimatePresence>
+          {!isHeroState && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col gap-3 pt-2 border-t border-[var(--c-cyan-border)]"
+            >
+              <HUDRow
+                icon={<Gauge size={11} />}
+                label="Speed"
+                value={`${fmt(telemetry.speed, 1)} kts`}
+              />
+
+              <HUDRow
+                icon={<Navigation size={11} />}
+                label="Heading"
+                value={fmtHeading(telemetry.heading)}
+              />
+
+              <HUDRow
+                icon={<Navigation size={11} className="rotate-45" />}
+                label="Offshore"
+                value={fmtDistance(telemetry.distanceOffshore)}
+              />
+
+              {/* Battery bars */}
+              <div className="pt-1 flex flex-col gap-1.5">
+                <BatteryBar label="BOAT" value={telemetry.battery} />
+                <BatteryBar label="WRIST" value={telemetry.wristBattery} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

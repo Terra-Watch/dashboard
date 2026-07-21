@@ -4,15 +4,7 @@
  * components/three/BoatMesh.tsx
  *
  * Vessel Mesh & Navigation Dynamics.
- * Milestone 2 — Boat & Voyage Path.
- *
- * Deliverable:
- *   - Catmull-Rom spline trajectory with smooth heading quaternion calculation
- *   - Speed modulation per phase (slows in storm, stops during emergency)
- *   - Multi-axis bobbing (heave, pitch, roll, yaw) synchronized with sea wave elevation
- *   - PBR maritime fishing vessel detailing (hull, keel, cabin, windows, mast, radar dome, life rings, guardrails)
- *   - Phase-reactive signal light (cyan LoRa pulse -> emergency flashing orange SOS -> cyan return)
- *   - Maritime compliant port (red) and starboard (green) navigation lights
+ * Critical Pass — Hero starting position set to [-5.8, 0, 1.0] for clear water separation.
  */
 
 import { useRef, useMemo } from 'react';
@@ -26,18 +18,18 @@ import { MISSION_CONFIG } from '@/lib/mission-config';
 // Catmull-Rom spline control points representing the 12-stage fishing voyage.
 
 const VOYAGE_WAYPOINTS = [
-  new THREE.Vector3(-7.5, 0,  1.5),  // 0.00 Harbor dock
-  new THREE.Vector3(-5.5, 0,  0.5),  // 0.10 Leaving harbor mouth
-  new THREE.Vector3(-3.0, 0, -0.5),  // 0.18 Clearing breakwater
-  new THREE.Vector3(-0.5, 0, -2.0),  // 0.28 Open ocean, heading out
+  new THREE.Vector3(-5.8, 0,  1.0),  // 0.00 Harbor water — floating cleanly in front of dock
+  new THREE.Vector3(-4.5, 0,  0.2),  // 0.10 Leaving harbor mouth
+  new THREE.Vector3(-2.5, 0, -0.5),  // 0.18 Clearing breakwater
+  new THREE.Vector3(-0.2, 0, -2.0),  // 0.28 Open ocean, heading out
   new THREE.Vector3( 1.5, 0, -4.0),  // 0.40 Open ocean swell
   new THREE.Vector3( 2.5, 0, -6.0),  // 0.52 Fishing zone
   new THREE.Vector3( 2.0, 0, -7.0),  // 0.60 Storm — drifting slightly
   new THREE.Vector3( 1.0, 0, -7.0),  // 0.70 Emergency — stationary distress
   new THREE.Vector3(-0.5, 0, -5.5),  // 0.78 Rescue — stabilizing
-  new THREE.Vector3(-3.0, 0, -3.0),  // 0.85 Return journey
-  new THREE.Vector3(-6.0, 0, -0.5),  // 0.92 Harbor approach
-  new THREE.Vector3(-7.5, 0,  1.0),  // 1.00 Harbor arrival
+  new THREE.Vector3(-2.8, 0, -3.0),  // 0.85 Return journey
+  new THREE.Vector3(-4.8, 0, -0.5),  // 0.92 Harbor approach
+  new THREE.Vector3(-5.8, 0,  0.8),  // 1.00 Harbor arrival
 ];
 
 // Speed multiplier keyframes — boat slows in heavy seas and stops during emergency

@@ -4,13 +4,7 @@
  * components/three/HarborMesh.tsx
  *
  * Harbor Structure & Breakwater Beacon.
- * Milestone 8 — Harbor Scene Integration.
- *
- * Responsibilities:
- *   - Harbor pier, wooden pylons, and breakwater navigational beacon tower
- *   - Anchored at the voyage origin (-7.8, 0, 1.5) where vessel starts and completes mission
- *   - Phase-gated visibility: visible during departure (0.00-0.16) and harbor return (0.88-1.00)
- *   - Warm amber harbor beacon light (#FF9900) with gentle night/dawn pulse
+ * Critical Pass — Shifted to [-11.5, 0, 2.5] for clean hero separation (Dock -> Water -> Boat).
  */
 
 import { useRef } from 'react';
@@ -66,17 +60,18 @@ export function HarborMesh() {
   });
 
   return (
-    <group ref={groupRef} position={[-8.2, 0, 1.8]} rotation={[0, 0.35, 0]}>
+    // Shifted dock far left to [-11.5, 0, 2.5] so dock, water, and vessel are physically distinct
+    <group ref={groupRef} position={[-11.5, 0, 2.5]} rotation={[0, 0.25, 0]}>
       {/* ── Main Concrete Dock Pier ─────────────────────────────── */}
       <mesh castShadow receiveShadow position={[0, 0.25, 0]}>
         <boxGeometry args={[3.2, 0.5, 8.0]} />
-        <meshStandardMaterial color="#1C2633" roughness={0.8} metalness={0.2} />
+        <meshStandardMaterial color="#16202C" roughness={0.8} metalness={0.2} />
       </mesh>
 
       {/* Dock Wooden Planks Top ──────────────────────────────────── */}
       <mesh position={[0, 0.52, 0]}>
         <boxGeometry args={[3.3, 0.06, 8.1]} />
-        <meshStandardMaterial color="#121B26" roughness={0.9} metalness={0.1} />
+        <meshStandardMaterial color="#0E1620" roughness={0.9} metalness={0.1} />
       </mesh>
 
       {/* Wooden Pylons Driven into Sea Floor ────────────────────── */}
@@ -84,11 +79,11 @@ export function HarborMesh() {
         <group key={idx}>
           <mesh position={[-1.4, -1.0, z]}>
             <cylinderGeometry args={[0.12, 0.14, 2.5, 8]} />
-            <meshStandardMaterial color="#0B121C" roughness={0.95} />
+            <meshStandardMaterial color="#080E17" roughness={0.95} />
           </mesh>
           <mesh position={[1.4, -1.0, z]}>
             <cylinderGeometry args={[0.12, 0.14, 2.5, 8]} />
-            <meshStandardMaterial color="#0B121C" roughness={0.95} />
+            <meshStandardMaterial color="#080E17" roughness={0.95} />
           </mesh>
         </group>
       ))}
@@ -97,20 +92,20 @@ export function HarborMesh() {
       {[-2.5, 0, 2.5].map((z, idx) => (
         <mesh key={idx} position={[1.5, 0.60, z]}>
           <boxGeometry args={[0.2, 0.1, 0.4]} />
-          <meshStandardMaterial color="#334455" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial color="#2B3A4A" metalness={0.8} roughness={0.3} />
         </mesh>
       ))}
 
       {/* ── Breakwater Beacon Tower ────────────────────────────── */}
       <mesh position={[1.2, 1.8, -3.4]}>
         <cylinderGeometry args={[0.35, 0.5, 2.4, 12]} />
-        <meshStandardMaterial color="#223344" roughness={0.6} metalness={0.4} />
+        <meshStandardMaterial color="#1A2736" roughness={0.6} metalness={0.4} />
       </mesh>
 
       {/* Beacon Light Housing / Gallery ──────────────────────────── */}
       <mesh position={[1.2, 3.1, -3.4]}>
         <cylinderGeometry args={[0.42, 0.42, 0.2, 12]} />
-        <meshStandardMaterial color="#111822" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#0D141E" metalness={0.8} roughness={0.2} />
       </mesh>
 
       {/* Amber Beacon Lens ──────────────────────────────────────── */}

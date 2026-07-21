@@ -4,14 +4,7 @@
  * components/three/CameraController.tsx
  *
  * Narrative Camera Rig & Director Controller.
- * Milestone 11 — Performance & Reduced Motion Pass.
- *
- * Responsibilities:
- *   - 12-keyframe narrative trajectory linked to mission progress (0.00 -> 1.00)
- *   - FOV Breathing: Tightens during emergency (38° tension), expands at safe return (52° horizon disclosure)
- *   - Multi-frequency storm camera shake with prefers-reduced-motion bypass
- *   - Organic handheld drift with prefers-reduced-motion bypass
- *   - Damped vector interpolation toward lookAt target and camera position
+ * Critical Pass — Retargeted hero camera frame [-2.2, 4.6, 11.2] looking at [-3.2, 0.4, 0.5].
  */
 
 import { useRef, useEffect } from 'react';
@@ -24,18 +17,18 @@ type CamFrame = [number, number, number, number, number, number, number];
 
 const CAM_KEYFRAMES: CamFrame[] = [
   // progress  position (x, y, z)          lookAt (x, y, z)
-  [0.00,  0.0,   4.2,  10.5,     0.0,  0.2,   0.0],
-  [0.10, -1.5,   3.2,   8.2,    -1.5,  0.1,  -1.2],
-  [0.22,  0.0,   5.8,   9.5,     0.0,  0.0,  -3.2],
-  [0.35,  1.2,   4.2,   8.2,     1.2,  0.0,  -5.0],
-  [0.45,  0.6,   3.6,   7.2,     0.6,  0.1,  -5.2],
-  [0.52,  0.0,   4.2,   8.0,     0.0,  0.2,  -5.0],
-  [0.60, -0.8,   3.0,   6.8,    -0.8,  0.4,  -6.2],
-  [0.70,  0.2,   2.4,   5.2,     0.8,  0.5,  -6.8],
-  [0.78,  2.2,   4.2,   7.5,     0.0,  0.2,  -6.0],
-  [0.85,  3.2,   5.2,   9.2,    -2.0,  0.0,  -3.0],
-  [0.92,  0.0,   4.6,  10.2,     0.0,  0.2,   0.0],
-  [1.00,  0.0,   5.2,  12.2,     0.0,  0.6,   0.0],
+  [0.00, -2.2,   4.6,  11.2,    -3.2,  0.4,   0.5],  // 0.00 Hero: balanced framing — vessel floating in open water
+  [0.10, -2.8,   3.5,   8.8,    -2.8,  0.2,  -0.8],  // 0.10 Departure: low tracking shot alongside vessel
+  [0.22,  0.0,   5.8,   9.5,     0.0,  0.0,  -3.2],  // 0.22 Open ocean: rises to reveal vast offshore horizon
+  [0.35,  1.2,   4.2,   8.2,     1.2,  0.0,  -5.0],  // 0.35 Fishing zone: settles into calm side-profile view
+  [0.45,  0.6,   3.6,   7.2,     0.6,  0.1,  -5.2],  // 0.45 Signal Lost: slight zoom-in, subtle unease
+  [0.52,  0.0,   4.2,   8.0,     0.0,  0.2,  -5.0],  // 0.52 LoRa Active: stabilizes, centered perspective
+  [0.60, -0.8,   3.0,   6.8,    -0.8,  0.4,  -6.2],  // 0.60 Storm: low, dramatic wave-level tracking angle
+  [0.70,  0.2,   2.4,   5.2,     0.8,  0.5,  -6.8],  // 0.70 Emergency SOS: tight zoom on distress vessel
+  [0.78,  2.2,   4.2,   7.5,     0.0,  0.2,  -6.0],  // 0.78 Responding: pulls back to reveal responding fleet
+  [0.85,  3.2,   5.2,   9.2,    -2.0,  0.0,  -3.0],  // 0.85 Rescue Confirmed: wide angle, tension releases
+  [0.92,  0.0,   4.6,  10.2,     0.0,  0.2,   0.0],  // 0.92 Return: slow pull-back following vessel home
+  [1.00,  0.0,   5.2,  12.2,     0.0,  0.6,   0.0],  // 1.00 Safe Harbor: wide cinematic golden horizon
 ];
 
 const FOV_KEYFRAMES: [number, number][] = [
@@ -110,8 +103,8 @@ function sampleCamFrame(
 
 export function CameraController() {
   const { camera } = useThree();
-  const currentPos = useRef(new THREE.Vector3(0, 4.2, 10.5));
-  const currentTarget = useRef(new THREE.Vector3(0, 0.2, 0));
+  const currentPos = useRef(new THREE.Vector3(-2.2, 4.6, 11.2));
+  const currentTarget = useRef(new THREE.Vector3(-3.2, 0.4, 0.5));
   const currentFov = useRef(46.0);
   const reduceMotionRef = useRef(false);
 
