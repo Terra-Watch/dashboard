@@ -1,0 +1,290 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Core palette */
+  --c-navy:         #030D1B;
+  --c-slate:        #0A1929;
+  --c-slate-mid:    #0F2540;
+  --c-slate-light:  #1A3550;
+  --c-white:        #EFF4F8;
+  --c-dim:          #7A90A4;
+  --c-dimmer:       #3D5268;
+
+  /* Brand accents */
+  --c-cyan:         #00C8DC;
+  --c-cyan-dim:     #007A87;
+  --c-cyan-border:  #00404A;
+  --c-cyan-glow:    rgba(0, 200, 220, 0.15);
+
+  /* State colors — used sparingly */
+  --c-orange:       #FF5A1F;   /* Emergency / SOS only */
+  --c-amber:        #D97706;   /* Weather warning */
+  --c-green:        #10B981;   /* Rescue confirmed / Safe */
+
+  /* Surfaces */
+  --c-glass:        rgba(10, 25, 41, 0.72);
+  --c-glass-light:  rgba(15, 37, 64, 0.60);
+
+  /* Typography */
+  --font-display: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  --font-body:    var(--font-inter), 'Inter', sans-serif;
+  --font-mono:    var(--font-geist-mono), 'Geist Mono', monospace;
+}
+
+/* ─── Tailwind v4 Theme Registration ───────────────────────────────────────── */
+
+@theme inline {
+  --color-background: var(--c-navy);
+  --color-foreground: var(--c-white);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Custom colors available as Tailwind utilities */
+  --color-navy:        #030D1B;
+  --color-slate:       #0A1929;
+  --color-slate-mid:   #0F2540;
+  --color-ocean-white: #EFF4F8;
+  --color-dim:         #7A90A4;
+  --color-cyan:        #00C8DC;
+  --color-cyan-dim:    #007A87;
+  --color-alert:       #FF5A1F;
+  --color-amber:       #D97706;
+  --color-confirm:     #10B981;
+}
+
+/* ─── Base Reset ────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: auto; /* Lenis handles smooth scrolling */
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--c-navy);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--c-cyan-border);
+  border-radius: 1px;
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────────── */
+
+::selection {
+  background: rgba(0, 200, 220, 0.18);
+  color: var(--c-white);
+}
+
+/* ─── Typography ────────────────────────────────────────────────────────────── */
+
+.font-display { font-family: var(--font-display); }
+.font-mono    { font-family: var(--font-mono); }
+
+/* ─── Glass Surface ─────────────────────────────────────────────────────────── */
+
+.glass {
+  background: var(--c-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 200, 220, 0.08);
+}
+
+.glass-light {
+  background: var(--c-glass-light);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(0, 200, 220, 0.12);
+}
+
+/* ─── Lenis Compatibility ───────────────────────────────────────────────────── */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ─── Mission Timeline ──────────────────────────────────────────────────────── */
+
+.timeline-node-active {
+  background: var(--c-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 200, 220, 0.2), 0 0 12px rgba(0, 200, 220, 0.4);
+}
+
+.timeline-node-passed {
+  background: var(--c-cyan-dim);
+}
+
+.timeline-node-future {
+  background: var(--c-dimmer);
+}
+
+/* ─── Status HUD ────────────────────────────────────────────────────────────── */
+
+.hud-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-dim);
+}
+
+.hud-value {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--c-white);
+  font-feature-settings: "tnum" 1;
+}
+
+/* ─── Emergency State ───────────────────────────────────────────────────────── */
+
+@keyframes sos-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 90, 31, 0.5),
+                0 0 0 0 rgba(255, 90, 31, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(255, 90, 31, 0),
+                0 0 0 24px rgba(255, 90, 31, 0);
+  }
+}
+
+@keyframes lora-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes signal-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+@keyframes gentle-drift {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-4px); }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── LoRa Signal Ring ──────────────────────────────────────────────────────── */
+
+.lora-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--c-cyan);
+  animation: lora-ring 3s ease-out infinite;
+}
+
+.lora-ring:nth-child(1) { animation-delay: 0s; }
+.lora-ring:nth-child(2) { animation-delay: 1s; }
+.lora-ring:nth-child(3) { animation-delay: 2s; }
+
+/* ─── Telemetry Bar ─────────────────────────────────────────────────────────── */
+
+.telemetry-bar-track {
+  height: 2px;
+  background: var(--c-slate-mid);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.telemetry-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  background: var(--c-cyan);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.telemetry-bar-fill--warning {
+  background: var(--c-amber);
+}
+
+.telemetry-bar-fill--alert {
+  background: var(--c-orange);
+}
+
+/* ─── Mission Log Entry ─────────────────────────────────────────────────────── */
+
+.log-entry {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.375rem 0;
+}
+
+.log-entry__time {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--c-dim);
+  white-space: nowrap;
+  padding-top: 0.0625rem;
+  min-width: 2.5rem;
+}
+
+.log-entry__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 0.375rem;
+  flex-shrink: 0;
+}
+
+.log-entry__text {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* ─── Utility ───────────────────────────────────────────────────────────────── */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
