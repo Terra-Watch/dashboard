@@ -31,17 +31,17 @@ export function FinalSequence() {
         initial={{ opacity: 0 }}
         animate={{ opacity: opacity > 0.1 ? 1 : 0 }}
         transition={{ duration: 1.4, ease: 'easeOut' }}
-        className="flex flex-col items-center"
+        className="flex flex-col items-center max-w-3xl"
       >
         {/* Subtle label */}
-        <p className="font-mono text-[0.6875rem] tracking-[0.25em] uppercase text-[var(--c-cyan)] mb-8 opacity-80">
+        <p className="font-mono text-[0.7rem] tracking-[0.25em] uppercase text-[var(--c-cyan)] mb-6 opacity-90 font-semibold">
           Mission Complete · 13:30
         </p>
 
         {/* Main headline — staggered */}
         <h2
-          className="font-display font-bold text-[var(--c-white)] leading-[1.0] mb-10"
-          style={{ fontSize: 'clamp(3rem, 8vw, 7.5rem)' }}
+          className="font-display font-bold text-[var(--c-white)] leading-[1.02] mb-8 tracking-tight"
+          style={{ fontSize: 'clamp(3rem, 7.5vw, 6.5rem)' }}
         >
           {lines.map((line, i) => (
             <motion.span
@@ -63,9 +63,9 @@ export function FinalSequence() {
         {/* Sub-line */}
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: opacity > 0.3 ? 0.7 : 0 }}
+          animate={{ opacity: opacity > 0.3 ? 0.8 : 0 }}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="font-body text-[var(--c-dim)] text-lg max-w-sm mb-12 leading-relaxed"
+          className="font-body text-[var(--c-dim)] text-lg max-w-md mb-10 leading-relaxed"
         >
           Built for every fisherman returning home.
         </motion.p>
@@ -75,7 +75,7 @@ export function FinalSequence() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: opacity > 0.5 ? 1 : 0, y: opacity > 0.5 ? 0 : 10 }}
           transition={{ duration: 0.6, delay: 1.2 }}
-          className="flex items-center gap-4 pointer-events-auto"
+          className="flex items-center gap-5 pointer-events-auto"
         >
           <Button
             variant="primary"
@@ -84,7 +84,7 @@ export function FinalSequence() {
             className="gap-2"
           >
             Explore Jalri
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={18} />
           </Button>
           <Button
             variant="secondary"
@@ -99,15 +99,13 @@ export function FinalSequence() {
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: opacity > 0.7 ? 0.4 : 0 }}
+          animate={{ opacity: opacity > 0.7 ? 0.5 : 0 }}
           transition={{ duration: 0.8, delay: 1.6 }}
-          className="mt-20 flex items-center gap-2 text-[var(--c-dimmer)]"
+          className="mt-16 flex items-center gap-3 text-[var(--c-dim)]"
         >
-          <div className="w-5 h-5 rounded-md bg-[var(--c-cyan)] flex items-center justify-center">
-            <Anchor size={10} className="text-[var(--c-navy)]" />
-          </div>
-          <span className="font-display font-semibold text-sm tracking-wide">JALRI</span>
-          <span className="ml-4 font-body text-xs">© 2026 · Maritime Safety Platform</span>
+          <Anchor size={14} className="text-[var(--c-cyan)]" />
+          <span className="font-display font-semibold text-sm tracking-wider text-[var(--c-white)]">JALRI</span>
+          <span className="font-body text-xs text-[var(--c-dim)]">© 2026 · Maritime Safety Platform</span>
         </motion.div>
       </motion.div>
     </div>

@@ -12,13 +12,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 font-medium tracking-wide transition-all duration-300 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-cyan)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--c-navy)] disabled:pointer-events-none disabled:opacity-40';
+  'inline-flex items-center justify-center gap-2 font-medium tracking-wide transition-all duration-300 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-cyan)] disabled:pointer-events-none disabled:opacity-40';
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-[var(--c-cyan)] text-[var(--c-navy)] hover:bg-white hover:scale-[1.03] active:scale-[0.98] rounded-full font-semibold shadow-[0_0_24px_rgba(0,200,220,0.25)]',
+    'bg-[var(--c-cyan)] text-[var(--c-navy)] hover:bg-white hover:shadow-[0_0_20px_rgba(0,200,220,0.4)] active:scale-[0.98] rounded-full font-semibold px-6 py-2.5',
   secondary:
-    'border border-[var(--c-cyan-border)] text-[var(--c-white)] hover:border-[var(--c-cyan)] hover:text-[var(--c-cyan)] hover:bg-[var(--c-cyan-glow)] rounded-full',
+    'glass border border-[rgba(255,255,255,0.15)] text-[var(--c-white)] hover:border-[var(--c-cyan)] hover:text-[var(--c-cyan)] hover:bg-[rgba(0,200,220,0.1)] rounded-full px-6 py-2.5',
   ghost:
     'text-[var(--c-dim)] hover:text-[var(--c-white)] underline-offset-4 hover:underline',
 };
@@ -26,7 +26,7 @@ const variants: Record<Variant, string> = {
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-5 text-sm',
   md: 'h-11 px-7 text-sm',
-  lg: 'h-14 px-10 text-base',
+  lg: 'h-13 px-9 text-base',
 };
 
 export function Button({
