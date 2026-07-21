@@ -4,7 +4,7 @@
  * components/three/AtmosphereSystem.tsx
  *
  * Controls the lighting and environmental mood of the 3D oceanic world.
- * Critical Pass — Eliminates lavender/purple sky cast; enforces deep sea gunmetal & oceanic morning light.
+ * Critical Visual Fix: Removed `background` prop from `<Environment>` so Drei IBL does NOT set a tan/brown HDRI texture as scene background. Scene background is now owned dynamically by deep sea color (#030D1B / fog color).
  */
 
 import { useRef } from 'react';
@@ -17,7 +17,6 @@ import { interpolateKeyframes, lerp } from '@/lib/utils';
 type LightFrame = [number, number, number, number]; // [progress, r, g, b]
 
 // ── Ambient light ─────────────────────────────────────────────────────────────
-// Pure oceanic navy/gunmetal — no lavender or magenta.
 const AMBIENT_COLOR: LightFrame[] = [
   [0.00, 0.03, 0.07, 0.12],  // Pre-dawn: deep oceanic navy
   [0.10, 0.04, 0.08, 0.14],  // Harbor departure
@@ -40,7 +39,6 @@ const AMBIENT_INTENSITY: [number, number][] = [
 ];
 
 // ── Directional (sun) light ───────────────────────────────────────────────────
-// Warm golden morning sun over deep blue sea — no pinkish tones
 const SUN_COLOR: LightFrame[] = [
   [0.00, 0.85, 0.65, 0.40],  // Morning golden light
   [0.10, 0.88, 0.72, 0.48],  // Morning gold
@@ -77,19 +75,18 @@ const SUN_POSITION: Vec3Frame[] = [
 ];
 
 // ── Fog (Deep Sea Haze) ───────────────────────────────────────────────────────
-// Deep oceanic navy & gunmetal haze — strictly eliminates purple/lavender tints
 const FOG_COLOR: LightFrame[] = [
-  [0.00, 0.015, 0.045, 0.085],  // Morning sea haze (Deep Navy)
-  [0.10, 0.018, 0.050, 0.095],
-  [0.22, 0.022, 0.060, 0.110],  // Open ocean horizon
-  [0.35, 0.025, 0.068, 0.120],  // Fishing zone
-  [0.52, 0.022, 0.060, 0.110],
-  [0.60, 0.010, 0.025, 0.055],  // Storm blue-grey
-  [0.70, 0.004, 0.008, 0.022],  // Emergency dark
-  [0.78, 0.008, 0.020, 0.045],
-  [0.85, 0.015, 0.038, 0.080],
-  [0.92, 0.022, 0.058, 0.110],  // Return horizon
-  [1.00, 0.025, 0.065, 0.125],  // Dawn harbor
+  [0.00, 0.012, 0.040, 0.080],  // Deep Navy (#030D1B)
+  [0.10, 0.015, 0.045, 0.090],
+  [0.22, 0.018, 0.052, 0.105],  // Open ocean horizon
+  [0.35, 0.022, 0.060, 0.115],  // Fishing zone
+  [0.52, 0.018, 0.052, 0.105],
+  [0.60, 0.010, 0.022, 0.050],  // Storm blue-grey
+  [0.70, 0.003, 0.006, 0.018],  // Emergency dark
+  [0.78, 0.006, 0.016, 0.040],
+  [0.85, 0.012, 0.032, 0.075],
+  [0.92, 0.018, 0.050, 0.100],  // Return horizon
+  [1.00, 0.020, 0.055, 0.110],  // Dawn harbor
 ];
 
 const FOG_DENSITY: [number, number][] = [
@@ -120,6 +117,10 @@ export function AtmosphereSystem() {
 
   useFrame(({ scene }) => {
     const p = missionProgressStore.value;
+    const fogCol = sampleColor(FOG_COLOR, p);
+
+    // Explicitly set scene background to fog color (deep oceanic navy) — eliminating brown HDRI sky
+    scene.background = fogCol;
 
     // ── Ambient ────────────────────────────────────────────────────
     if (ambientRef.current) {
@@ -145,7 +146,7 @@ export function AtmosphereSystem() {
 
     // ── Exponential fog ────────────────────────────────────────────
     if (scene.fog instanceof THREE.FogExp2) {
-      scene.fog.color.lerp(sampleColor(FOG_COLOR, p), 0.020);
+      scene.fog.color.copy(fogCol);
       scene.fog.density = lerp(
         scene.fog.density,
         interpolateKeyframes(FOG_DENSITY, p),
@@ -156,10 +157,9 @@ export function AtmosphereSystem() {
 
   return (
     <>
+      {/* NO `background` prop — provides ambient image-based lighting ONLY */}
       <Environment
         preset="night"
-        background
-        blur={0.7}
       />
 
       <ambientLight
@@ -189,7 +189,7 @@ export function AtmosphereSystem() {
         args={['#0B223D', '#020914', 0.40]}
       />
 
-      <fogExp2 attach="fog" args={['#040D1A', 0.012]} />
+      <fogExp2 attach="fog" args={['#030D1B', 0.012]} />
     </>
   );
 }

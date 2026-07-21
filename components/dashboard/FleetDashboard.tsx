@@ -1,52 +1,45 @@
 'use client';
 
+/**
+ * components/dashboard/FleetDashboard.tsx
+ *
+ * Fleet Operations Dashboard.
+ * Layout Fix: Removes fixed maxHeight constraints to eliminate content clipping (battery bars & status badges).
+ */
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMission } from '@/context/MissionContext';
-import { MISSION_CONFIG } from '@/lib/mission-config';
 import { fmt, fmtHeading, fmtDistance } from '@/lib/utils';
 import type { DashboardState } from '@/context/MissionContext';
 import { TelemetryGrid } from './TelemetryGrid';
 import { MissionLog } from './MissionLog';
 
-// ─── Dashboard size/position per state ───────────────────────────────────────
-
 const STATE_STYLES: Record<DashboardState, {
   width: string;
-  maxHeight: string;
   bottom: string;
   right: string;
-  top?: string;
-  left?: string;
-  transform?: string;
 }> = {
-  minimized: { width: '256px', maxHeight: '130px', bottom: '5rem', right: '1.5rem' },
-  normal:    { width: '320px', maxHeight: '300px', bottom: '5rem', right: '1.5rem' },
-  expanded:  { width: '400px', maxHeight: '440px', bottom: '5rem', right: '1.5rem' },
-  primary:   { width: '480px', maxHeight: '560px', bottom: '5rem', right: '1.5rem' },
-  complete:  { width: '320px', maxHeight: '300px', bottom: '5rem', right: '1.5rem' },
+  minimized: { width: '280px', bottom: '5rem', right: '1.5rem' },
+  normal:    { width: '340px', bottom: '5rem', right: '1.5rem' },
+  expanded:  { width: '420px', bottom: '5rem', right: '1.5rem' },
+  primary:   { width: '480px', bottom: '5rem', right: '1.5rem' },
+  complete:  { width: '340px', bottom: '5rem', right: '1.5rem' },
 };
 
-/**
- * PURPOSE: The dashboard has been watching the entire mission.
- * It represents the shore-side operations team — never offline,
- * always receiving. As things escalate, so does its prominence.
- * This is Jalri's fleet monitoring in action.
- */
 export function FleetDashboard() {
   const { dashboardState, telemetry, missionTime, progress, isEmergency } = useMission();
 
   const style = STATE_STYLES[dashboardState];
 
   const emergencyBorder = isEmergency
-    ? 'border-[rgba(255,90,31,0.35)] shadow-[0_0_40px_rgba(255,90,31,0.08)]'
-    : 'border-[var(--c-cyan-border)]';
+    ? 'border-[rgba(255,90,31,0.5)] shadow-[0_0_40px_rgba(255,90,31,0.15)]'
+    : 'border-[var(--c-cyan-border)] shadow-[0_4px_32px_rgba(0,0,0,0.3)]';
 
   return (
     <motion.div
       layout
       animate={{
         width: style.width,
-        maxHeight: style.maxHeight,
         opacity: 1,
       }}
       initial={{ opacity: 0, y: 20 }}
@@ -55,8 +48,8 @@ export function FleetDashboard() {
         opacity: { duration: 0.5 },
       }}
       className={`
-        fixed z-35 overflow-hidden
-        glass rounded-2xl border
+        fixed z-35
+        glass rounded-2xl border flex flex-col p-1
         ${emergencyBorder}
       `}
       style={{
@@ -67,27 +60,27 @@ export function FleetDashboard() {
       aria-label="Fleet Operations Dashboard"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--c-cyan-border)]">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[var(--c-cyan-border)]">
         <div className="flex items-center gap-2">
           <span
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               isEmergency
                 ? 'bg-[var(--c-orange)] animate-[sos-pulse_1s_ease-in-out_infinite]'
                 : 'bg-[var(--c-green)]'
             }`}
             aria-hidden="true"
           />
-          <span className="font-mono text-[0.6rem] tracking-[0.15em] uppercase text-[var(--c-dim)]">
+          <span className="font-mono text-[0.65rem] tracking-[0.15em] uppercase text-[var(--c-dim)] font-semibold">
             Fleet Operations
           </span>
         </div>
-        <span className="font-mono text-[0.6875rem] text-[var(--c-cyan)]">
+        <span className="font-mono text-[0.75rem] font-bold text-[var(--c-cyan)]">
           {missionTime}
         </span>
       </div>
 
-      {/* Content — scales with state */}
-      <div className="overflow-hidden">
+      {/* Content — smooth height auto */}
+      <div className="flex flex-col">
         {/* Vessel row — always visible */}
         <VesselRow
           telemetry={telemetry}
@@ -103,6 +96,7 @@ export function FleetDashboard() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.4 }}
+              className="px-1"
             >
               <TelemetryGrid telemetry={telemetry} />
             </motion.div>
@@ -117,6 +111,7 @@ export function FleetDashboard() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
+              className="px-1"
             >
               <MissionLog progress={progress} />
             </motion.div>
@@ -130,9 +125,9 @@ export function FleetDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="px-4 py-3 border-t border-[var(--c-cyan-border)]"
+              className="px-4 py-3 border-t border-[var(--c-cyan-border)] mt-1"
             >
-              <p className="font-mono text-[0.6875rem] text-[var(--c-green)] text-center tracking-wide">
+              <p className="font-mono text-[0.7rem] text-[var(--c-green)] text-center tracking-wide font-semibold">
                 ✦ Mission Complete — Safe Return
               </p>
             </motion.div>
@@ -145,19 +140,19 @@ export function FleetDashboard() {
 
 // ─── Vessel row ───────────────────────────────────────────────────────────────
 
-function VesselRow({ telemetry, missionTime, isEmergency }: {
+function VesselRow({ telemetry, isEmergency }: {
   telemetry: ReturnType<typeof useMission>['telemetry'];
   missionTime: string;
   isEmergency: boolean;
 }) {
   return (
-    <div className="px-4 py-3 flex items-center gap-3">
+    <div className="px-3.5 py-2.5 flex items-center gap-3">
       {/* Vessel icon */}
       <div
         className={`
-          w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs
+          w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold
           ${isEmergency
-            ? 'bg-[rgba(255,90,31,0.15)] text-[var(--c-orange)]'
+            ? 'bg-[rgba(255,90,31,0.2)] text-[var(--c-orange)]'
             : 'bg-[var(--c-slate-mid)] text-[var(--c-cyan)]'
           }
         `}
@@ -167,20 +162,20 @@ function VesselRow({ telemetry, missionTime, isEmergency }: {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-body text-sm font-medium text-[var(--c-white)] truncate">
+        <p className="font-body text-sm font-semibold text-[var(--c-white)] truncate">
           {isEmergency ? 'JALRI-01 — SOS' : 'JALRI-01'}
         </p>
-        <p className="font-mono text-[0.6rem] text-[var(--c-dim)] tracking-wider">
+        <p className="font-mono text-[0.65rem] text-[var(--c-dim)] tracking-wider truncate">
           {fmt(telemetry.speed, 1)} kts · {fmtHeading(telemetry.heading)} · {fmtDistance(telemetry.distanceOffshore)}
         </p>
       </div>
 
       <div
-        className={`text-[0.6rem] font-mono px-2 py-0.5 rounded-full ${
+        className={`text-[0.65rem] font-mono px-2.5 py-0.5 rounded-full font-bold flex-shrink-0 ${
           isEmergency
-            ? 'bg-[rgba(255,90,31,0.15)] text-[var(--c-orange)]'
+            ? 'bg-[rgba(255,90,31,0.2)] text-[var(--c-orange)]'
             : telemetry.meshStatus === 'active'
-              ? 'bg-[rgba(0,200,220,0.1)] text-[var(--c-cyan)]'
+              ? 'bg-[rgba(0,200,220,0.15)] text-[var(--c-cyan)]'
               : 'bg-[var(--c-slate-mid)] text-[var(--c-dim)]'
         }`}
       >

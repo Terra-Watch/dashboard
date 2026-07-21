@@ -5,7 +5,7 @@
  *
  * Mission Status Telemetry HUD.
  * Critical Pass — Hero focus optimization: shows essential status pill during hero (progress < 0.08)
- * and smoothly expands secondary telemetry rows as scrolling begins.
+ * and smoothly expands secondary telemetry rows as scrolling begins. Width expanded to min-w-[190px] to prevent clipping.
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +40,7 @@ export function StatusHUD() {
       aria-label="Mission telemetry"
       aria-live="polite"
     >
-      <div className="glass rounded-xl p-3.5 flex flex-col gap-3 min-w-[168px] transition-all duration-500">
+      <div className="glass rounded-xl p-3.5 flex flex-col gap-3 min-w-[190px] transition-all duration-500">
 
         {/* Mission time — Always Visible */}
         <div className="flex items-center gap-2 pb-2 border-b border-[var(--c-cyan-border)]">
@@ -72,7 +72,7 @@ export function StatusHUD() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col gap-3 pt-2 border-t border-[var(--c-cyan-border)]"
+              className="flex flex-col gap-3 pt-2 border-t border-[var(--c-cyan-border)] overflow-hidden"
             >
               <HUDRow
                 icon={<Gauge size={11} />}
@@ -117,9 +117,9 @@ function HUDRow({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[var(--c-dim)]">{icon}</span>
-      <span className="hud-label flex-1">{label}</span>
-      <span className={`hud-value ${valueClass}`}>{value}</span>
+      <span className="text-[var(--c-dim)] flex-shrink-0">{icon}</span>
+      <span className="hud-label flex-1 truncate">{label}</span>
+      <span className={`hud-value flex-shrink-0 ${valueClass}`}>{value}</span>
     </div>
   );
 }
