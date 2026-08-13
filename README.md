@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JALRI
 
-## Getting Started
+Jalri is a maritime safety and operations software system. It will provide operational tooling for BoatNodes, gateway connectivity, vessel status, SOS events, telemetry, maritime safety information, and communication history.
 
-First, run the development server:
+This repository is currently at **Phase 0: clean project foundation**. No operational features or fake operational data are included.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Repository structure
+
+```text
+jalri/
+├── frontend/       Next.js + TypeScript application
+├── backend/        FastAPI application
+├── docs/            Project documentation and data contracts
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Frontend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The frontend uses Next.js, React, and TypeScript. It currently contains only a temporary foundation page and global design tokens.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Learn More
+Open <http://localhost:3000>.
 
-To learn more about Next.js, take a look at the following resources:
+To create a production build:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd frontend
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Backend
 
-## Deploy on Vercel
+The backend uses Python, FastAPI, and Uvicorn. It currently exposes only a health-check endpoint.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open <http://localhost:8000/health> or use:
+
+```bash
+curl http://localhost:8000/health
+```
+
+## Environment variables
+
+Copy the relevant example file before local development:
+
+```bash
+cp frontend/.env.example frontend/.env.local
+cp backend/.env.example backend/.env
+```
+
+The examples document the current foundation settings. No database, gateway, authentication, or external API configuration is active yet.
+
+## Current dependencies
+
+- Frontend: Next.js, React, React DOM, TypeScript, and their type definitions.
+- Backend: FastAPI and Uvicorn.
+
+## Not implemented yet
+
+The dashboard, boat registry, live map, alerts and SOS, telemetry, history, gateway UI, system status, database schema, authentication, WebSocket flows, gateway ingestion, and landing page design are intentionally not implemented. They will be added in the documented phase order after the canonical data contract is established.
+
