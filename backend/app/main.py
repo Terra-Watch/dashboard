@@ -5,12 +5,22 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.routes import alerts, boat_telemetry, boats, gateways, history, ingestion, system_status, telemetry
 from app.services.errors import InvalidTransitionError, ResourceConflictError, ResourceNotFoundError
 from app.services.ingestion import UnregisteredNodeError
 
 app = FastAPI(title="JALRI Backend", version="0.1.0")
 logger = logging.getLogger("jalri.backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(boats.router)
 app.include_router(gateways.router)
