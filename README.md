@@ -92,6 +92,16 @@ npm run build
 npm start
 ```
 
+### Render Deployment
+
+Deploy the repository as a **Web Service**, using the settings in `render.yaml`:
+
+- Root directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Start command: `npm start`
+
+Do not configure this service as a Static Site or set its publish directory to `out`. The dynamic dashboard detail routes require the Next.js server, which serves the `.next` build through `next start`.
+
 ### Frontend Environment
 
 Copy the example before local development:
