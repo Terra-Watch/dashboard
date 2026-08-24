@@ -47,6 +47,25 @@ export interface SystemStatusResponse {
   }>;
 }
 
+export interface Gateway {
+  id: string;
+  gatewayId: string;
+  status: "ONLINE" | "OFFLINE";
+  lastSeen: string;
+  firmware?: string | null;
+  registeredAt: string;
+}
+
+export async function fetchGateways(): Promise<Gateway[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/gateways`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchBoats(): Promise<Boat[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/boats`, { cache: "no-store" });

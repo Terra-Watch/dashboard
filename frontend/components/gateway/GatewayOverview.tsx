@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchHistory, HistoricalEvent } from "../../lib/api";
+import { fetchGateways, fetchHistory, Gateway, HistoricalEvent } from "../../lib/api";
 import { Card } from "../ui/Card";
 import { DataTable } from "../ui/DataTable";
 import { SectionHeader } from "../ui/SectionHeader";
@@ -9,21 +9,16 @@ import { StatusBadge } from "../ui/StatusBadge";
 
 export function GatewayOverview() {
   const [history, setHistory] = useState<HistoricalEvent[]>([]);
-  const [lastSync, setLastSync] = useState<string>("Just now");
+  const [gateway, setGateway] = useState<Gateway | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function load() {
-      const data = await fetchHistory();
+      const [data, gateways] = await Promise.all([fetchHistory(), fetchGateways()]);
       if (!mounted) return;
       setHistory(data);
-      if (data && data.length > 0) {
-        const diffSeconds = Math.floor((Date.now() - new Date(data[0].timestamp).getTime()) / 1000);
-        if (diffSeconds < 5) setLastSync("Just now");
-        else if (diffSeconds < 60) setLastSync(`${diffSeconds}s ago`);
-        else setLastSync(`${Math.floor(diffSeconds / 60)}m ago`);
-      }
+      setGateway(gateways[0] ?? null);
     }
 
     load();
@@ -47,13 +42,18 @@ export function GatewayOverview() {
           <div className="gateway-status-content" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p className="gateway-status-title" style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                Shore Gateway (GW-01 / 0xFE)
+                {gateway ? `Shore Gateway (${gateway.gatewayId})` : "Shore Gateway unavailable"}
               </p>
               <p className="gateway-status-message" style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                Active and bridging 433 MHz LoRa packets to PostgreSQL backend over Wi-Fi.
+                {gateway
+                  ? `Gateway record reported ${gateway.status.toLowerCase()} at ${new Date(gateway.lastSeen).toLocaleString()}.`
+                  : "No gateway record is currently available from the backend."}
               </p>
             </div>
-            <StatusBadge label="ONLINE" tone="healthy" />
+            <StatusBadge
+              label={gateway?.status ?? "UNAVAILABLE"}
+              tone={gateway?.status === "ONLINE" ? "healthy" : "neutral"}
+            />
           </div>
         </Card>
       </section>

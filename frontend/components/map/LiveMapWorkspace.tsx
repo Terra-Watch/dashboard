@@ -109,9 +109,9 @@ export function LiveMapWorkspace() {
           <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway (GW-01)</strong><br/>
           <span style="color:#64748b;font-size:0.85em;">LoRa 433 MHz Shore Base Station</span><br/>
           <div style="margin-top:6px;font-size:0.85em;">
-            Status: <b style="color:#16a34a;">ONLINE</b><br/>
-            Network: <b>JalriHotspot</b><br/>
-            ID: <b>0xFE (254)</b>
+            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
+            Network: <b>Not connected</b><br/>
+            ID: <b>Not reported</b>
           </div>
         </div>
       `);
@@ -137,11 +137,11 @@ export function LiveMapWorkspace() {
       const boatMarker = L.marker(boatCoords, { icon: boatIcon }).addTo(map);
       boatMarker.bindPopup(`
         <div style="font-family:inherit;padding:4px;">
-          <strong style="color:#16a34a;font-size:1.1em;">BOAT-001 (Vessel #1)</strong><br/>
-          <span style="color:#64748b;font-size:0.85em;">LoRa Maritime Node</span><br/>
+            <strong style="color:#64748b;font-size:1.1em;">No live vessel data</strong><br/>
+            <span style="color:#64748b;font-size:0.85em;">No LoRa node is currently reported</span><br/>
           <div style="margin-top:6px;font-size:0.85em;">
-            Status: <b style="color:#16a34a;">ONLINE (Active RF Link)</b><br/>
-            Modulation: <b>LoRa SF7 / 125 kHz</b>
+            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
+            Modulation: <b>Not reported</b>
           </div>
         </div>
       `);
@@ -243,7 +243,7 @@ export function LiveMapWorkspace() {
             📍 Use Current Location
           </button>
           <StatusBadge label="MAP LIVE" tone="healthy" />
-          <StatusBadge label="RF LINK ACTIVE" tone="healthy" />
+          <StatusBadge label={activeBoat ? "RF LINK ACTIVE" : "RF LINK UNAVAILABLE"} tone={activeBoat ? "healthy" : "neutral"} />
         </div>
       </div>
 
@@ -278,22 +278,22 @@ export function LiveMapWorkspace() {
         <div>
           <span style={{ color: "#64748b", display: "block" }}>TRACKED VESSEL</span>
           <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>
-            {activeBoat ? `${activeBoat.boatId} (Node #${activeBoat.nodeId})` : "BOAT-001"}
+            {activeBoat ? `${activeBoat.boatId} (Node #${activeBoat.nodeId})` : "No live vessel data"}
           </strong>
         </div>
         <div>
           <span style={{ color: "#64748b", display: "block" }}>LORA SIGNAL STRENGTH</span>
           <strong style={{ fontSize: "1.05rem", color: "#0284c7" }}>
-            {activeBoat?.rssi != null ? `${activeBoat.rssi} dBm` : "-80 dBm"}{" "}
+            {activeBoat?.rssi != null ? `${activeBoat.rssi} dBm` : "Unavailable"}{" "}
             <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
-              (SNR: {activeBoat?.snr != null ? `${activeBoat.snr} dB` : "9.5 dB"})
+              (SNR: {activeBoat?.snr != null ? `${activeBoat.snr} dB` : "Unavailable"})
             </span>
           </strong>
         </div>
         <div>
           <span style={{ color: "#64748b", display: "block" }}>HEARTBEAT INGESTION</span>
           <strong style={{ fontSize: "1.05rem", color: "#16a34a" }}>
-            {activeBoat?.heartbeatCount ? `${activeBoat.heartbeatCount} Packets Received` : "Live Streaming"}
+            {activeBoat?.heartbeatCount ? `${activeBoat.heartbeatCount} Packets Received` : "Unavailable"}
           </strong>
         </div>
         <div>
