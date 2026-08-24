@@ -27,6 +27,7 @@ const operations: NavigationItem[] = [
 const system: NavigationItem[] = [
   { label: "Gateway", href: "/dashboard/gateway", icon: "gateway" },
   { label: "System Status", href: "/dashboard/system-status", icon: "status" },
+  { label: "Documentation", href: "/docs", icon: "docs" },
 ];
 
 function NavigationIcon({ name }: { name: string }) {
@@ -40,6 +41,7 @@ function NavigationIcon({ name }: { name: string }) {
     history: <><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5M12 7v5l3 2" /></>,
     gateway: <><path d="M5 20h14M7 17h10M9 14h6M12 4v10M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0" /></>,
     status: <><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></>,
+    docs: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /><path d="M8 7h8M8 11h6" /></>,
   };
 
   return <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true" {...common}>{paths[name] ?? paths.grid}</svg>;
@@ -80,7 +82,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         aria-label="Close navigation"
         onClick={onClose}
       />
-      <aside className={`sidebar${open ? " sidebar-open" : ""}`} aria-label="Jalri navigation">
+      <aside className={`sidebar${open ? " sidebar-open" : ""}`} aria-label="Jalari navigation">
         <div className="sidebar-brand">
           <span className="brand-lockup">
             <svg className="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
