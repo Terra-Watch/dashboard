@@ -28,7 +28,10 @@ export function LandingPage() {
             <a href="#intelligence">Operations</a>
             <Link href="/docs">Docs</Link>
           </div>
-          <Link className="landing-nav-cta" href="/dashboard">Access Dashboard</Link>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <Link className="landing-nav-cta" href="/dashboard">Operations</Link>
+            <Link className="landing-nav-cta" href="/login" style={{ backgroundColor: "#0369a1", borderColor: "#0284c7" }}>Family Portal</Link>
+          </div>
         </nav>
 
         <Reveal as="section" className="landing-hero">
@@ -38,6 +41,7 @@ export function LandingPage() {
             <p className="landing-lede">Jalari helps maritime teams monitor vessels, manage safety events, and understand what is happening across their operations.</p>
             <div className="landing-actions">
               <Link className="landing-primary-button" href="/dashboard">Access Dashboard</Link>
+              <Link className="landing-primary-button" href="/login" style={{ backgroundColor: "#0369a1" }}>Family Safety Portal</Link>
               <a className="landing-secondary-button" href="#capabilities">Explore Jalari</a>
             </div>
           </div>
