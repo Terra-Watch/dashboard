@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.models.enums import HistoricalEventType
 from app.models.historical_event import HistoricalEvent
+from app.models.telemetry import Telemetry
 from app.repositories.boats import BoatRepository
 from app.repositories.ingestion import IngestionRepository
-from app.schemas.ingestion import GatewayHeartbeatEvent
+from app.schemas.ingestion import GatewayHeartbeatEvent, GatewayTelemetryEvent
 from app.services.errors import ResourceNotFoundError
 
 
@@ -47,3 +48,34 @@ class IngestionService:
         db.flush()
         return {"accepted": True, "duplicate": False, "condition": "HEARTBEAT_PROCESSED"}
 
+    def process_telemetry(self, db: Session, event: GatewayTelemetryEvent) -> dict[str, object]:
+        boat = self.boats.get_by_node_id(db, event.nodeId)
+        if boat is None:
+            raise UnregisteredNodeError("UNREGISTERED_NODE")
+
+        sensor_timestamp = None
+        if event.rtcValid:
+            sensor_timestamp = datetime(event.year, event.month, event.day, event.hour, event.minute, event.second,
+                                        tzinfo=timezone.utc)
+        existing = None
+        if sensor_timestamp is not None:
+            existing = db.query(Telemetry).filter(
+                Telemetry.boat_id == boat.id,
+                Telemetry.sensorTimestamp == sensor_timestamp,
+            ).first()
+        if existing is not None:
+            return {"accepted": True, "duplicate": True, "condition": "DUPLICATE_TELEMETRY"}
+
+        received_at = datetime.now(timezone.utc)
+        boat.lastSeen = received_at
+        telemetry = Telemetry(
+            boat_id=boat.id,
+            rssi=event.rssi,
+            snr=event.snr,
+            rtcTemperatureC=event.temperatureC if event.rtcValid else None,
+            sensorTimestamp=sensor_timestamp,
+            heartbeatCount=boat.heartbeatCount,
+            timestamp=received_at,
+        )
+        db.add(telemetry)
+        return {"accepted": True, "duplicate": False, "condition": "TELEMETRY_PROCESSED"}

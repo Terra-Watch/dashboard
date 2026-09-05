@@ -15,6 +15,7 @@ class TelemetryResponse(ApiModel):
     rssi: int | None
     snr: Decimal | None = Field(default=None, max_digits=5, decimal_places=2)
     rttMs: int | None
+    rtcTemperatureC: Decimal | None = Field(default=None, max_digits=5, decimal_places=2)
+    sensorTimestamp: datetime | None = None
     heartbeatCount: int
     timestamp: datetime
-

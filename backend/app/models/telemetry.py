@@ -20,8 +20,9 @@ class Telemetry(Base):
     rssi: Mapped[int | None] = mapped_column(Integer, nullable=True)
     snr: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     rttMs: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rtcTemperatureC: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    sensorTimestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     heartbeatCount: Mapped[int] = mapped_column(Integer, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
     boat = relationship("Boat", back_populates="telemetry")
-

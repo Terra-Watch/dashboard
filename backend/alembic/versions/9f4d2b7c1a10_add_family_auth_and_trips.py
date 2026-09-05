@@ -17,9 +17,7 @@ depends_on = None
 
 def upgrade() -> None:
     role = sa.Enum("FAMILY", "FISHERMAN", "OPERATOR", "ADMIN", "CREW", "RESCUER", name="user_role")
-    role.create(op.get_bind(), checkfirst=True)
     trip_status = sa.Enum("ACTIVE", "COMPLETED", "INTERRUPTED", name="trip_status")
-    trip_status.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "users",
