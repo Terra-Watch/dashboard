@@ -40,6 +40,37 @@ export interface HistoricalEvent {
   } | null;
 }
 
+export interface Alert {
+  id: string;
+  alertId: string;
+  boat_id?: string | null;
+  type: "SOS" | "SYSTEM" | "COMMUNICATION";
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  status: "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED";
+  message: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface TelemetryRecord {
+  id: string;
+  boat_id: string;
+  battery?: number | null;
+  location?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  rssi?: number | null;
+  snr?: string | number | null;
+  rttMs?: number | null;
+  heartbeatCount: number;
+  timestamp: string;
+}
+
 export interface SystemStatusResponse {
   components: Array<{
     component: string;
@@ -69,6 +100,28 @@ export async function fetchGateways(): Promise<Gateway[]> {
 export async function fetchBoats(): Promise<Boat[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/boats`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAlerts(): Promise<Alert[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alerts`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchTelemetry(boatId?: string): Promise<TelemetryRecord[]> {
+  try {
+    const url = new URL(`${API_BASE_URL}/api/telemetry`);
+    if (boatId) url.searchParams.set("boatId", boatId);
+    const res = await fetch(url.toString(), { cache: "no-store" });
     if (!res.ok) return [];
     return await res.json();
   } catch {
