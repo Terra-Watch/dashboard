@@ -8,10 +8,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-.env
-.env.local
-.env.*.local
-
 .DS_Store
 
 backend/backend.env

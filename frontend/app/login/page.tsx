@@ -6,8 +6,6 @@ import Link from "next/link";
 import { AuthProvider, useAuth } from "../../lib/family/authContext";
 import {
   isSupabaseConfigured,
-  saveRuntimeSupabaseConfig,
-  clearRuntimeSupabaseConfig,
 } from "../../lib/supabase";
 import { FamilyUser } from "../../lib/family/types";
 
@@ -35,20 +33,18 @@ function LoginFormInner() {
 
   // Credentials
   const [identifier, setIdentifier] = useState("family@jalari.in");
-  const [password, setPassword] = useState("SafeSea2026!");
+  const [password, setPassword] = useState("FamilyPass123!");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
 
-  // Supabase-specific state
+  // Account creation state
   const [supabaseMode, setSupabaseMode] = useState<"SIGNIN" | "SIGNUP">("SIGNIN");
   const [signUpName, setSignUpName] = useState("");
   const [signUpPhone, setSignUpPhone] = useState("");
   const [signUpRole, setSignUpRole] = useState<FamilyUser["role"]>("FAMILY");
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [customSupabaseUrl, setCustomSupabaseUrl] = useState("");
-  const [customSupabaseAnonKey, setCustomSupabaseAnonKey] = useState("");
-  const [hasSupabaseConfig, setHasSupabaseConfig] = useState(isSupabaseConfigured);
+  const [hasSupabaseConfig] = useState(isSupabaseConfigured);
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   // Feedback Messages
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,24 +77,6 @@ function LoginFormInner() {
     }
   }, [reason]);
 
-  const handleRolePresetSelect = (role: RolePreset) => {
-    setActiveRolePreset(role);
-    setErrorMessage(null);
-    if (role === "FAMILY") {
-      setIdentifier("family@jalari.in");
-      setPassword("SafeSea2026!");
-    } else if (role === "FISHERMAN") {
-      setIdentifier("fisherman@jalari.in");
-      setPassword("SafeSea2026!");
-    } else if (role === "OPERATOR") {
-      setIdentifier("operator@jalari.in");
-      setPassword("SafeSea2026!");
-    } else if (role === "ADMIN") {
-      setIdentifier("admin@jalari.in");
-      setPassword("SafeSea2026!");
-    }
-  };
-
   const routeUserAfterLogin = (loggedInUser?: FamilyUser) => {
     if (redirectUrl) {
       const dest = redirectUrl.startsWith("/") ? redirectUrl : `/${redirectUrl}`;
@@ -115,6 +93,14 @@ function LoginFormInner() {
     } else {
       router.push("/profile");
     }
+  };
+
+  const selectDevelopmentAccount = (email: string, accountPassword: string, role: RolePreset) => {
+    setIdentifier(email);
+    setPassword(accountPassword);
+    setActiveRolePreset(role);
+    setErrorMessage(null);
+    setSuccessMessage("Development account selected.");
   };
 
   const handleDirectOrSupabaseSubmit = async (e: React.FormEvent) => {
@@ -240,28 +226,6 @@ function LoginFormInner() {
     }
   };
 
-  const handleSaveRuntimeConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customSupabaseUrl.trim() || !customSupabaseAnonKey.trim()) {
-      setErrorMessage("Please provide both Supabase Project URL and Anon Public Key.");
-      return;
-    }
-    const saved = saveRuntimeSupabaseConfig(customSupabaseUrl, customSupabaseAnonKey);
-    if (saved) {
-      setHasSupabaseConfig(true);
-      setShowConfigModal(false);
-      setSuccessMessage("Supabase credentials saved for this browser session!");
-    } else {
-      setErrorMessage("Failed to save credentials.");
-    }
-  };
-
-  const handleClearRuntimeConfig = () => {
-    clearRuntimeSupabaseConfig();
-    setHasSupabaseConfig(false);
-    setSuccessMessage("Custom Supabase credentials cleared.");
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -277,35 +241,35 @@ function LoginFormInner() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M2 17a5 5 0 0 0 10 0 5 5 0 0 0 10 0" />
-              <path d="M12 2v10" />
-              <path d="m4.93 10.93 4.24-4.24" />
-              <path d="m14.83 6.69 4.24 4.24" />
+              <path d="M3 14h18l-3 5H6l-3-5Z" />
+              <path d="m7 14 3-6h3l4 6M12 8V4h4" />
             </svg>
           </div>
-          <h1 style={styles.title}>JALARI AUTHENTICATION</h1>
-          <p style={styles.subtitle}>Maritime Safety & Operations Portal Access</p>
+          <h1 style={styles.title}>Sign in to Jalari</h1>
+          <p style={styles.subtitle}>Maritime safety and operations workspace</p>
         </div>
 
-        {/* Primary Auth Provider Mode Selector */}
+        {/* Primary account action */}
         <div style={styles.tabBar}>
           <button
             type="button"
             onClick={() => {
               setActiveTab("DIRECT");
+              setSupabaseMode("SIGNIN");
               setErrorMessage(null);
             }}
             style={{
               ...styles.tabBtn,
-              ...(activeTab === "DIRECT" ? styles.tabBtnActive : {}),
+              ...(activeTab === "DIRECT" || activeTab === "OTP" ? styles.tabBtnActive : {}),
             }}
           >
-            🛡️ Jalari Direct Auth
+            Sign in
           </button>
           <button
             type="button"
             onClick={() => {
               setActiveTab("SUPABASE");
+              setSupabaseMode("SIGNUP");
               setErrorMessage(null);
             }}
             style={{
@@ -313,187 +277,39 @@ function LoginFormInner() {
               ...(activeTab === "SUPABASE" ? styles.tabBtnActive : {}),
             }}
           >
-            ⚡ Supabase Cloud Auth
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("OTP");
-              setErrorMessage(null);
-            }}
-            style={{
-              ...styles.tabBtn,
-              ...(activeTab === "OTP" ? styles.tabBtnActive : {}),
-            }}
-          >
-            📱 Mobile OTP
+            Create account
           </button>
         </div>
 
-        {/* Supabase Status Pill & Configuration Trigger */}
-        {activeTab === "SUPABASE" && (
-          <div style={styles.supabaseBanner}>
-            <div style={styles.supabaseBannerLeft}>
-              <span
-                style={{
-                  ...styles.statusDot,
-                  backgroundColor: hasSupabaseConfig ? "#22c55e" : "#eab308",
-                }}
-              />
-              <span style={styles.supabaseBannerText}>
-                {hasSupabaseConfig
-                  ? "Connected to Supabase Authentication"
-                  : "Supabase Environment Not Detected (.env.local)"}
-              </span>
+        {activeTab === "DIRECT" && isDevelopment && (
+          <div style={styles.devAccess}>
+            <div>
+              <span style={styles.devAccessLabel}>Local development</span>
+              <span style={styles.devAccessHint}>Use a seeded account</span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowConfigModal(!showConfigModal)}
-              style={styles.supabaseConfigBtn}
-            >
-              ⚙️ {hasSupabaseConfig ? "Config" : "Connect URL & Key"}
-            </button>
-          </div>
-        )}
-
-        {/* Expandable Supabase Config Modal/Box */}
-        {showConfigModal && activeTab === "SUPABASE" && (
-          <div style={styles.configBox}>
-            <div style={styles.configHeader}>
-              <h4 style={styles.configTitle}>Supabase Connection Settings</h4>
+            <div style={styles.devAccessActions}>
               <button
                 type="button"
-                onClick={() => setShowConfigModal(false)}
-                style={styles.configCloseBtn}
+                onClick={() => selectDevelopmentAccount("family@jalari.in", "FamilyPass123!", "FAMILY")}
+                style={styles.devAccessButton}
               >
-                ✕
+                Family
+              </button>
+              <button
+                type="button"
+                onClick={() => selectDevelopmentAccount("fisherman@jalari.in", "FishermanPass123!", "FISHERMAN")}
+                style={styles.devAccessButton}
+              >
+                Fisherman
               </button>
             </div>
-            <p style={styles.configDesc}>
-              Enter your project URL and public Anon key. You can also configure them in{" "}
-              <code>frontend/.env.local</code> as <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-              <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
-            </p>
-            <form onSubmit={handleSaveRuntimeConfig} style={styles.configForm}>
-              <input
-                type="text"
-                placeholder="https://your-project.supabase.co"
-                value={customSupabaseUrl}
-                onChange={(e) => setCustomSupabaseUrl(e.target.value)}
-                style={styles.configInput}
-              />
-              <input
-                type="password"
-                placeholder="eyJh... (Anon Public Key)"
-                value={customSupabaseAnonKey}
-                onChange={(e) => setCustomSupabaseAnonKey(e.target.value)}
-                style={styles.configInput}
-              />
-              <div style={styles.configBtnRow}>
-                <button type="submit" style={styles.saveConfigBtn}>
-                  Save & Connect
-                </button>
-                {hasSupabaseConfig && (
-                  <button
-                    type="button"
-                    onClick={handleClearRuntimeConfig}
-                    style={styles.clearConfigBtn}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Role Presets (When in Direct Auth) */}
-        {activeTab === "DIRECT" && (
-          <div style={styles.rolePresetsWrapper}>
-            <div style={styles.rolePresetsHeader}>
-              <span style={styles.rolePresetsLabel}>Select Portal Role to Test</span>
-            </div>
-            <div style={styles.roleGrid}>
-              <button
-                type="button"
-                onClick={() => handleRolePresetSelect("FAMILY")}
-                style={{
-                  ...styles.roleChip,
-                  ...(activeRolePreset === "FAMILY" ? styles.roleChipActive : {}),
-                }}
-              >
-                👨‍👩‍👧 Family
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRolePresetSelect("FISHERMAN")}
-                style={{
-                  ...styles.roleChip,
-                  ...(activeRolePreset === "FISHERMAN" ? styles.roleChipActive : {}),
-                }}
-              >
-                ⚓ Fisherman
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRolePresetSelect("OPERATOR")}
-                style={{
-                  ...styles.roleChip,
-                  ...(activeRolePreset === "OPERATOR" ? styles.roleChipActive : {}),
-                }}
-              >
-                🛡️ Operator
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRolePresetSelect("ADMIN")}
-                style={{
-                  ...styles.roleChip,
-                  ...(activeRolePreset === "ADMIN" ? styles.roleChipActive : {}),
-                }}
-              >
-                ⚙️ Admin
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Supabase Mode Toggle (Sign In vs Sign Up) */}
-        {activeTab === "SUPABASE" && (
-          <div style={styles.supabaseModeToggle}>
-            <button
-              type="button"
-              onClick={() => {
-                setSupabaseMode("SIGNIN");
-                setErrorMessage(null);
-              }}
-              style={{
-                ...styles.subTabBtn,
-                ...(supabaseMode === "SIGNIN" ? styles.subTabBtnActive : {}),
-              }}
-            >
-              Sign In to Supabase
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSupabaseMode("SIGNUP");
-                setErrorMessage(null);
-              }}
-              style={{
-                ...styles.subTabBtn,
-                ...(supabaseMode === "SIGNUP" ? styles.subTabBtnActive : {}),
-              }}
-            >
-              Create Supabase Account
-            </button>
           </div>
         )}
 
         {/* Status Alerts */}
         {errorMessage && (
           <div style={styles.errorBox} role="alert">
-            <span style={styles.alertIcon}>⚠️</span>
+            <span style={styles.alertIcon} aria-hidden="true">!</span>
             <span style={styles.errorText}>
               {typeof errorMessage === "string" ? errorMessage : "An authentication error occurred."}
             </span>
@@ -502,7 +318,7 @@ function LoginFormInner() {
 
         {successMessage && (
           <div style={styles.successBox} role="status">
-            <span style={styles.alertIcon}>✅</span>
+            <span style={styles.alertIcon} aria-hidden="true">✓</span>
             <span style={styles.successText}>
               {typeof successMessage === "string" ? successMessage : "Success"}
             </span>
@@ -511,9 +327,28 @@ function LoginFormInner() {
 
         {otpNotice && activeTab === "OTP" && (
           <div style={styles.infoBox}>
-            <span style={styles.alertIcon}>ℹ️</span>
+            <span style={styles.alertIcon} aria-hidden="true">i</span>
             <span style={styles.infoText}>{otpNotice}</span>
           </div>
+        )}
+
+        {activeTab === "SUPABASE" && !hasSupabaseConfig && (
+          <div style={styles.setupNote}>
+            Account creation is currently unavailable. Please ask your Jalari administrator to configure access.
+          </div>
+        )}
+
+        {activeTab === "OTP" && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("DIRECT");
+              setErrorMessage(null);
+            }}
+            style={styles.secondaryAction}
+          >
+            ← Use password instead
+          </button>
         )}
 
         {/* Forms */}
@@ -561,7 +396,7 @@ function LoginFormInner() {
 
             <div style={styles.fieldGroup}>
               <label style={styles.label}>
-                {activeTab === "SUPABASE" ? "Supabase Account Email" : "Registered Email or User ID"}
+                {activeTab === "SUPABASE" ? "Email address" : "Email or user ID"}
               </label>
               <input
                 type="text"
@@ -589,20 +424,31 @@ function LoginFormInner() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (activeTab === "SUPABASE" && !hasSupabaseConfig)}
               style={{
                 ...styles.submitButton,
-                opacity: submitting ? 0.7 : 1,
+                opacity: submitting || (activeTab === "SUPABASE" && !hasSupabaseConfig) ? 0.55 : 1,
               }}
             >
               {submitting
                 ? "Verifying Credentials..."
                 : activeTab === "SUPABASE"
-                ? supabaseMode === "SIGNUP"
-                  ? "Create Account via Supabase"
-                  : "Sign In with Supabase"
-                : `Sign In as ${activeRolePreset}`}
+                ? hasSupabaseConfig ? "Create account" : "Account creation unavailable"
+                : "Sign in"}
             </button>
+
+            {activeTab === "DIRECT" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("OTP");
+                  setErrorMessage(null);
+                }}
+                style={styles.secondaryAction}
+              >
+                Use a one-time code instead
+              </button>
+            )}
           </form>
         ) : (
           /* Mobile OTP Form */
@@ -660,7 +506,7 @@ function LoginFormInner() {
         {/* Footer Navigation */}
         <div style={styles.footer}>
           <p style={styles.footerText}>
-            Secured by AES-256 JWT &amp; Supabase End-to-End Maritime Authentication
+            Secure access to the Jalari operations workspace
           </p>
           <div style={styles.footerLinks}>
             <Link href="/" style={styles.backLink}>
@@ -695,7 +541,7 @@ export default function LoginPage() {
               background: "#f1f5f9",
             }}
           >
-            Loading Jalari Maritime Portal...
+            Loading Jalari...
           </div>
         }
       >
@@ -711,79 +557,115 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%)",
-    padding: "24px 16px",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    background: "var(--color-background)",
+    padding: "40px 20px",
   },
   card: {
     width: "100%",
-    maxWidth: "460px",
-    background: "#ffffff",
-    borderRadius: "16px",
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.25)",
-    padding: "32px 28px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
+    maxWidth: "520px",
+    background: "var(--color-surface)",
+    borderRadius: "var(--radius)",
+    boxShadow: "none",
+    padding: "40px",
+    border: "1px solid var(--color-border)",
   },
   header: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    marginBottom: "20px",
-    textAlign: "center",
+    alignItems: "flex-start",
+    marginBottom: "28px",
+    textAlign: "left",
   },
   logoCircle: {
-    width: "52px",
-    height: "52px",
-    borderRadius: "14px",
-    background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+    width: "36px",
+    height: "36px",
+    borderRadius: "var(--radius)",
+    background: "var(--color-navy)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: "#ffffff",
-    marginBottom: "12px",
-    boxShadow: "0 6px 16px rgba(2, 132, 199, 0.35)",
+    marginBottom: "20px",
+    boxShadow: "none",
   },
   logoSvg: {
     width: "28px",
     height: "28px",
   },
   title: {
-    fontSize: "1.3rem",
-    fontWeight: "800",
-    color: "#0f172a",
+    fontSize: "1.5rem",
+    fontWeight: "600",
+    color: "var(--color-text)",
     margin: "0 0 4px 0",
-    letterSpacing: "0.04em",
   },
   subtitle: {
-    fontSize: "0.82rem",
-    color: "#64748b",
+    fontSize: "0.875rem",
+    color: "var(--color-muted)",
     margin: 0,
   },
   tabBar: {
     display: "flex",
-    background: "#f1f5f9",
-    padding: "4px",
-    borderRadius: "10px",
-    marginBottom: "16px",
-    gap: "4px",
+    background: "transparent",
+    padding: 0,
+    borderBottom: "1px solid var(--color-border)",
+    marginBottom: "24px",
+    gap: 0,
   },
   tabBtn: {
     flex: 1,
-    padding: "8px 6px",
-    border: "none",
+    padding: "12px 6px",
+    borderWidth: 0,
+    borderStyle: "solid",
+    borderColor: "transparent",
     background: "transparent",
-    color: "#64748b",
-    fontSize: "0.76rem",
-    fontWeight: "700",
-    borderRadius: "7px",
+    color: "var(--color-muted)",
+    fontSize: "0.8125rem",
+    fontWeight: "600",
+    borderRadius: 0,
     cursor: "pointer",
-    transition: "all 0.15s ease",
+    transition: "color 0.15s ease, border-color 0.15s ease",
     whiteSpace: "nowrap",
   },
   tabBtnActive: {
-    background: "#ffffff",
-    color: "#0f172a",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+    color: "var(--color-navy)",
+    borderBottomWidth: "2px",
+    borderBottomStyle: "solid",
+    borderBottomColor: "var(--color-navy)",
+  },
+  devAccess: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "16px",
+    marginBottom: "24px",
+    padding: "12px 14px",
+    borderLeft: "3px solid var(--color-navy)",
+    background: "#eef1ef",
+  },
+  devAccessLabel: {
+    display: "block",
+    color: "var(--color-text)",
+    fontSize: "0.8125rem",
+    fontWeight: "600",
+  },
+  devAccessHint: {
+    display: "block",
+    marginTop: "3px",
+    color: "var(--color-muted)",
+    fontSize: "0.75rem",
+  },
+  devAccessActions: {
+    display: "flex",
+    gap: "6px",
+  },
+  devAccessButton: {
+    padding: "7px 10px",
+    border: "1px solid var(--color-border)",
+    borderRadius: "var(--radius)",
+    background: "var(--color-surface)",
+    color: "var(--color-navy)",
+    fontSize: "0.75rem",
+    fontWeight: "600",
   },
   supabaseBanner: {
     display: "flex",
@@ -791,7 +673,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     background: "#f0fdf4",
     border: "1px solid #bbf7d0",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     padding: "8px 12px",
     marginBottom: "14px",
   },
@@ -824,7 +706,7 @@ const styles: Record<string, React.CSSProperties> = {
   configBox: {
     background: "#f8fafc",
     border: "1px solid #cbd5e1",
-    borderRadius: "10px",
+    borderRadius: "var(--radius)",
     padding: "14px",
     marginBottom: "16px",
   },
@@ -862,7 +744,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "8px 10px",
     fontSize: "0.8rem",
     border: "1px solid #cbd5e1",
-    borderRadius: "6px",
+    borderRadius: "var(--radius)",
     background: "#ffffff",
     outline: "none",
   },
@@ -877,7 +759,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#0284c7",
     color: "#ffffff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "var(--radius)",
     fontSize: "0.78rem",
     fontWeight: "700",
     cursor: "pointer",
@@ -912,10 +794,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   roleChip: {
     padding: "7px 4px",
-    border: "1px solid #e2e8f0",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: "#e2e8f0",
     background: "#f8fafc",
     color: "#475569",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     fontSize: "0.74rem",
     fontWeight: "600",
     cursor: "pointer",
@@ -923,30 +807,32 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: "center",
   },
   roleChipActive: {
-    background: "#0369a1",
-    borderColor: "#0284c7",
+    background: "var(--color-navy)",
+    borderColor: "var(--color-navy)",
     color: "#ffffff",
-    boxShadow: "0 2px 6px rgba(2, 132, 199, 0.3)",
+    boxShadow: "none",
   },
   supabaseModeToggle: {
     display: "flex",
-    borderBottom: "1px solid #e2e8f0",
+    borderBottom: "1px solid var(--color-border)",
     marginBottom: "16px",
   },
   subTabBtn: {
     flex: 1,
     padding: "8px 0",
     background: "transparent",
-    border: "none",
-    borderBottom: "2px solid transparent",
+    borderWidth: 0,
+    borderStyle: "solid",
+    borderColor: "transparent",
     color: "#64748b",
     fontSize: "0.8rem",
     fontWeight: "600",
     cursor: "pointer",
   },
   subTabBtnActive: {
-    color: "#0284c7",
-    borderBottomColor: "#0284c7",
+    color: "var(--color-navy)",
+    borderBottomWidth: "2px",
+    borderBottomColor: "var(--color-navy)",
     fontWeight: "700",
   },
   errorBox: {
@@ -955,7 +841,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
     background: "#fef2f2",
     border: "1px solid #fecaca",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     padding: "10px 12px",
     marginBottom: "14px",
   },
@@ -965,7 +851,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
     background: "#f0fdf4",
     border: "1px solid #bbf7d0",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     padding: "10px 12px",
     marginBottom: "14px",
   },
@@ -975,7 +861,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "8px",
     background: "#eff6ff",
     border: "1px solid #bfdbfe",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     padding: "8px 12px",
     marginBottom: "14px",
   },
@@ -998,6 +884,24 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#1e40af",
     lineHeight: "1.35",
   },
+  setupNote: {
+    marginBottom: "16px",
+    padding: "12px 14px",
+    borderLeft: "3px solid var(--color-warning)",
+    background: "#fbf8f1",
+    color: "var(--color-muted)",
+    fontSize: "0.8125rem",
+    lineHeight: "1.45",
+  },
+  secondaryAction: {
+    alignSelf: "center",
+    padding: 0,
+    border: "none",
+    background: "transparent",
+    color: "var(--color-navy)",
+    fontSize: "0.8125rem",
+    fontWeight: "600",
+  },
   form: {
     display: "flex",
     flexDirection: "column",
@@ -1016,14 +920,14 @@ const styles: Record<string, React.CSSProperties> = {
   label: {
     fontSize: "0.8rem",
     fontWeight: "600",
-    color: "#334155",
+    color: "var(--color-text)",
   },
   input: {
     width: "100%",
     padding: "10px 12px",
     fontSize: "0.88rem",
     border: "1px solid #cbd5e1",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     outline: "none",
     background: "#f8fafc",
     color: "#0f172a",
@@ -1034,10 +938,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "10px 12px",
     fontSize: "0.86rem",
     border: "1px solid #cbd5e1",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     outline: "none",
-    background: "#f8fafc",
-    color: "#0f172a",
+    background: "var(--color-surface)",
+    color: "var(--color-text)",
     boxSizing: "border-box",
   },
   otpInputRow: {
@@ -1048,7 +952,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 14px",
     background: "#f1f5f9",
     border: "1px solid #cbd5e1",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     fontSize: "0.78rem",
     fontWeight: "700",
     color: "#334155",
@@ -1059,15 +963,14 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: "6px",
     width: "100%",
     padding: "12px",
-    background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+    background: "var(--color-navy)",
     color: "#ffffff",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "var(--radius)",
     fontSize: "0.88rem",
     fontWeight: "700",
-    letterSpacing: "0.04em",
     cursor: "pointer",
-    boxShadow: "0 4px 12px rgba(2, 132, 199, 0.25)",
+    boxShadow: "none",
     minHeight: "44px",
   },
   footer: {
@@ -1090,7 +993,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   backLink: {
     fontSize: "0.78rem",
-    color: "#0284c7",
+    color: "var(--color-navy)",
     textDecoration: "none",
     fontWeight: "600",
   },

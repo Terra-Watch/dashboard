@@ -8,3 +8,5 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://jalari-frontend-dashboard.onrender.com
