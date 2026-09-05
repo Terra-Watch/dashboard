@@ -1,4 +1,4 @@
-# Jalri
+# Jalari
 
 Jalri is a maritime safety and operations platform. It provides a frontend dashboard, backend API, and landing page for managing vessel information, monitoring operational status, handling safety alerts, and reviewing telemetry and event history.
 
@@ -10,7 +10,7 @@ The Jalri web application is the user-facing layer of the Jalri maritime system.
 
 The application intentionally uses empty/unavailable states when no operational data exists. No fake data is generated or displayed.
 
-## Role in Jalri
+## Role in Jalari
 
 ```text
 [ BoatNode ] --LoRa--> [ Gateway ] --HTTP--> [ Backend ] --> [ Dashboard ]
