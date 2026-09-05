@@ -1,5 +1,10 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
+function authHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("jalari_token") : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export interface Boat {
   id: string;
   boatId: string;
@@ -89,7 +94,7 @@ export interface Gateway {
 
 export async function fetchGateways(): Promise<Gateway[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/gateways`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/api/gateways`, { cache: "no-store", headers: authHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -99,7 +104,7 @@ export async function fetchGateways(): Promise<Gateway[]> {
 
 export async function fetchBoats(): Promise<Boat[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/boats`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/api/boats`, { cache: "no-store", headers: authHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -131,7 +136,7 @@ export async function fetchTelemetry(boatId?: string): Promise<TelemetryRecord[]
 
 export async function fetchHistory(): Promise<HistoricalEvent[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/history`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/api/history`, { cache: "no-store", headers: authHeaders() });
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -141,7 +146,7 @@ export async function fetchHistory(): Promise<HistoricalEvent[]> {
 
 export async function fetchSystemStatus(): Promise<SystemStatusResponse | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/system-status`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/api/system-status`, { cache: "no-store", headers: authHeaders() });
     if (!res.ok) return null;
     return await res.json();
   } catch {

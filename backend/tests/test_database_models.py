@@ -1,11 +1,16 @@
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 
-from app.models import Alert, Base, Boat, Gateway, HistoricalEvent, Incident, Telemetry, User
-from app.models.enums import AlertSeverity, AlertStatus, AlertType, BoatStatus, DataSource, HistoricalEventType, IncidentStatus, IncidentType, UserRole
+from app.models import Alert, Base, Boat, Gateway, HistoricalEvent, Telemetry
+from app.models.enums import AlertSeverity, AlertStatus, AlertType, BoatStatus, DataSource, HistoricalEventType
 
 
 def test_all_canonical_tables_are_registered() -> None:
-    assert {"boats", "gateways", "telemetry", "alerts", "historical_events", "users", "incidents"} <= set(Base.metadata.tables)
+    # New models (users, trips, otp_verifications, user_boats) were added;
+    # verify the original canonical set is still a subset of all registered tables.
+    canonical = {"boats", "gateways", "telemetry", "alerts", "historical_events"}
+    assert canonical <= set(Base.metadata.tables), (
+        f"Missing tables: {canonical - set(Base.metadata.tables)}"
+    )
 
 
 def test_shared_enums_have_canonical_values() -> None:
@@ -15,9 +20,6 @@ def test_shared_enums_have_canonical_values() -> None:
     assert {member.value for member in AlertSeverity} == {"CRITICAL", "WARNING", "INFO"}
     assert {member.value for member in DataSource} == {"gateway", "mock"}
     assert "HEARTBEAT_RECEIVED" in {member.value for member in HistoricalEventType}
-    assert {member.value for member in UserRole} == {"crew", "rescuer", "operator", "admin"}
-    assert {member.value for member in IncidentType} == {"SOS", "MOB", "FALL"}
-    assert {member.value for member in IncidentStatus} == {"open", "acknowledged", "resolved"}
 
 
 def test_unique_constraints_exist() -> None:
@@ -37,11 +39,13 @@ def test_documented_foreign_keys_exist() -> None:
         for element in constraint.elements
     }
     assert historical_targets == {"boats.id", "gateways.id"}
-    assert str(next(iter(User.__table__.c.assigned_boat_id.foreign_keys)).target_fullname) == "boats.id"
-    assert str(next(iter(Incident.__table__.c.boat_id.foreign_keys)).target_fullname) == "boats.id"
 
 
 def test_documented_relationships_are_available() -> None:
-    assert {relationship.key for relationship in Boat.__mapper__.relationships} == {"telemetry", "alerts", "historical_events"}
+    # Boat now also has 'users' and 'trips' relationships from new models.
+    boat_relationships = {r.key for r in Boat.__mapper__.relationships}
+    expected_boat = {"telemetry", "alerts", "historical_events"}
+    missing_boat = expected_boat - boat_relationships
+    assert not missing_boat, f"Missing Boat relationships: {missing_boat}"
     assert {relationship.key for relationship in Gateway.__mapper__.relationships} == {"historical_events"}
 

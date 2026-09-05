@@ -16,20 +16,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    user_role = sa.Enum("crew", "rescuer", "operator", "admin", name="user_role")
     incident_type = sa.Enum("SOS", "MOB", "FALL", name="incident_type")
     incident_status = sa.Enum("open", "acknowledged", "resolved", name="incident_status")
-    op.create_table(
-        "users",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("username", sa.String(), nullable=False),
-        sa.Column("password_hash", sa.String(), nullable=False),
-        sa.Column("role", user_role, nullable=False),
-        sa.Column("assigned_boat_id", sa.UUID(), nullable=True),
-        sa.ForeignKeyConstraint(["assigned_boat_id"], ["boats.id"]),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("username"),
-    )
     op.create_table(
         "incidents",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -56,8 +44,6 @@ def downgrade() -> None:
     op.drop_index("ix_incidents_status", table_name="incidents")
     op.drop_index("ix_incidents_boat_id", table_name="incidents")
     op.drop_table("incidents")
-    op.drop_table("users")
     bind = op.get_bind()
     sa.Enum(name="incident_status").drop(bind, checkfirst=True)
     sa.Enum(name="incident_type").drop(bind, checkfirst=True)
-    sa.Enum(name="user_role").drop(bind, checkfirst=True)

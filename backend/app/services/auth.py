@@ -11,7 +11,8 @@ class AuthenticationError(Exception):
 
 class AuthService:
     def authenticate(self, db: Session, username: str, password: str) -> tuple[User, str]:
-        user = db.scalar(select(User).where(User.username == username))
-        if user is None or not verify_password(password, user.passwordHash):
+        normalized = username.strip().lower()
+        user = db.scalar(select(User).where((User.email == normalized) | (User.phone == normalized)))
+        if user is None or not verify_password(password, user.hashed_password):
             raise AuthenticationError("Invalid credentials")
-        return user, create_access_token(str(user.id), user.role.value)
+        return user, create_access_token({"sub": str(user.id), "email": user.email, "role": user.role.value})

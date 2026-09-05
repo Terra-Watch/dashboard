@@ -49,10 +49,12 @@ class HistoricalEventType(str, Enum):
 
 
 class UserRole(str, Enum):
+    FAMILY = "FAMILY"
+    FISHERMAN = "FISHERMAN"
+    OPERATOR = "OPERATOR"
+    ADMIN = "ADMIN"
     CREW = "crew"
     RESCUER = "rescuer"
-    OPERATOR = "operator"
-    ADMIN = "admin"
 
 
 class IncidentType(str, Enum):

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
+from app.api.dependencies.auth import require_operations_user
 from app.models.enums import HistoricalEventType
 from app.repositories.boats import BoatRepository
 from app.repositories.history import HistoricalEventRepository
@@ -25,6 +26,7 @@ def list_history(
     boatId: str | None = Query(default=None),
     eventType: HistoricalEventType | None = Query(default=None),
     db: Session = Depends(get_db),
+    _: object = Depends(require_operations_user),
 ) -> list[HistoricalEventResponse]:
     boat_uuid: UUID | None = None
     if boatId is not None:

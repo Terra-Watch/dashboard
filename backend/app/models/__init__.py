@@ -4,8 +4,23 @@ from app.models.boat import Boat
 from app.models.gateway import Gateway
 from app.models.historical_event import HistoricalEvent
 from app.models.incident import Incident
+from app.models.otp import OTPVerification
 from app.models.telemetry import Telemetry
-from app.models.user import User
+from app.models.trip import Trip, TripStatus
+from app.models.user import User, UserRole, user_boats
 
-__all__ = ["Alert", "Base", "Boat", "Gateway", "HistoricalEvent", "Incident", "Telemetry", "User"]
-
+__all__ = [
+    "Alert",
+    "Base",
+    "Boat",
+    "Gateway",
+    "HistoricalEvent",
+    "Incident",
+    "OTPVerification",
+    "Telemetry",
+    "Trip",
+    "TripStatus",
+    "User",
+    "UserRole",
+    "user_boats",
+]

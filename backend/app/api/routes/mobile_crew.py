@@ -14,7 +14,7 @@ from app.services.serialization import alert_response, boat_response
 
 router = APIRouter(prefix="/api/mobile/crew", tags=["mobile-crew"])
 service = CrewService()
-crew_user = require_role(UserRole.CREW)
+crew_user = require_role(UserRole.CREW, UserRole.FISHERMAN)
 
 
 def incident_response(incident) -> IncidentResponse:

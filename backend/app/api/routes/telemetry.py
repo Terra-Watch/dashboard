@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
+from app.api.dependencies.auth import require_operations_user
 from app.repositories.boats import BoatRepository
 from app.repositories.telemetry import TelemetryRepository
 from app.schemas.telemetry import TelemetryResponse
@@ -32,6 +33,7 @@ def get_telemetry(
     from_: datetime | None = Query(default=None, alias="from"),
     to: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
+    _: object = Depends(require_operations_user),
 ) -> list[TelemetryResponse]:
     return list_telemetry(db, boatId, from_, to)
 

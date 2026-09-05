@@ -74,7 +74,7 @@ last 2 B    CRC-16/CCITT     uint16, little-endian (polynomial 0x1021, init 0xFF
               </tr>
             </thead>
             <tbody>
-              <tr><td><code>eventType</code></td><td>string</td><td>Yes</td><td>Must be literal <code>"HEARTBEAT_RECEIVED"</code></td></tr>
+              <tr><td><code>eventType</code></td><td>string</td><td>Yes</td><td>Must be literal <code>&quot;HEARTBEAT_RECEIVED&quot;</code></td></tr>
               <tr><td><code>nodeId</code></td><td>integer</td><td>Yes</td><td>Source vessel node ID (must match a registered boat)</td></tr>
               <tr><td><code>packetId</code></td><td>uint32</td><td>Yes</td><td>32-bit packet ID from heartbeat payload for dedup</td></tr>
               <tr><td><code>destination</code></td><td>integer</td><td>Yes</td><td>Packet destination ID (typically 255)</td></tr>

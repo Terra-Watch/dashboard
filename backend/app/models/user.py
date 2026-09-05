@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Enum as SQLEnum, ForeignKey, Index, String, Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -8,13 +9,31 @@ from app.models.base import Base
 from app.models.enums import UserRole
 
 
+# Association table linking Users to Boats (Many-to-Many)
+user_boats = Table(
+    "user_boats",
+    Base.metadata,
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("boat_id", UUID(as_uuid=True), ForeignKey("boats.id", ondelete="CASCADE"), primary_key=True),
+    Column("relationship_type", String, nullable=False, default="FAMILY_CONTACT"),
+    Column("created_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)),
+)
+
+
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        Index("ix_users_email", "email"),
+        Index("ix_users_role", "role"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    username: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    passwordHash: Mapped[str] = mapped_column("password_hash", String, nullable=False)
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole, name="user_role", values_callable=lambda enum_type: [item.value for item in enum_type]), nullable=False)
-    assignedBoatId: Mapped[uuid.UUID | None] = mapped_column("assigned_boat_id", UUID(as_uuid=True), ForeignKey("boats.id"), nullable=True)
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role"), nullable=False, default=UserRole.FAMILY)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    assigned_boat = relationship("Boat")
+    boats = relationship("Boat", secondary=user_boats, backref="users", lazy="joined")

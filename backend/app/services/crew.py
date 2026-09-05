@@ -19,9 +19,9 @@ class CrewService:
         self.alerts = alerts or AlertRepository()
 
     def boat(self, user: User, db: Session) -> Boat:
-        if user.assignedBoatId is None:
+        if not user.boats:
             raise ResourceNotFoundError("No boat assigned")
-        boat = db.get(Boat, user.assignedBoatId)
+        boat = user.boats[0]
         if boat is None:
             raise ResourceNotFoundError("Assigned boat not found")
         return boat

@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "clean": "node -e \"const fs=require('fs'); try{fs.rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
+    "predev": "node -e \"const fs=require('fs'); try{if(fs.existsSync('.next/build-manifest.json')){fs.rmSync('.next',{recursive:true,force:true});}}catch(e){}\"",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --max-warnings=0",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.22",
@@ -16,9 +19,18 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.25",
+    "jest": "^30.5.1",
+    "jest-environment-jsdom": "^30.5.1",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.8.0"
   }
 }
