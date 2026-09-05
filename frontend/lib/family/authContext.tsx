@@ -74,11 +74,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("jalari_user", JSON.stringify(resp.user));
       }
       return { success: true };
-    } catch (err: any) {
-      return {
-        success: false,
-        error: err?.message || "Invalid credentials. Please verify your phone/email and password.",
-      };
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Invalid credentials. Please verify your phone/email and password.";
+      // Surface common backend error messages in user-friendly language
+      const friendly =
+        message.toLowerCase().includes("unauthorized") ||
+        message.toLowerCase().includes("invalid credentials")
+          ? "Incorrect email/phone or password. Please try again."
+          : message.toLowerCase().includes("not found") ||
+            message.toLowerCase().includes("no account")
+          ? "No account found with those details. Contact your harbour welfare coordinator."
+          : message;
+      return { success: false, error: friendly };
     } finally {
       setIsLoading(false);
     }

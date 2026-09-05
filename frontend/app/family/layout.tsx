@@ -27,8 +27,10 @@ export default function FamilyLayout({
             {children}
           </main>
 
-          {/* Interactive Simulation & Evaluation Dock */}
-          <SimulationControls />
+          {/* Interactive Simulation & Evaluation Dock — dev/demo only */}
+          {process.env.NEXT_PUBLIC_ENABLE_DEMO_SIMULATOR === "true" && (
+            <SimulationControls />
+          )}
 
           {/* Family Trust & Emergency Contacts Footer */}
           <footer style={styles.footer}>

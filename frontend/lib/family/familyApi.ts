@@ -6,6 +6,19 @@ import {
   FamilyUser,
   SOSIncident,
 } from "./types";
+
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
+export function isDemoMode(): boolean {
+  return process.env.NEXT_PUBLIC_ENABLE_DEMO_SIMULATOR === "true";
+}
+
+// ---------------------------------------------------------------------------
+// FamilyDataStore — only used by the demo simulator (SimulationControls).
+// In production (DEMO_MODE=false) this is still instantiated but only the
+// simulator panel actually calls localStore methods.
+// ---------------------------------------------------------------------------
 import {
   MOCK_BOATS,
   MOCK_FAMILY_USER,
@@ -13,10 +26,6 @@ import {
   MOCK_ACTIVE_INCIDENT,
 } from "./mockData";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-
-// In-memory state store for interactive testing and resilient local runtime
 class FamilyDataStore {
   private boats: FamilyBoat[] = JSON.parse(JSON.stringify(MOCK_BOATS));
   private trips: FamilyTrip[] = JSON.parse(JSON.stringify(MOCK_TRIPS));
@@ -94,74 +103,66 @@ class FamilyDataStore {
   }
 }
 
+/** Exported for use by SimulationControls (demo mode only). */
 export const localStore = new FamilyDataStore();
 
-// Helper for auth headers
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function getAuthHeaders(token?: string): Record<string, string> {
   const t =
-    token || (typeof window !== "undefined" ? localStorage.getItem("jalari_token") : null);
+    token ||
+    (typeof window !== "undefined" ? localStorage.getItem("jalari_token") : null);
   return {
     "Content-Type": "application/json",
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
   };
 }
 
-/**
- * Authentication API
- */
+async function apiFetch<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body?.detail || body?.message || detail;
+    } catch {
+      // ignore parse error
+    }
+    throw new Error(detail);
+  }
+  return res.json() as Promise<T>;
+}
+
+// ---------------------------------------------------------------------------
+// Authentication API
+// ---------------------------------------------------------------------------
+
 export async function loginFamily(
-  identifier: string, // Email or Phone
+  identifier: string,
   password?: string
 ): Promise<AuthResponse> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, password: password || "1234" }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data;
-    }
-  } catch (err) {
-    console.info("Backend login not reached; using authenticated family session fallback.");
-  }
-
-  // Fallback demo authentication
-  const mockUser: FamilyUser = {
-    ...MOCK_FAMILY_USER,
-    email: identifier.includes("@") ? identifier : MOCK_FAMILY_USER.email,
-    phone: !identifier.includes("@") ? identifier : MOCK_FAMILY_USER.phone,
-  };
-  return {
-    token: "jalari_token_fam_demo_" + Date.now(),
-    user: mockUser,
-  };
+  return apiFetch<AuthResponse>(`${API_BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier, password: password || "" }),
+  });
 }
 
 export async function fetchCurrentUser(): Promise<FamilyUser | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    return await apiFetch<FamilyUser>(`${API_BASE_URL}/api/auth/me`, {
       headers: getAuthHeaders(),
     });
-    if (res.ok) {
-      return await res.json();
-    }
   } catch {
-    // fallback
+    // Token may be expired or backend unreachable; return null so callers
+    // can redirect to login rather than silently using stale local data.
+    return null;
   }
-
-  if (typeof window !== "undefined") {
-    const storedUser = localStorage.getItem("jalari_user");
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch {
-        return null;
-      }
-    }
-  }
-  return null;
 }
 
 export async function logoutFamily(): Promise<void> {
@@ -171,7 +172,7 @@ export async function logoutFamily(): Promise<void> {
       headers: getAuthHeaders(),
     });
   } catch {
-    // Ignore network error on logout
+    // Ignore network error on logout — we always clear local state below.
   }
   if (typeof window !== "undefined") {
     localStorage.removeItem("jalari_token");
@@ -179,106 +180,85 @@ export async function logoutFamily(): Promise<void> {
   }
 }
 
-/**
- * Family Boats API
- */
+// ---------------------------------------------------------------------------
+// Family Boats API
+// ---------------------------------------------------------------------------
+
 export async function fetchFamilyBoats(): Promise<FamilyBoat[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getBoats();
+  if (isDemoMode()) return localStore.getBoats();
+  return apiFetch<FamilyBoat[]>(`${API_BASE_URL}/api/family/boats`, {
+    headers: getAuthHeaders(),
+    cache: "no-store",
+  });
 }
 
-export async function fetchFamilyBoatById(boatId: string): Promise<FamilyBoat | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getBoat(boatId) || null;
+export async function fetchFamilyBoatById(
+  boatId: string
+): Promise<FamilyBoat | null> {
+  if (isDemoMode()) return localStore.getBoat(boatId) ?? null;
+  return apiFetch<FamilyBoat>(
+    `${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }
 
-/**
- * Location API
- */
-export async function fetchBoatLocation(boatId: string): Promise<BoatLocation | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/location`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  const boat = localStore.getBoat(boatId);
-  return boat?.latestLocation || null;
+// ---------------------------------------------------------------------------
+// Location API
+// ---------------------------------------------------------------------------
+
+export async function fetchBoatLocation(
+  boatId: string
+): Promise<BoatLocation | null> {
+  if (isDemoMode()) return localStore.getBoat(boatId)?.latestLocation ?? null;
+  return apiFetch<BoatLocation>(
+    `${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/location`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }
 
-/**
- * Trips API
- */
+// ---------------------------------------------------------------------------
+// Trips API
+// ---------------------------------------------------------------------------
+
 export async function fetchBoatTrips(boatId: string): Promise<FamilyTrip[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/trips`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getTrips(boatId);
+  if (isDemoMode()) return localStore.getTrips(boatId);
+  return apiFetch<FamilyTrip[]>(
+    `${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/trips`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }
 
-export async function fetchTripById(boatId: string, tripId: string): Promise<FamilyTrip | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/trips/${encodeURIComponent(tripId)}`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getTrip(tripId) || null;
+export async function fetchTripById(
+  boatId: string,
+  tripId: string
+): Promise<FamilyTrip | null> {
+  if (isDemoMode()) return localStore.getTrip(tripId) ?? null;
+  return apiFetch<FamilyTrip>(
+    `${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/trips/${encodeURIComponent(tripId)}`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }
 
-/**
- * Incidents / SOS API
- */
-export async function fetchBoatIncidents(boatId: string): Promise<SOSIncident[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/incidents`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getIncidents(boatId);
+// ---------------------------------------------------------------------------
+// Incidents / SOS API
+// ---------------------------------------------------------------------------
+
+export async function fetchBoatIncidents(
+  boatId: string
+): Promise<SOSIncident[]> {
+  if (isDemoMode()) return localStore.getIncidents(boatId);
+  return apiFetch<SOSIncident[]>(
+    `${API_BASE_URL}/api/family/boats/${encodeURIComponent(boatId)}/incidents`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }
 
-export async function fetchIncidentById(incidentId: string): Promise<SOSIncident | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/family/incidents/${encodeURIComponent(incidentId)}`, {
-      headers: getAuthHeaders(),
-      cache: "no-store",
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // fallback
-  }
-  return localStore.getIncident(incidentId) || null;
+export async function fetchIncidentById(
+  incidentId: string
+): Promise<SOSIncident | null> {
+  if (isDemoMode()) return localStore.getIncident(incidentId) ?? null;
+  return apiFetch<SOSIncident>(
+    `${API_BASE_URL}/api/family/incidents/${encodeURIComponent(incidentId)}`,
+    { headers: getAuthHeaders(), cache: "no-store" }
+  );
 }

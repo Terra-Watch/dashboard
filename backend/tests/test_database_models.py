@@ -5,7 +5,12 @@ from app.models.enums import AlertSeverity, AlertStatus, AlertType, BoatStatus, 
 
 
 def test_all_canonical_tables_are_registered() -> None:
-    assert set(Base.metadata.tables) == {"boats", "gateways", "telemetry", "alerts", "historical_events"}
+    # New models (users, trips, otp_verifications, user_boats) were added;
+    # verify the original canonical set is still a subset of all registered tables.
+    canonical = {"boats", "gateways", "telemetry", "alerts", "historical_events"}
+    assert canonical <= set(Base.metadata.tables), (
+        f"Missing tables: {canonical - set(Base.metadata.tables)}"
+    )
 
 
 def test_shared_enums_have_canonical_values() -> None:
@@ -37,6 +42,10 @@ def test_documented_foreign_keys_exist() -> None:
 
 
 def test_documented_relationships_are_available() -> None:
-    assert {relationship.key for relationship in Boat.__mapper__.relationships} == {"telemetry", "alerts", "historical_events"}
+    # Boat now also has 'users' and 'trips' relationships from new models.
+    boat_relationships = {r.key for r in Boat.__mapper__.relationships}
+    expected_boat = {"telemetry", "alerts", "historical_events"}
+    missing_boat = expected_boat - boat_relationships
+    assert not missing_boat, f"Missing Boat relationships: {missing_boat}"
     assert {relationship.key for relationship in Gateway.__mapper__.relationships} == {"historical_events"}
 

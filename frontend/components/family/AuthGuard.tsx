@@ -53,7 +53,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.role !== "FAMILY") {
     return null; // Will redirect via useEffect
   }
 
