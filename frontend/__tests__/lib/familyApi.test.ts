@@ -164,6 +164,7 @@ describe("familyApi client", () => {
           method: "POST",
           body: JSON.stringify({
             email: "family@jalari.in",
+            identifier: "family@jalari.in",
             password: "Password123!",
           }),
         })

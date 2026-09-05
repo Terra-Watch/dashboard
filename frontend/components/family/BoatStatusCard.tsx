@@ -131,7 +131,7 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
         {/* Live vs Last Known Indicator */}
         <div style={styles.freshnessWrapper}>
           <LastUpdatedBadge
-            timestamp={boat.latestLocation?.timestamp}
+            timestamp={boat.latestLocation?.timestamp || boat.lastSeen}
             isLive={boat.latestLocation?.isLive}
             showExplanation={true}
           />

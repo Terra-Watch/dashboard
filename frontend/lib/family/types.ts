@@ -25,8 +25,8 @@ export interface FamilyBoat {
   id: string;
   boatId: string; // e.g. "AP-07-FISH-12"
   name: string; // e.g. "Matsya Ratna"
-  registrationNumber?: string;
-  homePort?: string; // e.g. "Visakhapatnam Fishing Harbour"
+  registrationNumber: string;
+  homePort: string; // e.g. "Visakhapatnam Fishing Harbour"
   safetyStatus: BoatSafetyStatus;
   tripState: TripState;
   latestLocation: BoatLocation | null;
@@ -35,14 +35,13 @@ export interface FamilyBoat {
   connectionStatus: "CONNECTED" | "NO_RECENT_UPDATE" | "OFFLINE";
   captainName?: string;
   crewCount?: number;
-  assignedFamilyUserIds?: string[];
 }
 
 export interface FamilyUser {
   id: string;
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   role: "FAMILY" | "OPERATOR" | "ADMIN" | "FISHERMAN";
   assignedBoatIds: string[];
 }
@@ -57,14 +56,14 @@ export interface FamilyTrip {
   id: string;
   boatId: string;
   title: string;
-  date?: string;
+  date: string;
   startTime: string;
   endTime?: string | null;
   status: "ACTIVE" | "COMPLETED" | "INTERRUPTED";
   departurePort: string;
   arrivalPort?: string;
-  startLocation?: { latitude: number; longitude: number; name?: string; timestamp?: string };
-  endLocation?: { latitude: number; longitude: number; name?: string; timestamp?: string } | null;
+  startLocation: { latitude: number; longitude: number; name?: string };
+  endLocation?: { latitude: number; longitude: number; name?: string } | null;
   waypoints?: Waypoint[];
   distanceNauticalMiles?: number;
   durationFormatted?: string;
@@ -79,9 +78,9 @@ export interface SOSIncident {
   timestamp: string;
   status: RescueStatus;
   statusLabel: string; // e.g. "Rescue team notified"
-  location: BoatLocation | null;
+  location: BoatLocation;
   details?: string;
-  updatedAt?: string;
+  updatedAt: string;
   rescueContact?: string;
   acknowledgedAt?: string;
   dispatchedAt?: string;

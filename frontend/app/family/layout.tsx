@@ -5,6 +5,7 @@ import { AuthProvider } from "../../lib/family/authContext";
 import { AuthGuard } from "../../components/family/AuthGuard";
 import { FamilyHeader } from "../../components/family/FamilyHeader";
 import { EmergencyBanner } from "../../components/family/EmergencyBanner";
+import { SimulationControls } from "../../components/family/SimulationControls";
 
 export default function FamilyLayout({
   children,
@@ -26,6 +27,10 @@ export default function FamilyLayout({
             {children}
           </main>
 
+          {/* Interactive Simulation & Evaluation Dock — dev/demo only */}
+          {process.env.NEXT_PUBLIC_ENABLE_DEMO_SIMULATOR === "true" && (
+            <SimulationControls />
+          )}
 
           {/* Family Trust & Emergency Contacts Footer */}
           <footer style={styles.footer}>

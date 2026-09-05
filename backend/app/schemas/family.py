@@ -17,7 +17,7 @@ class FamilyBoatResponse(BaseModel):
     name: str
     safetyStatus: str  # SAFE, WARNING, EMERGENCY
     tripState: str  # ON_TRIP, AT_PORT, COMPLETED
-    connectionStatus: str  # CONNECTED, NO_RECENT_UPDATE, OFFLINE
+    connectionStatus: str  # CONNECTED, DISCONNECTED, DEGRADED
     latestLocation: FamilyBoatLocation | None = None
     lastSeen: str | None = None
     activeIncidentId: str | None = None
@@ -45,6 +45,6 @@ class FamilyIncidentResponse(BaseModel):
     timestamp: str
     status: str  # ACTIVE, ACKNOWLEDGED, DISPATCHED, RESCUED, RESOLVED
     statusLabel: str
-    location: FamilyBoatLocation | None = None
+    location: FamilyBoatLocation
     details: str | None = None
     updatedAt: str | None = None

@@ -22,7 +22,7 @@ export function TripCard({ trip, boatName }: TripCardProps) {
       {/* Header Row */}
       <div style={styles.headerRow} onClick={() => setExpanded(!expanded)}>
         <div style={styles.dateBlock}>
-          <span style={styles.dateText}>{trip.date || "Date unavailable"}</span>
+          <span style={styles.dateText}>{trip.date}</span>
           <span style={styles.titleText}>{trip.title}</span>
         </div>
 

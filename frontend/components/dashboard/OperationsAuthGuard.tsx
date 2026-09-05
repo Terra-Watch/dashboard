@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchCurrentUser } from "../../lib/family/familyApi";
+import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 
 interface OperationsAuthGuardProps {
   children: React.ReactNode;
@@ -20,6 +21,14 @@ export function OperationsAuthGuard({ children }: OperationsAuthGuardProps) {
           ? localStorage.getItem("jalari_token")
           : null;
 
+      if (isSupabaseConfigured && supabase) {
+        const { data } = await supabase.auth.getSession();
+        token = data.session?.access_token || null;
+        if (token && typeof window !== "undefined") {
+          localStorage.setItem("jalari_token", token);
+        }
+      }
+
       if (!token) {
         router.replace("/login?redirect=dashboard&reason=unauthenticated");
         setChecking(false);
@@ -28,7 +37,17 @@ export function OperationsAuthGuard({ children }: OperationsAuthGuardProps) {
 
       try {
         let user;
-        user = await fetchCurrentUser();
+        if (isSupabaseConfigured && supabase) {
+          const { data } = await supabase.auth.getUser();
+          if (!data.user) {
+            user = null;
+          } else {
+            const role = String(data.user.user_metadata?.role || "FAMILY").toUpperCase();
+            user = { role };
+          }
+        } else {
+          user = await fetchCurrentUser();
+        }
         if (!user) {
           localStorage.removeItem("jalari_token");
           localStorage.removeItem("jalari_user");

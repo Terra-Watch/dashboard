@@ -6,6 +6,7 @@ import { Card } from "../ui/Card";
 import { StatusBadge } from "../ui/StatusBadge";
 import "leaflet/dist/leaflet.css";
 
+// Default coordinates if geolocation is not granted
 const DEFAULT_GATEWAY: [number, number] = [17.6868, 83.2185];
 const DEFAULT_BOAT: [number, number] = [17.6980, 83.2650];
 
@@ -22,10 +23,12 @@ export function LiveMapWorkspace() {
   const [boatCoords, setBoatCoords] = useState<[number, number]>(DEFAULT_BOAT);
   const [boats, setBoats] = useState<Boat[]>([]);
   const [activeBoat, setActiveBoat] = useState<Boat | null>(null);
-  const [locationName, setLocationName] = useState<string>("Backend vessel location");
+  const [locationName, setLocationName] = useState<string>("Detecting Location...");
 
+  // Update map objects when coordinates change
   function updateMapPositions(gCoords: [number, number], bCoords: [number, number]) {
     if (!mapInstanceRef.current || !LRef.current) return;
+    const L = LRef.current;
     const map = mapInstanceRef.current;
 
     if (gatewayMarkerRef.current) gatewayMarkerRef.current.setLatLng(gCoords);
@@ -33,9 +36,10 @@ export function LiveMapWorkspace() {
     if (coverageCircleRef.current) coverageCircleRef.current.setLatLng(gCoords);
     if (lineRef.current) lineRef.current.setLatLngs([gCoords, bCoords]);
 
-    map.flyTo(bCoords, 12, { duration: 1.5 });
+    map.flyTo(gCoords, 14, { duration: 1.5 });
   }
 
+  // Request HTML5 Geolocation
   function requestCurrentLocation() {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -43,21 +47,24 @@ export function LiveMapWorkspace() {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           const newGateway: [number, number] = [lat, lng];
+          // Position vessel ~1km offset
+          const newBoat: [number, number] = [lat + 0.006, lng + 0.008];
 
           setGatewayCoords(newGateway);
-          setLocationName(`Current gateway location (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)`);
-          if (mapInstanceRef.current) {
-            updateMapPositions(newGateway, boatCoords);
-          }
+          setBoatCoords(newBoat);
+          setLocationName(`Current Location (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)`);
+          updateMapPositions(newGateway, newBoat);
         },
-        () => {
-          setLocationName("Coastline (default)");
+        (error) => {
+          console.warn("Geolocation permission not granted or unavailable, using default coords:", error.message);
+          setLocationName("Coastline (Default)");
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     }
   }
 
+  // Initialize Leaflet Map
   useEffect(() => {
     let map: any = null;
 
@@ -67,6 +74,7 @@ export function LiveMapWorkspace() {
       const L = (await import("leaflet")).default;
       LRef.current = L;
 
+      // Fix default Leaflet icon paths in Next.js
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -75,17 +83,18 @@ export function LiveMapWorkspace() {
       });
 
       map = L.map(mapContainerRef.current, {
-        center: DEFAULT_GATEWAY,
-        zoom: 12,
+        center: gatewayCoords,
+        zoom: 14,
         zoomControl: true,
       });
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: "abcd",
+      // OpenStreetMap basemap
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
+      // Gateway Shore Station Marker
       const gatewayIcon = L.divIcon({
         className: "custom-gateway-marker",
         html: `<div style="background:#0284c7;color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid white;box-shadow:0 0 15px rgba(2,132,199,0.7);">📡</div>`,
@@ -96,11 +105,17 @@ export function LiveMapWorkspace() {
       const gatewayMarker = L.marker(gatewayCoords, { icon: gatewayIcon }).addTo(map);
       gatewayMarker.bindPopup(`
         <div style="font-family:inherit;padding:4px;">
-          <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway</strong><br/>
-          <span style="color:#64748b;font-size:0.85em;">LoRa shoreline connection</span>
+          <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway (GW-01)</strong><br/>
+          <span style="color:#64748b;font-size:0.85em;">LoRa 433 MHz Shore Base Station</span><br/>
+          <div style="margin-top:6px;font-size:0.85em;">
+            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
+            Network: <b>Not connected</b><br/>
+            ID: <b>Not reported</b>
+          </div>
         </div>
       `);
 
+      // LoRa RF Coverage Radius (5 km radius)
       const coverageCircle = L.circle(gatewayCoords, {
         radius: 5000,
         color: "#0284c7",
@@ -110,6 +125,7 @@ export function LiveMapWorkspace() {
         dashArray: "6, 6",
       }).addTo(map);
 
+      // Boat Vessel Marker
       const boatIcon = L.divIcon({
         className: "custom-boat-marker",
         html: `<div style="background:#16a34a;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:3px solid white;box-shadow:0 0 20px rgba(22,163,74,0.8);">⛵</div>`,
@@ -120,10 +136,16 @@ export function LiveMapWorkspace() {
       const boatMarker = L.marker(boatCoords, { icon: boatIcon }).addTo(map);
       boatMarker.bindPopup(`
         <div style="font-family:inherit;padding:4px;">
-          <strong style="color:#64748b;font-size:1.1em;">Waiting for boat position</strong>
+            <strong style="color:#64748b;font-size:1.1em;">No live vessel data</strong><br/>
+            <span style="color:#64748b;font-size:0.85em;">No LoRa node is currently reported</span><br/>
+          <div style="margin-top:6px;font-size:0.85em;">
+            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
+            Modulation: <b>Not reported</b>
+          </div>
         </div>
       `);
 
+      // LoRa RF Link Line
       const linkLine = L.polyline([gatewayCoords, boatCoords], {
         color: "#0284c7",
         weight: 2.5,
@@ -136,6 +158,9 @@ export function LiveMapWorkspace() {
       boatMarkerRef.current = boatMarker;
       coverageCircleRef.current = coverageCircle;
       lineRef.current = linkLine;
+
+      // Automatically request user location on map load
+      requestCurrentLocation();
     }
 
     initMap();
@@ -148,6 +173,7 @@ export function LiveMapWorkspace() {
     };
   }, []);
 
+  // Poll real-time boat telemetry and update marker popup & stats
   useEffect(() => {
     let mounted = true;
 
@@ -155,39 +181,26 @@ export function LiveMapWorkspace() {
       const data = await fetchBoats();
       if (!mounted) return;
       setBoats(data);
-
-      const latestBoat = [...data].sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime())[0] ?? null;
-      setActiveBoat(latestBoat);
-
-      if (latestBoat && latestBoat.location) {
-        const nextCoords: [number, number] = [Number(latestBoat.location.latitude), Number(latestBoat.location.longitude)];
-        setBoatCoords(nextCoords);
-        setLocationName(`${latestBoat.boatId} latest position`);
-        if (mapInstanceRef.current) updateMapPositions(gatewayCoords, nextCoords);
+      if (data.length > 0) {
+        const boat = data[0];
+        setActiveBoat(boat);
 
         if (boatMarkerRef.current) {
           boatMarkerRef.current.setPopupContent(`
             <div style="font-family:inherit;padding:6px;min-width:180px;">
-              <strong style="color:#16a34a;font-size:1.1em;">${latestBoat.boatId}</strong>
-              <span style="margin-left:6px;color:#64748b;font-size:0.85em;">Node #${latestBoat.nodeId}</span><br/>
+              <strong style="color:#16a34a;font-size:1.1em;">${boat.boatId}</strong>
+              <span style="margin-left:6px;color:#64748b;font-size:0.85em;">Node #${boat.nodeId}</span><br/>
               <hr style="border:none;border-top:1px solid #e2e8f0;margin:6px 0;"/>
               <div style="font-size:0.85em;line-height:1.5;">
-                Status: <b style="color:#16a34a;">${latestBoat.status}</b><br/>
-                Heartbeats: <b>${latestBoat.heartbeatCount}</b><br/>
-                Signal RSSI: <b>${latestBoat.rssi ?? "—"} dBm</b><br/>
-                Signal SNR: <b>${latestBoat.snr ?? "—"} dB</b><br/>
-                Last Seen: <b>${new Date(latestBoat.lastSeen).toLocaleTimeString()}</b>
+                Status: <b style="color:#16a34a;">${boat.status}</b><br/>
+                Heartbeats: <b>${boat.heartbeatCount}</b><br/>
+                Signal RSSI: <b>${boat.rssi ?? "—"} dBm</b><br/>
+                Signal SNR: <b>${boat.snr ?? "—"} dB</b><br/>
+                Last Seen: <b>${new Date(boat.lastSeen).toLocaleTimeString()}</b>
               </div>
             </div>
           `);
         }
-      } else if (boatMarkerRef.current) {
-        boatMarkerRef.current.setPopupContent(`
-          <div style="font-family:inherit;padding:4px;">
-            <strong style="color:#64748b;font-size:1.1em;">No live vessel position</strong><br/>
-            <span style="color:#64748b;font-size:0.85em;">The backend has not reported GPS coordinates yet.</span>
-          </div>
-        `);
       }
     }
 
@@ -197,7 +210,7 @@ export function LiveMapWorkspace() {
       mounted = false;
       clearInterval(interval);
     };
-  }, [gatewayCoords]);
+  }, []);
 
   return (
     <Card className="live-map-workspace" style={{ padding: "1.25rem" }}>
@@ -233,6 +246,7 @@ export function LiveMapWorkspace() {
         </div>
       </div>
 
+      {/* Real Interactive Leaflet OpenStreetMap View */}
       <div
         ref={mapContainerRef}
         style={{

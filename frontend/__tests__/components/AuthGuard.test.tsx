@@ -67,8 +67,6 @@ describe("AuthGuard Component", () => {
     jest.spyOn(authContext, "useAuth").mockReturnValue({
       user: {
         id: "op-1",
-        email: "operator@example.test",
-        phone: "",
         name: "Operator John",
         role: "OPERATOR",
         assignedBoatIds: [],
@@ -95,8 +93,6 @@ describe("AuthGuard Component", () => {
     jest.spyOn(authContext, "useAuth").mockReturnValue({
       user: {
         id: "fam-1",
-        email: "family@example.test",
-        phone: "",
         name: "Lakshmi Rao",
         role: "FAMILY",
         assignedBoatIds: ["AP-07-FISH-12"],

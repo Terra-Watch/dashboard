@@ -16,22 +16,14 @@ from app.api.routes import (
     gateways,
     history,
     ingestion,
-    mobile_crew,
     system_status,
     telemetry,
 )
-from app.core.config import get_secret_key
 from app.services.errors import InvalidTransitionError, ResourceConflictError, ResourceNotFoundError
 from app.services.ingestion import UnregisteredNodeError
 
 app = FastAPI(title="JALRI Backend", version="0.1.0")
 logger = logging.getLogger("jalri.backend")
-
-
-@app.on_event("startup")
-def validate_security_configuration() -> None:
-    """Fail fast rather than starting a server that cannot sign JWTs safely."""
-    get_secret_key()
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,7 +43,6 @@ app.include_router(alerts.router)
 app.include_router(history.router)
 app.include_router(system_status.router)
 app.include_router(ingestion.router)
-app.include_router(mobile_crew.router)
 
 
 

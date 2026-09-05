@@ -1,7 +1,7 @@
 import uuid
 from typing import Callable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -15,10 +15,15 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 def get_current_user(
     auth_header: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    token_query: str | None = Query(None, alias="token"),
     db: Session = Depends(get_db),
 ) -> User:
-    """Extract and validate a JALARI JWT from the Bearer header."""
-    token = auth_header.credentials if auth_header and auth_header.credentials else None
+    """Extract and validate JWT token from Bearer header or query parameter."""
+    token = None
+    if auth_header and auth_header.credentials:
+        token = auth_header.credentials
+    elif token_query:
+        token = token_query
 
     if not token:
         raise HTTPException(

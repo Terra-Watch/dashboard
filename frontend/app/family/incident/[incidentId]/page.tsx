@@ -108,18 +108,6 @@ export default function IncidentDetailsPage({ params }: PageProps) {
 
   const isResolved = incident.status === "RESOLVED";
 
-  if (!incident.location) {
-    return (
-      <div style={styles.centerBox}>
-        <h2 style={styles.errorTitle}>Incident location unavailable</h2>
-        <p style={styles.errorDesc}>The emergency feed did not include a verified location.</p>
-        <Link href="/family" style={styles.backButton}>
-          Return to Family Home
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div style={styles.container}>
       {/* Top Bar */}

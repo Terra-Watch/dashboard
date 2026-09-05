@@ -112,10 +112,10 @@ export function useFamilySocket(boatId?: string) {
       }
 
       const wsBase = API_BASE_URL.replace(/^http/, "ws") + "/api/family/ws";
-      const wsUrl = wsBase;
+      const wsUrl = `${wsBase}?token=${encodeURIComponent(token)}`;
 
       try {
-        const ws = new WebSocket(wsUrl, ["bearer", token]);
+        const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
         ws.onopen = () => {

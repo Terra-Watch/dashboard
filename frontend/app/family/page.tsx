@@ -26,7 +26,7 @@ export default function FamilyHomePage() {
         setSelectedBoatId(data[0].boatId);
       }
     } catch (err: any) {
-      setError("Unable to update vessel safety data. Current status is unavailable.");
+      setError("Unable to connect to maritime gateway. Showing last available data.");
     } finally {
       setLoading(false);
     }
@@ -109,16 +109,6 @@ export default function FamilyHomePage() {
         <div style={styles.spinner} />
         <h2 style={styles.loadingTitle}>Connecting to family vessel...</h2>
         <p style={styles.stateSub}>Fetching latest safety updates from shore gateway</p>
-      </div>
-    );
-  }
-
-  if (error && boats.length === 0 && !loading) {
-    return (
-      <div style={styles.stateCenter} role="alert">
-        <h2 style={styles.emptyTitle}>Safety data unavailable</h2>
-        <p style={styles.stateSub}>{error}</p>
-        <button type="button" onClick={loadBoats}>Retry</button>
       </div>
     );
   }

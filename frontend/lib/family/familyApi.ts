@@ -11,7 +11,7 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export function isDemoMode(): boolean {
-  return process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_ENABLE_DEMO_SIMULATOR === "true";
+  return process.env.NEXT_PUBLIC_ENABLE_DEMO_SIMULATOR === "true";
 }
 
 // ---------------------------------------------------------------------------
@@ -162,11 +162,44 @@ export async function loginFamily(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email,
+      identifier,
       password: password || "",
     }),
   });
 
-  const token = resp.access_token;
+  const token = resp.access_token || resp.token;
+  return {
+    access_token: token,
+    token: token,
+    token_type: resp.token_type || "bearer",
+    user: resp.user,
+  };
+}
+
+export async function requestOTP(
+  identifier: string
+): Promise<{ message: string; expires_in_seconds?: number | string }> {
+  return apiFetch<{ message: string; expires_in_seconds?: number | string }>(
+    `${API_BASE_URL}/api/auth/otp/request`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: identifier.trim(), purpose: "LOGIN" }),
+    }
+  );
+}
+
+export async function verifyOTP(
+  identifier: string,
+  code: string
+): Promise<AuthResponse> {
+  const resp = await apiFetch<any>(`${API_BASE_URL}/api/auth/otp/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier: identifier.trim(), code: code.trim() }),
+  });
+
+  const token = resp.access_token || resp.token;
   return {
     access_token: token,
     token: token,
@@ -188,6 +221,14 @@ export async function fetchCurrentUser(): Promise<FamilyUser | null> {
 }
 
 export async function logoutFamily(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+  } catch {
+    // Ignore network error on logout — we always clear local state below.
+  }
   if (typeof window !== "undefined") {
     localStorage.removeItem("jalari_token");
     localStorage.removeItem("jalari_user");

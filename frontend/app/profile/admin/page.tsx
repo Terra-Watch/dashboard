@@ -4,6 +4,7 @@ import { useAuth } from "../../../lib/family/authContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
+import { isSupabaseConfigured } from "../../../lib/supabase";
 
 export default function AdminProfilePage() {
   const { user, isLoading, logout } = useAuth();
@@ -74,7 +75,7 @@ export default function AdminProfilePage() {
             <InfoCard label="Account Name" value={user.name || "System Administrator"} icon="👤" />
             <InfoCard label="Admin Email" value={user.email} icon="✉️" />
             <InfoCard label="Security Role" value="ADMIN (Tier 1 Superuser)" icon="🔐" />
-            <InfoCard label="Auth Method" value="JALARI backend authentication" icon="⚡" />
+            <InfoCard label="Auth Method" value={isSupabaseConfigured ? "Supabase Cloud + FastAPI" : "FastAPI Direct Auth"} icon="⚡" />
           </div>
         </div>
 
@@ -87,9 +88,9 @@ export default function AdminProfilePage() {
               <span style={{ ...styles.healthValue, color: "#22c55e" }}>● ONLINE (Port 8000)</span>
             </div>
             <div style={styles.healthBox}>
-              <span style={styles.healthLabel}>Authentication</span>
-              <span style={{ ...styles.healthValue, color: "#22c55e" }}>
-                ● JALARI BACKEND
+              <span style={styles.healthLabel}>Supabase Integration</span>
+              <span style={{ ...styles.healthValue, color: isSupabaseConfigured ? "#22c55e" : "#eab308" }}>
+                {isSupabaseConfigured ? "● CONNECTED" : "○ OPTIONAL LOCAL MODE"}
               </span>
             </div>
             <div style={styles.healthBox}>
