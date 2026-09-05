@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import alerts, boat_telemetry, boats, gateways, history, ingestion, system_status, telemetry
+from app.api.routes import alerts, auth, boat_telemetry, boats, gateways, history, ingestion, mobile_crew, system_status, telemetry
 from app.services.errors import InvalidTransitionError, ResourceConflictError, ResourceNotFoundError
 from app.services.ingestion import UnregisteredNodeError
 
@@ -30,6 +30,8 @@ app.include_router(alerts.router)
 app.include_router(history.router)
 app.include_router(system_status.router)
 app.include_router(ingestion.router)
+app.include_router(auth.router)
+app.include_router(mobile_crew.router)
 
 
 @app.exception_handler(ResourceNotFoundError)
