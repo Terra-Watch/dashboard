@@ -88,6 +88,10 @@ def require_fisherman_user(current_user: User = Depends(require_role(UserRole.FI
     return current_user
 
 
+def require_operations_user(current_user: User = Depends(require_role(UserRole.OPERATOR, UserRole.ADMIN))) -> User:
+    return current_user
+
+
 def verify_boat_authorization(user: User, boat_identifier: str, db: Session) -> Boat:
     """Verify that the user is authorized to access the requested boat."""
     # Find boat by boatId (e.g. AP-07-FISH-12) or UUID

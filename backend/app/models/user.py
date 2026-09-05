@@ -1,17 +1,12 @@
 import uuid
 from datetime import datetime, timezone
-from enum import Enum
 
 from sqlalchemy import Boolean, Column, DateTime, Enum as SQLEnum, ForeignKey, Index, String, Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-
-
-class UserRole(str, Enum):
-    FAMILY = "FAMILY"
-    FISHERMAN = "FISHERMAN"
+from app.models.enums import UserRole
 
 
 # Association table linking Users to Boats (Many-to-Many)
