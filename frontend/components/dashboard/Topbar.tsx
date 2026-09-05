@@ -120,6 +120,18 @@ export function Topbar({ sidebarOpen, onMenuClick }: TopbarProps) {
             </svg>
             <span>Docs</span>
           </Link>
+          <Link
+            href="/profile"
+            className="docs-header-btn-dashboard"
+            style={{ padding: "5px 10px", fontSize: "0.75rem", background: "#0284c7", color: "#fff", textDecoration: "none", borderRadius: "6px", display: "inline-flex", alignItems: "center" }}
+            title="View User Profile"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{ marginRight: "4px", verticalAlign: "middle" }}>
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Profile</span>
+          </Link>
         </div>
       </div>
     </header>

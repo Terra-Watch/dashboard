@@ -42,7 +42,7 @@ export function LastUpdatedBadge({
         timeText = `${diffSec} second${diffSec === 1 ? "" : "s"} ago`;
       } else if (diffSec < 3600) {
         const mins = Math.floor(diffSec / 60);
-        timeText = `${mins} minute${mins === 1 ? "" : "s"} ago`;
+        timeText = `${mins} min${mins === 1 ? "" : "s"} ago`;
       } else {
         const hrs = Math.floor(diffSec / 3600);
         timeText = `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
@@ -51,14 +51,18 @@ export function LastUpdatedBadge({
       setRelativeTime(timeText);
 
       // Freshness thresholds
-      // Within 5 minutes (< 300s): RECENT/LIVE
-      // Older than 5 minutes: LAST_KNOWN
+      // Within 2 minutes and live: LIVE (🟢)
+      // Within 10 minutes: RECENT (🟡)
+      // Within 60 minutes: STALE / LAST_KNOWN (🟠)
+      // Older than 60 minutes: OFFLINE (⚫)
       if (diffSec <= 120 && isLive) {
         setFreshness("LIVE");
-      } else if (diffSec <= 300) {
+      } else if (diffSec <= 600) {
         setFreshness("RECENT");
+      } else if (diffSec <= 3600) {
+        setFreshness("STALE");
       } else {
-        setFreshness("LAST_KNOWN");
+        setFreshness("OFFLINE");
       }
     }
 
@@ -72,42 +76,69 @@ export function LastUpdatedBadge({
       <div style={styles.unavailableContainer}>
         <div style={styles.badgeRow}>
           <span style={styles.dotGrey} />
-          <span style={styles.badgeTextMuted}>LOCATION UNAVAILABLE</span>
+          <span style={styles.badgeTextMuted}>⚪ LOCATION UNAVAILABLE</span>
         </div>
         {showExplanation && (
           <p style={styles.explanationText}>
-            No GPS location has been reported yet.
+            No GPS fix has been received from the vessel yet.
           </p>
         )}
       </div>
     );
   }
 
-  if (freshness === "LIVE" || freshness === "RECENT") {
+  if (freshness === "LIVE") {
     return (
       <div style={styles.recentContainer}>
         <div style={styles.badgeRow}>
           <span style={styles.dotGreenPulse} />
-          <span style={styles.badgeTextGreen}>
-            {freshness === "LIVE" ? "🟢 LIVE SIGNAL" : "🟢 RECENT UPDATE"}
-          </span>
+          <span style={styles.badgeTextGreen}>🟢 LIVE SIGNAL</span>
           <span style={styles.timeTag}>({relativeTime})</span>
         </div>
       </div>
     );
   }
 
-  // LAST_KNOWN
+  if (freshness === "RECENT") {
+    return (
+      <div style={styles.recentContainer}>
+        <div style={styles.badgeRow}>
+          <span style={styles.dotYellow} />
+          <span style={styles.badgeTextYellow}>🟡 RECENT UPDATE</span>
+          <span style={styles.timeTag}>({relativeTime})</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (freshness === "STALE" || freshness === "LAST_KNOWN") {
+    return (
+      <div style={styles.lastKnownContainer}>
+        <div style={styles.badgeRow}>
+          <span style={styles.dotAmber} />
+          <span style={styles.badgeTextAmber}>🟠 STALE LOCATION</span>
+          <span style={styles.timeTagAmber}>(Last verified {relativeTime})</span>
+        </div>
+        {showExplanation && (
+          <p style={styles.explanationAmber}>
+            Vessel has not sent an update in over 10 minutes. Showing last confirmed position.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // OFFLINE
   return (
-    <div style={styles.lastKnownContainer}>
+    <div style={styles.offlineContainer}>
       <div style={styles.badgeRow}>
-        <span style={styles.dotAmber} />
-        <span style={styles.badgeTextAmber}>⚠️ LAST KNOWN LOCATION</span>
-        <span style={styles.timeTagAmber}>(Updated {relativeTime})</span>
+        <span style={styles.dotBlack} />
+        <span style={styles.badgeTextBlack}>⚫ OFFLINE / NO SIGNAL</span>
+        <span style={styles.timeTagBlack}>(Last seen {relativeTime})</span>
       </div>
       {showExplanation && (
-        <p style={styles.explanationAmber}>
-          The vessel has not sent a recent location update. Displaying the most recent coordinates safely recorded.
+        <p style={styles.explanationBlack}>
+          Vessel has been out of gateway range or powered off for over an hour.
         </p>
       )}
     </div>
@@ -129,11 +160,21 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: "8px",
     padding: "8px 12px",
   },
+  offlineContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+    background: "#f1f5f9",
+    border: "1px solid #cbd5e1",
+    borderRadius: "8px",
+    padding: "8px 12px",
+  },
   unavailableContainer: {
     display: "flex",
     flexDirection: "column",
     gap: "2px",
-    background: "#f1f5f9",
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
     borderRadius: "6px",
     padding: "6px 10px",
   },
@@ -150,11 +191,23 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: "#16a34a",
     boxShadow: "0 0 0 3px rgba(34, 197, 94, 0.25)",
   },
+  dotYellow: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#ca8a04",
+  },
   dotAmber: {
     width: "8px",
     height: "8px",
     borderRadius: "50%",
-    backgroundColor: "#d97706",
+    backgroundColor: "#ea580c",
+  },
+  dotBlack: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#334155",
   },
   dotGrey: {
     width: "8px",
@@ -168,10 +221,22 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#15803d",
     letterSpacing: "0.04em",
   },
+  badgeTextYellow: {
+    fontSize: "0.78rem",
+    fontWeight: "700",
+    color: "#a16207",
+    letterSpacing: "0.04em",
+  },
   badgeTextAmber: {
     fontSize: "0.78rem",
     fontWeight: "700",
-    color: "#b45309",
+    color: "#c2410c",
+    letterSpacing: "0.04em",
+  },
+  badgeTextBlack: {
+    fontSize: "0.78rem",
+    fontWeight: "700",
+    color: "#1e293b",
     letterSpacing: "0.04em",
   },
   badgeTextMuted: {
@@ -185,11 +250,21 @@ const styles: Record<string, React.CSSProperties> = {
   },
   timeTagAmber: {
     fontSize: "0.78rem",
-    color: "#92400e",
+    color: "#9a3412",
+  },
+  timeTagBlack: {
+    fontSize: "0.78rem",
+    color: "#475569",
   },
   explanationAmber: {
     fontSize: "0.74rem",
-    color: "#78350f",
+    color: "#7c2d12",
+    margin: "0",
+    lineHeight: "1.35",
+  },
+  explanationBlack: {
+    fontSize: "0.74rem",
+    color: "#475569",
     margin: "0",
     lineHeight: "1.35",
   },

@@ -114,7 +114,7 @@ export default function BoatLocationPage({ params }: PageProps) {
       {/* Top Navigation */}
       <div style={styles.navRow}>
         <Link href="/family" style={styles.backLink}>
-          ← My Boat ({boat.name})
+          ← Back to Family Dashboard
         </Link>
         <button
           onClick={() => loadBoatData(true)}
@@ -193,16 +193,16 @@ export default function BoatLocationPage({ params }: PageProps) {
             <div style={styles.coordBox}>
               <span style={styles.infoLabel}>Vessel Speed & Heading</span>
               <span style={styles.infoValue}>
-                {location?.speedKnots !== undefined
+                {location?.speedKnots != null
                   ? `${location.speedKnots} knots`
                   : "Calm / Drifting"}{" "}
-                {location?.headingDeg !== undefined ? `(${location.headingDeg}°)` : ""}
+                {location?.headingDeg != null ? `(${location.headingDeg}°)` : ""}
               </span>
             </div>
 
             <div style={styles.coordBox}>
               <span style={styles.infoLabel}>Home Harbour</span>
-              <span style={styles.infoValue}>{boat.homePort}</span>
+              <span style={styles.infoValue}>{boat.homePort || "Visakhapatnam Fishing Harbour"}</span>
             </div>
           </div>
 

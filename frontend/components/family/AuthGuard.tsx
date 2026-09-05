@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,6 +21,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
       }
     }
   }, [user, isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (!isLoading && !!user && user.role === "FAMILY") {
+      refreshProfile();
+    }
+  }, [isLoading, user, refreshProfile]);
 
   if (isLoading) {
     return (

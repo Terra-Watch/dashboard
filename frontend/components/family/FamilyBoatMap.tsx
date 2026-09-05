@@ -75,12 +75,11 @@ export function FamilyBoatMap({
       });
       mapInstanceRef.current = map;
 
-      // High-trust clean nautical style (CartoDB Voyager)
+      // OpenStreetMap basemap with clean global coastal coverage
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          subdomains: "abcd",
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19,
         }
       ).addTo(map);

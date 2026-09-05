@@ -53,6 +53,7 @@ export default function IncidentDetailsPage({ params }: PageProps) {
     if (
       (lastEvent.type === "sos.acknowledged" ||
         lastEvent.type === "sos.dispatched" ||
+        lastEvent.type === "sos.rescued" ||
         lastEvent.type === "sos.resolved") &&
       lastEvent.incidentId === incidentId
     ) {
@@ -62,6 +63,7 @@ export default function IncidentDetailsPage({ params }: PageProps) {
         let newLabel = prev.statusLabel;
         if (newStatus === "ACKNOWLEDGED") newLabel = "Rescue team notified";
         if (newStatus === "DISPATCHED") newLabel = "Rescue team dispatched";
+        if (newStatus === "RESCUED") newLabel = "Fishermen safely rescued";
         if (newStatus === "RESOLVED") newLabel = "Incident resolved";
 
         return {
@@ -73,6 +75,8 @@ export default function IncidentDetailsPage({ params }: PageProps) {
             newStatus === "ACKNOWLEDGED" ? lastEvent.timestamp : prev.acknowledgedAt,
           dispatchedAt:
             newStatus === "DISPATCHED" ? lastEvent.timestamp : prev.dispatchedAt,
+          rescuedAt:
+            newStatus === "RESCUED" ? lastEvent.timestamp : prev.rescuedAt,
           resolvedAt:
             newStatus === "RESOLVED" ? lastEvent.timestamp : prev.resolvedAt,
         };

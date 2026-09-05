@@ -144,15 +144,17 @@ describe("familyApi client", () => {
       await expect(fetchFamilyBoats()).rejects.toThrow("Token expired");
     });
 
-    it("calls /api/auth/login and returns auth payload", async () => {
-      const mockAuth = {
+    it("calls /api/auth/login and returns auth payload matching backend contract", async () => {
+      const mockBackendResponse = {
+        access_token: "jwt_token_123",
         token: "jwt_token_123",
-        user: { id: "u1", name: "Lakshmi Rao", role: "FAMILY" },
+        token_type: "bearer",
+        user: { id: "u1", name: "Lakshmi Rao", role: "FAMILY", authorizedBoatIds: ["AP-07-FISH-12"], assignedBoatIds: ["AP-07-FISH-12"] },
       };
       // @ts-ignore
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockAuth,
+        json: async () => mockBackendResponse,
       });
 
       const result = await loginFamily("family@jalari.in", "Password123!");
@@ -160,10 +162,16 @@ describe("familyApi client", () => {
         expect.stringContaining("/api/auth/login"),
         expect.objectContaining({
           method: "POST",
-          body: JSON.stringify({ identifier: "family@jalari.in", password: "Password123!" }),
+          body: JSON.stringify({
+            email: "family@jalari.in",
+            identifier: "family@jalari.in",
+            password: "Password123!",
+          }),
         })
       );
-      expect(result).toEqual(mockAuth);
+      expect(result.access_token).toBe("jwt_token_123");
+      expect(result.token).toBe("jwt_token_123");
+      expect(result.user.role).toBe("FAMILY");
     });
 
     it("returns null for fetchCurrentUser when endpoint returns error", async () => {

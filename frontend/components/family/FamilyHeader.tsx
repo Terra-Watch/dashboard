@@ -41,12 +41,14 @@ export function FamilyHeader({ currentBoatId, boatName }: FamilyHeaderProps) {
 
         {/* Right: User Profile & Logout */}
         <div style={styles.rightCluster}>
-          <div style={styles.userInfo}>
-            <span style={styles.userName}>{user?.name || "Family Member"}</span>
-            <span style={styles.userRole}>
-              {user?.phone ? `${user.phone}` : "Family Account"}
-            </span>
-          </div>
+          <Link href="/profile" style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }} title="View Profile">
+            <div style={styles.userInfo}>
+              <span style={styles.userName}>{user?.name || "Family Member"}</span>
+              <span style={styles.userRole}>
+                {user?.phone ? `${user.phone}` : "Family Account"} • <span style={{ textDecoration: "underline" }}>Profile</span>
+              </span>
+            </div>
+          </Link>
 
           <button
             onClick={() => logout()}

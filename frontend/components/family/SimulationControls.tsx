@@ -83,6 +83,15 @@ export function SimulationControls({ boatId = "AP-07-FISH-12" }: SimulationContr
         status: "DISPATCHED",
       });
       setStep(3);
+    } else if (nextStatus === "RESCUED") {
+      familyBus.dispatch({
+        type: "sos.rescued",
+        incidentId: activeIncidentId,
+        boatId,
+        timestamp: new Date().toISOString(),
+        status: "RESCUED",
+      });
+      setStep(4);
     } else if (nextStatus === "RESOLVED") {
       familyBus.dispatch({
         type: "sos.resolved",
@@ -193,11 +202,18 @@ export function SimulationControls({ boatId = "AP-07-FISH-12" }: SimulationContr
                   3. Dispatch
                 </button>
                 <button
+                  onClick={() => handleAdvanceRescue("RESCUED")}
+                  style={styles.stageBtn}
+                  disabled={step < 3}
+                >
+                  4. Rescued
+                </button>
+                <button
                   onClick={() => handleAdvanceRescue("RESOLVED")}
                   style={{ ...styles.stageBtn, color: "#16a34a" }}
                   disabled={step < 1}
                 >
-                  4. Resolve
+                  5. Resolve
                 </button>
               </div>
             </div>
@@ -228,7 +244,7 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
   },
   panel: {
-    width: "290px",
+    width: "320px",
     background: "#1e293b",
     color: "#f8fafc",
     borderRadius: "10px",
@@ -296,7 +312,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   rescueStages: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
+    gridTemplateColumns: "1fr 1fr 1fr 1fr",
     gap: "4px",
   },
   stageBtn: {

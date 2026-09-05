@@ -50,6 +50,7 @@ class FamilyEventBus {
     } else if (
       event.type === "sos.acknowledged" ||
       event.type === "sos.dispatched" ||
+      event.type === "sos.rescued" ||
       event.type === "sos.resolved"
     ) {
       const inc = localStore.getIncident(event.incidentId);
@@ -62,6 +63,9 @@ class FamilyEventBus {
         } else if (event.status === "DISPATCHED") {
           inc.statusLabel = "Rescue team dispatched";
           inc.dispatchedAt = event.timestamp;
+        } else if (event.status === "RESCUED") {
+          inc.statusLabel = "Crew secured / rescued";
+          inc.rescuedAt = event.timestamp;
         } else if (event.status === "RESOLVED") {
           inc.statusLabel = "Incident resolved";
           inc.resolvedAt = event.timestamp;
@@ -84,45 +88,77 @@ class FamilyEventBus {
 export const familyBus = new FamilyEventBus();
 
 export function useFamilySocket(boatId?: string) {
-  const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [lastEvent, setLastEvent] = useState<FamilyWebSocketEvent | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const backoffRef = useRef<number>(1000);
 
-  // Connect to real backend WebSocket if available
+  // Connect to real backend WebSocket with token and exponential backoff
   useEffect(() => {
-    const wsUrl = API_BASE_URL.replace(/^http/, "ws") + "/api/family/ws";
-    let ws: WebSocket | null = null;
+    let isCancelled = false;
 
-    try {
-      ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+    function connect() {
+      if (isCancelled) return;
 
-      ws.onopen = () => {
-        setIsConnected(true);
-      };
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("jalari_token")
+          : null;
 
-      ws.onmessage = (evt) => {
-        try {
-          const parsed: FamilyWebSocketEvent = JSON.parse(evt.data);
-          if (!boatId || !("boatId" in parsed) || parsed.boatId.toLowerCase() === boatId.toLowerCase()) {
-            setLastEvent(parsed);
-            familyBus.dispatch(parsed);
+      if (!token) {
+        setIsConnected(false);
+        return;
+      }
+
+      const wsBase = API_BASE_URL.replace(/^http/, "ws") + "/api/family/ws";
+      const wsUrl = `${wsBase}?token=${encodeURIComponent(token)}`;
+
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (isCancelled) {
+            ws.close();
+            return;
           }
-        } catch {
-          // Non-JSON or unrecognized payload
-        }
-      };
+          setIsConnected(true);
+          backoffRef.current = 1000; // Reset backoff on successful connect
+        };
 
-      ws.onerror = () => {
-        setIsConnected(false);
-      };
+        ws.onmessage = (evt) => {
+          try {
+            const parsed: FamilyWebSocketEvent = JSON.parse(evt.data);
+            if (!boatId || !("boatId" in parsed) || parsed.boatId.toLowerCase() === boatId.toLowerCase()) {
+              setLastEvent(parsed);
+              familyBus.dispatch(parsed);
+            }
+          } catch {
+            // Non-JSON or ping/pong payload
+          }
+        };
 
-      ws.onclose = () => {
+        ws.onerror = () => {
+          setIsConnected(false);
+        };
+
+        ws.onclose = (evt) => {
+          setIsConnected(false);
+          wsRef.current = null;
+          // Only reconnect if not intentionally closed and not cancelled
+          if (!isCancelled && evt.code !== 1000 && evt.code !== 4001 && evt.code !== 4003) {
+            const nextDelay = Math.min(backoffRef.current * 1.5, 15000);
+            backoffRef.current = nextDelay;
+            reconnectTimeoutRef.current = setTimeout(connect, nextDelay);
+          }
+        };
+      } catch {
         setIsConnected(false);
-      };
-    } catch {
-      setIsConnected(false);
+      }
     }
+
+    connect();
 
     // Subscribe to internal bus for synchronized simulated & peer events
     const unsubscribe = familyBus.subscribe((event) => {
@@ -132,9 +168,13 @@ export function useFamilySocket(boatId?: string) {
     });
 
     return () => {
+      isCancelled = true;
       unsubscribe();
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close(1000, "Unmounting");
       }
     };
   }, [boatId]);

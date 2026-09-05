@@ -1,2 +1,3 @@
 // Stub for CSS imports (Leaflet, etc.)
-export default {};
+const styleMock = {};
+export default styleMock;

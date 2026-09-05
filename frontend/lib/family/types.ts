@@ -2,7 +2,7 @@ export type BoatSafetyStatus = "SAFE" | "WARNING" | "EMERGENCY";
 
 export type TripState = "AT_PORT" | "ON_TRIP" | "COMPLETED";
 
-export type LocationFreshness = "LIVE" | "RECENT" | "LAST_KNOWN" | "UNAVAILABLE";
+export type LocationFreshness = "LIVE" | "RECENT" | "STALE" | "OFFLINE" | "LAST_KNOWN" | "UNAVAILABLE";
 
 export type RescueStatus = 
   | "ACTIVE" 
@@ -42,7 +42,7 @@ export interface FamilyUser {
   name: string;
   email: string;
   phone: string;
-  role: "FAMILY" | "OPERATOR" | "ADMIN";
+  role: "FAMILY" | "OPERATOR" | "ADMIN" | "FISHERMAN";
   assignedBoatIds: string[];
 }
 
@@ -89,7 +89,9 @@ export interface SOSIncident {
 }
 
 export interface AuthResponse {
+  access_token: string;
   token: string;
+  token_type?: string;
   user: FamilyUser;
 }
 
@@ -140,6 +142,13 @@ export type FamilyWebSocketEvent =
       boatId: string;
       timestamp: string;
       status: "DISPATCHED";
+    }
+  | {
+      type: "sos.rescued";
+      incidentId: string;
+      boatId: string;
+      timestamp: string;
+      status: "RESCUED";
     }
   | {
       type: "sos.resolved";

@@ -126,10 +126,20 @@ async function apiFetch<T>(
 ): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail = res.statusText || "Request failed";
     try {
       const body = await res.json();
-      detail = body?.detail || body?.message || detail;
+      if (typeof body?.detail === "string") {
+        detail = body.detail;
+      } else if (Array.isArray(body?.detail)) {
+        detail = body.detail
+          .map((d: any) => (typeof d === "string" ? d : d.msg || d.message || "Invalid input"))
+          .join("; ");
+      } else if (typeof body?.message === "string") {
+        detail = body.message;
+      } else if (body?.detail) {
+        detail = JSON.stringify(body.detail);
+      }
     } catch {
       // ignore parse error
     }
@@ -146,11 +156,56 @@ export async function loginFamily(
   identifier: string,
   password?: string
 ): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>(`${API_BASE_URL}/api/auth/login`, {
+  const email = identifier.trim();
+  const resp = await apiFetch<any>(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifier, password: password || "" }),
+    body: JSON.stringify({
+      email,
+      identifier,
+      password: password || "",
+    }),
   });
+
+  const token = resp.access_token || resp.token;
+  return {
+    access_token: token,
+    token: token,
+    token_type: resp.token_type || "bearer",
+    user: resp.user,
+  };
+}
+
+export async function requestOTP(
+  identifier: string
+): Promise<{ message: string; expires_in_seconds?: number | string }> {
+  return apiFetch<{ message: string; expires_in_seconds?: number | string }>(
+    `${API_BASE_URL}/api/auth/otp/request`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: identifier.trim(), purpose: "LOGIN" }),
+    }
+  );
+}
+
+export async function verifyOTP(
+  identifier: string,
+  code: string
+): Promise<AuthResponse> {
+  const resp = await apiFetch<any>(`${API_BASE_URL}/api/auth/otp/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier: identifier.trim(), code: code.trim() }),
+  });
+
+  const token = resp.access_token || resp.token;
+  return {
+    access_token: token,
+    token: token,
+    token_type: resp.token_type || "bearer",
+    user: resp.user,
+  };
 }
 
 export async function fetchCurrentUser(): Promise<FamilyUser | null> {
