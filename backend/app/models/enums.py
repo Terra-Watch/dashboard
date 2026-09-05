@@ -46,3 +46,24 @@ class HistoricalEventType(str, Enum):
     BOAT_REGISTERED = "BOAT_REGISTERED"
     GATEWAY_CONNECTED = "GATEWAY_CONNECTED"
     GATEWAY_DISCONNECTED = "GATEWAY_DISCONNECTED"
+
+
+class UserRole(str, Enum):
+    FAMILY = "FAMILY"
+    FISHERMAN = "FISHERMAN"
+    OPERATOR = "OPERATOR"
+    ADMIN = "ADMIN"
+    CREW = "crew"
+    RESCUER = "rescuer"
+
+
+class IncidentType(str, Enum):
+    SOS = "SOS"
+    MOB = "MOB"
+    FALL = "FALL"
+
+
+class IncidentStatus(str, Enum):
+    OPEN = "open"
+    ACKNOWLEDGED = "acknowledged"
+    RESOLVED = "resolved"
