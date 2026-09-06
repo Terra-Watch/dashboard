@@ -17,6 +17,11 @@ function formatAge(timestamp: string | null | undefined): string {
   return `${Math.floor(seconds / 3600)}h ago`;
 }
 
+function numericCoordinate(value: unknown): number | null {
+  const coordinate = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(coordinate) ? coordinate : null;
+}
+
 export function LiveMapWorkspace() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -80,8 +85,10 @@ export function LiveMapWorkspace() {
       const boat = boatsData[0] ?? null;
       setActiveBoat(boat);
       setGateway(gatewaysData[0] ?? null);
-      if (boat?.location?.latitude != null && boat.location.longitude != null) {
-        const coords: [number, number] = [boat.location.latitude, boat.location.longitude];
+      const latitude = numericCoordinate(boat?.location?.latitude);
+      const longitude = numericCoordinate(boat?.location?.longitude);
+      if (latitude !== null && longitude !== null) {
+        const coords: [number, number] = [latitude, longitude];
         setBoatCoords(coords);
         updateBoatPosition(coords);
       } else {
