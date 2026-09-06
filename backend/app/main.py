@@ -16,9 +16,12 @@ from app.api.routes import (
     gateways,
     history,
     ingestion,
+    mobile_crew,
+    users,
     system_status,
     telemetry,
 )
+from app.api.routes import assignments
 from app.services.errors import InvalidTransitionError, ResourceConflictError, ResourceNotFoundError
 from app.services.ingestion import UnregisteredNodeError
 
@@ -36,6 +39,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(family.router)
 app.include_router(boats.router)
+app.include_router(assignments.router)
 app.include_router(gateways.router)
 app.include_router(telemetry.router)
 app.include_router(boat_telemetry.router)
@@ -43,6 +47,8 @@ app.include_router(alerts.router)
 app.include_router(history.router)
 app.include_router(system_status.router)
 app.include_router(ingestion.router)
+app.include_router(mobile_crew.router)
+app.include_router(users.router)
 
 
 

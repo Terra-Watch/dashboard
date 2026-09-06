@@ -22,12 +22,12 @@ export default function ProfileIndexPage() {
       return;
     }
 
-    if (rolePath === "fisherman") {
+    if (rolePath === "fisherman" || rolePath === "crew") {
       router.replace("/profile/fisherman");
       return;
     }
 
-    if (rolePath === "operator") {
+    if (rolePath === "operator" || rolePath === "rescuer") {
       router.replace("/profile/operator");
       return;
     }

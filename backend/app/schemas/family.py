@@ -45,6 +45,6 @@ class FamilyIncidentResponse(BaseModel):
     timestamp: str
     status: str  # ACTIVE, ACKNOWLEDGED, DISPATCHED, RESCUED, RESOLVED
     statusLabel: str
-    location: FamilyBoatLocation
+    location: FamilyBoatLocation | None = None
     details: str | None = None
     updatedAt: str | None = None

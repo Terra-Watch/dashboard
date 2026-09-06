@@ -42,7 +42,7 @@ export interface FamilyUser {
   name: string;
   email: string;
   phone: string;
-  role: "FAMILY" | "OPERATOR" | "ADMIN" | "FISHERMAN";
+  role: "FAMILY" | "OPERATOR" | "ADMIN" | "FISHERMAN" | "CREW" | "RESCUER";
   assignedBoatIds: string[];
 }
 

@@ -55,8 +55,10 @@ export function OperationsAuthGuard({ children }: OperationsAuthGuardProps) {
           return;
         }
 
-        // Only operators, fishermen, and administrators may view Operations
-        if (user.role === "FAMILY") {
+        // This website owns the shore-side operations console. Fisherman/crew
+        // and rescuer clients are separate applications and must not fall
+        // through into this dashboard merely because they are authenticated.
+        if (user.role !== "OPERATOR" && user.role !== "ADMIN") {
           router.replace("/login?redirect=dashboard&reason=unauthorized_role");
           return;
         }

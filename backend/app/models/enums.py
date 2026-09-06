@@ -6,6 +6,13 @@ class BoatStatus(str, Enum):
     OFFLINE = "OFFLINE"
 
 
+class BoatLifecycleStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    INACTIVE = "INACTIVE"
+    ARCHIVED = "ARCHIVED"
+
+
 class AlertType(str, Enum):
     SOS = "SOS"
     SYSTEM = "SYSTEM"
@@ -53,8 +60,8 @@ class UserRole(str, Enum):
     FISHERMAN = "FISHERMAN"
     OPERATOR = "OPERATOR"
     ADMIN = "ADMIN"
-    CREW = "crew"
-    RESCUER = "rescuer"
+    CREW = "CREW"
+    RESCUER = "RESCUER"
 
 
 class IncidentType(str, Enum):

@@ -4,14 +4,11 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AuthProvider, useAuth } from "../../lib/family/authContext";
-import {
-  isSupabaseConfigured,
-} from "../../lib/supabase";
 import { FamilyUser } from "../../lib/family/types";
 import { JalariLogo } from "../../components/ui/JalariLogo";
 
 type AuthTab = "DIRECT" | "SUPABASE" | "OTP";
-type RolePreset = "FAMILY" | "FISHERMAN" | "OPERATOR" | "ADMIN";
+type RolePreset = "FAMILY" | "FISHERMAN" | "OPERATOR" | "ADMIN" | "CREW" | "RESCUER";
 
 function LoginFormInner() {
   const router = useRouter();
@@ -44,7 +41,9 @@ function LoginFormInner() {
   const [signUpName, setSignUpName] = useState("");
   const [signUpPhone, setSignUpPhone] = useState("");
   const [signUpRole, setSignUpRole] = useState<FamilyUser["role"]>("FAMILY");
-  const [hasSupabaseConfig] = useState(isSupabaseConfigured);
+  // Public signup is intentionally disabled. Accounts are provisioned by an
+  // authorized Admin/Operator through the server-side user API.
+  const hasSupabaseConfig = false;
   const isDevelopment = process.env.NODE_ENV === "development";
 
   // Feedback Messages
@@ -61,8 +60,8 @@ function LoginFormInner() {
         return;
       }
       if (user.role === "FAMILY") router.push("/family");
-      else if (user.role === "OPERATOR" || user.role === "ADMIN") router.push("/dashboard");
-      else if (user.role === "FISHERMAN") router.push("/profile/fisherman");
+      else if (user.role === "OPERATOR" || user.role === "ADMIN" || user.role === "RESCUER") router.push("/dashboard");
+      else if (user.role === "FISHERMAN" || user.role === "CREW") router.push("/profile/fisherman");
       else router.push("/profile");
     }
   }, [isAuthenticated, user, redirectUrl, router]);
@@ -364,7 +363,7 @@ function LoginFormInner() {
                     type="tel"
                     value={signUpPhone}
                     onChange={(e) => setSignUpPhone(e.target.value)}
-                    placeholder="+91 98480 22334"
+                    placeholder="Enter phone number"
                     style={styles.input}
                   />
                 </div>

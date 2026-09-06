@@ -40,6 +40,7 @@ class BoatService:
             firmware=payload.firmware,
             registeredAt=payload.registeredAt,
             dataSource=payload.dataSource,
+            lifecycleStatus=payload.lifecycleStatus,
         )
         try:
             return self.repository.add(db, boat)
@@ -57,4 +58,3 @@ class BoatService:
             boat.latitude = location.latitude if location else None
             boat.longitude = location.longitude if location else None
         return boat
-

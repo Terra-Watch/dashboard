@@ -171,8 +171,7 @@ export default function IncidentDetailsPage({ params }: PageProps) {
             <div style={styles.infoRow}>
               <span style={styles.fieldLabel}>Last Known Coordinates:</span>
               <span style={styles.coordValue}>
-                {incident.location.latitude.toFixed(4)}° N,{" "}
-                {incident.location.longitude.toFixed(4)}° E
+                {incident.location ? `${incident.location.latitude.toFixed(4)}° N, ${incident.location.longitude.toFixed(4)}° E` : "Location not reported"}
               </span>
             </div>
 
@@ -214,13 +213,13 @@ export default function IncidentDetailsPage({ params }: PageProps) {
               <span style={styles.emergencyTag}>Beacon Fix</span>
             </div>
 
-            <FamilyBoatMap
+            {incident.location && <FamilyBoatMap
               boatId={incident.boatId}
               boatName={incident.boatName}
               location={incident.location}
               status="EMERGENCY"
               height="480px"
-            />
+            />}
 
             <div style={styles.mapFootnote}>
               <span>

@@ -92,6 +92,26 @@ export interface Gateway {
   registeredAt: string;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string | null;
+  role: "FAMILY" | "FISHERMAN" | "OPERATOR" | "ADMIN" | "CREW" | "RESCUER";
+  is_active: boolean;
+  authorizedBoatIds: string[];
+}
+
+async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers: { "Content-Type": "application/json", ...authHeaders(), ...(options?.headers || {}) } });
+  if (!response.ok) throw new Error((await response.json().catch(() => null))?.detail || "Request failed");
+  return response.status === 204 ? (undefined as T) : response.json();
+}
+
+export function fetchUsers(): Promise<AdminUser[]> { return apiRequest<AdminUser[]>("/api/users", { cache: "no-store" }); }
+export function createUser(payload: { email: string; name: string; phone?: string; password: string; role: AdminUser["role"]; assignedBoatIds: string[] }): Promise<AdminUser> { return apiRequest<AdminUser>("/api/users", { method: "POST", body: JSON.stringify(payload) }); }
+export function updateUser(id: string, payload: Partial<Pick<AdminUser, "name" | "email" | "phone" | "role" | "is_active" | "authorizedBoatIds">>): Promise<AdminUser> { return apiRequest<AdminUser>(`/api/users/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ ...payload, assignedBoatIds: payload.authorizedBoatIds }) }); }
+
 export async function fetchGateways(): Promise<Gateway[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/gateways`, { cache: "no-store", headers: authHeaders() });

@@ -43,7 +43,7 @@ export function mapSupabaseUser(supabaseUser: {
 }): FamilyUser {
   const metadata = supabaseUser.user_metadata || {};
   const rawRole = String(metadata.role || "FAMILY").toUpperCase();
-  const validRole = (["FAMILY", "OPERATOR", "ADMIN", "FISHERMAN"].includes(rawRole)
+  const validRole = (["FAMILY", "OPERATOR", "ADMIN", "FISHERMAN", "CREW", "RESCUER"].includes(rawRole)
     ? rawRole
     : "FAMILY") as FamilyUser["role"];
 
@@ -334,8 +334,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isUserAuthenticated = !!user;
   const isFamily = !!user && user.role === "FAMILY";
-  const isOperator = !!user && (user.role === "OPERATOR" || user.role === "ADMIN");
-  const isFisherman = !!user && user.role === "FISHERMAN";
+  const isOperator = !!user && (user.role === "OPERATOR" || user.role === "ADMIN" || user.role === "RESCUER");
+  const isFisherman = !!user && (user.role === "FISHERMAN" || user.role === "CREW");
   const isAdmin = !!user && user.role === "ADMIN";
 
   return (

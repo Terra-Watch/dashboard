@@ -23,6 +23,7 @@ class BoatCreate(ApiModel):
     firmware: str | None = None
     registeredAt: datetime
     dataSource: DataSource
+    lifecycleStatus: str = "ACTIVE"
 
 
 class BoatUpdate(ApiModel):
@@ -37,8 +38,8 @@ class BoatUpdate(ApiModel):
     lastSeen: datetime | None = None
     firmware: str | None = None
     dataSource: DataSource | None = None
+    lifecycleStatus: str | None = None
 
 
 class BoatResponse(BoatCreate):
     id: UUID
-

@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
-from app.api.dependencies.auth import require_operations_user
+from app.api.dependencies.auth import require_admin_user, require_operations_user
+from app.models.user import User
+from app.services.audit import record_audit
 from app.schemas.boat import BoatCreate, BoatResponse, BoatUpdate
 from app.services.boats import BoatService
 from app.services.serialization import boat_response
@@ -35,3 +37,26 @@ def update_boat(boatId: str, payload: BoatUpdate, _: object = Depends(require_op
     db.commit()
     return boat_response(boat)
 
+
+def _set_lifecycle(boatId: str, lifecycle: str, actor: User, db: Session) -> BoatResponse:
+    boat = service.get(db, boatId)
+    boat.lifecycleStatus = lifecycle
+    record_audit(db, actor.id, f"BOAT_{lifecycle}", "BOAT", str(boat.id), {"boatId": boat.boatId})
+    db.commit()
+    db.refresh(boat)
+    return boat_response(boat)
+
+
+@router.post("/{boatId}/suspend", response_model=BoatResponse)
+def suspend_boat(boatId: str, actor: User = Depends(require_operations_user), db: Session = Depends(get_db)) -> BoatResponse:
+    return _set_lifecycle(boatId, "SUSPENDED", actor, db)
+
+
+@router.post("/{boatId}/restore", response_model=BoatResponse)
+def restore_boat(boatId: str, actor: User = Depends(require_operations_user), db: Session = Depends(get_db)) -> BoatResponse:
+    return _set_lifecycle(boatId, "ACTIVE", actor, db)
+
+
+@router.post("/{boatId}/archive", response_model=BoatResponse)
+def archive_boat(boatId: str, actor: User = Depends(require_admin_user), db: Session = Depends(get_db)) -> BoatResponse:
+    return _set_lifecycle(boatId, "ARCHIVED", actor, db)

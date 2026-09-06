@@ -16,6 +16,9 @@ user_boats = Table(
     Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("boat_id", UUID(as_uuid=True), ForeignKey("boats.id", ondelete="CASCADE"), primary_key=True),
     Column("relationship_type", String, nullable=False, default="FAMILY_CONTACT"),
+    Column("assignment_status", String, nullable=False, default="ACTIVE"),
+    Column("started_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)),
+    Column("ended_at", DateTime(timezone=True), nullable=True),
     Column("created_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)),
 )
 
@@ -34,6 +37,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role"), nullable=False, default=UserRole.FAMILY)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    account_status: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE", server_default="ACTIVE")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     boats = relationship("Boat", secondary=user_boats, backref="users", lazy="joined")

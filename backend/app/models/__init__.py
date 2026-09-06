@@ -7,6 +7,7 @@ from app.models.otp import OTPVerification
 from app.models.telemetry import Telemetry
 from app.models.trip import Trip, TripStatus
 from app.models.user import User, UserRole, user_boats
+from app.models.security import AuditLog, PasswordResetToken
 
 __all__ = [
     "Alert",
@@ -21,4 +22,6 @@ __all__ = [
     "User",
     "UserRole",
     "user_boats",
+    "AuditLog",
+    "PasswordResetToken",
 ]

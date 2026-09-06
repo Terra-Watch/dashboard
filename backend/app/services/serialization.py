@@ -30,4 +30,3 @@ def alert_response(alert) -> AlertResponse:
 
 def history_response(event) -> HistoricalEventResponse:
     return HistoricalEventResponse.model_validate(event)
-

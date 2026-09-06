@@ -130,7 +130,17 @@ def seeded_data(db_session: Session):
     )
     fisherman_user.boats.append(boat_1)
 
-    db_session.add_all([family_user, fisherman_user])
+    admin_user = User(
+        id=uuid.uuid4(),
+        email="admin@jalari.in",
+        name="Test Administrator",
+        phone=None,
+        hashed_password=hash_password("AdminPass123!"),
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+
+    db_session.add_all([family_user, fisherman_user, admin_user])
     db_session.flush()
 
     # Trip
@@ -167,6 +177,7 @@ def seeded_data(db_session: Session):
     return {
         "family_user": family_user,
         "fisherman_user": fisherman_user,
+        "admin_user": admin_user,
         "boat_1": boat_1,
         "boat_2": boat_2,
         "trip": trip,

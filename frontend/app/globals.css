@@ -188,6 +188,18 @@ button { cursor: pointer; }
 .profile-vessel-list li a { color: var(--color-navy); font-weight: 600; }
 .profile-actions { display: flex; gap: 12px; margin-top: 22px; }
 .profile-signout { background: transparent; color: var(--color-navy); }
+.profile-security-card { margin-top: 18px; }
+.profile-form { display: grid; gap: 14px; margin-top: 20px; max-width: 520px; }
+.profile-form label { display: grid; gap: 6px; color: var(--color-text); font-size: .8125rem; font-weight: 600; }
+.profile-form input { min-height: 40px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); font: inherit; }
+.profile-form input:focus { border-color: var(--color-navy); outline: 2px solid rgba(41, 67, 77, .12); }
+.profile-form-actions { display: flex; gap: 10px; }
+.profile-edit-button { margin-top: 20px; }
+.profile-error { border-left-color: var(--color-danger); background: #fbf2f1; }
+.admin-create-card, .admin-users-card { margin-top: 22px; }
+.admin-users-card .data-table-wrapper { margin-top: 18px; }
+.data-table small { display: block; margin-top: 3px; color: var(--color-muted); font-size: .75rem; }
+.table-action-button { border: 0; background: transparent; color: var(--color-navy); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
 @media (max-width: 760px) { .family-topbar { flex-wrap: wrap; gap: 12px; padding: 14px 18px; } .family-nav { order: 3; width: 100%; margin-left: 0; justify-content: space-between; } .family-user-label { margin-left: auto; } .family-main, .profile-page { padding: 28px 18px; } .family-vessel-grid, .profile-grid, .family-history-grid { grid-template-columns: 1fr; } .family-detail-list div, .profile-detail-list div { align-items: flex-start; flex-direction: column; gap: 4px; } .family-detail-list dd, .profile-detail-list dd { text-align: left; } }
 
 .overview-page { width: 100%; max-width: 1440px; margin: 0 auto; }

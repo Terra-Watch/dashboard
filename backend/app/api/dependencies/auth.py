@@ -1,14 +1,17 @@
 import uuid
 from typing import Callable
 
-from fastapi import Depends, HTTPException, Query, status
+import secrets
+from fastapi import Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, select
 
 from app.api.dependencies.database import get_db
+from app.core.config import get_environment, get_gateway_ingestion_key
 from app.core.security import decode_access_token
 from app.models.boat import Boat
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, user_boats
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -58,7 +61,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not user.is_active:
+    if not user.is_active or user.account_status != "ACTIVE":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated",
@@ -88,8 +91,39 @@ def require_fisherman_user(current_user: User = Depends(require_role(UserRole.FI
     return current_user
 
 
-def require_operations_user(current_user: User = Depends(require_role(UserRole.OPERATOR, UserRole.ADMIN))) -> User:
+def require_operations_user(current_user: User = Depends(require_role(UserRole.OPERATOR, UserRole.ADMIN, UserRole.RESCUER))) -> User:
     return current_user
+
+
+def require_admin_user(current_user: User = Depends(require_role(UserRole.ADMIN))) -> User:
+    return current_user
+
+
+def require_account_manager(current_user: User = Depends(require_role(UserRole.ADMIN, UserRole.OPERATOR))) -> User:
+    return current_user
+
+
+def can_create_role(creator: User, role: UserRole) -> bool:
+    if creator.role == UserRole.ADMIN:
+        return role in set(UserRole)
+    if creator.role == UserRole.OPERATOR:
+        return role in {UserRole.FAMILY, UserRole.FISHERMAN, UserRole.CREW}
+    return False
+
+
+def require_gateway_ingestion_key(
+    gateway_key: str | None = Header(default=None, alias="X-Gateway-Key"),
+) -> None:
+    """Authenticate device ingestion when a deployment key is configured.
+
+    Development keeps the existing physical-gateway contract. Production must
+    configure JALRI_GATEWAY_INGESTION_KEY rather than exposing a public write.
+    """
+    expected = get_gateway_ingestion_key()
+    if expected is None and get_environment() == "development":
+        return
+    if expected is None or not gateway_key or not secrets.compare_digest(gateway_key, expected):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Gateway authentication required")
 
 
 def verify_boat_authorization(user: User, boat_identifier: str, db: Session) -> Boat:
@@ -109,8 +143,17 @@ def verify_boat_authorization(user: User, boat_identifier: str, db: Session) -> 
             detail=f"Boat '{boat_identifier}' not found",
         )
 
-    # Check RBAC ownership/link
-    is_authorized = any(b.id == boat.id for b in user.boats)
+    # Only active assignments grant access. Ended assignments remain queryable
+    # for audit/history but must not authorize a family request.
+    is_authorized = db.scalar(
+        select(user_boats.c.user_id).where(
+            and_(
+                user_boats.c.user_id == user.id,
+                user_boats.c.boat_id == boat.id,
+                user_boats.c.assignment_status == "ACTIVE",
+            )
+        )
+    ) is not None and boat.lifecycleStatus == "ACTIVE"
     if not is_authorized:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

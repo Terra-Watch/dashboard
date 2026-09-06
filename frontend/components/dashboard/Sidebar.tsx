@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { JalariLogo } from "../ui/JalariLogo";
+import { useAuth } from "../../lib/family/authContext";
 
 type SidebarProps = {
   open: boolean;
@@ -31,6 +32,8 @@ const system: NavigationItem[] = [
   { label: "Profile", href: "/profile", icon: "user" },
   { label: "Documentation", href: "/docs", icon: "docs" },
 ];
+
+const administration: NavigationItem[] = [{ label: "Users", href: "/dashboard/users", icon: "user" }];
 
 function NavigationIcon({ name }: { name: string }) {
   const common = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as const, strokeLinejoin: "round" as const, strokeWidth: 1.8 };
@@ -77,6 +80,7 @@ function NavigationGroup({ items }: { items: NavigationItem[] }) {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const { isAdmin } = useAuth();
   return (
     <>
       <button
@@ -99,6 +103,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="sidebar-divider" />
           <div className="sidebar-section-label">SYSTEM</div>
           <NavigationGroup items={system} />
+          {isAdmin && <><div className="sidebar-divider" /><div className="sidebar-section-label">ADMINISTRATION</div><NavigationGroup items={administration} /></>}
         </div>
       </aside>
     </>

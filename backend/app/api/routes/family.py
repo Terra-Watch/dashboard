@@ -14,6 +14,7 @@ from app.models.alert import Alert
 from app.models.boat import Boat
 from app.models.trip import Trip
 from app.models.user import User, UserRole
+from app.models.user import user_boats
 from app.schemas.family import (
     FamilyBoatLocation,
     FamilyBoatResponse,
@@ -56,17 +57,17 @@ def _map_boat_to_family_response(boat: Boat, current_user: User, db: Session) ->
             longitude=float(boat.longitude),
             timestamp=last_seen_dt.isoformat() if last_seen_dt else datetime.now(timezone.utc).isoformat(),
             isLive=is_live,
-            speedKnots=6.8 if is_live else 0.0,
-            headingDeg=120,
+            speedKnots=None,
+            headingDeg=None,
         )
 
     trip_state = "ON_TRIP" if boat.status.value == "ONLINE" else "AT_PORT"
-    connection_status = "CONNECTED" if boat.status.value == "ONLINE" else "DISCONNECTED"
+    connection_status = "CONNECTED" if boat.status.value == "ONLINE" else "OFFLINE"
 
     return FamilyBoatResponse(
         id=str(boat.id),
         boatId=boat.boatId,
-        name=f"{boat.boatId} - Sagar Express",
+        name=boat.boatId,
         safetyStatus=safety_status,
         tripState=trip_state,
         connectionStatus=connection_status,
@@ -83,7 +84,13 @@ def get_family_boats(
     db: Session = Depends(get_db),
 ) -> list[FamilyBoatResponse]:
     """Retrieve only the vessels explicitly assigned to the authenticated family account."""
-    return [_map_boat_to_family_response(boat, user, db) for boat in user.boats]
+    boats = (
+        db.query(Boat)
+        .join(user_boats, user_boats.c.boat_id == Boat.id)
+        .filter(user_boats.c.user_id == user.id, user_boats.c.assignment_status == "ACTIVE", Boat.lifecycleStatus == "ACTIVE")
+        .all()
+    )
+    return [_map_boat_to_family_response(boat, user, db) for boat in boats]
 
 
 @router.get("/boats/{boat_id}", response_model=FamilyBoatResponse)
@@ -119,8 +126,8 @@ def get_family_boat_location(
         longitude=float(boat.longitude),
         timestamp=last_seen_dt.isoformat() if last_seen_dt else datetime.now(timezone.utc).isoformat(),
         isLive=is_live,
-        speedKnots=7.4 if is_live else None,
-        headingDeg=135 if is_live else None,
+        speedKnots=None,
+        headingDeg=None,
     )
 
 
@@ -199,16 +206,11 @@ def get_family_boat_incidents(
         FamilyIncidentResponse(
             id=str(a.id),
             boatId=boat.boatId,
-            boatName=f"{boat.boatId} - Sagar Express",
+            boatName=boat.boatId,
             timestamp=a.createdAt.isoformat(),
             status=a.status.value,
             statusLabel="Emergency reported" if a.status.value == "ACTIVE" else "Rescue team notified",
-            location=FamilyBoatLocation(
-                latitude=float(a.latitude or boat.latitude or 16.98),
-                longitude=float(a.longitude or boat.longitude or 82.25),
-                timestamp=a.createdAt.isoformat(),
-                isLive=False,
-            ),
+            location=FamilyBoatLocation(latitude=float(a.latitude), longitude=float(a.longitude), timestamp=a.createdAt.isoformat(), isLive=False) if a.latitude is not None and a.longitude is not None else None,
             details=a.message,
             updatedAt=a.createdAt.isoformat(),
         )
@@ -233,7 +235,7 @@ def get_family_incident(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incident not found")
 
     boat = db.query(Boat).filter(Boat.id == alert.boat_id).first()
-    if not boat or not any(b.id == boat.id for b in user.boats):
+    if not boat or not db.query(user_boats).filter(user_boats.c.user_id == user.id, user_boats.c.boat_id == boat.id, user_boats.c.assignment_status == "ACTIVE").first():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: You are not authorized to view this emergency incident",
@@ -242,16 +244,11 @@ def get_family_incident(
     return FamilyIncidentResponse(
         id=str(alert.id),
         boatId=boat.boatId,
-        boatName=f"{boat.boatId} - Sagar Express",
+        boatName=boat.boatId,
         timestamp=alert.createdAt.isoformat(),
         status=alert.status.value,
         statusLabel="Emergency reported" if alert.status.value == "ACTIVE" else "Rescue team notified",
-        location=FamilyBoatLocation(
-            latitude=float(alert.latitude or boat.latitude or 16.98),
-            longitude=float(alert.longitude or boat.longitude or 82.25),
-            timestamp=alert.createdAt.isoformat(),
-            isLive=False,
-        ),
+        location=FamilyBoatLocation(latitude=float(alert.latitude), longitude=float(alert.longitude), timestamp=alert.createdAt.isoformat(), isLive=False) if alert.latitude is not None and alert.longitude is not None else None,
         details=alert.message,
         updatedAt=alert.createdAt.isoformat(),
     )
@@ -280,7 +277,14 @@ async def family_websocket_stream(websocket: WebSocket, token: str = Query(...),
         return
 
     # Authorized boat set
-    authorized_boat_ids = frozenset(b.boatId.lower() for b in user.boats)
+    authorized_boat_ids = frozenset(
+        boat.boatId.lower()
+        for boat in db.query(Boat).join(user_boats, user_boats.c.boat_id == Boat.id).filter(
+            user_boats.c.user_id == user.id,
+            user_boats.c.assignment_status == "ACTIVE",
+            Boat.lifecycleStatus == "ACTIVE",
+        ).all()
+    )
     await websocket.accept()
     conn_info = (websocket, authorized_boat_ids)
     active_family_sockets.add(conn_info)
@@ -305,5 +309,3 @@ async def family_websocket_stream(websocket: WebSocket, token: str = Query(...),
         pass
     finally:
         active_family_sockets.discard(conn_info)
-
-

@@ -220,6 +220,14 @@ export async function fetchCurrentUser(): Promise<FamilyUser | null> {
   }
 }
 
+export async function updateCurrentUserProfile(payload: { name?: string; email?: string; phone?: string }): Promise<FamilyUser> {
+  return apiFetch<FamilyUser>(`${API_BASE_URL}/api/auth/me`, { method: "PATCH", headers: getAuthHeaders(), body: JSON.stringify(payload) });
+}
+
+export async function changeCurrentUserPassword(payload: { current_password: string; new_password: string; confirm_password: string }): Promise<void> {
+  await apiFetch<void>(`${API_BASE_URL}/api/auth/change-password`, { method: "POST", headers: getAuthHeaders(), body: JSON.stringify(payload) });
+}
+
 export async function logoutFamily(): Promise<void> {
   try {
     await fetch(`${API_BASE_URL}/api/auth/logout`, {

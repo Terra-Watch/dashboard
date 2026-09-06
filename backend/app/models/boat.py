@@ -36,6 +36,7 @@ class Boat(Base):
         Enum(DataSource, name="data_source", values_callable=lambda enum_type: [item.value for item in enum_type]),
         nullable=False,
     )
+    lifecycleStatus: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE", server_default="ACTIVE")
 
     telemetry = relationship("Telemetry", back_populates="boat")
     alerts = relationship("Alert", back_populates="boat")

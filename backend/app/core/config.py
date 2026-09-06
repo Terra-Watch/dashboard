@@ -32,7 +32,16 @@ def get_environment() -> str:
 
 
 def get_secret_key() -> str:
-    return os.getenv("JALRI_SECRET_KEY", "jalari-maritime-secret-key-2026-very-secure-jwt-signing")
+    value = os.getenv("JALRI_SECRET_KEY")
+    if value:
+        return value
+    if get_environment() == "development":
+        return "development-only-jalari-secret-key"
+    raise RuntimeError("JALRI_SECRET_KEY must be set outside development")
+
+
+def get_gateway_ingestion_key() -> str | None:
+    return os.getenv("JALRI_GATEWAY_INGESTION_KEY")
 
 
 def get_token_expire_minutes() -> int:
