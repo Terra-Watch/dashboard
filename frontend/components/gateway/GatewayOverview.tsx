@@ -46,7 +46,9 @@ export function GatewayOverview() {
               </p>
               <p className="gateway-status-message" style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
                 {gateway
-                  ? `Gateway record reported ${gateway.status.toLowerCase()} at ${new Date(gateway.lastSeen).toLocaleString()}.`
+                  ? gateway.lastSeen
+                    ? `Gateway record reported ${gateway.status.toLowerCase()} at ${new Date(gateway.lastSeen).toLocaleString()}.`
+                    : `Gateway record reported ${gateway.status.toLowerCase()} (Never connected).`
                   : "No gateway record is currently available from the backend."}
               </p>
             </div>
@@ -77,7 +79,7 @@ export function GatewayOverview() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "#94a3b8" }}>Backend Target:</span>
-                <span style={{ color: "#a78bfa" }}>http://172.20.10.3:8000</span>
+                <span style={{ color: "#a78bfa" }}>{process.env.NEXT_PUBLIC_API_BASE_URL || "https://jalari-frontend-dashboard.onrender.com"}</span>
               </div>
             </div>
           </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fetchBoats, Boat } from "../../lib/api";
+import { fetchBoats, fetchGateways, Boat, Gateway } from "../../lib/api";
 import { Card } from "../ui/Card";
 import { StatusBadge } from "../ui/StatusBadge";
 import "leaflet/dist/leaflet.css";
@@ -28,7 +28,6 @@ export function LiveMapWorkspace() {
   // Update map objects when coordinates change
   function updateMapPositions(gCoords: [number, number], bCoords: [number, number]) {
     if (!mapInstanceRef.current || !LRef.current) return;
-    const L = LRef.current;
     const map = mapInstanceRef.current;
 
     if (gatewayMarkerRef.current) gatewayMarkerRef.current.setLatLng(gCoords);
@@ -39,7 +38,7 @@ export function LiveMapWorkspace() {
     map.flyTo(gCoords, 14, { duration: 1.5 });
   }
 
-  // Request HTML5 Geolocation
+  // Request HTML5 Geolocation for Shore Gateway position
   function requestCurrentLocation() {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -47,13 +46,10 @@ export function LiveMapWorkspace() {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           const newGateway: [number, number] = [lat, lng];
-          // Position vessel ~1km offset
-          const newBoat: [number, number] = [lat + 0.006, lng + 0.008];
 
           setGatewayCoords(newGateway);
-          setBoatCoords(newBoat);
           setLocationName(`Current Location (${lat.toFixed(4)}°, ${lng.toFixed(4)}°)`);
-          updateMapPositions(newGateway, newBoat);
+          updateMapPositions(newGateway, boatCoords);
         },
         (error) => {
           console.warn("Geolocation permission not granted or unavailable, using default coords:", error.message);
@@ -105,13 +101,8 @@ export function LiveMapWorkspace() {
       const gatewayMarker = L.marker(gatewayCoords, { icon: gatewayIcon }).addTo(map);
       gatewayMarker.bindPopup(`
         <div style="font-family:inherit;padding:4px;">
-          <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway (GW-01)</strong><br/>
+          <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway</strong><br/>
           <span style="color:#64748b;font-size:0.85em;">LoRa 433 MHz Shore Base Station</span><br/>
-          <div style="margin-top:6px;font-size:0.85em;">
-            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
-            Network: <b>Not connected</b><br/>
-            ID: <b>Not reported</b>
-          </div>
         </div>
       `);
 
@@ -136,12 +127,8 @@ export function LiveMapWorkspace() {
       const boatMarker = L.marker(boatCoords, { icon: boatIcon }).addTo(map);
       boatMarker.bindPopup(`
         <div style="font-family:inherit;padding:4px;">
-            <strong style="color:#64748b;font-size:1.1em;">No live vessel data</strong><br/>
-            <span style="color:#64748b;font-size:0.85em;">No LoRa node is currently reported</span><br/>
-          <div style="margin-top:6px;font-size:0.85em;">
-            Status: <b style="color:#64748b;">UNAVAILABLE</b><br/>
-            Modulation: <b>Not reported</b>
-          </div>
+          <strong style="color:#64748b;font-size:1.1em;">No live vessel data</strong><br/>
+          <span style="color:#64748b;font-size:0.85em;">No LoRa node is currently reported</span>
         </div>
       `);
 
@@ -159,7 +146,6 @@ export function LiveMapWorkspace() {
       coverageCircleRef.current = coverageCircle;
       lineRef.current = linkLine;
 
-      // Automatically request user location on map load
       requestCurrentLocation();
     }
 
@@ -173,30 +159,60 @@ export function LiveMapWorkspace() {
     };
   }, []);
 
-  // Poll real-time boat telemetry and update marker popup & stats
+  // Poll real-time boat and gateway data
   useEffect(() => {
     let mounted = true;
 
     async function loadData() {
-      const data = await fetchBoats();
+      const [boatsData, gatewaysData] = await Promise.all([fetchBoats(), fetchGateways()]);
       if (!mounted) return;
-      setBoats(data);
-      if (data.length > 0) {
-        const boat = data[0];
+
+      setBoats(boatsData);
+      const gateway = gatewaysData[0];
+      if (gateway && gatewayMarkerRef.current) {
+        gatewayMarkerRef.current.setPopupContent(`
+          <div style="font-family:inherit;padding:6px;min-width:180px;">
+            <strong style="color:#0284c7;font-size:1.1em;">Shore Gateway (${gateway.gatewayId})</strong><br/>
+            <span style="color:#64748b;font-size:0.85em;">LoRa 433 MHz Shore Base Station</span><br/>
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:6px 0;"/>
+            <div style="font-size:0.85em;line-height:1.5;">
+              Status: <b>${gateway.status}</b><br/>
+              Firmware: <b>${gateway.firmware ?? "—"}</b><br/>
+              Last Sync: <b>${gateway.lastSeen ? new Date(gateway.lastSeen).toLocaleTimeString() : "Never"}</b>
+            </div>
+          </div>
+        `);
+      }
+
+      if (boatsData.length > 0) {
+        const boat = boatsData[0];
         setActiveBoat(boat);
 
+        // Position boat at authentic telemetry GPS location if valid fix present
+        if (boat.location?.latitude != null && boat.location?.longitude != null) {
+          const realBoatCoords: [number, number] = [boat.location.latitude, boat.location.longitude];
+          setBoatCoords(realBoatCoords);
+          updateMapPositions(gatewayCoords, realBoatCoords);
+        }
+
         if (boatMarkerRef.current) {
+          const hasLocation = boat.location?.latitude != null && boat.location?.longitude != null;
+          const locText = hasLocation
+            ? `${boat.location?.latitude.toFixed(4)}°, ${boat.location?.longitude.toFixed(4)}°`
+            : "No GPS fix (Telemetry active)";
+
           boatMarkerRef.current.setPopupContent(`
             <div style="font-family:inherit;padding:6px;min-width:180px;">
               <strong style="color:#16a34a;font-size:1.1em;">${boat.boatId}</strong>
               <span style="margin-left:6px;color:#64748b;font-size:0.85em;">Node #${boat.nodeId}</span><br/>
               <hr style="border:none;border-top:1px solid #e2e8f0;margin:6px 0;"/>
               <div style="font-size:0.85em;line-height:1.5;">
-                Status: <b style="color:#16a34a;">${boat.status}</b><br/>
+                Status: <b style="color:${boat.status === "ONLINE" ? "#16a34a" : "#dc2626"};">${boat.status}</b><br/>
+                GPS Position: <b>${locText}</b><br/>
                 Heartbeats: <b>${boat.heartbeatCount}</b><br/>
                 Signal RSSI: <b>${boat.rssi ?? "—"} dBm</b><br/>
                 Signal SNR: <b>${boat.snr ?? "—"} dB</b><br/>
-                Last Seen: <b>${new Date(boat.lastSeen).toLocaleTimeString()}</b>
+                Last Seen: <b>${boat.lastSeen ? new Date(boat.lastSeen).toLocaleTimeString() : "Never"}</b>
               </div>
             </div>
           `);
@@ -210,7 +226,7 @@ export function LiveMapWorkspace() {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [gatewayCoords]);
 
   return (
     <Card className="live-map-workspace" style={{ padding: "1.25rem" }}>
