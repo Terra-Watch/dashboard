@@ -109,6 +109,20 @@ export interface HistoricalEvent {
   } | null;
 }
 
+export interface OperationsMessage {
+  id: string;
+  messageId: string;
+  clientEventId: string;
+  boatId: string;
+  sourceUserName: string;
+  sourceUserEmail: string;
+  text: string;
+  status: string;
+  createdAt: string;
+  dispatchedAt?: string | null;
+  receivedAt?: string | null;
+}
+
 export interface Alert {
   id: string;
   alertId: string;
@@ -173,6 +187,13 @@ async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
+export class ApiRequestError extends Error {
+  constructor(public readonly status: number, message: string) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 export function fetchUsers(): Promise<AdminUser[]> { return apiRequest<AdminUser[]>("/api/users", { cache: "no-store" }); }
 export function createUser(payload: { email: string; name: string; phone?: string; password: string; role: AdminUser["role"]; assignedBoatIds: string[] }): Promise<AdminUser> { return apiRequest<AdminUser>("/api/users", { method: "POST", body: JSON.stringify(payload) }); }
 export function updateUser(id: string, payload: Partial<Pick<AdminUser, "name" | "email" | "phone" | "role" | "is_active" | "authorizedBoatIds">>): Promise<AdminUser> { return apiRequest<AdminUser>(`/api/users/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ ...payload, assignedBoatIds: payload.authorizedBoatIds }) }); }
@@ -228,14 +249,18 @@ export async function fetchAlerts(): Promise<Alert[]> {
 }
 
 export async function fetchTelemetry(boatId?: string): Promise<TelemetryRecord[]> {
+  const url = new URL(`${API_BASE_URL}/api/telemetry`);
+  if (boatId) url.searchParams.set("boatId", boatId);
   try {
-    const url = new URL(`${API_BASE_URL}/api/telemetry`);
-    if (boatId) url.searchParams.set("boatId", boatId);
     const res = await fetch(url.toString(), { cache: "no-store", headers: authHeaders() });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as { detail?: string } | null;
+      throw new ApiRequestError(res.status, body?.detail || `Telemetry request failed (${res.status})`);
+    }
     return await res.json();
-  } catch {
-    return [];
+  } catch (reason) {
+    if (reason instanceof ApiRequestError) throw reason;
+    throw new Error("Unable to reach the telemetry service.");
   }
 }
 
@@ -247,6 +272,11 @@ export async function fetchHistory(): Promise<HistoricalEvent[]> {
   } catch {
     return [];
   }
+}
+
+export function fetchMessages(boatId?: string): Promise<OperationsMessage[]> {
+  const query = boatId ? `?boatId=${encodeURIComponent(boatId)}` : "";
+  return apiRequest<OperationsMessage[]>(`/api/messages${query}`, { cache: "no-store" });
 }
 
 export async function fetchSystemStatus(): Promise<SystemStatusResponse | null> {

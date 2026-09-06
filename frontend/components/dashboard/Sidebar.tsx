@@ -24,6 +24,7 @@ const operations: NavigationItem[] = [
   { label: "Alerts & SOS", href: "/dashboard/alerts", icon: "alert" },
   { label: "Telemetry", href: "/dashboard/telemetry", icon: "activity" },
   { label: "History", href: "/dashboard/history", icon: "history" },
+  { label: "Messages", href: "/dashboard/messages", icon: "message" },
 ];
 
 const system: NavigationItem[] = [
@@ -49,6 +50,7 @@ function NavigationIcon({ name }: { name: string }) {
     alert: <><path d="m12 3 9 17H3L12 3Z" /><path d="M12 9v5M12 17h.01" /></>,
     activity: <path d="M3 12h4l2-6 4 12 2-6h6" />,
     history: <><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5M12 7v5l3 2" /></>,
+    message: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5v-8Z" /><path d="M8 8h8M8 11h5" /></>,
     gateway: <><path d="M5 20h14M7 17h10M9 14h6M12 4v10M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0" /></>,
     status: <><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></>,
     user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchBoats, fetchTelemetry, Boat, TelemetryRecord } from "../../lib/api";
+import { ApiRequestError, fetchBoats, fetchTelemetry, Boat, TelemetryRecord } from "../../lib/api";
 import { Card } from "../ui/Card";
 import { DataTable } from "../ui/DataTable";
 import { SectionHeader } from "../ui/SectionHeader";
@@ -21,6 +21,7 @@ export function TelemetryOverview() {
   const [records, setRecords] = useState<TelemetryRecord[]>([]);
   const [selectedBoatId, setSelectedBoatId] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [telemetryError, setTelemetryError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -48,9 +49,24 @@ export function TelemetryOverview() {
 
     async function loadTelemetry() {
       const boat = boats.find((item) => item.boatId === selectedBoatId);
-      const data = await fetchTelemetry(boat?.id ?? undefined);
-      if (!mounted) return;
-      setRecords(data);
+      try {
+        const data = await fetchTelemetry(boat?.boatId ?? undefined);
+        if (!mounted) return;
+        setRecords(data);
+        setTelemetryError(null);
+      } catch (reason) {
+        if (!mounted) return;
+        setRecords([]);
+        if (reason instanceof ApiRequestError && reason.status === 401) {
+          setTelemetryError("Your session is not authorized to view telemetry.");
+        } else if (reason instanceof ApiRequestError && reason.status === 403) {
+          setTelemetryError("You are not authorized to view this vessel's telemetry.");
+        } else if (reason instanceof ApiRequestError && reason.status === 404) {
+          setTelemetryError("The selected vessel was not found.");
+        } else {
+          setTelemetryError(reason instanceof Error ? reason.message : "Telemetry is temporarily unavailable.");
+        }
+      }
     }
 
     if (boats.length > 0 || selectedBoatId === "all") {
@@ -93,7 +109,9 @@ export function TelemetryOverview() {
       <section className="telemetry-overview-section" aria-label="Telemetry overview">
         <SectionHeader title="Telemetry Overview" />
         <Card className="telemetry-overview-panel">
-          {latestRecord ? (
+          {telemetryError ? (
+            <EmptyState title="Telemetry unavailable" message={telemetryError} />
+          ) : latestRecord ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "1rem", padding: "1rem" }}>
               <div><p className="telemetry-empty-title" style={{ fontSize: "0.75rem" }}>Battery</p><p style={{ fontSize: "1.5rem", margin: "0.25rem 0" }}>{latestRecord.battery ?? "—"}</p></div>
               <div><p className="telemetry-empty-title" style={{ fontSize: "0.75rem" }}>RSSI</p><p style={{ fontSize: "1.5rem", margin: "0.25rem 0" }}>{latestRecord.rssi ?? "—"}</p></div>
@@ -109,7 +127,12 @@ export function TelemetryOverview() {
       <section className="telemetry-data-section" aria-label="Technical data">
         <SectionHeader title="Technical Data" description="Detailed telemetry values from the backend." />
         <DataTable>
-          {loading ? (
+          {telemetryError ? (
+            <div className="telemetry-table-empty">
+              <p className="telemetry-empty-title">Telemetry unavailable</p>
+              <p className="telemetry-empty-message">{telemetryError}</p>
+            </div>
+          ) : loading ? (
             <div className="telemetry-table-empty">
               <p className="telemetry-empty-title">Loading telemetry...</p>
             </div>
@@ -148,7 +171,9 @@ export function TelemetryOverview() {
       <section className="telemetry-history-section" aria-label="Telemetry history">
         <SectionHeader title="Telemetry History" />
         <Card className="telemetry-history-panel">
-          {records.length === 0 ? (
+          {telemetryError ? (
+            <EmptyState title="Telemetry unavailable" message={telemetryError} />
+          ) : records.length === 0 ? (
             <EmptyState title="Telemetry history unavailable" message="Historical telemetry will appear here when data is available." />
           ) : (
             <div style={{ padding: "1rem" }}>
@@ -165,4 +190,3 @@ export function TelemetryOverview() {
     </div>
   );
 }
-

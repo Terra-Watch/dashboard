@@ -17,6 +17,7 @@ from app.api.routes import (
     history,
     ingestion,
     mobile_crew,
+    messages,
     users,
     system_status,
     telemetry,
@@ -55,6 +56,7 @@ app.include_router(history.router)
 app.include_router(system_status.router)
 app.include_router(ingestion.router)
 app.include_router(mobile_crew.router)
+app.include_router(messages.router)
 app.include_router(users.router)
 
 
