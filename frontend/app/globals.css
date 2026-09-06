@@ -2754,6 +2754,9 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
 .dashboard-shell .admin-page-header-action { flex: 0 0 auto; }
 .dashboard-shell .admin-summary-strip { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
 .dashboard-shell .admin-summary-strip > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 13px 16px; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; background: #0f1923; }
+.dashboard-shell .admin-summary-strip > div::before { content: ''; width: 3px; align-self: stretch; border-radius: 4px; background: #0ea5e9; }
+.dashboard-shell .admin-summary-strip > div { align-items: center; }
+.dashboard-shell .admin-summary-strip > div > span { flex: 1; }
 .dashboard-shell .admin-summary-strip span { color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .dashboard-shell .admin-summary-strip strong { color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 500; }
 .dashboard-shell .admin-panel { margin-top: 18px; padding: 20px; }
@@ -2767,6 +2770,9 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
 .dashboard-shell .admin-device-form { grid-template-columns: repeat(3, minmax(160px, 1fr)) auto; }
 .dashboard-shell .admin-inline-form label, .dashboard-shell .admin-form label { display: grid; gap: 6px; color: #94a3b8; font-size: .72rem; font-weight: 600; letter-spacing: .04em; }
 .dashboard-shell .admin-inline-form input, .dashboard-shell .admin-inline-form select, .dashboard-shell .admin-form input, .dashboard-shell .admin-form select, .dashboard-shell .admin-menu-select select { min-height: 38px; padding: 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 6px; background: #111e2b; color: #e2e8f0; font: inherit; font-size: .82rem; outline: none; }
+.dashboard-shell .admin-form select.admin-multiselect { height: auto; min-height: 92px; padding: 7px 8px; }
+.dashboard-shell .admin-form select.admin-multiselect option { padding: 5px 6px; }
+.dashboard-shell .admin-help { color: #64748b; font-size: .68rem; font-weight: 400; letter-spacing: 0; }
 .dashboard-shell .admin-inline-form input:focus, .dashboard-shell .admin-inline-form select:focus, .dashboard-shell .admin-form input:focus, .dashboard-shell .admin-form select:focus, .dashboard-shell .admin-menu-select select:focus { border-color: rgba(14,165,233,.55); box-shadow: 0 0 0 3px rgba(14,165,233,.1); }
 .dashboard-shell .admin-form { display: grid; gap: 18px; }
 .dashboard-shell .admin-form-section { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.06); }
@@ -2779,6 +2785,13 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
 .dashboard-shell .admin-table { min-width: 760px; }
 .dashboard-shell .admin-table td { padding-top: 11px; padding-bottom: 11px; }
 .dashboard-shell .admin-table td strong { color: #e2e8f0; font-weight: 600; }
+.dashboard-shell .admin-table td small { display: block; margin-top: 3px; color: #64748b; font-size: .72rem; }
+.dashboard-shell .admin-table td.admin-nowrap { white-space: nowrap; }
+.dashboard-shell .admin-audit-table { min-width: 900px; }
+.dashboard-shell .admin-detail-list { display: grid; gap: 4px; min-width: 180px; }
+.dashboard-shell .admin-detail-list span { display: flex; flex-wrap: wrap; gap: 5px 8px; }
+.dashboard-shell .admin-detail-list strong { color: #94a3b8; font-size: .68rem; font-weight: 600; text-transform: capitalize; }
+.dashboard-shell .admin-detail-list em { color: #cbd5e1; font-size: .72rem; font-style: normal; overflow-wrap: anywhere; }
 .dashboard-shell .admin-table td a { color: #7dd3fc; }
 .dashboard-shell .admin-chip-list { display: flex; flex-wrap: wrap; gap: 5px; }
 .dashboard-shell .admin-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 7px; border: 1px solid rgba(14,165,233,.2); border-radius: 4px; background: rgba(14,165,233,.07); color: #7dd3fc; font-size: .7rem; font-weight: 600; }
