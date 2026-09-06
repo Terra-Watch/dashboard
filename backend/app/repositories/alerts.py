@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,3 +19,6 @@ class AlertRepository:
     def get(self, db: Session, alert_id: str) -> Alert | None:
         return db.scalar(select(Alert).where(Alert.alertId == alert_id))
 
+    def list_for_boat(self, db: Session, boat_id) -> List[Alert]:
+        statement = select(Alert).where(Alert.boat_id == boat_id).order_by(Alert.createdAt.desc())
+        return list(db.scalars(statement))
