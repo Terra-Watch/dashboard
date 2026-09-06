@@ -2433,3 +2433,403 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
   font-size: 0.8rem;
   color: #22d3ee;
 }
+
+/* ==========================================================================
+   JALARI OPERATIONS DASHBOARD — DARK PREMIUM THEME
+   Scoped to .dashboard-shell so landing, family, and docs pages are unaffected
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+.dashboard-shell {
+  --color-background: #090e14;
+  --color-surface:    #0f1923;
+  --color-surface-2:  #162030;
+  --color-surface-3:  #1c2a3a;
+  --color-border:     rgba(255,255,255,0.07);
+  --color-border-hover: rgba(255,255,255,0.14);
+  --color-text:       #e2e8f0;
+  --color-muted:      #64748b;
+  --color-muted-2:    #475569;
+  --color-navy:       #0ea5e9;
+  --color-accent:     #0ea5e9;
+  --color-accent-dim: rgba(14,165,233,0.12);
+  --color-healthy:    #22c55e;
+  --color-healthy-dim: rgba(34,197,94,0.12);
+  --color-warning:    #f59e0b;
+  --color-warning-dim: rgba(245,158,11,0.12);
+  --color-danger:     #ef4444;
+  --color-danger-dim: rgba(239,68,68,0.12);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100svh;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* ── Sidebar ───────────────────────────────────────── */
+.dashboard-shell .sidebar {
+  background: linear-gradient(180deg, #0d1721 0%, #0a1219 100%);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+}
+.dashboard-shell .sidebar-brand {
+  background: rgba(14,165,233,0.06);
+  border-bottom: 1px solid rgba(14,165,233,0.15);
+}
+.dashboard-shell .brand-name {
+  color: #f1f5f9;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.dashboard-shell .brand-subtitle {
+  color: rgba(100,116,139,0.9);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.dashboard-shell .sidebar-section-label {
+  color: rgba(100,116,139,0.7);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+.dashboard-shell .sidebar-divider { background: rgba(255,255,255,0.05); }
+.dashboard-shell .nav-item {
+  color: rgba(148,163,184,0.8);
+  font-size: 0.8125rem;
+  font-weight: 450;
+  letter-spacing: 0.01em;
+  transition: background 160ms ease, color 160ms ease;
+  border-radius: 6px;
+}
+.dashboard-shell .nav-item:hover { background: rgba(14,165,233,0.08); color: #e2e8f0; }
+.dashboard-shell .nav-item-active { background: rgba(14,165,233,0.14); color: #7dd3fc; }
+.dashboard-shell .nav-item-active::before { background: #0ea5e9; width: 3px; border-radius: 0 3px 3px 0; }
+
+/* ── Topbar ───────────────────────────────────────── */
+.dashboard-shell .topbar {
+  background: #0d1721;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+}
+.dashboard-shell .topbar-page { color: #e2e8f0; font-weight: 600; font-size: 0.9rem; }
+.dashboard-shell .topbar-meta { color: #475569; font-size: 0.72rem; }
+.dashboard-shell .topbar-meta-value { color: #94a3b8; }
+.dashboard-shell .menu-button { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: #94a3b8; }
+.dashboard-shell .menu-button:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); color: #e2e8f0; }
+.dashboard-shell .status-dot-neutral { background: #475569; }
+
+/* ── Workspace / Main ─────────────────────────────── */
+.dashboard-shell .dashboard-workspace { background: var(--color-background); }
+.dashboard-shell .dashboard-main { background: var(--color-background); }
+
+/* ── Cards ────────────────────────────────────────── */
+.dashboard-shell .ui-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+.dashboard-shell .ui-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* ── Eyebrow / Headers ────────────────────────────── */
+.dashboard-shell .eyebrow {
+  color: #0ea5e9;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.dashboard-shell .overview-header h1,
+.dashboard-shell .boats-header h1,
+.dashboard-shell .live-map-header h1,
+.dashboard-shell .alerts-header h1,
+.dashboard-shell .telemetry-header h1,
+.dashboard-shell .history-header h1,
+.dashboard-shell .gateway-header h1,
+.dashboard-shell .system-status-header h1 {
+  color: #f1f5f9;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.dashboard-shell .overview-header > p,
+.dashboard-shell .boats-header > p,
+.dashboard-shell .live-map-header > p,
+.dashboard-shell .alerts-header > p,
+.dashboard-shell .telemetry-header > p,
+.dashboard-shell .history-header > p,
+.dashboard-shell .gateway-header > p,
+.dashboard-shell .system-status-header > p {
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+/* ── Section headers ──────────────────────────────── */
+.dashboard-shell .section-header h2 { color: #cbd5e1; font-size: 1rem; font-weight: 600; }
+.dashboard-shell .section-header p { color: #475569; font-size: 0.8125rem; }
+
+/* ── Metric cards ─────────────────────────────────── */
+.dashboard-shell .overview-metric-label,
+.dashboard-shell .alerts-summary-label { color: #475569; font-size: 0.65rem; letter-spacing: 0.12em; }
+.dashboard-shell .overview-metric-value,
+.dashboard-shell .alerts-summary-value { color: #f1f5f9; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 1.9rem; font-weight: 500; }
+.dashboard-shell .overview-metric-supporting,
+.dashboard-shell .alerts-summary-supporting { color: #475569; font-size: 0.78rem; }
+
+/* ── Status badges ────────────────────────────────── */
+.dashboard-shell .status-badge { border-radius: 4px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; padding: 2px 8px; }
+.dashboard-shell .status-badge-healthy { color: #4ade80; border-color: rgba(74,222,128,0.25); background: rgba(34,197,94,0.08); }
+.dashboard-shell .status-badge-warning { color: #fbbf24; border-color: rgba(251,191,36,0.25); background: rgba(245,158,11,0.08); }
+.dashboard-shell .status-badge-danger { color: #f87171; border-color: rgba(248,113,113,0.25); background: rgba(239,68,68,0.08); }
+.dashboard-shell .status-badge-neutral { color: #64748b; border-color: rgba(100,116,139,0.25); background: rgba(100,116,139,0.08); }
+
+/* ── Tables ───────────────────────────────────────── */
+.dashboard-shell .data-table-wrapper {
+  background: var(--color-surface);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dashboard-shell .data-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.dashboard-shell .data-table thead tr { background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.dashboard-shell .data-table th { padding: 10px 16px; color: #475569; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; }
+.dashboard-shell .data-table td { padding: 13px 16px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+.dashboard-shell .data-table tbody tr { transition: background 140ms ease; }
+.dashboard-shell .data-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+.dashboard-shell .data-table tbody tr:last-child td { border-bottom: none; }
+.dashboard-shell .data-table small { color: #475569; font-size: 0.72rem; }
+
+/* ── Table action buttons ─────────────────────────── */
+.dashboard-shell .table-action-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  margin-right: 4px;
+  border: 1px solid rgba(14,165,233,0.2);
+  border-radius: 4px;
+  background: rgba(14,165,233,0.06);
+  color: #38bdf8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  cursor: pointer;
+}
+.dashboard-shell .table-action-button:hover {
+  background: rgba(14,165,233,0.14);
+  border-color: rgba(14,165,233,0.4);
+  color: #7dd3fc;
+}
+
+/* ── Primary UI Button ────────────────────────────── */
+.dashboard-shell .ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid rgba(14,165,233,0.35);
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(14,165,233,0.08) 100%);
+  color: #7dd3fc;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 120ms ease;
+}
+.dashboard-shell .ui-button:hover {
+  background: linear-gradient(135deg, rgba(14,165,233,0.28) 0%, rgba(14,165,233,0.16) 100%);
+  border-color: rgba(14,165,233,0.55);
+  color: #bae6fd;
+  transform: translateY(-1px);
+}
+.dashboard-shell .ui-button:active { transform: translateY(0); }
+.dashboard-shell .profile-signout {
+  background: transparent;
+  border-color: rgba(239,68,68,0.2);
+  color: #f87171;
+}
+.dashboard-shell .profile-signout:hover {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.4);
+  color: #fca5a5;
+}
+
+/* ── Forms ────────────────────────────────────────── */
+.dashboard-shell .profile-form label { color: #94a3b8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; }
+.dashboard-shell .profile-form input,
+.dashboard-shell .profile-form select,
+.dashboard-shell .dashboard-shell select {
+  min-height: 40px;
+  padding: 0 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.dashboard-shell .profile-form input:focus,
+.dashboard-shell .profile-form select:focus {
+  border-color: rgba(14,165,233,0.5);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+}
+.dashboard-shell .profile-form input::placeholder { color: #334155; }
+
+/* ── Inline notices ───────────────────────────────── */
+.dashboard-shell .family-inline-notice {
+  border-left: 3px solid #0ea5e9;
+  background: rgba(14,165,233,0.06);
+  color: #94a3b8;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.8125rem;
+}
+.dashboard-shell .profile-error {
+  border-left-color: #ef4444;
+  background: rgba(239,68,68,0.06);
+  color: #fca5a5;
+}
+
+/* ── Empty states ─────────────────────────────────── */
+.dashboard-shell .overview-empty-title,
+.dashboard-shell .boats-empty-title,
+.dashboard-shell .alerts-empty-title,
+.dashboard-shell .telemetry-empty-title,
+.dashboard-shell .history-empty-title,
+.dashboard-shell .gateway-empty-title,
+.dashboard-shell .system-status-empty-title { color: #475569; font-weight: 600; }
+.dashboard-shell .overview-empty-message,
+.dashboard-shell .boats-empty-message,
+.dashboard-shell .alerts-empty-message,
+.dashboard-shell .telemetry-empty-message,
+.dashboard-shell .history-empty-message,
+.dashboard-shell .gateway-empty-message,
+.dashboard-shell .system-status-empty-message { color: #334155; }
+.dashboard-shell .family-state p,
+.dashboard-shell .family-muted,
+.dashboard-shell .profile-empty { color: #475569; }
+
+/* ── Alerts panel borders ─────────────────────────── */
+.dashboard-shell .overview-alerts-panel { border-left: 2px solid rgba(239,68,68,0.3); }
+.dashboard-shell .alerts-sos-panel { border-left: 3px solid rgba(239,68,68,0.5); background: rgba(239,68,68,0.03); }
+
+/* ── Gateway & System status ──────────────────────── */
+.dashboard-shell .gateway-status-title,
+.dashboard-shell .system-status-summary-title { color: #cbd5e1; }
+.dashboard-shell .gateway-status-message,
+.dashboard-shell .system-status-summary-message { color: #475569; }
+
+/* ── Profile ──────────────────────────────────────── */
+.dashboard-shell .profile-initial { background: rgba(14,165,233,0.12); border-color: rgba(14,165,233,0.25); color: #7dd3fc; font-weight: 700; }
+.dashboard-shell .profile-heading h2 { color: #e2e8f0; }
+.dashboard-shell .profile-heading p { color: #475569; }
+.dashboard-shell .family-detail-list div,
+.dashboard-shell .profile-detail-list div { border-top-color: rgba(255,255,255,0.05); }
+.dashboard-shell .family-detail-list dt,
+.dashboard-shell .profile-detail-list dt { color: #475569; }
+.dashboard-shell .family-detail-list dd,
+.dashboard-shell .profile-detail-list dd { color: #cbd5e1; }
+.dashboard-shell .profile-vessel-list li { border-top-color: rgba(255,255,255,0.05); }
+.dashboard-shell .profile-vessel-list span { color: #475569; }
+.dashboard-shell .profile-vessel-list li a { color: #38bdf8; }
+
+/* ── Administration console ───────────────────────── */
+.dashboard-shell .admin-console { max-width: 1380px; }
+.dashboard-shell .admin-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.dashboard-shell .admin-page-header h1 { margin: 4px 0 8px; color: #f1f5f9; font-size: clamp(1.7rem, 2.5vw, 2.25rem); letter-spacing: -0.03em; }
+.dashboard-shell .admin-page-header > div:first-child > p:last-child { max-width: 640px; margin: 0; color: #64748b; font-size: .875rem; }
+.dashboard-shell .admin-page-header-action { flex: 0 0 auto; }
+.dashboard-shell .admin-summary-strip { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.dashboard-shell .admin-summary-strip > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 13px 16px; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; background: #0f1923; }
+.dashboard-shell .admin-summary-strip span { color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.dashboard-shell .admin-summary-strip strong { color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 500; }
+.dashboard-shell .admin-panel { margin-top: 18px; padding: 20px; }
+.dashboard-shell .admin-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.dashboard-shell .admin-panel-heading h2 { margin: 3px 0 5px; color: #e2e8f0; font-size: 1rem; }
+.dashboard-shell .admin-panel-heading p:last-child { margin: 0; color: #64748b; font-size: .78rem; }
+.dashboard-shell .admin-kicker { margin: 0; color: #38bdf8; font-size: .64rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.dashboard-shell .admin-notice { margin-bottom: 14px; padding: 10px 13px; border: 1px solid rgba(14,165,233,.25); border-left: 3px solid #0ea5e9; border-radius: 6px; background: rgba(14,165,233,.06); color: #bae6fd; font-size: .8rem; }
+.dashboard-shell .admin-notice-error { border-color: rgba(239,68,68,.25); border-left-color: #ef4444; background: rgba(239,68,68,.06); color: #fca5a5; }
+.dashboard-shell .admin-inline-form { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 1fr) auto; align-items: end; gap: 14px; }
+.dashboard-shell .admin-device-form { grid-template-columns: repeat(3, minmax(160px, 1fr)) auto; }
+.dashboard-shell .admin-inline-form label, .dashboard-shell .admin-form label { display: grid; gap: 6px; color: #94a3b8; font-size: .72rem; font-weight: 600; letter-spacing: .04em; }
+.dashboard-shell .admin-inline-form input, .dashboard-shell .admin-inline-form select, .dashboard-shell .admin-form input, .dashboard-shell .admin-form select, .dashboard-shell .admin-menu-select select { min-height: 38px; padding: 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 6px; background: #111e2b; color: #e2e8f0; font: inherit; font-size: .82rem; outline: none; }
+.dashboard-shell .admin-inline-form input:focus, .dashboard-shell .admin-inline-form select:focus, .dashboard-shell .admin-form input:focus, .dashboard-shell .admin-form select:focus, .dashboard-shell .admin-menu-select select:focus { border-color: rgba(14,165,233,.55); box-shadow: 0 0 0 3px rgba(14,165,233,.1); }
+.dashboard-shell .admin-form { display: grid; gap: 18px; }
+.dashboard-shell .admin-form-section { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.06); }
+.dashboard-shell .admin-form-section > span { grid-column: 1 / -1; color: #38bdf8; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.dashboard-shell .admin-form-section:nth-of-type(2) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dashboard-shell .admin-form-actions { display: flex; gap: 8px; }
+.dashboard-shell .ui-button-secondary { border-color: rgba(255,255,255,.12); background: transparent; color: #94a3b8; }
+.dashboard-shell .admin-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 160px 160px; gap: 8px; margin-bottom: 14px; }
+.dashboard-shell .admin-toolbar input, .dashboard-shell .admin-toolbar select { min-height: 36px; padding: 0 10px; border: 1px solid rgba(255,255,255,.09); border-radius: 6px; background: #111e2b; color: #cbd5e1; font: inherit; font-size: .78rem; }
+.dashboard-shell .admin-table { min-width: 760px; }
+.dashboard-shell .admin-table td { padding-top: 11px; padding-bottom: 11px; }
+.dashboard-shell .admin-table td strong { color: #e2e8f0; font-weight: 600; }
+.dashboard-shell .admin-table td a { color: #7dd3fc; }
+.dashboard-shell .admin-chip-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.dashboard-shell .admin-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 7px; border: 1px solid rgba(14,165,233,.2); border-radius: 4px; background: rgba(14,165,233,.07); color: #7dd3fc; font-size: .7rem; font-weight: 600; }
+.dashboard-shell .admin-muted { color: #64748b; }
+.dashboard-shell .admin-action-menu { position: relative; min-width: 84px; }
+.dashboard-shell .admin-action-menu summary { display: inline-flex; cursor: pointer; list-style: none; color: #7dd3fc; font-size: .75rem; font-weight: 600; }
+.dashboard-shell .admin-action-menu summary::-webkit-details-marker { display: none; }
+.dashboard-shell .admin-action-menu summary::after { content: ' ⋮'; color: #64748b; }
+.dashboard-shell .admin-action-menu > div { position: absolute; z-index: 4; right: 0; top: 25px; display: grid; min-width: 170px; gap: 2px; padding: 6px; border: 1px solid rgba(255,255,255,.1); border-radius: 7px; background: #162030; box-shadow: 0 12px 28px rgba(0,0,0,.35); }
+.dashboard-shell .admin-action-menu button { padding: 7px 8px; border: 0; border-radius: 4px; background: transparent; color: #cbd5e1; font: inherit; font-size: .75rem; text-align: left; cursor: pointer; }
+.dashboard-shell .admin-action-menu button:hover { background: rgba(14,165,233,.1); color: #7dd3fc; }
+.dashboard-shell .admin-action-menu button.danger { color: #f87171; }
+.dashboard-shell .admin-menu-select { display: grid; gap: 5px; padding: 6px 8px; color: #94a3b8; font-size: .7rem; }
+.dashboard-shell .admin-empty { display: grid; justify-items: center; padding: 38px 20px; border: 1px dashed rgba(255,255,255,.1); border-radius: 7px; text-align: center; }
+.dashboard-shell .admin-empty h3 { margin: 0 0 6px; color: #cbd5e1; font-size: .95rem; }
+.dashboard-shell .admin-empty p, .dashboard-shell .admin-state-card p { margin: 0; color: #64748b; font-size: .8rem; }
+.dashboard-shell .admin-state-card { display: flex; align-items: flex-start; gap: 14px; max-width: 640px; margin-top: 18px; padding: 20px; }
+.dashboard-shell .admin-state-card h2 { margin: 0 0 5px; color: #e2e8f0; font-size: 1rem; }
+.dashboard-shell .admin-state-icon { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border: 1px solid rgba(14,165,233,.35); border-radius: 50%; color: #38bdf8; font-weight: 700; }
+.dashboard-shell .admin-state-error .admin-state-icon { border-color: rgba(239,68,68,.4); color: #f87171; }
+.dashboard-shell .admin-state-action { margin-top: 14px; }
+.dashboard-shell .admin-skeleton-list { display: grid; gap: 9px; }
+.dashboard-shell .admin-skeleton-list span { display: block; height: 38px; border-radius: 5px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04)); }
+@media (max-width: 760px) {
+  .dashboard-shell .admin-page-header { align-items: flex-start; flex-direction: column; }
+  .dashboard-shell .admin-summary-strip { grid-template-columns: 1fr; }
+  .dashboard-shell .admin-inline-form, .dashboard-shell .admin-device-form, .dashboard-shell .admin-form-section, .dashboard-shell .admin-form-section:nth-of-type(2), .dashboard-shell .admin-toolbar { grid-template-columns: 1fr; }
+  .dashboard-shell .admin-panel { padding: 15px; }
+  .dashboard-shell .admin-toolbar input, .dashboard-shell .admin-toolbar select { width: 100%; }
+}
+
+/* ── Boat search bar ──────────────────────────────── */
+.dashboard-shell .boat-search input { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.09); color: #e2e8f0; }
+.dashboard-shell .boat-search input::placeholder { color: #334155; }
+.dashboard-shell .boat-search input:focus { border-color: rgba(14,165,233,0.5); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+.dashboard-shell .boat-search button { background: linear-gradient(135deg, rgba(14,165,233,0.2), rgba(14,165,233,0.1)); border-color: rgba(14,165,233,0.35); color: #7dd3fc; }
+.dashboard-shell .boat-search button:hover { background: linear-gradient(135deg, rgba(14,165,233,0.3), rgba(14,165,233,0.18)); }
+
+/* ── Filter labels ────────────────────────────────── */
+.dashboard-shell .telemetry-device-header label,
+.dashboard-shell .history-filter-panel label,
+.dashboard-shell .boat-search label { color: #94a3b8; font-weight: 600; }
+.dashboard-shell .history-filter-panel input,
+.dashboard-shell .telemetry-device-section select,
+.dashboard-shell .family-vessel-selector select { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.09); color: #94a3b8; }
+
+/* ── Scrollbars ───────────────────────────────────── */
+.dashboard-shell ::-webkit-scrollbar { width: 5px; height: 5px; }
+.dashboard-shell ::-webkit-scrollbar-track { background: transparent; }
+.dashboard-shell ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.dashboard-shell ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Loading & Error pages ────────────────────────── */
+.dashboard-shell .jalari-loading { background: var(--color-background); color: #0ea5e9; }
+.dashboard-shell .jalari-loading-name { color: #94a3b8; }
+.dashboard-shell .jalari-loading-label { color: #334155; }
+.dashboard-shell .dashboard-error-page { background: var(--color-background); }
+.dashboard-shell .dashboard-error-page h1 { color: #e2e8f0; }
