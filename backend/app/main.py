@@ -80,7 +80,8 @@ def unregistered_node_handler(_: Request, exc: UnregisteredNodeError) -> JSONRes
 
 
 @app.exception_handler(SQLAlchemyError)
-def database_error_handler(_: Request, __: SQLAlchemyError) -> JSONResponse:
+def database_error_handler(_: Request, exc: SQLAlchemyError) -> JSONResponse:
+    logger.exception("Database error occurred (%s)", exc.__class__.__name__)
     return JSONResponse(status_code=503, content={"detail": "Database unavailable"})
 
 

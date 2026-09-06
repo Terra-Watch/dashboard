@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+
+from app.models.enums import BoatStatus
 from app.schemas.alert import AlertResponse
 from app.schemas.boat import BoatResponse
 from app.schemas.gateway import GatewayResponse
@@ -5,15 +8,51 @@ from app.schemas.history import HistoricalEventResponse
 from app.schemas.telemetry import TelemetryResponse
 
 
+GATEWAY_ONLINE_TIMEOUT_SECONDS = 300  # 5 minutes
+BOAT_ONLINE_TIMEOUT_SECONDS = 300     # 5 minutes
+
+
+def compute_gateway_status(last_seen: datetime | None, timeout_seconds: int = GATEWAY_ONLINE_TIMEOUT_SECONDS) -> BoatStatus:
+    if last_seen is None:
+        return BoatStatus.OFFLINE
+    now = datetime.now(timezone.utc)
+    if last_seen.tzinfo is None:
+        last_seen = last_seen.replace(tzinfo=timezone.utc)
+    if (now - last_seen).total_seconds() <= timeout_seconds:
+        return BoatStatus.ONLINE
+    return BoatStatus.OFFLINE
+
+
+def compute_boat_status(last_seen: datetime | None, timeout_seconds: int = BOAT_ONLINE_TIMEOUT_SECONDS) -> BoatStatus:
+    if last_seen is None:
+        return BoatStatus.OFFLINE
+    now = datetime.now(timezone.utc)
+    if last_seen.tzinfo is None:
+        last_seen = last_seen.replace(tzinfo=timezone.utc)
+    if (now - last_seen).total_seconds() <= timeout_seconds:
+        return BoatStatus.ONLINE
+    return BoatStatus.OFFLINE
+
+
 def boat_response(boat) -> BoatResponse:
-    data = {key: getattr(boat, key) for key in BoatResponse.model_fields if key not in {"id", "location"}}
+    data = {key: getattr(boat, key) for key in BoatResponse.model_fields if key not in {"id", "location", "status"}}
     data["id"] = boat.id
+    data["status"] = compute_boat_status(boat.lastSeen)
     data["location"] = None if boat.latitude is None or boat.longitude is None else {"latitude": boat.latitude, "longitude": boat.longitude}
     return BoatResponse.model_validate(data)
 
 
 def gateway_response(gateway) -> GatewayResponse:
-    return GatewayResponse.model_validate(gateway)
+    computed_status = compute_gateway_status(gateway.lastSeen)
+    data = {
+        "id": gateway.id,
+        "gatewayId": gateway.gatewayId,
+        "status": computed_status,
+        "lastSeen": gateway.lastSeen,
+        "firmware": gateway.firmware,
+        "registeredAt": gateway.registeredAt,
+    }
+    return GatewayResponse.model_validate(data)
 
 
 def telemetry_response(telemetry) -> TelemetryResponse:

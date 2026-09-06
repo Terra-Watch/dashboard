@@ -22,18 +22,24 @@ export function Topbar({ sidebarOpen, onMenuClick }: TopbarProps) {
       const gateway = gateways[0];
       if (gateway) {
         setGatewayStatus(gateway.status);
-        const latestTime = new Date(gateway.lastSeen);
-        const diffSeconds = Math.floor((Date.now() - latestTime.getTime()) / 1000);
-        if (diffSeconds < 5) {
-          setLastSync("Just now");
-        } else if (diffSeconds < 60) {
-          setLastSync(`${diffSeconds}s ago`);
+        if (!gateway.lastSeen) {
+          setLastSync("Never");
         } else {
-          setLastSync(`${Math.floor(diffSeconds / 60)}m ago`);
+          const latestTime = new Date(gateway.lastSeen);
+          const diffSeconds = Math.floor((Date.now() - latestTime.getTime()) / 1000);
+          if (diffSeconds < 5) {
+            setLastSync("Just now");
+          } else if (diffSeconds < 60) {
+            setLastSync(`${diffSeconds}s ago`);
+          } else if (diffSeconds < 3600) {
+            setLastSync(`${Math.floor(diffSeconds / 60)}m ago`);
+          } else {
+            setLastSync(`${Math.floor(diffSeconds / 3600)}h ago`);
+          }
         }
       } else {
         setGatewayStatus("UNKNOWN");
-        setLastSync("Unavailable");
+        setLastSync("Never");
       }
     }
 

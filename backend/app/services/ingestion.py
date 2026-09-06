@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models.enums import HistoricalEventType
+from app.models.enums import BoatStatus, HistoricalEventType
+from app.models.gateway import Gateway
 from app.models.historical_event import HistoricalEvent
 from app.models.telemetry import Telemetry
 from app.models.device import BoatDevice
@@ -20,6 +21,27 @@ class IngestionService:
     def __init__(self, boats: BoatRepository | None = None, ingestion: IngestionRepository | None = None) -> None:
         self.boats = boats or BoatRepository()
         self.ingestion = ingestion or IngestionRepository()
+
+    def _update_gateway_last_seen(self, db: Session, received_at: datetime, destination: int | None = None) -> Gateway:
+        gateway = None
+        if destination is not None and destination != 255:
+            target_id = f"GW-{destination:02X}"
+            gateway = db.query(Gateway).filter(Gateway.gatewayId == target_id).first()
+        if gateway is None:
+            gateway = db.query(Gateway).first()
+        if gateway is None:
+            gateway = Gateway(
+                gatewayId="GW-FE",
+                status=BoatStatus.ONLINE,
+                lastSeen=received_at,
+                registeredAt=received_at,
+            )
+            db.add(gateway)
+            db.flush()
+        else:
+            gateway.lastSeen = received_at
+            gateway.status = BoatStatus.ONLINE
+        return gateway
 
     def process_heartbeat(self, db: Session, event: GatewayHeartbeatEvent) -> dict[str, object]:
         boat = self.boats.get_by_node_id(db, event.nodeId)
@@ -41,10 +63,12 @@ class IngestionService:
         if event.snr is not None:
             boat.snr = event.snr
 
+        gateway = self._update_gateway_last_seen(db, received_at, destination=event.destination)
+
         history = HistoricalEvent(
             eventType=HistoricalEventType.HEARTBEAT_RECEIVED,
             boat_id=boat.id,
-            gateway_id=None,
+            gateway_id=gateway.id if gateway else None,
             timestamp=received_at,
             details=event.model_dump(mode="json"),
         )
@@ -75,6 +99,9 @@ class IngestionService:
         device = db.query(BoatDevice).filter(BoatDevice.boat_id == boat.id, BoatDevice.node_id == event.nodeId, BoatDevice.status == "ACTIVE").first()
         if device:
             device.last_seen = received_at
+
+        gateway = self._update_gateway_last_seen(db, received_at)
+
         telemetry = Telemetry(
             boat_id=boat.id,
             device_id=device.id if device else None,

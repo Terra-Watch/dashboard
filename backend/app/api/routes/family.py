@@ -43,14 +43,16 @@ def _map_boat_to_family_response(boat: Boat, current_user: User, db: Session) ->
         safety_status = "WARNING"
         active_incident_id = str(active_alert.id)
 
-    # Location freshness
+    # Location freshness and connectivity evaluation
+    last_seen_dt = boat.lastSeen
+    if last_seen_dt and last_seen_dt.tzinfo is None:
+        last_seen_dt = last_seen_dt.replace(tzinfo=timezone.utc)
+    diff_sec = (datetime.now(timezone.utc) - last_seen_dt).total_seconds() if last_seen_dt else 9999
+    is_connected = diff_sec <= 300
+    is_live = diff_sec <= 120
+
     location = None
     if boat.latitude is not None and boat.longitude is not None:
-        last_seen_dt = boat.lastSeen
-        if last_seen_dt and last_seen_dt.tzinfo is None:
-            last_seen_dt = last_seen_dt.replace(tzinfo=timezone.utc)
-        diff_sec = (datetime.now(timezone.utc) - last_seen_dt).total_seconds() if last_seen_dt else 9999
-        is_live = diff_sec <= 120 and boat.status.value == "ONLINE"
         location = FamilyBoatLocation(
             latitude=float(boat.latitude),
             longitude=float(boat.longitude),
@@ -60,8 +62,8 @@ def _map_boat_to_family_response(boat: Boat, current_user: User, db: Session) ->
             headingDeg=None,
         )
 
-    trip_state = "ON_TRIP" if boat.status.value == "ONLINE" else "AT_PORT"
-    connection_status = "CONNECTED" if boat.status.value == "ONLINE" else "OFFLINE"
+    trip_state = "ON_TRIP" if is_connected else "AT_PORT"
+    connection_status = "CONNECTED" if is_connected else "OFFLINE"
 
     return FamilyBoatResponse(
         id=str(boat.id),
@@ -118,7 +120,7 @@ def get_family_boat_location(
     if last_seen_dt and last_seen_dt.tzinfo is None:
         last_seen_dt = last_seen_dt.replace(tzinfo=timezone.utc)
     diff_sec = (datetime.now(timezone.utc) - last_seen_dt).total_seconds() if last_seen_dt else 9999
-    is_live = diff_sec <= 120 and boat.status.value == "ONLINE"
+    is_live = diff_sec <= 120
 
     return FamilyBoatLocation(
         latitude=float(boat.latitude),

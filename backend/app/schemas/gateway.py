@@ -9,7 +9,7 @@ class GatewayResponse(ApiModel):
     id: UUID
     gatewayId: str
     status: BoatStatus
-    lastSeen: datetime
+    lastSeen: datetime | None = None
     firmware: str | None
     registeredAt: datetime
 
