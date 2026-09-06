@@ -20,9 +20,10 @@ function getStoredConfig(): { url: string; anonKey: string } {
   }
 }
 
-const initialConfig = getStoredConfig();
-
-export const isSupabaseConfigured = Boolean(initialConfig.url && initialConfig.anonKey);
+// Supabase is not currently an authority for Jalari identity or roles. The
+// backend-issued JWT is authoritative; enabling this client before the
+// backend verifies Supabase tokens would allow metadata-based role spoofing.
+export const isSupabaseConfigured = false;
 
 export function createSupabaseClient(url?: string, anonKey?: string): SupabaseClient | null {
   const targetUrl = url || getStoredConfig().url;
@@ -41,9 +42,7 @@ export function createSupabaseClient(url?: string, anonKey?: string): SupabaseCl
   });
 }
 
-export const supabase = isSupabaseConfigured
-  ? createSupabaseClient(initialConfig.url, initialConfig.anonKey)
-  : null;
+export const supabase: SupabaseClient | null = null;
 
 export function saveRuntimeSupabaseConfig(url: string, anonKey: string): boolean {
   if (typeof window === "undefined") return false;

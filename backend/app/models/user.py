@@ -13,13 +13,26 @@ from app.models.enums import UserRole
 user_boats = Table(
     "user_boats",
     Base.metadata,
-    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("boat_id", UUID(as_uuid=True), ForeignKey("boats.id", ondelete="CASCADE"), primary_key=True),
-    Column("relationship_type", String, nullable=False, default="FAMILY_CONTACT"),
+    Column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("boat_id", UUID(as_uuid=True), ForeignKey("boats.id", ondelete="CASCADE"), nullable=False),
+    Column("relationship_type", String, nullable=False, default="FAMILY_VIEWER", server_default="FAMILY_VIEWER"),
     Column("assignment_status", String, nullable=False, default="ACTIVE"),
     Column("started_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)),
     Column("ended_at", DateTime(timezone=True), nullable=True),
     Column("created_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)),
+)
+
+operator_boat_access = Table(
+    "operator_boat_access",
+    Base.metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("boat_id", UUID(as_uuid=True), ForeignKey("boats.id", ondelete="CASCADE"), nullable=False),
+    Column("status", String, nullable=False, default="ACTIVE", server_default="ACTIVE"),
+    Column("started_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False),
+    Column("ended_at", DateTime(timezone=True), nullable=True),
+    Column("created_at", DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False),
 )
 
 

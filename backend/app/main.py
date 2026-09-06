@@ -22,6 +22,10 @@ from app.api.routes import (
     telemetry,
 )
 from app.api.routes import assignments
+from app.api.routes import devices
+from app.api.routes import operator_scope
+from app.api.routes import family_access
+from app.core.config import get_cors_origins
 from app.services.errors import InvalidTransitionError, ResourceConflictError, ResourceNotFoundError
 from app.services.ingestion import UnregisteredNodeError
 
@@ -30,7 +34,7 @@ logger = logging.getLogger("jalri.backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +44,9 @@ app.include_router(auth.router)
 app.include_router(family.router)
 app.include_router(boats.router)
 app.include_router(assignments.router)
+app.include_router(devices.router)
+app.include_router(operator_scope.router)
+app.include_router(family_access.router)
 app.include_router(gateways.router)
 app.include_router(telemetry.router)
 app.include_router(boat_telemetry.router)

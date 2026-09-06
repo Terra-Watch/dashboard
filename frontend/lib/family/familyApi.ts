@@ -229,14 +229,8 @@ export async function changeCurrentUserPassword(payload: { current_password: str
 }
 
 export async function logoutFamily(): Promise<void> {
-  try {
-    await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-  } catch {
-    // Ignore network error on logout — we always clear local state below.
-  }
+  // Authentication is stateless JWT. Clearing the client token logs the user
+  // out locally; account-status checks still invalidate access server-side.
   if (typeof window !== "undefined") {
     localStorage.removeItem("jalari_token");
     localStorage.removeItem("jalari_user");

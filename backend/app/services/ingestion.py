@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.enums import HistoricalEventType
 from app.models.historical_event import HistoricalEvent
 from app.models.telemetry import Telemetry
+from app.models.device import BoatDevice
 from app.repositories.boats import BoatRepository
 from app.repositories.ingestion import IngestionRepository
 from app.schemas.ingestion import GatewayHeartbeatEvent, GatewayTelemetryEvent
@@ -31,6 +32,9 @@ class IngestionService:
 
         received_at = datetime.now(timezone.utc)
         boat.lastSeen = received_at
+        device = db.query(BoatDevice).filter(BoatDevice.boat_id == boat.id, BoatDevice.node_id == event.nodeId, BoatDevice.status == "ACTIVE").first()
+        if device:
+            device.last_seen = received_at
         boat.heartbeatCount += 1
         if event.rssi is not None:
             boat.rssi = event.rssi
@@ -68,8 +72,12 @@ class IngestionService:
 
         received_at = datetime.now(timezone.utc)
         boat.lastSeen = received_at
+        device = db.query(BoatDevice).filter(BoatDevice.boat_id == boat.id, BoatDevice.node_id == event.nodeId, BoatDevice.status == "ACTIVE").first()
+        if device:
+            device.last_seen = received_at
         telemetry = Telemetry(
             boat_id=boat.id,
+            device_id=device.id if device else None,
             rssi=event.rssi,
             snr=event.snr,
             rtcTemperatureC=event.temperatureC if event.rtcValid else None,

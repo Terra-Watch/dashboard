@@ -21,7 +21,7 @@ class BoatService:
         return boat
 
     def create(self, db: Session, payload: BoatCreate) -> Boat:
-        if self.repository.get(db, payload.boatId) is not None or self.repository.get_by_node_id(db, payload.nodeId) is not None:
+        if self.repository.get(db, payload.boatId) is not None or (payload.nodeId is not None and self.repository.get_by_node_id(db, payload.nodeId) is not None):
             raise ResourceConflictError("boatId or nodeId already exists")
         location = payload.location
         boat = Boat(

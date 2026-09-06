@@ -1,7 +1,7 @@
 """add family authentication, assignments, OTP records and trips
 
 Revision ID: 9f4d2b7c1a10
-Revises: 335c409c3e91
+Revises: 7c5f1d8a2b41
 """
 from typing import Sequence, Union
 

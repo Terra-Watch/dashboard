@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
-from app.api.dependencies.auth import require_operations_user
+from app.api.dependencies.auth import operation_boats_for_user, require_operation_boat, require_operations_user
+from app.models.user import User
 from app.models.enums import HistoricalEventType
 from app.repositories.boats import BoatRepository
 from app.repositories.history import HistoricalEventRepository
@@ -26,13 +27,17 @@ def list_history(
     boatId: str | None = Query(default=None),
     eventType: HistoricalEventType | None = Query(default=None),
     db: Session = Depends(get_db),
-    _: object = Depends(require_operations_user),
+    actor: User = Depends(require_operations_user),
 ) -> list[HistoricalEventResponse]:
     boat_uuid: UUID | None = None
     if boatId is not None:
         boat = boat_repository.get(db, boatId)
         if boat is None:
             raise ResourceNotFoundError("Boat not found")
+        require_operation_boat(actor, boat, db)
         boat_uuid = boat.id
-    return [history_response(item) for item in repository.list(db, from_, to, boat_uuid, eventType)]
-
+    records = [history_response(item) for item in repository.list(db, from_, to, boat_uuid, eventType)]
+    if actor.role.value == "OPERATOR":
+        allowed = {boat.id for boat in operation_boats_for_user(actor, db)}
+        records = [record for record in records if record.boat_id in allowed]
+    return records

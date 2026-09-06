@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.boat import Boat
+from app.models.device import BoatDevice
 
 
 class BoatRepository:
@@ -15,10 +16,17 @@ class BoatRepository:
         return db.scalar(select(Boat).where(Boat.boatId == boat_id))
 
     def get_by_node_id(self, db: Session, node_id: int) -> Boat | None:
+        device_boat = db.scalar(
+            select(Boat)
+            .join(BoatDevice, BoatDevice.boat_id == Boat.id)
+            .where(BoatDevice.node_id == node_id, BoatDevice.status == "ACTIVE")
+        )
+        if device_boat is not None:
+            return device_boat
+        # Compatibility for test/legacy databases before device backfill.
         return db.scalar(select(Boat).where(Boat.nodeId == node_id))
 
     def add(self, db: Session, boat: Boat) -> Boat:
         db.add(boat)
         db.flush()
         return boat
-

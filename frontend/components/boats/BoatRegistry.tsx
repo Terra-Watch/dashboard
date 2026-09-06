@@ -1,24 +1,32 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { fetchBoats, Boat } from "../../lib/api";
+import { Boat, Device, fetchBoats, fetchDevices, fetchUsers, registerBoat as registerBoatApi, AdminUser } from "../../lib/api";
 import { Card } from "../ui/Card";
 import { DataTable } from "../ui/DataTable";
 import { SectionHeader } from "../ui/SectionHeader";
 import { StatusBadge } from "../ui/StatusBadge";
+import Link from "next/link";
+import { useAuth } from "../../lib/family/authContext";
 
 export function BoatRegistry() {
   const [boats, setBoats] = useState<Boat[]>([]);
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     let mounted = true;
 
     async function loadBoats() {
-      const data = await fetchBoats();
+      const [data, userData, deviceData] = await Promise.all([fetchBoats(), isAdmin ? fetchUsers() : Promise.resolve([]), isAdmin ? fetchDevices() : Promise.resolve([])]);
       if (!mounted) return;
       setBoats(data);
+      setUsers(userData);
+      setDevices(deviceData);
       setLoading(false);
     }
 
@@ -28,16 +36,23 @@ export function BoatRegistry() {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [isAdmin]);
 
   const filteredBoats = boats.filter(
     (b) =>
       b.boatId.toLowerCase().includes(identifier.toLowerCase()) ||
-      b.nodeId.toString().includes(identifier)
+      b.nodeId != null && b.nodeId.toString().includes(identifier)
   );
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+  }
+
+  async function handleRegister(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const created = await registerBoatApi({ boatId: String(form.get("boatId")), nodeId: form.get("nodeId") ? Number(form.get("nodeId")) : undefined, deviceId: String(form.get("deviceId") || "") || undefined, ownerUserId: String(form.get("ownerUserId") || "") || undefined, commanderUserId: String(form.get("commanderUserId") || "") || undefined, familyUserIds: String(form.get("familyUserId") || "") ? [String(form.get("familyUserId"))] : [] });
+    setBoats((current) => [created, ...current]); setShowRegister(false); event.currentTarget.reset();
   }
 
   return (
@@ -46,6 +61,8 @@ export function BoatRegistry() {
         <h1>Boats</h1>
         <p>Registered vessels and their current operational status over LoRa.</p>
       </header>
+
+      {isAdmin && <section className="boats-controls" aria-label="Register vessel"><button className="ui-button" type="button" onClick={() => setShowRegister((current) => !current)}>{showRegister ? "Close registration" : "Register boat"}</button>{showRegister && <Card className="admin-create-card"><div className="section-header"><div><h2>Register boat</h2><p>Use existing accounts and registered devices. Relationships remain auditable.</p></div></div><form className="profile-form" onSubmit={(event) => void handleRegister(event)}><label>Boat identifier<input name="boatId" required placeholder="AP-07-FISH-12" /></label><label>Node ID<input name="nodeId" type="number" min="0" /></label><label>Registered device<select name="deviceId" defaultValue=""><option value="">No device yet</option>{devices.filter((device) => device.status === "UNASSOCIATED").map((device) => <option value={device.deviceId} key={device.id}>{device.deviceId} · node {device.nodeId ?? "—"}</option>)}</select></label><label>Owner<select name="ownerUserId" defaultValue=""><option value="">Not assigned</option>{users.filter((user) => user.role === "FISHERMAN").map((user) => <option value={user.id} key={user.id}>{user.name} · {user.email}</option>)}</select></label><label>Commander<select name="commanderUserId" defaultValue=""><option value="">Not assigned</option>{users.filter((user) => user.role === "FISHERMAN").map((user) => <option value={user.id} key={user.id}>{user.name} · {user.email}</option>)}</select></label><label>Family viewer<select name="familyUserId" defaultValue=""><option value="">No family access</option>{users.filter((user) => user.role === "FAMILY").map((user) => <option value={user.id} key={user.id}>{user.name} · {user.email}</option>)}</select></label><button className="ui-button" type="submit">Register boat</button></form></Card>}</section>}
 
       <section className="boats-controls" aria-label="Vessel registry search">
         <form className="boat-search" onSubmit={handleSearch}>
@@ -102,10 +119,10 @@ export function BoatRegistry() {
                       }}
                     >
                       <td style={{ padding: "0.75rem 1rem", fontWeight: 600, color: "#f1f5f9" }}>
-                        {boat.boatId}
+                        <Link href={`/dashboard/boats/${encodeURIComponent(boat.boatId)}`}>{boat.boatId}</Link>
                       </td>
                       <td style={{ padding: "0.75rem 1rem", color: "#38bdf8" }}>
-                        #{boat.nodeId}
+                        {boat.nodeId == null ? "—" : `#${boat.nodeId}`}
                       </td>
                       <td style={{ padding: "0.75rem 1rem" }}>
                         <StatusBadge

@@ -11,7 +11,7 @@ from app.api.dependencies.database import get_db
 from app.core.config import get_environment, get_gateway_ingestion_key
 from app.core.security import decode_access_token
 from app.models.boat import Boat
-from app.models.user import User, UserRole, user_boats
+from app.models.user import User, UserRole, operator_boat_access, user_boats
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -124,6 +124,48 @@ def require_gateway_ingestion_key(
         return
     if expected is None or not gateway_key or not secrets.compare_digest(gateway_key, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Gateway authentication required")
+
+
+def active_boats_for_user(user: User, db: Session) -> list[Boat]:
+    return list(
+        db.scalars(
+            select(Boat)
+            .join(user_boats, user_boats.c.boat_id == Boat.id)
+            .where(
+                user_boats.c.user_id == user.id,
+                user_boats.c.assignment_status == "ACTIVE",
+                Boat.lifecycleStatus == "ACTIVE",
+            )
+            .order_by(Boat.boatId)
+        )
+    )
+
+
+def operation_boats_for_user(user: User, db: Session) -> list[Boat]:
+    if user.role in {UserRole.ADMIN, UserRole.RESCUER}:
+        return list(db.query(Boat).order_by(Boat.boatId).all())
+    return list(
+        db.scalars(
+            select(Boat)
+            .join(operator_boat_access, operator_boat_access.c.boat_id == Boat.id)
+            .where(operator_boat_access.c.user_id == user.id, operator_boat_access.c.status == "ACTIVE")
+            .order_by(Boat.boatId)
+        )
+    )
+
+
+def require_operation_boat(user: User, boat: Boat, db: Session) -> None:
+    if user.role in {UserRole.ADMIN, UserRole.RESCUER}:
+        return
+    allowed = db.scalar(
+        select(operator_boat_access.c.id).where(
+            operator_boat_access.c.user_id == user.id,
+            operator_boat_access.c.boat_id == boat.id,
+            operator_boat_access.c.status == "ACTIVE",
+        )
+    )
+    if allowed is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operator is not authorized for this boat")
 
 
 def verify_boat_authorization(user: User, boat_identifier: str, db: Session) -> Boat:

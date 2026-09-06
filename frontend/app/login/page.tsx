@@ -30,8 +30,8 @@ function LoginFormInner() {
   const [activeRolePreset, setActiveRolePreset] = useState<RolePreset>("FAMILY");
 
   // Credentials
-  const [identifier, setIdentifier] = useState("family@jalari.in");
-  const [password, setPassword] = useState("FamilyPass123!");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
@@ -44,7 +44,6 @@ function LoginFormInner() {
   // Public signup is intentionally disabled. Accounts are provisioned by an
   // authorized Admin/Operator through the server-side user API.
   const hasSupabaseConfig = false;
-  const isDevelopment = process.env.NODE_ENV === "development";
 
   // Feedback Messages
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -93,14 +92,6 @@ function LoginFormInner() {
     } else {
       router.push("/profile");
     }
-  };
-
-  const selectDevelopmentAccount = (email: string, accountPassword: string, role: RolePreset) => {
-    setIdentifier(email);
-    setPassword(accountPassword);
-    setActiveRolePreset(role);
-    setErrorMessage(null);
-    setSuccessMessage("Development account selected.");
   };
 
   const handleDirectOrSupabaseSubmit = async (e: React.FormEvent) => {
@@ -270,31 +261,6 @@ function LoginFormInner() {
           </button>
         </div>
 
-        {activeTab === "DIRECT" && isDevelopment && (
-          <div style={styles.devAccess}>
-            <div>
-              <span style={styles.devAccessLabel}>Local development</span>
-              <span style={styles.devAccessHint}>Use a seeded account</span>
-            </div>
-            <div style={styles.devAccessActions}>
-              <button
-                type="button"
-                onClick={() => selectDevelopmentAccount("family@jalari.in", "FamilyPass123!", "FAMILY")}
-                style={styles.devAccessButton}
-              >
-                Family
-              </button>
-              <button
-                type="button"
-                onClick={() => selectDevelopmentAccount("fisherman@jalari.in", "FishermanPass123!", "FISHERMAN")}
-                style={styles.devAccessButton}
-              >
-                Fisherman
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Status Alerts */}
         {errorMessage && (
           <div style={styles.errorBox} role="alert">
@@ -366,19 +332,6 @@ function LoginFormInner() {
                     placeholder="Enter phone number"
                     style={styles.input}
                   />
-                </div>
-                <div style={styles.fieldGroup}>
-                  <label style={styles.label}>Account Role</label>
-                  <select
-                    value={signUpRole}
-                    onChange={(e) => setSignUpRole(e.target.value as FamilyUser["role"])}
-                    style={styles.select}
-                  >
-                    <option value="FAMILY">Family Member (Shore-side Safety View)</option>
-                    <option value="FISHERMAN">Vessel Crew / Fisherman (Onboard Terminal)</option>
-                    <option value="OPERATOR">Operations Officer (Coast Guard / Port Command)</option>
-                    <option value="ADMIN">System Administrator (Root Admin)</option>
-                  </select>
                 </div>
               </>
             )}

@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
-from app.api.dependencies.auth import require_operations_user
+from app.api.dependencies.auth import require_operation_boat, require_operations_user
+from app.models.user import User
 from app.repositories.boats import BoatRepository
 from app.repositories.telemetry import TelemetryRepository
 from app.schemas.telemetry import TelemetryResponse
@@ -23,10 +24,10 @@ def get_boat_telemetry(
     from_: datetime | None = Query(default=None, alias="from"),
     to: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
-    _: object = Depends(require_operations_user),
+    actor: User = Depends(require_operations_user),
 ) -> list[TelemetryResponse]:
     boat = boat_repository.get(db, boatId)
     if boat is None:
         raise ResourceNotFoundError("Boat not found")
+    require_operation_boat(actor, boat, db)
     return [telemetry_response(item) for item in telemetry_repository.list(db, boat.id, from_, to)]
-

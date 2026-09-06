@@ -7,14 +7,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import get_current_user, require_family_user, verify_boat_authorization
+from app.api.dependencies.auth import active_boats_for_user, get_current_user, require_family_user, verify_boat_authorization
 from app.api.dependencies.database import get_db
 from app.core.security import decode_access_token
 from app.models.alert import Alert
 from app.models.boat import Boat
 from app.models.trip import Trip
-from app.models.user import User, UserRole
-from app.models.user import user_boats
+from app.models.user import User, UserRole, user_boats
 from app.schemas.family import (
     FamilyBoatLocation,
     FamilyBoatResponse,
@@ -272,19 +271,12 @@ async def family_websocket_stream(websocket: WebSocket, token: str = Query(...),
     except Exception:
         user = None
 
-    if not user or user.role != UserRole.FAMILY or not user.is_active:
+    if not user or user.role != UserRole.FAMILY or not user.is_active or user.account_status != "ACTIVE":
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     # Authorized boat set
-    authorized_boat_ids = frozenset(
-        boat.boatId.lower()
-        for boat in db.query(Boat).join(user_boats, user_boats.c.boat_id == Boat.id).filter(
-            user_boats.c.user_id == user.id,
-            user_boats.c.assignment_status == "ACTIVE",
-            Boat.lifecycleStatus == "ACTIVE",
-        ).all()
-    )
+    authorized_boat_ids = frozenset(boat.boatId.lower() for boat in active_boats_for_user(user, db))
     await websocket.accept()
     conn_info = (websocket, authorized_boat_ids)
     active_family_sockets.add(conn_info)

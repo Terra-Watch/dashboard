@@ -30,7 +30,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [isLoading, user, refreshProfile]);
 
   if (isLoading) {
-    return <JalariLoading label="Checking your secure connection" />;
+    return <JalariLoading label="Checking secure maritime connection" />;
   }
 
   if (!isAuthenticated || user?.role !== "FAMILY") {

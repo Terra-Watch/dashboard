@@ -44,5 +44,14 @@ def get_gateway_ingestion_key() -> str | None:
     return os.getenv("JALRI_GATEWAY_INGESTION_KEY")
 
 
+def get_cors_origins() -> list[str]:
+    configured = os.getenv("JALRI_CORS_ORIGINS")
+    if configured:
+        return [origin.strip() for origin in configured.split(",") if origin.strip()]
+    if get_environment() == "development":
+        return ["http://localhost:3000", "http://127.0.0.1:3000"]
+    return []
+
+
 def get_token_expire_minutes() -> int:
     return int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours

@@ -33,7 +33,12 @@ const system: NavigationItem[] = [
   { label: "Documentation", href: "/docs", icon: "docs" },
 ];
 
-const administration: NavigationItem[] = [{ label: "Users", href: "/dashboard/users", icon: "user" }];
+const administration: NavigationItem[] = [
+  { label: "Users", href: "/dashboard/users", icon: "user" },
+  { label: "Family access", href: "/dashboard/family-access", icon: "user" },
+  { label: "Devices", href: "/dashboard/devices", icon: "gateway" },
+  { label: "Audit log", href: "/dashboard/audit", icon: "history" },
+];
 
 function NavigationIcon({ name }: { name: string }) {
   const common = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as const, strokeLinejoin: "round" as const, strokeWidth: 1.8 };

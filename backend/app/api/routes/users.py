@@ -1,6 +1,8 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import can_create_role, require_account_manager, require_admin_user
@@ -15,10 +17,16 @@ from app.services.audit import record_audit
 router = APIRouter(prefix="/api/users", tags=["users"])
 
 
-def _response(user: User) -> AdminUserResponse:
+def _response(user: User, db: Session) -> AdminUserResponse:
+    active_boat_ids = db.execute(
+        select(Boat.boatId).join(user_boats, user_boats.c.boat_id == Boat.id).where(
+            user_boats.c.user_id == user.id,
+            user_boats.c.assignment_status == "ACTIVE",
+        )
+    ).scalars().all()
     return AdminUserResponse(
         id=user.id, email=user.email, name=user.name, phone=user.phone,
-        role=user.role, authorizedBoatIds=[boat.boatId for boat in user.boats],
+        role=user.role, authorizedBoatIds=active_boat_ids,
         is_active=user.is_active, account_status=user.account_status,
     )
 
@@ -30,12 +38,22 @@ def _assign_boats(user: User, boat_ids: list[str], db: Session) -> None:
         if not boat:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Boat '{identifier}' not found")
         boats.append(boat)
-    user.boats = boats
+    requested_ids = {boat.id for boat in boats}
+    now = datetime.now(timezone.utc)
+    if requested_ids:
+        db.execute(user_boats.update().where(user_boats.c.user_id == user.id, user_boats.c.assignment_status == "ACTIVE", ~user_boats.c.boat_id.in_(requested_ids)).values(assignment_status="ENDED", ended_at=now))
+    else:
+        db.execute(user_boats.update().where(user_boats.c.user_id == user.id, user_boats.c.assignment_status == "ACTIVE").values(assignment_status="ENDED", ended_at=now))
+    relationship = "FAMILY_VIEWER" if user.role == UserRole.FAMILY else "CREW"
+    for boat in boats:
+        active = db.execute(select(user_boats.c.id).where(user_boats.c.user_id == user.id, user_boats.c.boat_id == boat.id, user_boats.c.assignment_status == "ACTIVE")).first()
+        if not active:
+            db.execute(user_boats.insert().values(user_id=user.id, boat_id=boat.id, relationship_type=relationship, assignment_status="ACTIVE", started_at=now, ended_at=None, created_at=now))
 
 
 @router.get("", response_model=list[AdminUserResponse])
 def list_users(_: User = Depends(require_admin_user), db: Session = Depends(get_db)) -> list[AdminUserResponse]:
-    return [_response(user) for user in db.query(User).order_by(User.created_at.desc()).all()]
+    return [_response(user, db) for user in db.query(User).order_by(User.created_at.desc()).all()]
 
 
 @router.get("/audit", dependencies=[Depends(require_admin_user)])
@@ -63,19 +81,21 @@ def create_user(
     record_audit(db, creator.id, "USER_CREATED", "USER", str(user.id), {"role": user.role.value})
     db.commit()
     db.refresh(user)
-    return _response(user)
+    return _response(user, db)
 
 
 def _set_account_status(user_id: uuid.UUID, lifecycle: str, actor: User, db: Session) -> AdminUserResponse:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if lifecycle == "ACTIVE" and user.account_status != "SUSPENDED":
+        raise HTTPException(status_code=409, detail="Only suspended accounts can be restored; archived accounts are not directly restorable")
     user.account_status = lifecycle
     user.is_active = lifecycle == "ACTIVE"
     record_audit(db, actor.id, f"USER_{lifecycle}", "USER", str(user.id), {"status": lifecycle})
     db.commit()
     db.refresh(user)
-    return _response(user)
+    return _response(user, db)
 
 
 @router.post("/{user_id}/suspend", response_model=AdminUserResponse)
@@ -118,4 +138,4 @@ def update_user(
     record_audit(db, _.id, "USER_UPDATED", "USER", str(user.id), {"role": user.role.value, "is_active": user.is_active})
     db.commit()
     db.refresh(user)
-    return _response(user)
+    return _response(user, db)

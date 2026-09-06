@@ -19,7 +19,7 @@ class Boat(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     boatId: Mapped[str] = mapped_column(String, nullable=False)
-    nodeId: Mapped[int] = mapped_column(Integer, nullable=False)
+    nodeId: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[BoatStatus] = mapped_column(Enum(BoatStatus, name="boat_status"), nullable=False)
     sos: Mapped[bool] = mapped_column(Boolean, nullable=False)
     battery: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
@@ -41,3 +41,4 @@ class Boat(Base):
     telemetry = relationship("Telemetry", back_populates="boat")
     alerts = relationship("Alert", back_populates="boat")
     historical_events = relationship("HistoricalEvent", back_populates="boat")
+    devices = relationship("BoatDevice", back_populates="boat", order_by="BoatDevice.registered_at")

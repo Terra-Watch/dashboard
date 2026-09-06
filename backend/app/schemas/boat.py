@@ -10,7 +10,7 @@ from app.schemas.common import ApiModel, Location
 
 class BoatCreate(ApiModel):
     boatId: str
-    nodeId: int
+    nodeId: int | None = None
     status: BoatStatus
     sos: bool
     battery: Decimal | None = Field(default=None, max_digits=5, decimal_places=2)
@@ -43,3 +43,12 @@ class BoatUpdate(ApiModel):
 
 class BoatResponse(BoatCreate):
     id: UUID
+
+
+class BoatRegistrationRequest(ApiModel):
+    boatId: str = Field(min_length=1, max_length=100)
+    nodeId: int | None = None
+    deviceId: str | None = None
+    ownerUserId: UUID | None = None
+    commanderUserId: UUID | None = None
+    familyUserIds: list[UUID] = Field(default_factory=list)

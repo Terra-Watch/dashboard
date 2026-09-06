@@ -6,7 +6,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import active_boats_for_user, get_current_user
 from app.api.dependencies.database import get_db
 from app.core.config import get_environment, get_secret_key
 from app.core.security import (
@@ -48,7 +48,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             detail="Account is suspended or deactivated",
         )
 
-    boat_ids = [b.boatId for b in user.boats]
+    boat_ids = [b.boatId for b in active_boats_for_user(user, db)]
     token = create_access_token({
         "sub": str(user.id),
         "email": user.email,
@@ -151,13 +151,13 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)) -> Toke
 
     # Fetch user
     user = db.query(User).filter((User.email == identifier) | (User.phone == identifier)).first()
-    if not user:
+    if not user or not user.is_active or user.account_status != "ACTIVE":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No user associated with verified identifier",
         )
 
-    boat_ids = [b.boatId for b in user.boats]
+    boat_ids = [b.boatId for b in active_boats_for_user(user, db)]
     token = create_access_token({
         "sub": str(user.id),
         "email": user.email,
@@ -180,7 +180,7 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)) -> Toke
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_profile(user: User = Depends(get_current_user)) -> UserResponse:
+def get_current_user_profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> UserResponse:
     """Retrieve authenticated user identity and authorized boats."""
     return UserResponse(
         id=user.id,
@@ -188,7 +188,7 @@ def get_current_user_profile(user: User = Depends(get_current_user)) -> UserResp
         name=user.name,
         phone=user.phone,
         role=user.role,
-        authorizedBoatIds=[b.boatId for b in user.boats],
+        authorizedBoatIds=[b.boatId for b in active_boats_for_user(user, db)],
     )
 
 
@@ -205,7 +205,7 @@ def update_current_user_profile(payload: ProfileUpdateRequest, user: User = Depe
         user.phone = payload.phone
     db.commit()
     db.refresh(user)
-    return UserResponse(id=user.id, email=user.email, name=user.name, phone=user.phone, role=user.role, authorizedBoatIds=[b.boatId for b in user.boats])
+    return UserResponse(id=user.id, email=user.email, name=user.name, phone=user.phone, role=user.role, authorizedBoatIds=[b.boatId for b in active_boats_for_user(user, db)])
 
 
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
@@ -251,7 +251,7 @@ def confirm_password_reset(payload: PasswordResetConfirmRequest, db: Session = D
     record = db.query(PasswordResetToken).filter(PasswordResetToken.token_hash == _reset_hash(payload.token), PasswordResetToken.used.is_(False), PasswordResetToken.expires_at > now).first()
     if not record:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token is invalid or expired")
-    user = db.query(User).filter(User.id == record.user_id, User.is_active.is_(True)).first()
+    user = db.query(User).filter(User.id == record.user_id, User.is_active.is_(True), User.account_status == "ACTIVE").first()
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token is invalid or expired")
     user.hashed_password = hash_password(payload.new_password)

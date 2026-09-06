@@ -10,6 +10,7 @@ from app.models.boat import Boat
 from app.models.enums import AlertSeverity, AlertStatus, AlertType, IncidentStatus, IncidentType
 from app.models.incident import Incident
 from app.models.user import User
+from app.models.user import user_boats
 from app.repositories.alerts import AlertRepository
 from app.services.errors import ResourceConflictError, ResourceNotFoundError
 
@@ -19,9 +20,22 @@ class CrewService:
         self.alerts = alerts or AlertRepository()
 
     def boat(self, user: User, db: Session) -> Boat:
-        if not user.boats:
+        boats = list(
+            db.scalars(
+                select(Boat)
+                .join(user_boats, user_boats.c.boat_id == Boat.id)
+                .where(
+                    user_boats.c.user_id == user.id,
+                    user_boats.c.assignment_status == "ACTIVE",
+                    user_boats.c.relationship_type.in_(("OWNER", "COMMANDER", "CREW")),
+                    Boat.lifecycleStatus == "ACTIVE",
+                )
+                .order_by(Boat.boatId)
+            )
+        )
+        if not boats:
             raise ResourceNotFoundError("No boat assigned")
-        boat = user.boats[0]
+        boat = boats[0]
         if boat is None:
             raise ResourceNotFoundError("Assigned boat not found")
         return boat
