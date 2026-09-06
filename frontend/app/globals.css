@@ -2439,7 +2439,11 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
    Scoped to .dashboard-shell so landing, family, and docs pages are unaffected
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* The dashboard uses the light application theme above. The former dark
+   dashboard override remains below for reference but is disabled. */
+@media all and (max-width: 0px) {
+
+/* Legacy dark-theme font import disabled. */
 
 .dashboard-shell {
   --color-background: #090e14;
@@ -2833,3 +2837,4 @@ h1 { margin: 0; color: var(--color-navy); font-size: clamp(2.5rem, 8vw, 5rem); l
 .dashboard-shell .jalari-loading-label { color: #334155; }
 .dashboard-shell .dashboard-error-page { background: var(--color-background); }
 .dashboard-shell .dashboard-error-page h1 { color: #e2e8f0; }
+}
