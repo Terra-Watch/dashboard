@@ -19,7 +19,7 @@ export function FamilyBoatMap({
   location,
   status,
   height = "420px",
-  homePortCoords = [17.6980, 83.2980], // Default Vizag Fishing Harbour
+  homePortCoords,
 }: FamilyBoatMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -33,7 +33,7 @@ export function FamilyBoatMap({
 
   const targetCoords: [number, number] = location
     ? [location.latitude, location.longitude]
-    : homePortCoords;
+    : homePortCoords || [0, 0];
 
   useEffect(() => {
     let map: any = null;
@@ -87,19 +87,20 @@ export function FamilyBoatMap({
       // Home Port Marker
       const portIcon = L.divIcon({
         className: "jalari-port-marker",
-        html: `<div style="background:#29434d;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">⚓</div>`,
+        html: `<div style="background:#29434d;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">PORT</div>`,
         iconSize: [30, 30],
         iconAnchor: [15, 15],
       });
 
-      portMarkerRef.current = L.marker(homePortCoords, { icon: portIcon })
-        .addTo(map)
-        .bindPopup(`
+      if (homePortCoords) {
+        portMarkerRef.current = L.marker(homePortCoords, { icon: portIcon })
+          .addTo(map)
+          .bindPopup(`
           <div style="font-family:sans-serif;padding:4px;">
-            <strong style="color:#29434d;font-size:0.95em;">Departure Harbour</strong><br/>
-            <span style="color:#64748b;font-size:0.8em;">Visakhapatnam Fishing Port</span>
+            <strong style="color:#29434d;font-size:0.95em;">Home port</strong>
           </div>
         `);
+      }
 
       // Boat Marker
       if (location) {
@@ -161,7 +162,7 @@ export function FamilyBoatMap({
           box-shadow: ${pulseShadow};
           transition: transform 0.3s ease;
         ">
-          🚤
+          <span aria-hidden="true">●</span>
         </div>
       `,
       iconSize: [38, 38],
@@ -196,6 +197,7 @@ export function FamilyBoatMap({
     }
 
     // Connect dashed guide line to harbour
+    if (!homePortCoords) return;
     if (trackLineRef.current) {
       trackLineRef.current.setLatLngs([homePortCoords, coords]);
     } else {
@@ -231,7 +233,7 @@ export function FamilyBoatMap({
           style={styles.recenterBtn}
           title="Re-center on Boat"
         >
-          🎯 Re-center
+          Re-center
         </button>
       )}
     </div>

@@ -121,7 +121,7 @@ export default function BoatLocationPage({ params }: PageProps) {
           disabled={refreshing}
           style={styles.refreshBtn}
         >
-          {refreshing ? "Updating..." : "🔄 Refresh Location"}
+          {refreshing ? "Updating..." : "Refresh location"}
         </button>
       </div>
 
@@ -154,7 +154,7 @@ export default function BoatLocationPage({ params }: PageProps) {
                   : "#86efac",
               }}
             >
-              {isEmergency ? "🚨 EMERGENCY" : isWarning ? "🟡 WARNING" : "🟢 SAFE"}
+              {isEmergency ? "EMERGENCY" : isWarning ? "WARNING" : "SAFE"}
             </span>
 
             <span style={styles.tripBadge}>
@@ -193,16 +193,14 @@ export default function BoatLocationPage({ params }: PageProps) {
             <div style={styles.coordBox}>
               <span style={styles.infoLabel}>Vessel Speed & Heading</span>
               <span style={styles.infoValue}>
-                {location?.speedKnots != null
-                  ? `${location.speedKnots} knots`
-                  : "Calm / Drifting"}{" "}
+                {location?.speedKnots != null ? `${location.speedKnots} knots` : "Unavailable"}{" "}
                 {location?.headingDeg != null ? `(${location.headingDeg}°)` : ""}
               </span>
             </div>
 
             <div style={styles.coordBox}>
               <span style={styles.infoLabel}>Home Harbour</span>
-              <span style={styles.infoValue}>{boat.homePort || "Visakhapatnam Fishing Harbour"}</span>
+              <span style={styles.infoValue}>{boat.homePort || "Unavailable"}</span>
             </div>
           </div>
 
@@ -221,7 +219,7 @@ export default function BoatLocationPage({ params }: PageProps) {
               href={`/family/boat/${encodeURIComponent(boat.boatId)}/history`}
               style={styles.historyBtn}
             >
-              📜 View Full Trip Route & History →
+              View full trip route &amp; history →
             </Link>
           </div>
         </div>

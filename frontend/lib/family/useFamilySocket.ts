@@ -45,7 +45,6 @@ class FamilyEventBus {
         },
         details: event.details || "Distress beacon activated from vessel.",
         updatedAt: event.timestamp,
-        rescueContact: "Indian Coast Guard MRCC Vizag: +91 891 256 0148 / Toll-Free 1554",
       });
     } else if (
       event.type === "sos.acknowledged" ||

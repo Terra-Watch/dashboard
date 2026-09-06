@@ -78,7 +78,7 @@ export function EmergencyBanner({ boatId }: EmergencyBannerProps) {
     <aside style={styles.banner} role="alert" aria-live="assertive">
       <div style={styles.container}>
         <div style={styles.left}>
-          <div style={styles.beaconPulse}>🚨</div>
+          <div style={styles.beaconPulse}>SOS</div>
           <div>
             <div style={styles.titleRow}>
               <span style={styles.title}>EMERGENCY ALERT</span>

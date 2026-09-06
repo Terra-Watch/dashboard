@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/family/authContext";
+import { JalariLoading } from "../../components/ui/JalariLoading";
 
 export default function ProfileIndexPage() {
   const router = useRouter();
@@ -40,28 +41,7 @@ export default function ProfileIndexPage() {
   }, [isLoading, router, user]);
 
   if (isLoading) {
-    return (
-      <div style={{
-        minHeight: "80vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "12px",
-        color: "#64748b"
-      }}>
-        <div style={{
-          width: "36px",
-          height: "36px",
-          border: "3px solid #cbd5e1",
-          borderTopColor: "#0284c7",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
-        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }` }} />
-        <span>Loading Maritime Profile...</span>
-      </div>
-    );
+    return <JalariLoading label="Loading your profile" />;
   }
 
   return null;

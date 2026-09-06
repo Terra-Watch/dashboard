@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { JalariLogo } from "../ui/JalariLogo";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { DOC_CATEGORIES, type DocCategory, type DocSection } from "@/lib/docs-data";
@@ -49,10 +50,7 @@ export function DocsSidebar({ isOpen, onClose, onOpenSearch }: DocsSidebarProps)
         <div className="docs-sidebar-top">
           <Link href="/" className="docs-sidebar-brand" onClick={onClose}>
             <div className="docs-sidebar-logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 14h18l-3 5H6l-3-5Z" />
-                <path d="m7 14 3-6h3l4 6M12 8V4h4" />
-              </svg>
+              <JalariLogo />
             </div>
             <div className="docs-sidebar-brand-text">
               <span className="docs-sidebar-brand-name">JALARI</span>

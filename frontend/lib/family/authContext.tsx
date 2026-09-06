@@ -55,7 +55,7 @@ export function mapSupabaseUser(supabaseUser: {
     role: validRole,
     assignedBoatIds: Array.isArray(metadata.assignedBoatIds)
       ? metadata.assignedBoatIds.filter((id): id is string => typeof id === "string")
-      : ["AP-07-FISH-12"],
+      : [],
   };
 }
 
@@ -240,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: name,
             role,
             phone,
-            assignedBoatIds: ["AP-07-FISH-12"],
+            assignedBoatIds: [],
           },
         },
       });

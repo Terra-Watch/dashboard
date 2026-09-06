@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { JalariLogo } from "../ui/JalariLogo";
 
 type SidebarProps = {
   open: boolean;
@@ -87,10 +88,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <aside className={`sidebar${open ? " sidebar-open" : ""}`} aria-label="Jalari navigation">
         <div className="sidebar-brand">
           <span className="brand-lockup">
-            <svg className="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 14h18l-3 5H6l-3-5Z" />
-              <path d="m7 14 3-6h3l4 6M12 8V4h4" />
-            </svg>
+            <JalariLogo className="brand-mark" />
             <span className="brand-name">JALARI</span>
           </span>
           <span className="brand-subtitle">MARITIME SAFETY</span>

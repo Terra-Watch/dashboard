@@ -127,7 +127,7 @@ export default function IncidentDetailsPage({ params }: PageProps) {
         }}
       >
         <div style={styles.heroLeft}>
-          <span style={styles.heroIcon}>{isResolved ? "✅" : "🚨"}</span>
+          <span style={styles.heroIcon}>{isResolved ? "RESOLVED" : "SOS"}</span>
           <div>
             <h1 style={styles.heroTitle}>
               {isResolved ? "EMERGENCY RESOLVED" : "ACTIVE DISTRESS INCIDENT"}
@@ -193,27 +193,13 @@ export default function IncidentDetailsPage({ params }: PageProps) {
             resolvedAt={incident.resolvedAt}
           />
 
-          {/* Verified Official Emergency Contacts */}
+          {/* Contact information returned with the incident */}
           <div style={styles.contactsCard}>
-            <h3 style={styles.contactTitle}>Official Emergency Contact Hub</h3>
+            <h3 style={styles.contactTitle}>Incident contact</h3>
             <p style={styles.contactNotice}>
-              If you have urgent information about the vessel or crew, contact:
+              Use the contact details supplied by the rescue service for this incident.
             </p>
-            <div style={styles.contactList}>
-              <div style={styles.contactItem}>
-                <span style={styles.contactOrg}>Indian Coast Guard (MRCC Vizag):</span>
-                <a href="tel:1554" style={styles.phoneLink}>
-                  📞 1554 (Toll-Free Search & Rescue)
-                </a>
-                <span style={styles.phoneSub}>Direct: +91 891 256 0148</span>
-              </div>
-              <div style={styles.contactItem}>
-                <span style={styles.contactOrg}>Harbour Fisheries Welfare Desk:</span>
-                <a href="tel:18004251660" style={styles.phoneLink}>
-                  📞 1800 425 1660
-                </a>
-              </div>
-            </div>
+            {incident.rescueContact ? <a href={`tel:${incident.rescueContact.replace(/[^\d+]/g, "")}`} style={styles.phoneLink}>{incident.rescueContact}</a> : <span style={styles.phoneSub}>No incident contact was provided.</span>}
           </div>
         </div>
 

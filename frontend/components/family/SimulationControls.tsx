@@ -183,7 +183,7 @@ export function SimulationControls({ boatId = "AP-07-FISH-12" }: SimulationContr
                 onClick={handleTriggerSOS}
                 style={{ ...styles.actionBtn, background: "#dc2626" }}
               >
-                🚨 1. Trigger SOS Alert
+                1. Trigger SOS Alert
               </button>
 
               <div style={styles.rescueStages}>

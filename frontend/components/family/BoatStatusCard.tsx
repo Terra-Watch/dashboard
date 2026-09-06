@@ -27,7 +27,7 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
       color: "#b45309",
       bg: "#fef3c7",
       border: "#fde68a",
-      icon: "🟡",
+      icon: "!",
       label: "WEATHER / SWELL WARNING",
       description: "Cautionary advisory issued for this maritime area.",
     },
@@ -35,7 +35,7 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
       color: "#b91c1c",
       bg: "#fee2e2",
       border: "#fca5a5",
-      icon: "🚨",
+      icon: "SOS",
       label: "DISTRESS REPORTED",
       description: "Emergency beacon active. Rescue coordination in progress.",
     },
@@ -43,7 +43,7 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
     color: "#475569",
     bg: "#f1f5f9",
     border: "#cbd5e1",
-    icon: "⚪",
+    icon: "—",
     label: "UNKNOWN",
     description: "Status awaiting synchronization.",
   };
@@ -67,7 +67,7 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
       {/* Top Bar: Vessel Identification */}
       <div style={styles.cardHeader}>
         <div style={styles.identityGroup}>
-          <div style={styles.boatIcon}>🚤</div>
+          <div style={styles.boatIcon}>V</div>
           <div>
             <h2 style={styles.boatName}>{boat.name}</h2>
             <div style={styles.idSubrow}>
@@ -143,12 +143,12 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
         <div style={styles.crewStrip}>
           {boat.captainName && (
             <span style={styles.crewItem}>
-              👤 <strong>Captain:</strong> {boat.captainName}
+              <strong>Captain:</strong> {boat.captainName}
             </span>
           )}
           {boat.crewCount && (
             <span style={styles.crewItem}>
-              👥 <strong>Crew Onboard:</strong> {boat.crewCount} members
+              <strong>Crew onboard:</strong> {boat.crewCount} members
             </span>
           )}
         </div>
@@ -160,14 +160,12 @@ export function BoatStatusCard({ boat, isPrimary = true }: BoatStatusCardProps) 
           href={`/family/boat/${encodeURIComponent(boat.boatId)}`}
           style={styles.btnPrimary}
         >
-          <span style={styles.btnIcon}>🗺️</span>
           VIEW LOCATION ON MAP
         </Link>
         <Link
           href={`/family/boat/${encodeURIComponent(boat.boatId)}/history`}
           style={styles.btnSecondary}
         >
-          <span style={styles.btnIcon}>📋</span>
           VIEW TRIP HISTORY
         </Link>
       </div>

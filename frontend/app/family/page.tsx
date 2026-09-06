@@ -1,329 +1,44 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Card } from "../../components/ui/Card";
+import { StatusBadge } from "../../components/ui/StatusBadge";
+import { JalariLoading } from "../../components/ui/JalariLoading";
+import { FamilyBoatMap } from "../../components/family/FamilyBoatMap";
 import { useAuth } from "../../lib/family/authContext";
-import { fetchFamilyBoats } from "../../lib/family/familyApi";
-import { FamilyBoat } from "../../lib/family/types";
-import { BoatStatusCard } from "../../components/family/BoatStatusCard";
+import { fetchBoatIncidents, fetchBoatTrips, fetchFamilyBoats } from "../../lib/family/familyApi";
 import { useFamilySocket } from "../../lib/family/useFamilySocket";
+import type { FamilyBoat, FamilyTrip, SOSIncident } from "../../lib/family/types";
+
+const activeIncidentStatuses = new Set(["ACTIVE", "ACKNOWLEDGED", "DISPATCHED"]);
+const formatTime = (value?: string | null) => { if (!value) return "Unavailable"; const date = new Date(value); return Number.isNaN(date.getTime()) ? "Unavailable" : date.toLocaleString(); };
+const connectionTone = (status: FamilyBoat["connectionStatus"]) => status === "CONNECTED" ? "healthy" : status === "NO_RECENT_UPDATE" ? "warning" : "danger";
 
 export default function FamilyHomePage() {
   const { user } = useAuth();
   const [boats, setBoats] = useState<FamilyBoat[]>([]);
-  const [selectedBoatId, setSelectedBoatId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedBoatId, setSelectedBoatId] = useState<string>();
+  const [incidents, setIncidents] = useState<SOSIncident[]>([]);
+  const [trips, setTrips] = useState<FamilyTrip[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { lastEvent } = useFamilySocket(selectedBoatId);
 
-  const { lastEvent } = useFamilySocket();
+  useEffect(() => { let active = true; fetchFamilyBoats().then((data) => { if (!active) return; setBoats(data); setSelectedBoatId((current) => current || data[0]?.boatId); }).catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : "Unable to load authorized vessels.")).finally(() => active && setLoading(false)); return () => { active = false; }; }, []);
+  const boat = useMemo(() => boats.find((item) => item.boatId === selectedBoatId) || boats[0], [boats, selectedBoatId]);
+  useEffect(() => { if (!boat) return; let active = true; Promise.all([fetchBoatIncidents(boat.boatId), fetchBoatTrips(boat.boatId)]).then(([incidentData, tripData]) => { if (!active) return; setIncidents(incidentData); setTrips(tripData); }).catch((reason: unknown) => active && setError(reason instanceof Error ? reason.message : "Unable to load vessel history.")); return () => { active = false; }; }, [boat?.boatId]);
+  useEffect(() => { if (!lastEvent) return; setBoats((current) => current.map((item) => { if (item.boatId.toLowerCase() !== lastEvent.boatId.toLowerCase()) return item; if (lastEvent.type === "boat.location.updated") return { ...item, latestLocation: { ...lastEvent, isLive: true }, lastSeen: lastEvent.timestamp, connectionStatus: "CONNECTED" }; if (lastEvent.type === "boat.status.updated") return { ...item, safetyStatus: lastEvent.status, tripState: lastEvent.tripState || item.tripState }; if (lastEvent.type === "sos.created") return { ...item, safetyStatus: "EMERGENCY", activeIncidentId: lastEvent.incidentId }; if (lastEvent.type === "sos.resolved") return { ...item, safetyStatus: "SAFE", activeIncidentId: null }; return item; })); }, [lastEvent]);
 
-  const loadBoats = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchFamilyBoats();
-      setBoats(data);
-      if (data.length > 0 && !selectedBoatId) {
-        setSelectedBoatId(data[0].boatId);
-      }
-    } catch (err: any) {
-      setError("Unable to connect to maritime gateway. Showing last available data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadBoats();
-  }, []);
-
-  // Update boat in real-time when WebSocket event arrives
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    if (lastEvent.type === "boat.location.updated") {
-      setBoats((prev) =>
-        prev.map((b) => {
-          if (b.boatId.toLowerCase() === lastEvent.boatId.toLowerCase()) {
-            return {
-              ...b,
-              latestLocation: {
-                latitude: lastEvent.latitude,
-                longitude: lastEvent.longitude,
-                timestamp: lastEvent.timestamp,
-                isLive: true,
-                speedKnots: lastEvent.speedKnots,
-                headingDeg: lastEvent.headingDeg,
-              },
-              lastSeen: lastEvent.timestamp,
-              connectionStatus: "CONNECTED",
-            };
-          }
-          return b;
-        })
-      );
-    } else if (lastEvent.type === "boat.status.updated") {
-      setBoats((prev) =>
-        prev.map((b) => {
-          if (b.boatId.toLowerCase() === lastEvent.boatId.toLowerCase()) {
-            return {
-              ...b,
-              safetyStatus: lastEvent.status,
-              tripState: lastEvent.tripState || b.tripState,
-            };
-          }
-          return b;
-        })
-      );
-    } else if (lastEvent.type === "sos.created") {
-      setBoats((prev) =>
-        prev.map((b) => {
-          if (b.boatId.toLowerCase() === lastEvent.boatId.toLowerCase()) {
-            return {
-              ...b,
-              safetyStatus: "EMERGENCY",
-              activeIncidentId: lastEvent.incidentId,
-            };
-          }
-          return b;
-        })
-      );
-    } else if (lastEvent.type === "sos.resolved") {
-      setBoats((prev) =>
-        prev.map((b) => {
-          if (b.boatId.toLowerCase() === lastEvent.boatId.toLowerCase()) {
-            return {
-              ...b,
-              safetyStatus: "SAFE",
-              activeIncidentId: null,
-            };
-          }
-          return b;
-        })
-      );
-    }
-  }, [lastEvent]);
-
-  if (loading && boats.length === 0) {
-    return (
-      <div style={styles.stateCenter}>
-        <div style={styles.spinner} />
-        <h2 style={styles.loadingTitle}>Connecting to family vessel...</h2>
-        <p style={styles.stateSub}>Fetching latest safety updates from shore gateway</p>
-      </div>
-    );
-  }
-
-  if (boats.length === 0 && !loading) {
-    return (
-      <div style={styles.stateCenter}>
-        <div style={styles.emptyIcon}>⚓</div>
-        <h2 style={styles.emptyTitle}>No Boat Assigned</h2>
-        <p style={styles.stateSub}>
-          There are currently no fishing vessels assigned to your family account (
-          <strong>{user?.phone || user?.email}</strong>).
-        </p>
-        <p style={styles.stateNote}>
-          Please contact your harbour registration desk or fisheries officer to link your vessel RFID/Node ID.
-        </p>
-      </div>
-    );
-  }
-
-  const primaryBoat =
-    boats.find((b) => b.boatId === selectedBoatId) || boats[0];
-  const secondaryBoats = boats.filter((b) => b.boatId !== primaryBoat.boatId);
-
-  return (
-    <div style={styles.container}>
-      {/* Welcome Banner */}
-      <div style={styles.welcomeRow}>
-        <div>
-          <h1 style={styles.greeting}>
-            Namaskaram, {user?.name || "Family Member"}
-          </h1>
-          <p style={styles.greetingSub}>
-            Here is the current safety and location status of your family at sea.
-          </p>
-        </div>
-
-        {/* Vessel Switcher (if family has >1 boat registered) */}
-        {boats.length > 1 && (
-          <div style={styles.switcher}>
-            <span style={styles.switcherLabel}>Selected Boat:</span>
-            <div style={styles.switcherTabs}>
-              {boats.map((b) => (
-                <button
-                  key={b.boatId}
-                  onClick={() => setSelectedBoatId(b.boatId)}
-                  style={{
-                    ...styles.tabBtn,
-                    backgroundColor:
-                      b.boatId === primaryBoat.boatId ? "#29434d" : "#ffffff",
-                    color:
-                      b.boatId === primaryBoat.boatId ? "#ffffff" : "#475569",
-                    borderColor:
-                      b.boatId === primaryBoat.boatId ? "#29434d" : "#cbd5e1",
-                  }}
-                >
-                  {b.name} ({b.boatId})
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <div style={styles.warningNotice}>
-          <span>⚠️ {error}</span>
-        </div>
-      )}
-
-      {/* Main Focus: Primary Boat Status Card */}
-      <div style={styles.primarySection}>
-        <BoatStatusCard boat={primaryBoat} isPrimary={true} />
-      </div>
-
-      {/* If family owns other vessels, list them */}
-      {secondaryBoats.length > 0 && (
-        <div style={styles.secondarySection}>
-          <h3 style={styles.sectionHeader}>Other Registered Vessels</h3>
-          <div style={styles.secondaryGrid}>
-            {secondaryBoats.map((b) => (
-              <BoatStatusCard key={b.boatId} boat={b} isPrimary={false} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  if (loading) return <JalariLoading label="Loading authorized vessel data" />;
+  if (error && boats.length === 0) return <div className="family-state"><h1>Family view unavailable</h1><p>{error}</p></div>;
+  if (!boat) return <div className="family-state"><h1>No authorized vessels</h1><p>No vessel is currently linked to {user?.email || "this account"}.</p></div>;
+  const activeIncident = incidents.find((incident) => activeIncidentStatuses.has(incident.status));
+  return <div className="family-page">
+    <header className="overview-header"><p className="eyebrow">Family monitoring</p><h1>Vessel status</h1><p>Current information for vessels authorized for your account.</p></header>
+    {boats.length > 1 && <div className="family-vessel-selector"><label htmlFor="family-vessel">Vessel</label><select id="family-vessel" value={boat.boatId} onChange={(event) => setSelectedBoatId(event.target.value)}>{boats.map((item) => <option key={item.boatId} value={item.boatId}>{item.name || item.boatId} ({item.boatId})</option>)}</select></div>}
+    {error && <div className="family-inline-notice" role="status">{error}</div>}
+    <section className="family-vessel-grid"><Card><div className="section-header"><div><h2>{boat.name || "Unnamed vessel"}</h2><p>{boat.boatId} · {boat.registrationNumber || "Registration unavailable"}</p></div><StatusBadge label={boat.safetyStatus} tone={boat.safetyStatus === "SAFE" ? "healthy" : boat.safetyStatus === "WARNING" ? "warning" : "danger"} /></div><dl className="family-detail-list"><div><dt>Connection</dt><dd><StatusBadge label={boat.connectionStatus.replaceAll("_", " ")} tone={connectionTone(boat.connectionStatus)} /></dd></div><div><dt>Trip state</dt><dd>{boat.tripState.replaceAll("_", " ")}</dd></div><div><dt>Last update</dt><dd>{formatTime(boat.lastSeen)}</dd></div><div><dt>Home port</dt><dd>{boat.homePort || "Unavailable"}</dd></div></dl></Card><Card><div className="section-header"><div><h2>Safety and connection</h2><p>Reported by the Jalari backend</p></div><StatusBadge label={activeIncident ? "ACTIVE SOS" : "No active SOS"} tone={activeIncident ? "danger" : "neutral"} /></div><p className="family-safety-message">{activeIncident ? activeIncident.statusLabel : boat.safetyStatus === "WARNING" ? "A vessel warning is currently reported." : "No active emergency is reported for this vessel."}</p>{activeIncident && <a className="ui-button family-action-link" href={`/family/incident/${activeIncident.id}`}>View incident details</a>}</Card></section>
+    <section className="family-section"><div className="section-header"><div><h2>Live location</h2><p>{boat.latestLocation ? `Reported ${formatTime(boat.latestLocation.timestamp)}` : "No location has been reported."}</p></div></div>{boat.latestLocation ? <FamilyBoatMap boatId={boat.boatId} boatName={boat.name || boat.boatId} location={boat.latestLocation} status={boat.safetyStatus} height="420px" /> : <Card className="family-empty-panel"><p>Location unavailable</p><span>The backend has not reported a current position for this vessel.</span></Card>}</section>
+    <section className="family-history-grid"><Card><div className="section-header"><div><h2>Recent incidents</h2><p>Recorded SOS events for this vessel</p></div></div>{incidents.length === 0 ? <p className="family-muted">No incidents returned.</p> : <ul className="family-record-list">{incidents.slice(0, 3).map((incident) => <li key={incident.id}><span>{incident.statusLabel}</span><small>{formatTime(incident.timestamp)}</small></li>)}</ul>}</Card><Card><div className="section-header"><div><h2>Recent trips</h2><p>Recorded trips for this vessel</p></div></div>{trips.length === 0 ? <p className="family-muted">No trips returned.</p> : <ul className="family-record-list">{trips.slice(0, 3).map((trip) => <li key={trip.id}><span>{trip.title || trip.status}</span><small>{formatTime(trip.startTime)}</small></li>)}</ul>}</Card></section>
+  </div>;
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  welcomeRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-    gap: "14px",
-  },
-  greeting: {
-    margin: 0,
-    fontSize: "1.45rem",
-    fontWeight: "800",
-    color: "#1e293b",
-    letterSpacing: "-0.01em",
-  },
-  greetingSub: {
-    margin: "4px 0 0 0",
-    fontSize: "0.85rem",
-    color: "#64748b",
-  },
-  switcher: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    alignItems: "flex-end",
-  },
-  switcherLabel: {
-    fontSize: "0.72rem",
-    color: "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    fontWeight: "600",
-  },
-  switcherTabs: {
-    display: "flex",
-    gap: "6px",
-  },
-  tabBtn: {
-    padding: "6px 12px",
-    fontSize: "0.78rem",
-    fontWeight: "600",
-    borderRadius: "6px",
-    border: "1px solid",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  warningNotice: {
-    backgroundColor: "#fffbeb",
-    border: "1px solid #fef3c7",
-    color: "#92400e",
-    borderRadius: "8px",
-    padding: "10px 14px",
-    fontSize: "0.82rem",
-  },
-  primarySection: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  secondarySection: {
-    marginTop: "12px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  sectionHeader: {
-    margin: 0,
-    fontSize: "1.05rem",
-    fontWeight: "700",
-    color: "#334155",
-  },
-  secondaryGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-    gap: "16px",
-  },
-  stateCenter: {
-    minHeight: "50vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    padding: "40px 20px",
-  },
-  spinner: {
-    width: "40px",
-    height: "40px",
-    border: "3px solid #cbd5e1",
-    borderTopColor: "#29434d",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-    marginBottom: "16px",
-  },
-  loadingTitle: {
-    margin: 0,
-    fontSize: "1.2rem",
-    color: "#1e293b",
-    fontWeight: "700",
-  },
-  emptyIcon: {
-    fontSize: "3rem",
-    marginBottom: "12px",
-  },
-  emptyTitle: {
-    margin: "0 0 8px 0",
-    fontSize: "1.3rem",
-    fontWeight: "800",
-    color: "#1e293b",
-  },
-  stateSub: {
-    margin: "0 0 10px 0",
-    fontSize: "0.88rem",
-    color: "#64748b",
-    maxWidth: "400px",
-    lineHeight: "1.4",
-  },
-  stateNote: {
-    margin: 0,
-    fontSize: "0.78rem",
-    color: "#94a3b8",
-    maxWidth: "380px",
-  },
-};

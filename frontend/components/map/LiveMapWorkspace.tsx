@@ -97,7 +97,7 @@ export function LiveMapWorkspace() {
       // Gateway Shore Station Marker
       const gatewayIcon = L.divIcon({
         className: "custom-gateway-marker",
-        html: `<div style="background:#0284c7;color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid white;box-shadow:0 0 15px rgba(2,132,199,0.7);">📡</div>`,
+        html: `<div style="background:#0284c7;color:white;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:3px solid white;box-shadow:0 0 15px rgba(2,132,199,0.7);">GW</div>`,
         iconSize: [38, 38],
         iconAnchor: [19, 19],
       });

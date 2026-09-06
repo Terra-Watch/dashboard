@@ -8,6 +8,7 @@ import {
   isSupabaseConfigured,
 } from "../../lib/supabase";
 import { FamilyUser } from "../../lib/family/types";
+import { JalariLogo } from "../../components/ui/JalariLogo";
 
 type AuthTab = "DIRECT" | "SUPABASE" | "OTP";
 type RolePreset = "FAMILY" | "FISHERMAN" | "OPERATOR" | "ADMIN";
@@ -232,18 +233,7 @@ function LoginFormInner() {
         {/* Brand Header */}
         <div style={styles.header}>
           <div style={styles.logoCircle}>
-            <svg
-              style={styles.logoSvg}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 14h18l-3 5H6l-3-5Z" />
-              <path d="m7 14 3-6h3l4 6M12 8V4h4" />
-            </svg>
+            <JalariLogo className="login-logo" />
           </div>
           <h1 style={styles.title}>Sign in to Jalari</h1>
           <p style={styles.subtitle}>Maritime safety and operations workspace</p>
@@ -363,7 +353,7 @@ function LoginFormInner() {
                     type="text"
                     value={signUpName}
                     onChange={(e) => setSignUpName(e.target.value)}
-                    placeholder="e.g. Captain Rajesh / Lakshmi Rao"
+                    placeholder="Enter your full name"
                     required
                     style={styles.input}
                   />

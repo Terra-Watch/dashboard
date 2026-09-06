@@ -60,7 +60,7 @@ export function TripCard({ trip, boatName }: TripCardProps) {
 
         <div style={styles.portCluster}>
           <span style={styles.portText}>
-            ⚓ {trip.departurePort} {trip.arrivalPort && `→ ${trip.arrivalPort}`}
+            {trip.departurePort} {trip.arrivalPort && `→ ${trip.arrivalPort}`}
           </span>
         </div>
       </div>

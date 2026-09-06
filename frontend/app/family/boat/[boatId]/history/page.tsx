@@ -71,7 +71,7 @@ export default function TripHistoryPage({ params }: PageProps) {
           <Link href={`/family/boat/${encodeURIComponent(boat.boatId)}`} style={styles.backLink}>
             ← Vessel Location ({boat.name})
           </Link>
-          <span style={styles.harbourTag}>Port: {boat.homePort || "Visakhapatnam Fishing Harbour"}</span>
+          <span style={styles.harbourTag}>Port: {boat.homePort || "Unavailable"}</span>
         </div>
 
         <div style={styles.titleRow}>
