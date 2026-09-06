@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -18,3 +19,16 @@ class GatewayMessageReceipt(BaseModel):
     nodeId: int = Field(ge=1, le=255)
     sequence: int = Field(ge=0, le=65535)
     boatNodeReceived: bool = False
+
+
+class GatewayCrewMessage(BaseModel):
+    eventType: Literal["CREW_MESSAGE_RECEIVED"]
+    nodeId: int = Field(ge=1)
+    destination: int = Field(ge=0, le=255)
+    sequence: int = Field(ge=0, le=65535)
+    packetSize: int = Field(ge=1, le=255)
+    receivedAtMs: int = Field(ge=0)
+    rssi: int | None = None
+    snr: float | None = None
+    clientEventId: UUID
+    text: str = Field(min_length=1, max_length=27)

@@ -51,3 +51,33 @@ def test_gateway_receipt_advances_dispatch_and_is_idempotent(client: TestClient,
     assert first.status_code == 202
     assert second.status_code == 202
     assert client.get("/api/mobile/crew/messages", headers=headers).json()[0]["status"] == "BOATNODE_RECEIVED"
+
+
+def test_gateway_ingests_incoming_crew_message_and_is_idempotent(client: TestClient, db_session, seeded_data):
+    headers = _auth(client, db_session, seeded_data)
+    client_event_id = str(uuid4())
+    payload = {
+        "eventType": "CREW_MESSAGE_RECEIVED",
+        "nodeId": 1001,
+        "destination": 254,
+        "sequence": 42,
+        "packetSize": 37,
+        "receivedAtMs": 123456,
+        "rssi": -67,
+        "snr": 9.5,
+        "clientEventId": client_event_id,
+        "text": "TEST CREW E2E 001",
+    }
+
+    first = client.post("/api/ingest/gateway/crew-message", json=payload)
+    second = client.post("/api/ingest/gateway/crew-message", json=payload)
+
+    assert first.status_code == 202
+    assert first.json()["duplicate"] is False
+    assert second.status_code == 202
+    assert second.json()["duplicate"] is True
+    messages = client.get("/api/mobile/crew/messages", headers=headers).json()
+    assert len(messages) == 1
+    assert messages[0]["clientEventId"] == client_event_id
+    assert messages[0]["text"] == "TEST CREW E2E 001"
+    assert messages[0]["status"] == "GATEWAY_RECEIVED"
