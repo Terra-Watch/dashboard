@@ -96,6 +96,10 @@ class IngestionService:
 
         received_at = datetime.now(timezone.utc)
         boat.lastSeen = received_at
+        has_valid_gps = event.latitude is not None and event.longitude is not None
+        if has_valid_gps:
+            boat.latitude = event.latitude
+            boat.longitude = event.longitude
         device = db.query(BoatDevice).filter(BoatDevice.boat_id == boat.id, BoatDevice.node_id == event.nodeId, BoatDevice.status == "ACTIVE").first()
         if device:
             device.last_seen = received_at
@@ -107,6 +111,8 @@ class IngestionService:
             device_id=device.id if device else None,
             rssi=event.rssi,
             snr=event.snr,
+            latitude=event.latitude if has_valid_gps else None,
+            longitude=event.longitude if has_valid_gps else None,
             rtcTemperatureC=event.temperatureC if event.rtcValid else None,
             sensorTimestamp=sensor_timestamp,
             heartbeatCount=boat.heartbeatCount,

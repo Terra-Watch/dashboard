@@ -32,3 +32,5 @@ class GatewayTelemetryEvent(BaseModel):
     minute: int = Field(ge=0, le=59)
     second: int = Field(ge=0, le=59)
     temperatureC: Decimal = Field(ge=-40, le=85, max_digits=5, decimal_places=2)
+    latitude: Decimal | None = Field(default=None, ge=-90, le=90, max_digits=9, decimal_places=6)
+    longitude: Decimal | None = Field(default=None, ge=-180, le=180, max_digits=9, decimal_places=6)

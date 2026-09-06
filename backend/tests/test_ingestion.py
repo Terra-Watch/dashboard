@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.api.dependencies.database import get_db
 from app.core.database import get_db as database_session
 from app.main import app
-from app.models import Boat, HistoricalEvent
+from app.models import Boat, HistoricalEvent, Telemetry
 
 
 pytestmark = pytest.mark.skipif(not os.getenv("DATABASE_URL"), reason="DATABASE_URL is required for API integration tests")
@@ -22,6 +22,7 @@ def cleanup() -> None:
         boats = list(session.scalars(select(Boat).where(Boat.boatId.like("INGEST-TEST-%"))))
         for boat in boats:
             session.execute(delete(HistoricalEvent).where(HistoricalEvent.boat_id == boat.id))
+            session.execute(delete(Telemetry).where(Telemetry.boat_id == boat.id))
         session.execute(delete(Boat).where(Boat.boatId.like("INGEST-TEST-%")))
         session.commit()
     finally:
@@ -69,6 +70,28 @@ def heartbeat_payload(packet_id: int = 1234) -> dict:
     }
 
 
+def telemetry_payload(**overrides: object) -> dict:
+    payload = {
+        "eventType": "TELEMETRY_RECEIVED",
+        "nodeId": 9101,
+        "sequence": 7,
+        "packetSize": 32,
+        "receivedAtMs": 456789,
+        "rssi": -87,
+        "snr": 7.25,
+        "rtcValid": True,
+        "year": 2026,
+        "month": 9,
+        "day": 6,
+        "hour": 10,
+        "minute": 30,
+        "second": 0,
+        "temperatureC": 29.75,
+    }
+    payload.update(overrides)
+    return payload
+
+
 def register_boat() -> None:
     response = client.post("/api/boats", json=boat_payload())
     assert response.status_code == 201
@@ -109,6 +132,56 @@ def test_duplicate_heartbeat_is_idempotent() -> None:
         assert len(list(session.scalars(select(HistoricalEvent).where(HistoricalEvent.boat_id == boat.id)))) == 1
     finally:
         session.close()
+
+
+def test_valid_telemetry_updates_latest_boat_position() -> None:
+    register_boat()
+    response = client.post("/api/ingest/gateway", json=telemetry_payload(latitude=10.9015, longitude=76.9058))
+    assert response.status_code == 202
+
+    session = next(database_session())
+    try:
+        boat = session.scalar(select(Boat).where(Boat.nodeId == 9101))
+        assert boat is not None
+        assert float(boat.latitude) == 10.9015
+        assert float(boat.longitude) == 76.9058
+        telemetry = session.scalar(select(Telemetry).where(Telemetry.boat_id == boat.id))
+        assert telemetry is not None
+        assert float(telemetry.latitude) == 10.9015
+        assert float(telemetry.longitude) == 76.9058
+    finally:
+        session.close()
+
+
+def test_telemetry_without_gps_does_not_overwrite_latest_position() -> None:
+    register_boat()
+    session = next(database_session())
+    try:
+        boat = session.scalar(select(Boat).where(Boat.nodeId == 9101))
+        assert boat is not None
+        boat.latitude = 10.9015
+        boat.longitude = 76.9058
+        session.commit()
+    finally:
+        session.close()
+
+    response = client.post("/api/ingest/gateway", json=telemetry_payload())
+    assert response.status_code == 202
+
+    session = next(database_session())
+    try:
+        boat = session.scalar(select(Boat).where(Boat.nodeId == 9101))
+        assert boat is not None
+        assert float(boat.latitude) == 10.9015
+        assert float(boat.longitude) == 76.9058
+    finally:
+        session.close()
+
+
+def test_invalid_gps_does_not_overwrite_latest_position() -> None:
+    register_boat()
+    response = client.post("/api/ingest/gateway", json=telemetry_payload(latitude=91, longitude=76.9058))
+    assert response.status_code == 422
 
 
 def test_unknown_node_does_not_create_boat() -> None:

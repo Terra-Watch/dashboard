@@ -108,7 +108,7 @@ export function Overview() {
                         (Node ID: {b.nodeId})
                       </span>
                       <div style={{ fontSize: "0.85rem", color: "#aaa", marginTop: "0.25rem" }}>
-                        Heartbeats: {b.heartbeatCount} | RSSI: {b.rssi ?? "—"} dBm | SNR: {b.snr ?? "—"} dB
+                        Total heartbeats: {b.heartbeatCount} | {b.status === "ONLINE" ? "Current" : "Last observed"} RSSI: {b.rssi ?? "—"} dBm | SNR: {b.snr ?? "—"}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>

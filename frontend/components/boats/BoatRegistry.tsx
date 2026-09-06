@@ -103,8 +103,8 @@ export function BoatRegistry() {
                     <th style={{ padding: "0.75rem 1rem" }}>BOAT ID</th>
                     <th style={{ padding: "0.75rem 1rem" }}>NODE ID</th>
                     <th style={{ padding: "0.75rem 1rem" }}>STATUS</th>
-                    <th style={{ padding: "0.75rem 1rem" }}>HEARTBEATS</th>
-                    <th style={{ padding: "0.75rem 1rem" }}>SIGNAL (RSSI / SNR)</th>
+                    <th style={{ padding: "0.75rem 1rem" }}>TOTAL HEARTBEATS</th>
+                    <th style={{ padding: "0.75rem 1rem" }}>LAST OBSERVED SIGNAL (RSSI / SNR)</th>
                     <th style={{ padding: "0.75rem 1rem" }}>LAST SEEN</th>
                     <th style={{ padding: "0.75rem 1rem" }}>DATA SOURCE</th>
                   </tr>
@@ -135,6 +135,7 @@ export function BoatRegistry() {
                       </td>
                       <td style={{ padding: "0.75rem 1rem", color: "#94a3b8" }}>
                         {boat.rssi != null ? `${boat.rssi} dBm` : "—"} / {boat.snr != null ? `${boat.snr} dB` : "—"}
+                        <small style={{ display: "block", marginTop: "0.25rem" }}>Observed at last seen</small>
                       </td>
                       <td style={{ padding: "0.75rem 1rem", color: "#94a3b8" }}>
                         {new Date(boat.lastSeen).toLocaleTimeString()}

@@ -10,7 +10,7 @@ from app.models.historical_event import HistoricalEvent
 
 class HistoricalEventRepository:
     def list(self, db: Session, from_: datetime | None = None, to: datetime | None = None, boat_id: UUID | None = None, event_type: HistoricalEventType | None = None) -> list[HistoricalEvent]:
-        statement = select(HistoricalEvent).order_by(HistoricalEvent.timestamp)
+        statement = select(HistoricalEvent).order_by(HistoricalEvent.timestamp.desc())
         if from_ is not None:
             statement = statement.where(HistoricalEvent.timestamp >= from_)
         if to is not None:
@@ -20,4 +20,3 @@ class HistoricalEventRepository:
         if event_type is not None:
             statement = statement.where(HistoricalEvent.eventType == event_type)
         return list(db.scalars(statement))
-
