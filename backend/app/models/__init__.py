@@ -10,6 +10,7 @@ from app.models.trip import Trip, TripStatus
 from app.models.user import User, UserRole, user_boats
 from app.models.security import AuditLog, PasswordResetToken
 from app.models.device import BoatDevice, DeviceAssociation
+from app.models.crew_message import CrewMessage
 
 __all__ = [
     "Alert",
@@ -29,4 +30,5 @@ __all__ = [
     "PasswordResetToken",
     "BoatDevice",
     "DeviceAssociation",
+    "CrewMessage",
 ]

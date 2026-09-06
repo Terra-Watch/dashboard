@@ -102,6 +102,10 @@ export interface HistoricalEvent {
     rssi?: number;
     snr?: string | number;
     receivedAtMs?: number;
+    messageId?: string;
+    clientEventId?: string;
+    text?: string;
+    status?: string;
   } | null;
 }
 

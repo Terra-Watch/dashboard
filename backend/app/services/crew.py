@@ -3,12 +3,14 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.alert import Alert
 from app.models.boat import Boat
 from app.models.enums import AlertSeverity, AlertStatus, AlertType, IncidentStatus, IncidentType
 from app.models.incident import Incident
+from app.models.crew_message import CrewMessage
 from app.models.user import User
 from app.models.user import user_boats
 from app.repositories.alerts import AlertRepository
@@ -93,3 +95,33 @@ class CrewService:
                 return existing
             raise ResourceConflictError("Unable to create incident") from exc
         return incident
+
+    def messages_for_boat(self, user: User, db: Session) -> list[CrewMessage]:
+        boat = self.boat(user, db)
+        return list(db.scalars(select(CrewMessage).where(CrewMessage.boat_id == boat.id).order_by(CrewMessage.createdAt)))
+
+    def create_message(self, user: User, db: Session, client_event_id: UUID, text: str) -> CrewMessage:
+        boat = self.boat(user, db)
+        existing = db.scalar(select(CrewMessage).where(CrewMessage.clientEventId == client_event_id))
+        if existing is not None:
+            if existing.boat_id != boat.id or existing.source_user_id != user.id or existing.text != text:
+                raise ResourceConflictError("clientEventId already belongs to another message")
+            return existing
+        message = CrewMessage(
+            clientEventId=client_event_id,
+            boat_id=boat.id,
+            source_user_id=user.id,
+            text=text,
+            status="QUEUED",
+            createdAt=datetime.now(timezone.utc),
+        )
+        db.add(message)
+        try:
+            db.flush()
+        except IntegrityError as exc:
+            db.rollback()
+            existing = db.scalar(select(CrewMessage).where(CrewMessage.clientEventId == client_event_id))
+            if existing is not None and existing.boat_id == boat.id and existing.source_user_id == user.id and existing.text == text:
+                return existing
+            raise ResourceConflictError("Unable to create message") from exc
+        return message

@@ -28,11 +28,31 @@ class SosRequest(BaseModel):
     createdOffline: bool = False
 
 
+class MessageRequest(BaseModel):
+    clientEventId: UUID
+    text: str = Field(min_length=1, max_length=240)
+    createdOffline: bool = False
+
+
+class MessageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    messageId: UUID
+    clientEventId: UUID
+    boat_id: UUID
+    text: str
+    status: str
+    createdAt: datetime
+    dispatchedAt: datetime | None
+    receivedAt: datetime | None
+
+
 class SyncOperation(BaseModel):
-    operation: str = Field(pattern="^SOS_CREATE$")
+    operation: str = Field(pattern="^(SOS_CREATE|MESSAGE_CREATE)$")
     clientEventId: UUID
     location: Location | None = None
     createdOffline: bool = False
+    text: str | None = Field(default=None, min_length=1, max_length=240)
 
 
 class SyncRequest(BaseModel):
@@ -44,6 +64,7 @@ class SyncResult(BaseModel):
     accepted: bool
     incident: IncidentResponse | None = None
     error: str | None = None
+    message: MessageResponse | None = None
 
 
 class SyncResponse(BaseModel):

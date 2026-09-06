@@ -78,6 +78,7 @@ export function HistoryRecords() {
                   <tr style={{ borderBottom: "2px solid #e2e8f0", color: "#475569", fontSize: "0.85rem", fontWeight: 600 }}>
                     <th style={{ padding: "0.75rem 1rem" }}>TIMESTAMP</th>
                     <th style={{ padding: "0.75rem 1rem" }}>EVENT TYPE</th>
+                    <th style={{ padding: "0.75rem 1rem" }}>MESSAGE</th>
                     <th style={{ padding: "0.75rem 1rem" }}>NODE ID</th>
                     <th style={{ padding: "0.75rem 1rem" }}>PACKET ID</th>
                     <th style={{ padding: "0.75rem 1rem" }}>RSSI</th>
@@ -112,6 +113,9 @@ export function HistoryRecords() {
                         >
                           {item.eventType}
                         </span>
+                      </td>
+                      <td style={{ padding: "0.6rem 1rem", color: "#334155" }}>
+                        {item.details?.text ? `${item.details.text} (${item.details.status ?? "—"})` : "—"}
                       </td>
                       <td style={{ padding: "0.6rem 1rem", color: "#0284c7", fontWeight: 600 }}>
                         {item.details?.nodeId != null ? `#${item.details.nodeId}` : "—"}
