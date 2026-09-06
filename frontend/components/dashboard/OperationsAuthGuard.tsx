@@ -36,19 +36,44 @@ export function OperationsAuthGuard({ children }: OperationsAuthGuardProps) {
       }
 
       try {
-        let user;
+        let user: { role: string } | null = null;
+
         if (isSupabaseConfigured && supabase) {
           const { data } = await supabase.auth.getUser();
-          if (!data.user) {
-            user = null;
-          } else {
-            const role = String(data.user.user_metadata?.role || "FAMILY").toUpperCase();
+          if (data.user) {
+            const role = String(data.user.user_metadata?.role || "").toUpperCase();
             user = { role };
           }
-        } else {
-          user = await fetchCurrentUser();
         }
-        if (!user) {
+
+        // If Supabase returned no user (or isn't configured), fall back to the
+        // JWT user stored by the direct backend login flow.
+        if (!user || !user.role) {
+          const stored =
+            typeof window !== "undefined"
+              ? localStorage.getItem("jalari_user")
+              : null;
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored) as { role?: string };
+              if (parsed?.role) {
+                user = { role: String(parsed.role).toUpperCase() };
+              }
+            } catch {
+              // ignore malformed stored data
+            }
+          }
+        }
+
+        // If still no user, validate via the backend /me endpoint.
+        if (!user || !user.role) {
+          const fetched = await fetchCurrentUser();
+          if (fetched) {
+            user = { role: String(fetched.role).toUpperCase() };
+          }
+        }
+
+        if (!user || !user.role) {
           localStorage.removeItem("jalari_token");
           localStorage.removeItem("jalari_user");
           router.replace("/login?redirect=dashboard&reason=session_expired");
