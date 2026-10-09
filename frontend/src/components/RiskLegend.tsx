@@ -1,0 +1,1 @@
+export function RiskLegend(){return <div className="legend" aria-label="Risk bands"><span><i className="dot low"/>Low</span><span><i className="dot moderate"/>Moderate</span><span><i className="dot high"/>High</span><span><i className="dot very-high"/>Very high</span></div>}

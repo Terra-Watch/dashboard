@@ -1,0 +1,7 @@
+import type { Navigate } from '../app/types';
+import { DemoMap } from '../components/DemoMap';
+import { LandingSections } from '../components/LandingSections';
+
+export function PublicPage({ title, copy, landing = false, go }: { title: string; copy: string; landing?: boolean; go: Navigate }) {
+  return <main className="public-page"><header className="public-nav"><div className="brand brand-dark"><span className="brand-mark">R</span><span>RESQ</span></div><nav><a href="/about-forecast" onClick={event => { event.preventDefault(); go('/about-forecast'); }}>How it works</a><a href="/demo" onClick={event => { event.preventDefault(); go('/demo'); }}>Demo</a><a href="/help" onClick={event => { event.preventDefault(); go('/help'); }}>Help</a><button className="quiet-button" onClick={() => go('/login')}>Sign in</button></nav></header>{landing ? <><section className="public-hero"><div><span className="eyebrow">Forest operations</span><h1>{title}</h1><p>{copy}</p><div className="hero-actions"><button onClick={() => go('/demo')}>Open the demo</button><button className="secondary-button" onClick={() => go('/request-access')}>Request access</button></div></div><DemoMap /></section><LandingSections /></> : <section className="public-copy"><span className="eyebrow">RESQ</span><h1>{title}</h1><p>{copy}</p><div className="empty large">This page is being prepared. No operational data is shown here yet.</div></section>}<footer>Advisory forecast. Confirm with field observations.</footer></main>;
+}

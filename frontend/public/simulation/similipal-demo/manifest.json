@@ -1,0 +1,89 @@
+{
+  "scenario_id": "similipal-worldcover-gfs-demo",
+  "location": {
+    "latitude": 21.867894,
+    "longitude": 86.500688
+  },
+  "grid": {
+    "rows": 40,
+    "columns": 40,
+    "cell_size_m": 30
+  },
+  "frame_count": 49,
+  "burned_cells": [
+    1,
+    2,
+    10,
+    23,
+    43,
+    70,
+    101,
+    141,
+    182,
+    228,
+    281,
+    332,
+    387,
+    433,
+    475,
+    528,
+    572,
+    619,
+    654,
+    694,
+    725,
+    755,
+    791,
+    821,
+    853,
+    883,
+    910,
+    937,
+    966,
+    986,
+    1018,
+    1039,
+    1071,
+    1095,
+    1121,
+    1160,
+    1179,
+    1204,
+    1227,
+    1246,
+    1270,
+    1290,
+    1302,
+    1331,
+    1343,
+    1364,
+    1385,
+    1397,
+    1424
+  ],
+  "inputs": {
+    "grid": {
+      "worldcover_classes": [
+        10,
+        30
+      ],
+      "fuel_ids": [
+        101,
+        182
+      ],
+      "elevation_min_m": 487.0,
+      "elevation_max_m": 713.0
+    },
+    "weather": {
+      "wind_speed_kmh_hour06": 9.195516298718632,
+      "wind_direction_hour06": 6.067710629076146,
+      "source_rows": 36115,
+      "timeline_hours": 48,
+      "extension": "repeated available GFS h06-h17 profile for development playback"
+    },
+    "fuel_mapping": "UNVALIDATED_DEVELOPMENT_PROXY"
+  },
+  "georeferenced": false,
+  "production_eligible": false,
+  "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo; not an operational forecast."
+}

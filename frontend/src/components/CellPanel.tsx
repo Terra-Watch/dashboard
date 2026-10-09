@@ -1,0 +1,5 @@
+import type { RiskRecord } from '../pages/MapPage';
+
+export function CellPanel({ record, count, close, startSimulation }: { record: RiskRecord; count: number; close: () => void; startSimulation: () => void }) {
+  return <aside className="cell-panel" aria-labelledby="cell-panel-title"><button className="close-sheet" onClick={close}>Close</button><p className="eyebrow">Predicted ignition cell</p><h2 id="cell-panel-title">Cell {record.cell_id} · {record.state}</h2><p><span className={`band band-${record.band.toLowerCase().replace(' ', '-')}`}>{record.band}</span></p><p className="muted">Rank {record.rank_percentile ? `within the daily ranking` : 'unavailable'} · {count.toLocaleString()} forest cells</p><button className="primary-link" onClick={startSimulation}>Run 48-hour spread demo</button><p className="muted">Only the staged Similipal demo extent has simulation inputs.</p><section><h3>Why it is elevated</h3><div className="empty">Driver details are unavailable for this forecast.</div></section><section><h3>Field context</h3><div className="empty">Weather, nearby detections, roads and villages are unavailable.</div></section></aside>;
+}
