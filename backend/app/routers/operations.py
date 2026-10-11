@@ -3,7 +3,8 @@ from sqlalchemy import text
 from ..database.session import engine
 from ..contracts.schemas import AlertRuleRequest, IncidentRequest, IncidentStatusUpdate, PlanRequest, SettingsUpdate, SpreadRequest
 from ..core.security import current_user, require_write
-from ..services.simulation_service import SimulationUnavailable, run_simulation, validate_simulation
+from inference.simulation_domain import RequestOutsideDomain
+from ..services.simulation_service import SimulationUnavailable, run_simulation, validate_simulation, validate_spread_request
 
 router = APIRouter(prefix="/api", tags=["operations"])
 
@@ -133,14 +134,17 @@ def update_settings(payload: SettingsUpdate, user: dict[str, object] = Depends(c
 
 @router.post('/spread/jobs', status_code=202)
 def create_spread_job(payload: SpreadRequest, _: dict[str, object] = Depends(require_write)) -> dict[str, object]:
-    if abs(payload.latitude - 21.867894) < 0.2 and abs(payload.longitude - 86.500688) < 0.2:
-        try:
-            manifest = run_simulation()
-        except SimulationUnavailable as exc:
-            return {'status': 'unavailable', 'message': str(exc), 'request': payload.model_dump()}
-        grid = manifest['grid']
-        return {'status': 'development_demo', 'message': 'Simulation completed with uncalibrated WorldCover/GFS/SRTM demo inputs. This is not an operational forecast.', 'request': payload.model_dump(), 'scenario_id': manifest['scenario_id'], 'frame_count': manifest['frame_count'], 'grid_rows': grid['rows'], 'grid_columns': grid['columns'], 'burned_cells': manifest['burned_cells'], 'source_date': '2024-01-01', 'georeferenced': False}
-    return {'status': 'unavailable', 'message': 'No validated simulation inputs are available for this location.', 'request': payload.model_dump()}
+    try:
+        validate_spread_request(payload.latitude, payload.longitude, payload.duration_hours)
+    except RequestOutsideDomain as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    try:
+        manifest = run_simulation(payload.latitude, payload.longitude, payload.duration_hours)
+    except SimulationUnavailable as exc:
+        return {'status': 'unavailable', 'message': str(exc), 'request': payload.model_dump()}
+    grid = manifest['grid']
+    weather = manifest['inputs']['weather']
+    return {'status': 'development_demo', 'message': 'Simulated spread completed with uncalibrated WorldCover/SRTM inputs and a fixed GFS wind profile. This is not an operational forecast.', 'request': payload.model_dump(), 'scenario_id': manifest['scenario_id'], 'frame_count': manifest['frame_count'], 'duration_hours': manifest.get('duration_hours', payload.duration_hours), 'grid_rows': grid['rows'], 'grid_columns': grid['columns'], 'cell_size_m': grid.get('cell_size_m'), 'domain': manifest.get('domain'), 'ignition': manifest.get('ignition'), 'burned_cells': manifest['burned_cells'], 'wind_profile': {'kind': weather.get('profile', 'fixed'), 'source_date': weather.get('source_date', '2024-01-01'), 'note': weather.get('extension')}, 'source_date': weather.get('source_date', '2024-01-01'), 'georeferenced': bool(manifest.get('georeferenced'))}
 
 @router.get('/spread/validation')
 def get_spread_validation(month: str = '2024-01', _: dict[str, object] = Depends(current_user)) -> dict[str, object]:

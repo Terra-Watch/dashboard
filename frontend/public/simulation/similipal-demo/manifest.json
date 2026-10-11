@@ -4,6 +4,29 @@
     "latitude": 21.867894,
     "longitude": 86.500688
   },
+  "domain": {
+    "center": {
+      "latitude": 21.867894,
+      "longitude": 86.500688
+    },
+    "bounds": {
+      "west": 86.49488290726568,
+      "south": 21.86247533996782,
+      "east": 86.50649309273432,
+      "north": 21.87331266003218
+    },
+    "rows": 40,
+    "columns": 40,
+    "cell_size_m": 30
+  },
+  "ignition": {
+    "latitude": 21.867894,
+    "longitude": 86.500688,
+    "row": 20,
+    "column": 20,
+    "ncell": 821
+  },
+  "duration_hours": 48,
   "grid": {
     "rows": 40,
     "columns": 40,
@@ -79,11 +102,14 @@
       "wind_direction_hour06": 6.067710629076146,
       "source_rows": 36115,
       "timeline_hours": 48,
-      "extension": "repeated available GFS h06-h17 profile for development playback"
+      "profile": "fixed",
+      "source_date": "2024-01-01",
+      "source_row": 0,
+      "extension": "repeated available GFS h06-h17 profile for development playback; not the weather of the ignition pixel or date"
     },
     "fuel_mapping": "UNVALIDATED_DEVELOPMENT_PROXY"
   },
-  "georeferenced": false,
+  "georeferenced": true,
   "production_eligible": false,
-  "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo; not an operational forecast."
+  "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo with a fixed wind profile; not an operational forecast."
 }

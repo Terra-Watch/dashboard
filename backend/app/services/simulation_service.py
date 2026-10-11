@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from inference.simulation_domain import MAX_DURATION_HOURS, ORIGIN_LATITUDE, ORIGIN_LONGITUDE, RequestOutsideDomain, locate_ignition, validate_duration
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 RUNNER = PROJECT_ROOT / "backend/inference/run_demo_simulation.py"
@@ -15,11 +17,18 @@ class SimulationUnavailable(RuntimeError):
     pass
 
 
-def run_simulation() -> dict[str, object]:
+def validate_spread_request(latitude: float, longitude: float, duration_hours: int) -> tuple[int, int]:
+    """Return the (row, column) ignition cell, or raise RequestOutsideDomain."""
+    validate_duration(duration_hours)
+    return locate_ignition(latitude, longitude)
+
+
+def run_simulation(latitude: float = ORIGIN_LATITUDE, longitude: float = ORIGIN_LONGITUDE, duration_hours: int = MAX_DURATION_HOURS) -> dict[str, object]:
+    validate_spread_request(latitude, longitude, duration_hours)
     if not RUNNER.exists():
         raise SimulationUnavailable("The development simulation runner is not installed.")
     try:
-        completed = subprocess.run([sys.executable, str(RUNNER)], cwd=RUNNER.parent, capture_output=True, text=True, timeout=120)
+        completed = subprocess.run([sys.executable, str(RUNNER), "--latitude", repr(float(latitude)), "--longitude", repr(float(longitude)), "--duration-hours", str(int(duration_hours))], cwd=RUNNER.parent, capture_output=True, text=True, timeout=120)
     except subprocess.TimeoutExpired as exc:
         raise SimulationUnavailable("The development simulation timed out.") from exc
     if completed.returncode != 0:

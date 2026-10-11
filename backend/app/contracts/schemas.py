@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class LoginRequest(BaseModel):
     email: str
@@ -44,6 +44,6 @@ class SettingsUpdate(BaseModel):
     push_alerts: bool | None = None
 
 class SpreadRequest(BaseModel):
-    latitude: float
-    longitude: float
-    duration_hours: int = 12
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    duration_hours: int = Field(default=12, ge=1, le=48)

@@ -2,9 +2,28 @@
 
 Inputs are public/demo data only. This never writes to wildfire-research or
 wild-fire-simulation; it reads the Cell2Fire binary and lookup table there.
+
+This is the single exporter for frontend/public/simulation/similipal-demo/
+(frames and manifest.json). The earlier benchmark exporter that wrote a
+different manifest into the same folder has been removed.
+
+Usage: run_demo_simulation.py [--latitude LAT] [--longitude LON] [--duration-hours N]
+The ignition cell is derived from the coordinate and must lie inside the
+1.2 km x 1.2 km domain (see simulation_domain.py); the number of hourly
+weather rows, and so of frames, is the duration.
+
+Fixed inputs that are NOT yet event-specific (see docs/sim_followups.md):
+the wind is the first row of the January 2024 GFS file (one 12-hour daytime
+profile repeated), not the weather of the ignition pixel or date.
+
+Data.csv, written by the Cell2Fire binary, carries latitude 51.621244 and
+longitude -115.608378 (Banff, hard-coded in DataGenerator.cpp). Simulator
+"S" never reads them (they only feed the Canadian FBP model), so they have
+no effect here; the real location is carried by this script's constants.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -15,6 +34,10 @@ import zlib
 from pathlib import Path
 
 from proxy_mapping import PROXY_STATUS, WORLDCOVER_TO_CELL2FIRE
+from simulation_domain import (
+    CELL_SIZE_M, COLS, MAX_DURATION_HOURS, ORIGIN_LATITUDE, ORIGIN_LONGITUDE, ROWS,
+    RequestOutsideDomain, domain_bounds, ignition_ncell, locate_ignition, validate_duration,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "runtime_data/simulation_demo"
@@ -24,14 +47,9 @@ PUBLIC = ROOT.parent / "frontend/public/simulation/similipal-demo"
 SOURCE_SIM = Path("/Users/kireeti/Desktop/Projects/wild-fire-simulation")
 BINARY = SOURCE_SIM / "external/Cell2Fire/Cell2Fire/Cell2Fire"
 LOOKUP = SOURCE_SIM / "cell2fire/tests/fixtures/synthetic_40x40/spain_lookup_table.csv"
-ROWS = COLS = 40
-CELL_SIZE_M = 30
-CENTER_ROW = CENTER_COL = 20
-ORIGIN_LATITUDE = 21.867894
-ORIGIN_LONGITUDE = 86.500688
 
 
-def _write_asc(path: Path, values, *, xll: float = ORIGIN_LONGITUDE - 0.005, yll: float = ORIGIN_LATITUDE - 0.005) -> None:
+def _write_asc(path: Path, values, *, xll: float = domain_bounds()["west"], yll: float = domain_bounds()["south"]) -> None:
     with path.open("w") as handle:
         handle.write(f"ncols {values.shape[1]}\nnrows {values.shape[0]}\n")
         handle.write(f"xllcorner {xll}\nyllcorner {yll}\ncellsize {CELL_SIZE_M}\nNODATA_value -9999\n")
@@ -90,7 +108,7 @@ def _write_lookup() -> None:
                 writer.writerow(row)
 
 
-def _weather_rows() -> dict[str, float]:
+def _weather_rows(duration_hours: int, ignition_row: int, ignition_col: int) -> dict[str, float]:
     source = DATA / "weather/gfs00_2024_01.csv"
     with source.open() as handle:
         rows = list(csv.DictReader(handle))
@@ -108,12 +126,12 @@ def _weather_rows() -> dict[str, float]:
         writer.writerow(["Instance", "datetime", "WS", "WD", "FireScenario"])
         # The available GFS slice has 12 daytime hourly columns. Repeat that
         # observed profile to create a 48-step visual demo timeline.
-        for index in range(48):
+        for index in range(duration_hours):
             speed, direction = weather[index % len(weather)]
             writer.writerow(["similipal_demo", f"2024-01-01 {(index + 6) % 24:02d}:00", f"{speed:.3f}", f"{direction:.3f}", 1])
     with (SCENARIO / "Ignitions.csv").open("w", newline="") as handle:
-        writer = csv.writer(handle); writer.writerow(["Year", "Ncell"]); writer.writerow([1, CENTER_ROW * COLS + CENTER_COL + 1])
-    return {"wind_speed_kmh_hour06": weather[0][0], "wind_direction_hour06": weather[0][1], "source_rows": len(rows), "timeline_hours": 48, "extension": "repeated available GFS h06-h17 profile for development playback"}
+        writer = csv.writer(handle); writer.writerow(["Year", "Ncell"]); writer.writerow([1, ignition_ncell(ignition_row, ignition_col)])
+    return {"wind_speed_kmh_hour06": weather[0][0], "wind_direction_hour06": weather[0][1], "source_rows": len(rows), "timeline_hours": duration_hours, "profile": "fixed", "source_date": "2024-01-01", "source_row": 0, "extension": "repeated available GFS h06-h17 profile for development playback; not the weather of the ignition pixel or date"}
 
 
 def _copy_outputs() -> list[int]:
@@ -128,6 +146,8 @@ def _copy_outputs() -> list[int]:
 
     frames = sorted((OUTPUT / "Grids/Grids1").glob("ForestGrid*.csv"), key=lambda path: int(path.stem.replace("ForestGrid", "")))
     burned = []
+    for stale in PUBLIC.glob("frame-*.png"):
+        stale.unlink()
     for index, frame in enumerate(frames):
         grid = [[int(value) for value in line.split(",")] for line in frame.read_text().splitlines() if line]
         burned.append(sum(value == 1 for row in grid for value in row))
@@ -135,10 +155,20 @@ def _copy_outputs() -> list[int]:
     return burned
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--latitude", type=float, default=ORIGIN_LATITUDE)
+    parser.add_argument("--longitude", type=float, default=ORIGIN_LONGITUDE)
+    parser.add_argument("--duration-hours", type=int, default=MAX_DURATION_HOURS)
+    args = parser.parse_args(argv)
+    try:
+        duration_hours = validate_duration(args.duration_hours)
+        ignition_row, ignition_col = locate_ignition(args.latitude, args.longitude)
+    except RequestOutsideDomain as exc:
+        raise SystemExit(f"Invalid simulation request: {exc}")
     SCENARIO.mkdir(parents=True, exist_ok=True); OUTPUT.mkdir(parents=True, exist_ok=True); PUBLIC.mkdir(parents=True, exist_ok=True)
     if not BINARY.exists(): raise RuntimeError(f"Cell2Fire binary not found: {BINARY}")
-    grid_meta = _build_grid(); _write_lookup(); weather_meta = _weather_rows()
+    grid_meta = _build_grid(); _write_lookup(); weather_meta = _weather_rows(duration_hours, ignition_row, ignition_col)
     if (OUTPUT / "Grids").exists(): shutil.rmtree(OUTPUT / "Grids")
     if (OUTPUT / "Messages").exists(): shutil.rmtree(OUTPUT / "Messages")
     command = [str(BINARY), "--input-instance-folder", str(SCENARIO) + "/", "--output-folder", str(OUTPUT) + "/", "--sim", "S", "--ignitions", "--nsims", "1", "--grids", "--final-grid", "--Fire-Period-Length", "1.0", "--weather", "rows", "--nweathers", "1", "--output-messages", "--scenario", "1", "--seed", "42"]
@@ -146,7 +176,21 @@ def main() -> None:
     if completed.returncode:
         raise RuntimeError((completed.stdout + "\n" + completed.stderr)[-5000:])
     burned = _copy_outputs()
-    (PUBLIC / "manifest.json").write_text(json.dumps({"scenario_id": "similipal-worldcover-gfs-demo", "location": {"latitude": ORIGIN_LATITUDE, "longitude": ORIGIN_LONGITUDE}, "grid": {"rows": ROWS, "columns": COLS, "cell_size_m": CELL_SIZE_M}, "frame_count": len(burned), "burned_cells": burned, "inputs": {"grid": grid_meta, "weather": weather_meta, "fuel_mapping": PROXY_STATUS}, "georeferenced": False, "production_eligible": False, "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo; not an operational forecast."}, indent=2) + "\n")
+    manifest = {
+        "scenario_id": "similipal-worldcover-gfs-demo",
+        "location": {"latitude": ORIGIN_LATITUDE, "longitude": ORIGIN_LONGITUDE},
+        "domain": {"center": {"latitude": ORIGIN_LATITUDE, "longitude": ORIGIN_LONGITUDE}, "bounds": domain_bounds(), "rows": ROWS, "columns": COLS, "cell_size_m": CELL_SIZE_M},
+        "ignition": {"latitude": args.latitude, "longitude": args.longitude, "row": ignition_row, "column": ignition_col, "ncell": ignition_ncell(ignition_row, ignition_col)},
+        "duration_hours": duration_hours,
+        "grid": {"rows": ROWS, "columns": COLS, "cell_size_m": CELL_SIZE_M},
+        "frame_count": len(burned),
+        "burned_cells": burned,
+        "inputs": {"grid": grid_meta, "weather": weather_meta, "fuel_mapping": PROXY_STATUS},
+        "georeferenced": True,
+        "production_eligible": False,
+        "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo with a fixed wind profile; not an operational forecast.",
+    }
+    (PUBLIC / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({"frames": len(burned), "burned_cells": burned, "grid": grid_meta, "weather": weather_meta}))
 
 
