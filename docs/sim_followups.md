@@ -4,6 +4,7 @@ Open items from `docs/sim_diagnosis/REPORT.md` that were deliberately **not**
 changed in the engineering-fix branch (they need new data, a model decision, or
 change what the validation score means). In the order the report recommends.
 
+0. **Correct the MCD64A1 pixel size (463.31 m, not 500 m) and re-centre the demo.** Found in RESQ-2 (`docs/RESQ2_INCIDENTS.md`, section 2): the 2024-03-31 burned pixels are at 22.463 N, 86.849 E, about 75 km north-east of the demo point; `validate_mcd64a1.py` and the demo origin constants carry the error. Code change, not made here.
 1. **Larger domain (6-10 km or more).** The 1.2 km x 1.2 km grid is smaller than
    the 250 ha observed burn; the fire reaches the edge by hour 12 and fills 89 %
    of the grid by hour 48. Re-crop land cover and DEM from the local tiles (or
