@@ -183,7 +183,7 @@ def weather_check(row, folder):
 
 def main():
     cand = pd.read_csv(WEBSITE / "results/resq2_incident_candidates.csv", dtype={"first_time_utc": str, "first_time_ist": str})
-    for iid in INCIDENTS:
+    for iid in (sys.argv[1:] or INCIDENTS):
         row = next(cand[cand.event_id == iid].itertuples())
         folder = OUT / iid
         res = {"incident_id": iid, "forest": forest_check(row, folder)}

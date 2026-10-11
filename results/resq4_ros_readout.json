@@ -1,0 +1,2150 @@
+[
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 0.0,
+  "head_E": 0.4,
+  "flank_N": 0.38,
+  "back_W": 0.35,
+  "cells_after_24h_with_threshold_0.001": 893,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 236,
+    "min": 0.4,
+    "median": 0.4,
+    "max": 0.4
+   },
+   "N": {
+    "n": 209,
+    "min": 0.38,
+    "median": 0.38,
+    "max": 0.38
+   },
+   "NE": {
+    "n": 223,
+    "min": 0.39,
+    "median": 0.39,
+    "max": 0.39
+   },
+   "NW": {
+    "n": 189,
+    "min": 0.36,
+    "median": 0.36,
+    "max": 0.36
+   },
+   "S": {
+    "n": 209,
+    "min": 0.38,
+    "median": 0.38,
+    "max": 0.38
+   },
+   "SE": {
+    "n": 223,
+    "min": 0.39,
+    "median": 0.39,
+    "max": 0.39
+   },
+   "SW": {
+    "n": 189,
+    "min": 0.36,
+    "median": 0.36,
+    "max": 0.36
+   },
+   "W": {
+    "n": 188,
+    "min": 0.35,
+    "median": 0.35,
+    "max": 0.35
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 0.5,
+  "head_E": 1.13,
+  "flank_N": 0.82,
+  "back_W": 0.64,
+  "cells_after_24h_with_threshold_0.001": 3337,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 1.13,
+    "median": 1.13,
+    "max": 1.13
+   },
+   "N": {
+    "n": 833,
+    "min": 0.82,
+    "median": 0.82,
+    "max": 0.82
+   },
+   "NE": {
+    "n": 900,
+    "min": 1.02,
+    "median": 1.02,
+    "max": 1.02
+   },
+   "NW": {
+    "n": 708,
+    "min": 0.69,
+    "median": 0.69,
+    "max": 0.69
+   },
+   "S": {
+    "n": 833,
+    "min": 0.82,
+    "median": 0.82,
+    "max": 0.82
+   },
+   "SE": {
+    "n": 900,
+    "min": 1.02,
+    "median": 1.02,
+    "max": 1.02
+   },
+   "SW": {
+    "n": 708,
+    "min": 0.69,
+    "median": 0.69,
+    "max": 0.69
+   },
+   "W": {
+    "n": 666,
+    "min": 0.64,
+    "median": 0.64,
+    "max": 0.64
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 0.87,
+  "head_E": 2.34,
+  "flank_N": 1.48,
+  "back_W": 1.08,
+  "cells_after_24h_with_threshold_0.001": 3010,
+  "frame_hours_written": 19,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 2.34,
+    "median": 2.34,
+    "max": 2.34
+   },
+   "N": {
+    "n": 900,
+    "min": 1.48,
+    "median": 1.48,
+    "max": 1.48
+   },
+   "NE": {
+    "n": 900,
+    "min": 2.0,
+    "median": 2.0,
+    "max": 2.0
+   },
+   "NW": {
+    "n": 900,
+    "min": 1.17,
+    "median": 1.17,
+    "max": 1.17
+   },
+   "S": {
+    "n": 900,
+    "min": 1.48,
+    "median": 1.48,
+    "max": 1.48
+   },
+   "SE": {
+    "n": 900,
+    "min": 2.0,
+    "median": 2.0,
+    "max": 2.0
+   },
+   "SW": {
+    "n": 900,
+    "min": 1.17,
+    "median": 1.17,
+    "max": 1.17
+   },
+   "W": {
+    "n": 900,
+    "min": 1.08,
+    "median": 1.08,
+    "max": 1.08
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 1.0,
+  "head_E": 2.92,
+  "flank_N": 1.77,
+  "back_W": 1.27,
+  "cells_after_24h_with_threshold_0.001": 3365,
+  "frame_hours_written": 16,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 2.92,
+    "median": 2.92,
+    "max": 2.92
+   },
+   "N": {
+    "n": 900,
+    "min": 1.77,
+    "median": 1.77,
+    "max": 1.77
+   },
+   "NE": {
+    "n": 900,
+    "min": 2.45,
+    "median": 2.45,
+    "max": 2.45
+   },
+   "NW": {
+    "n": 900,
+    "min": 1.38,
+    "median": 1.38,
+    "max": 1.38
+   },
+   "S": {
+    "n": 900,
+    "min": 1.77,
+    "median": 1.77,
+    "max": 1.77
+   },
+   "SE": {
+    "n": 900,
+    "min": 2.45,
+    "median": 2.45,
+    "max": 2.45
+   },
+   "SW": {
+    "n": 900,
+    "min": 1.38,
+    "median": 1.38,
+    "max": 1.38
+   },
+   "W": {
+    "n": 900,
+    "min": 1.27,
+    "median": 1.27,
+    "max": 1.27
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 1.22,
+  "head_E": 4.05,
+  "flank_N": 2.28,
+  "back_W": 1.59,
+  "cells_after_24h_with_threshold_0.001": 3705,
+  "frame_hours_written": 13,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 4.05,
+    "median": 4.05,
+    "max": 4.05
+   },
+   "N": {
+    "n": 900,
+    "min": 2.28,
+    "median": 2.28,
+    "max": 2.28
+   },
+   "NE": {
+    "n": 900,
+    "min": 3.3,
+    "median": 3.3,
+    "max": 3.3
+   },
+   "NW": {
+    "n": 900,
+    "min": 1.74,
+    "median": 1.74,
+    "max": 1.74
+   },
+   "S": {
+    "n": 900,
+    "min": 2.28,
+    "median": 2.28,
+    "max": 2.28
+   },
+   "SE": {
+    "n": 900,
+    "min": 3.3,
+    "median": 3.3,
+    "max": 3.3
+   },
+   "SW": {
+    "n": 900,
+    "min": 1.74,
+    "median": 1.74,
+    "max": 1.74
+   },
+   "W": {
+    "n": 900,
+    "min": 1.59,
+    "median": 1.59,
+    "max": 1.59
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 1.77,
+  "head_E": 6.83,
+  "flank_N": 3.26,
+  "back_W": 2.14,
+  "cells_after_24h_with_threshold_0.001": 3029,
+  "frame_hours_written": 9,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 6.83,
+    "median": 6.83,
+    "max": 6.83
+   },
+   "N": {
+    "n": 900,
+    "min": 3.26,
+    "median": 3.26,
+    "max": 3.26
+   },
+   "NE": {
+    "n": 900,
+    "min": 5.17,
+    "median": 5.17,
+    "max": 5.17
+   },
+   "NW": {
+    "n": 900,
+    "min": 2.38,
+    "median": 2.38,
+    "max": 2.38
+   },
+   "S": {
+    "n": 900,
+    "min": 3.26,
+    "median": 3.26,
+    "max": 3.26
+   },
+   "SE": {
+    "n": 900,
+    "min": 5.17,
+    "median": 5.17,
+    "max": 5.17
+   },
+   "SW": {
+    "n": 900,
+    "min": 2.38,
+    "median": 2.38,
+    "max": 2.38
+   },
+   "W": {
+    "n": 900,
+    "min": 2.14,
+    "median": 2.14,
+    "max": 2.14
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 2.0,
+  "head_E": 7.65,
+  "flank_N": 3.41,
+  "back_W": 2.19,
+  "cells_after_24h_with_threshold_0.001": 3098,
+  "frame_hours_written": 9,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 7.65,
+    "median": 7.65,
+    "max": 7.65
+   },
+   "N": {
+    "n": 900,
+    "min": 3.41,
+    "median": 3.41,
+    "max": 3.41
+   },
+   "NE": {
+    "n": 900,
+    "min": 5.61,
+    "median": 5.61,
+    "max": 5.61
+   },
+   "NW": {
+    "n": 900,
+    "min": 2.45,
+    "median": 2.45,
+    "max": 2.45
+   },
+   "S": {
+    "n": 900,
+    "min": 3.41,
+    "median": 3.41,
+    "max": 3.41
+   },
+   "SE": {
+    "n": 900,
+    "min": 5.61,
+    "median": 5.61,
+    "max": 5.61
+   },
+   "SW": {
+    "n": 900,
+    "min": 2.45,
+    "median": 2.45,
+    "max": 2.45
+   },
+   "W": {
+    "n": 900,
+    "min": 2.19,
+    "median": 2.19,
+    "max": 2.19
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 3.0,
+  "head_E": 8.97,
+  "flank_N": 3.01,
+  "back_W": 1.81,
+  "cells_after_24h_with_threshold_0.001": 2820,
+  "frame_hours_written": 11,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 8.97,
+    "median": 8.97,
+    "max": 8.97
+   },
+   "N": {
+    "n": 900,
+    "min": 3.01,
+    "median": 3.01,
+    "max": 3.01
+   },
+   "NE": {
+    "n": 900,
+    "min": 5.67,
+    "median": 5.67,
+    "max": 5.67
+   },
+   "NW": {
+    "n": 900,
+    "min": 2.05,
+    "median": 2.05,
+    "max": 2.05
+   },
+   "S": {
+    "n": 900,
+    "min": 3.01,
+    "median": 3.01,
+    "max": 3.01
+   },
+   "SE": {
+    "n": 900,
+    "min": 5.67,
+    "median": 5.67,
+    "max": 5.67
+   },
+   "SW": {
+    "n": 900,
+    "min": 2.05,
+    "median": 2.05,
+    "max": 2.05
+   },
+   "W": {
+    "n": 900,
+    "min": 1.81,
+    "median": 1.81,
+    "max": 1.81
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 3.18,
+  "head_E": 9.03,
+  "flank_N": 2.88,
+  "back_W": 1.71,
+  "cells_after_24h_with_threshold_0.001": 2713,
+  "frame_hours_written": 11,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 9.03,
+    "median": 9.03,
+    "max": 9.03
+   },
+   "N": {
+    "n": 900,
+    "min": 2.88,
+    "median": 2.88,
+    "max": 2.88
+   },
+   "NE": {
+    "n": 900,
+    "min": 5.55,
+    "median": 5.55,
+    "max": 5.55
+   },
+   "NW": {
+    "n": 900,
+    "min": 1.94,
+    "median": 1.94,
+    "max": 1.94
+   },
+   "S": {
+    "n": 900,
+    "min": 2.88,
+    "median": 2.88,
+    "max": 2.88
+   },
+   "SE": {
+    "n": 900,
+    "min": 5.55,
+    "median": 5.55,
+    "max": 5.55
+   },
+   "SW": {
+    "n": 900,
+    "min": 1.94,
+    "median": 1.94,
+    "max": 1.94
+   },
+   "W": {
+    "n": 900,
+    "min": 1.71,
+    "median": 1.71,
+    "max": 1.71
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 5.0,
+  "head_E": 9.13,
+  "flank_N": 1.78,
+  "back_W": 0.99,
+  "cells_after_24h_with_threshold_0.001": 2994,
+  "frame_hours_written": 19,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 9.13,
+    "median": 9.13,
+    "max": 9.13
+   },
+   "N": {
+    "n": 900,
+    "min": 1.78,
+    "median": 1.78,
+    "max": 1.78
+   },
+   "NE": {
+    "n": 900,
+    "min": 4.13,
+    "median": 4.13,
+    "max": 4.13
+   },
+   "NW": {
+    "n": 900,
+    "min": 1.14,
+    "median": 1.14,
+    "max": 1.14
+   },
+   "S": {
+    "n": 900,
+    "min": 1.78,
+    "median": 1.78,
+    "max": 1.78
+   },
+   "SE": {
+    "n": 900,
+    "min": 4.13,
+    "median": 4.13,
+    "max": 4.13
+   },
+   "SW": {
+    "n": 900,
+    "min": 1.14,
+    "median": 1.14,
+    "max": 1.14
+   },
+   "W": {
+    "n": 900,
+    "min": 0.99,
+    "median": 0.99,
+    "max": 0.99
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 8.0,
+  "head_E": 9.13,
+  "flank_N": 0.83,
+  "back_W": 0.44,
+  "cells_after_24h_with_threshold_0.001": 2815,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 9.13,
+    "median": 9.13,
+    "max": 9.13
+   },
+   "N": {
+    "n": 744,
+    "min": 0.83,
+    "median": 0.83,
+    "max": 0.83
+   },
+   "NE": {
+    "n": 900,
+    "min": 2.32,
+    "median": 2.32,
+    "max": 2.32
+   },
+   "NW": {
+    "n": 452,
+    "min": 0.51,
+    "median": 0.51,
+    "max": 0.51
+   },
+   "S": {
+    "n": 744,
+    "min": 0.83,
+    "median": 0.83,
+    "max": 0.83
+   },
+   "SE": {
+    "n": 900,
+    "min": 2.32,
+    "median": 2.32,
+    "max": 2.32
+   },
+   "SW": {
+    "n": 452,
+    "min": 0.51,
+    "median": 0.51,
+    "max": 0.51
+   },
+   "W": {
+    "n": 334,
+    "min": 0.44,
+    "median": 0.44,
+    "max": 0.44
+   }
+  }
+ },
+ {
+  "fuel": 101,
+  "fuel_name": "GR1 (grass)",
+  "wind_ms": 12.0,
+  "head_E": 9.13,
+  "flank_N": 0.32,
+  "back_W": 0.16,
+  "cells_after_24h_with_threshold_0.001": 1562,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 9.13,
+    "median": 9.13,
+    "max": 9.13
+   },
+   "N": {
+    "n": 274,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "NE": {
+    "n": 687,
+    "min": 0.99,
+    "median": 0.99,
+    "max": 0.99
+   },
+   "NW": {
+    "n": 60,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "S": {
+    "n": 274,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "SE": {
+    "n": 687,
+    "min": 0.99,
+    "median": 0.99,
+    "max": 0.99
+   },
+   "SW": {
+    "n": 60,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "W": {
+    "n": 41,
+    "min": 0.16,
+    "median": 0.16,
+    "max": 0.16
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 0.0,
+  "head_E": 19.73,
+  "flank_N": 18.44,
+  "back_W": 17.32,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 19.73,
+    "median": 19.73,
+    "max": 19.73
+   },
+   "N": {
+    "n": 900,
+    "min": 18.44,
+    "median": 18.44,
+    "max": 18.44
+   },
+   "NE": {
+    "n": 900,
+    "min": 19.33,
+    "median": 19.33,
+    "max": 19.33
+   },
+   "NW": {
+    "n": 900,
+    "min": 17.63,
+    "median": 17.63,
+    "max": 17.63
+   },
+   "S": {
+    "n": 900,
+    "min": 18.44,
+    "median": 18.44,
+    "max": 18.44
+   },
+   "SE": {
+    "n": 900,
+    "min": 19.33,
+    "median": 19.33,
+    "max": 19.33
+   },
+   "SW": {
+    "n": 900,
+    "min": 17.63,
+    "median": 17.63,
+    "max": 17.63
+   },
+   "W": {
+    "n": 900,
+    "min": 17.32,
+    "median": 17.32,
+    "max": 17.32
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 0.5,
+  "head_E": 22.35,
+  "flank_N": 16.13,
+  "back_W": 12.62,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 22.35,
+    "median": 22.35,
+    "max": 22.35
+   },
+   "N": {
+    "n": 900,
+    "min": 16.13,
+    "median": 16.13,
+    "max": 16.13
+   },
+   "NE": {
+    "n": 900,
+    "min": 20.08,
+    "median": 20.08,
+    "max": 20.08
+   },
+   "NW": {
+    "n": 900,
+    "min": 13.48,
+    "median": 13.48,
+    "max": 13.48
+   },
+   "S": {
+    "n": 900,
+    "min": 16.13,
+    "median": 16.13,
+    "max": 16.13
+   },
+   "SE": {
+    "n": 900,
+    "min": 20.08,
+    "median": 20.08,
+    "max": 20.08
+   },
+   "SW": {
+    "n": 900,
+    "min": 13.48,
+    "median": 13.48,
+    "max": 13.48
+   },
+   "W": {
+    "n": 900,
+    "min": 12.62,
+    "median": 12.62,
+    "max": 12.62
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 0.87,
+  "head_E": 24.63,
+  "flank_N": 15.56,
+  "back_W": 11.37,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 24.63,
+    "median": 24.63,
+    "max": 24.63
+   },
+   "N": {
+    "n": 900,
+    "min": 15.56,
+    "median": 15.56,
+    "max": 15.56
+   },
+   "NE": {
+    "n": 900,
+    "min": 21.04,
+    "median": 21.04,
+    "max": 21.04
+   },
+   "NW": {
+    "n": 900,
+    "min": 12.34,
+    "median": 12.34,
+    "max": 12.34
+   },
+   "S": {
+    "n": 900,
+    "min": 15.56,
+    "median": 15.56,
+    "max": 15.56
+   },
+   "SE": {
+    "n": 900,
+    "min": 21.04,
+    "median": 21.04,
+    "max": 21.04
+   },
+   "SW": {
+    "n": 900,
+    "min": 12.34,
+    "median": 12.34,
+    "max": 12.34
+   },
+   "W": {
+    "n": 900,
+    "min": 11.37,
+    "median": 11.37,
+    "max": 11.37
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 1.0,
+  "head_E": 25.49,
+  "flank_N": 15.42,
+  "back_W": 11.05,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 25.49,
+    "median": 25.49,
+    "max": 25.49
+   },
+   "N": {
+    "n": 900,
+    "min": 15.42,
+    "median": 15.42,
+    "max": 15.42
+   },
+   "NE": {
+    "n": 1335,
+    "min": 21.39,
+    "median": 21.39,
+    "max": 21.39
+   },
+   "NW": {
+    "n": 900,
+    "min": 12.05,
+    "median": 12.05,
+    "max": 12.05
+   },
+   "S": {
+    "n": 900,
+    "min": 15.42,
+    "median": 15.42,
+    "max": 15.42
+   },
+   "SE": {
+    "n": 1335,
+    "min": 21.39,
+    "median": 21.39,
+    "max": 21.39
+   },
+   "SW": {
+    "n": 900,
+    "min": 12.05,
+    "median": 12.05,
+    "max": 12.05
+   },
+   "W": {
+    "n": 900,
+    "min": 11.05,
+    "median": 11.05,
+    "max": 11.05
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 1.22,
+  "head_E": 26.99,
+  "flank_N": 15.21,
+  "back_W": 10.59,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 26.99,
+    "median": 26.99,
+    "max": 26.99
+   },
+   "N": {
+    "n": 900,
+    "min": 15.21,
+    "median": 15.21,
+    "max": 15.21
+   },
+   "NE": {
+    "n": 1335,
+    "min": 22.0,
+    "median": 22.0,
+    "max": 22.0
+   },
+   "NW": {
+    "n": 900,
+    "min": 11.62,
+    "median": 11.62,
+    "max": 11.62
+   },
+   "S": {
+    "n": 900,
+    "min": 15.21,
+    "median": 15.21,
+    "max": 15.21
+   },
+   "SE": {
+    "n": 1335,
+    "min": 22.0,
+    "median": 22.0,
+    "max": 22.0
+   },
+   "SW": {
+    "n": 900,
+    "min": 11.62,
+    "median": 11.62,
+    "max": 11.62
+   },
+   "W": {
+    "n": 900,
+    "min": 10.59,
+    "median": 10.59,
+    "max": 10.59
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 1.77,
+  "head_E": 31.11,
+  "flank_N": 14.82,
+  "back_W": 9.73,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 2,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 31.11,
+    "median": 31.11,
+    "max": 31.11
+   },
+   "N": {
+    "n": 900,
+    "min": 14.82,
+    "median": 14.82,
+    "max": 14.82
+   },
+   "NE": {
+    "n": 1335,
+    "min": 23.54,
+    "median": 23.54,
+    "max": 23.54
+   },
+   "NW": {
+    "n": 1770,
+    "min": 10.82,
+    "median": 10.82,
+    "max": 10.82
+   },
+   "S": {
+    "n": 900,
+    "min": 14.82,
+    "median": 14.82,
+    "max": 14.82
+   },
+   "SE": {
+    "n": 1335,
+    "min": 23.54,
+    "median": 23.54,
+    "max": 23.54
+   },
+   "SW": {
+    "n": 1770,
+    "min": 10.82,
+    "median": 10.82,
+    "max": 10.82
+   },
+   "W": {
+    "n": 900,
+    "min": 9.73,
+    "median": 9.73,
+    "max": 9.73
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 2.0,
+  "head_E": 33.0,
+  "flank_N": 14.69,
+  "back_W": 9.45,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 3,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 33.0,
+    "median": 33.0,
+    "max": 33.0
+   },
+   "N": {
+    "n": 900,
+    "min": 14.69,
+    "median": 14.69,
+    "max": 14.69
+   },
+   "NE": {
+    "n": 900,
+    "min": 24.18,
+    "median": 24.18,
+    "max": 24.18
+   },
+   "NW": {
+    "n": 900,
+    "min": 10.56,
+    "median": 10.56,
+    "max": 10.56
+   },
+   "S": {
+    "n": 900,
+    "min": 14.69,
+    "median": 14.69,
+    "max": 14.69
+   },
+   "SE": {
+    "n": 900,
+    "min": 24.18,
+    "median": 24.18,
+    "max": 24.18
+   },
+   "SW": {
+    "n": 900,
+    "min": 10.56,
+    "median": 10.56,
+    "max": 10.56
+   },
+   "W": {
+    "n": 900,
+    "min": 9.45,
+    "median": 9.45,
+    "max": 9.45
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 3.0,
+  "head_E": 42.45,
+  "flank_N": 14.22,
+  "back_W": 8.54,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 3,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 42.45,
+    "median": 42.45,
+    "max": 42.45
+   },
+   "N": {
+    "n": 900,
+    "min": 14.22,
+    "median": 14.22,
+    "max": 14.22
+   },
+   "NE": {
+    "n": 900,
+    "min": 26.83,
+    "median": 26.83,
+    "max": 26.83
+   },
+   "NW": {
+    "n": 900,
+    "min": 9.67,
+    "median": 9.67,
+    "max": 9.67
+   },
+   "S": {
+    "n": 900,
+    "min": 14.22,
+    "median": 14.22,
+    "max": 14.22
+   },
+   "SE": {
+    "n": 900,
+    "min": 26.83,
+    "median": 26.83,
+    "max": 26.83
+   },
+   "SW": {
+    "n": 900,
+    "min": 9.67,
+    "median": 9.67,
+    "max": 9.67
+   },
+   "W": {
+    "n": 900,
+    "min": 8.54,
+    "median": 8.54,
+    "max": 8.54
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 3.18,
+  "head_E": 44.38,
+  "flank_N": 14.14,
+  "back_W": 8.41,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 3,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 44.38,
+    "median": 44.38,
+    "max": 44.38
+   },
+   "N": {
+    "n": 900,
+    "min": 14.14,
+    "median": 14.14,
+    "max": 14.14
+   },
+   "NE": {
+    "n": 900,
+    "min": 27.28,
+    "median": 27.28,
+    "max": 27.28
+   },
+   "NW": {
+    "n": 900,
+    "min": 9.54,
+    "median": 9.54,
+    "max": 9.54
+   },
+   "S": {
+    "n": 900,
+    "min": 14.14,
+    "median": 14.14,
+    "max": 14.14
+   },
+   "SE": {
+    "n": 900,
+    "min": 27.28,
+    "median": 27.28,
+    "max": 27.28
+   },
+   "SW": {
+    "n": 900,
+    "min": 9.54,
+    "median": 9.54,
+    "max": 9.54
+   },
+   "W": {
+    "n": 900,
+    "min": 8.41,
+    "median": 8.41,
+    "max": 8.41
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 5.0,
+  "head_E": 68.38,
+  "flank_N": 13.33,
+  "back_W": 7.39,
+  "cells_after_24h_with_threshold_0.001": 3721,
+  "frame_hours_written": 3,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 68.38,
+    "median": 68.38,
+    "max": 68.38
+   },
+   "N": {
+    "n": 900,
+    "min": 13.33,
+    "median": 13.33,
+    "max": 13.33
+   },
+   "NE": {
+    "n": 900,
+    "min": 30.95,
+    "median": 30.95,
+    "max": 30.95
+   },
+   "NW": {
+    "n": 1335,
+    "min": 8.5,
+    "median": 8.5,
+    "max": 8.5
+   },
+   "S": {
+    "n": 900,
+    "min": 13.33,
+    "median": 13.33,
+    "max": 13.33
+   },
+   "SE": {
+    "n": 900,
+    "min": 30.95,
+    "median": 30.95,
+    "max": 30.95
+   },
+   "SW": {
+    "n": 1335,
+    "min": 8.5,
+    "median": 8.5,
+    "max": 8.5
+   },
+   "W": {
+    "n": 900,
+    "min": 7.39,
+    "median": 7.39,
+    "max": 7.39
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 8.0,
+  "head_E": 126.95,
+  "flank_N": 11.5,
+  "back_W": 6.03,
+  "cells_after_24h_with_threshold_0.001": 3611,
+  "frame_hours_written": 4,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 126.95,
+    "median": 126.95,
+    "max": 126.95
+   },
+   "N": {
+    "n": 900,
+    "min": 11.5,
+    "median": 11.5,
+    "max": 11.5
+   },
+   "NE": {
+    "n": 900,
+    "min": 32.21,
+    "median": 32.21,
+    "max": 32.21
+   },
+   "NW": {
+    "n": 900,
+    "min": 7.0,
+    "median": 7.0,
+    "max": 7.0
+   },
+   "S": {
+    "n": 900,
+    "min": 11.5,
+    "median": 11.5,
+    "max": 11.5
+   },
+   "SE": {
+    "n": 900,
+    "min": 32.21,
+    "median": 32.21,
+    "max": 32.21
+   },
+   "SW": {
+    "n": 900,
+    "min": 7.0,
+    "median": 7.0,
+    "max": 7.0
+   },
+   "W": {
+    "n": 900,
+    "min": 6.03,
+    "median": 6.03,
+    "max": 6.03
+   }
+  }
+ },
+ {
+  "fuel": 145,
+  "fuel_name": "SH5 (shrub)",
+  "wind_ms": 12.0,
+  "head_E": 225.36,
+  "flank_N": 7.73,
+  "back_W": 3.94,
+  "cells_after_24h_with_threshold_0.001": 2945,
+  "frame_hours_written": 5,
+  "ros": {
+   "E": {
+    "n": 900,
+    "min": 225.36,
+    "median": 225.36,
+    "max": 225.36
+   },
+   "N": {
+    "n": 900,
+    "min": 7.73,
+    "median": 7.73,
+    "max": 7.73
+   },
+   "NE": {
+    "n": 900,
+    "min": 24.37,
+    "median": 24.37,
+    "max": 24.37
+   },
+   "NW": {
+    "n": 900,
+    "min": 4.6,
+    "median": 4.6,
+    "max": 4.6
+   },
+   "S": {
+    "n": 900,
+    "min": 7.73,
+    "median": 7.73,
+    "max": 7.73
+   },
+   "SE": {
+    "n": 900,
+    "min": 24.37,
+    "median": 24.37,
+    "max": 24.37
+   },
+   "SW": {
+    "n": 900,
+    "min": 4.6,
+    "median": 4.6,
+    "max": 4.6
+   },
+   "W": {
+    "n": 900,
+    "min": 3.94,
+    "median": 3.94,
+    "max": 3.94
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 0.0,
+  "head_E": 0.09,
+  "flank_N": 0.09,
+  "back_W": 0.08,
+  "cells_after_24h_with_threshold_0.001": 42,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 10,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "N": {
+    "n": 8,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "NE": {
+    "n": 8,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "NW": {
+    "n": 6,
+    "min": 0.08,
+    "median": 0.08,
+    "max": 0.08
+   },
+   "S": {
+    "n": 8,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "SE": {
+    "n": 8,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "SW": {
+    "n": 6,
+    "min": 0.08,
+    "median": 0.08,
+    "max": 0.08
+   },
+   "W": {
+    "n": 7,
+    "min": 0.08,
+    "median": 0.08,
+    "max": 0.08
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 0.5,
+  "head_E": 0.15,
+  "flank_N": 0.11,
+  "back_W": 0.09,
+  "cells_after_24h_with_threshold_0.001": 82,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 27,
+    "min": 0.15,
+    "median": 0.15,
+    "max": 0.15
+   },
+   "N": {
+    "n": 15,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   },
+   "NE": {
+    "n": 20,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "NW": {
+    "n": 10,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "S": {
+    "n": 15,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   },
+   "SE": {
+    "n": 20,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "SW": {
+    "n": 10,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   },
+   "W": {
+    "n": 10,
+    "min": 0.09,
+    "median": 0.09,
+    "max": 0.09
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 0.87,
+  "head_E": 0.22,
+  "flank_N": 0.14,
+  "back_W": 0.11,
+  "cells_after_24h_with_threshold_0.001": 151,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 60,
+    "min": 0.22,
+    "median": 0.22,
+    "max": 0.22
+   },
+   "N": {
+    "n": 29,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "NE": {
+    "n": 46,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "NW": {
+    "n": 16,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   },
+   "S": {
+    "n": 29,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "SE": {
+    "n": 46,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "SW": {
+    "n": 16,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   },
+   "W": {
+    "n": 14,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 1.0,
+  "head_E": 0.25,
+  "flank_N": 0.15,
+  "back_W": 0.11,
+  "cells_after_24h_with_threshold_0.001": 189,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 77,
+    "min": 0.25,
+    "median": 0.25,
+    "max": 0.25
+   },
+   "N": {
+    "n": 37,
+    "min": 0.15,
+    "median": 0.15,
+    "max": 0.15
+   },
+   "NE": {
+    "n": 61,
+    "min": 0.21,
+    "median": 0.21,
+    "max": 0.21
+   },
+   "NW": {
+    "n": 18,
+    "min": 0.12,
+    "median": 0.12,
+    "max": 0.12
+   },
+   "S": {
+    "n": 37,
+    "min": 0.15,
+    "median": 0.15,
+    "max": 0.15
+   },
+   "SE": {
+    "n": 61,
+    "min": 0.21,
+    "median": 0.21,
+    "max": 0.21
+   },
+   "SW": {
+    "n": 18,
+    "min": 0.12,
+    "median": 0.12,
+    "max": 0.12
+   },
+   "W": {
+    "n": 17,
+    "min": 0.11,
+    "median": 0.11,
+    "max": 0.11
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 1.22,
+  "head_E": 0.31,
+  "flank_N": 0.18,
+  "back_W": 0.12,
+  "cells_after_24h_with_threshold_0.001": 256,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 114,
+    "min": 0.31,
+    "median": 0.31,
+    "max": 0.31
+   },
+   "N": {
+    "n": 48,
+    "min": 0.18,
+    "median": 0.18,
+    "max": 0.18
+   },
+   "NE": {
+    "n": 86,
+    "min": 0.25,
+    "median": 0.25,
+    "max": 0.25
+   },
+   "NW": {
+    "n": 24,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "S": {
+    "n": 48,
+    "min": 0.18,
+    "median": 0.18,
+    "max": 0.18
+   },
+   "SE": {
+    "n": 86,
+    "min": 0.25,
+    "median": 0.25,
+    "max": 0.25
+   },
+   "SW": {
+    "n": 24,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   },
+   "W": {
+    "n": 21,
+    "min": 0.12,
+    "median": 0.12,
+    "max": 0.12
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 1.77,
+  "head_E": 0.49,
+  "flank_N": 0.24,
+  "back_W": 0.16,
+  "cells_after_24h_with_threshold_0.001": 537,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 277,
+    "min": 0.49,
+    "median": 0.49,
+    "max": 0.49
+   },
+   "N": {
+    "n": 94,
+    "min": 0.24,
+    "median": 0.24,
+    "max": 0.24
+   },
+   "NE": {
+    "n": 197,
+    "min": 0.37,
+    "median": 0.37,
+    "max": 0.37
+   },
+   "NW": {
+    "n": 45,
+    "min": 0.17,
+    "median": 0.17,
+    "max": 0.17
+   },
+   "S": {
+    "n": 94,
+    "min": 0.24,
+    "median": 0.24,
+    "max": 0.24
+   },
+   "SE": {
+    "n": 197,
+    "min": 0.37,
+    "median": 0.37,
+    "max": 0.37
+   },
+   "SW": {
+    "n": 45,
+    "min": 0.17,
+    "median": 0.17,
+    "max": 0.17
+   },
+   "W": {
+    "n": 37,
+    "min": 0.16,
+    "median": 0.16,
+    "max": 0.16
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 2.0,
+  "head_E": 0.58,
+  "flank_N": 0.26,
+  "back_W": 0.17,
+  "cells_after_24h_with_threshold_0.001": 691,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 375,
+    "min": 0.58,
+    "median": 0.58,
+    "max": 0.58
+   },
+   "N": {
+    "n": 116,
+    "min": 0.26,
+    "median": 0.26,
+    "max": 0.26
+   },
+   "NE": {
+    "n": 262,
+    "min": 0.43,
+    "median": 0.43,
+    "max": 0.43
+   },
+   "NW": {
+    "n": 54,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "S": {
+    "n": 116,
+    "min": 0.26,
+    "median": 0.26,
+    "max": 0.26
+   },
+   "SE": {
+    "n": 262,
+    "min": 0.43,
+    "median": 0.43,
+    "max": 0.43
+   },
+   "SW": {
+    "n": 54,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   },
+   "W": {
+    "n": 43,
+    "min": 0.17,
+    "median": 0.17,
+    "max": 0.17
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 3.0,
+  "head_E": 0.95,
+  "flank_N": 0.32,
+  "back_W": 0.2,
+  "cells_after_24h_with_threshold_0.001": 1222,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 720,
+    "min": 0.95,
+    "median": 0.95,
+    "max": 0.95
+   },
+   "N": {
+    "n": 194,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "NE": {
+    "n": 500,
+    "min": 0.6,
+    "median": 0.6,
+    "max": 0.6
+   },
+   "NW": {
+    "n": 76,
+    "min": 0.22,
+    "median": 0.22,
+    "max": 0.22
+   },
+   "S": {
+    "n": 194,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "SE": {
+    "n": 500,
+    "min": 0.6,
+    "median": 0.6,
+    "max": 0.6
+   },
+   "SW": {
+    "n": 76,
+    "min": 0.22,
+    "median": 0.22,
+    "max": 0.22
+   },
+   "W": {
+    "n": 59,
+    "min": 0.2,
+    "median": 0.2,
+    "max": 0.2
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 3.18,
+  "head_E": 1.01,
+  "flank_N": 0.32,
+  "back_W": 0.19,
+  "cells_after_24h_with_threshold_0.001": 1264,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 746,
+    "min": 1.01,
+    "median": 1.01,
+    "max": 1.01
+   },
+   "N": {
+    "n": 202,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "NE": {
+    "n": 520,
+    "min": 0.62,
+    "median": 0.62,
+    "max": 0.62
+   },
+   "NW": {
+    "n": 77,
+    "min": 0.22,
+    "median": 0.22,
+    "max": 0.22
+   },
+   "S": {
+    "n": 202,
+    "min": 0.32,
+    "median": 0.32,
+    "max": 0.32
+   },
+   "SE": {
+    "n": 520,
+    "min": 0.62,
+    "median": 0.62,
+    "max": 0.62
+   },
+   "SW": {
+    "n": 77,
+    "min": 0.22,
+    "median": 0.22,
+    "max": 0.22
+   },
+   "W": {
+    "n": 59,
+    "min": 0.19,
+    "median": 0.19,
+    "max": 0.19
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 5.0,
+  "head_E": 1.27,
+  "flank_N": 0.25,
+  "back_W": 0.14,
+  "cells_after_24h_with_threshold_0.001": 1067,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 724,
+    "min": 1.27,
+    "median": 1.27,
+    "max": 1.27
+   },
+   "N": {
+    "n": 132,
+    "min": 0.25,
+    "median": 0.25,
+    "max": 0.25
+   },
+   "NE": {
+    "n": 464,
+    "min": 0.58,
+    "median": 0.58,
+    "max": 0.58
+   },
+   "NW": {
+    "n": 40,
+    "min": 0.16,
+    "median": 0.16,
+    "max": 0.16
+   },
+   "S": {
+    "n": 132,
+    "min": 0.25,
+    "median": 0.25,
+    "max": 0.25
+   },
+   "SE": {
+    "n": 464,
+    "min": 0.58,
+    "median": 0.58,
+    "max": 0.58
+   },
+   "SW": {
+    "n": 40,
+    "min": 0.16,
+    "median": 0.16,
+    "max": 0.16
+   },
+   "W": {
+    "n": 30,
+    "min": 0.14,
+    "median": 0.14,
+    "max": 0.14
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 8.0,
+  "head_E": 1.31,
+  "flank_N": 0.12,
+  "back_W": 0.07,
+  "cells_after_24h_with_threshold_0.001": 567,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 468,
+    "min": 1.31,
+    "median": 1.31,
+    "max": 1.31
+   },
+   "N": {
+    "n": 34,
+    "min": 0.12,
+    "median": 0.12,
+    "max": 0.12
+   },
+   "NE": {
+    "n": 255,
+    "min": 0.34,
+    "median": 0.34,
+    "max": 0.34
+   },
+   "NW": {
+    "n": 7,
+    "min": 0.08,
+    "median": 0.08,
+    "max": 0.08
+   },
+   "S": {
+    "n": 34,
+    "min": 0.12,
+    "median": 0.12,
+    "max": 0.12
+   },
+   "SE": {
+    "n": 255,
+    "min": 0.34,
+    "median": 0.34,
+    "max": 0.34
+   },
+   "SW": {
+    "n": 7,
+    "min": 0.08,
+    "median": 0.08,
+    "max": 0.08
+   },
+   "W": {
+    "n": 4,
+    "min": 0.07,
+    "median": 0.07,
+    "max": 0.07
+   }
+  }
+ },
+ {
+  "fuel": 182,
+  "fuel_name": "TL2 (broadleaf litter)",
+  "wind_ms": 12.0,
+  "head_E": 1.31,
+  "flank_N": 0.05,
+  "back_W": 0.03,
+  "cells_after_24h_with_threshold_0.001": 228,
+  "frame_hours_written": 24,
+  "ros": {
+   "E": {
+    "n": 210,
+    "min": 1.31,
+    "median": 1.31,
+    "max": 1.31
+   },
+   "N": {
+    "n": 4,
+    "min": 0.05,
+    "median": 0.05,
+    "max": 0.05
+   },
+   "NE": {
+    "n": 96,
+    "min": 0.15,
+    "median": 0.15,
+    "max": 0.15
+   },
+   "S": {
+    "n": 4,
+    "min": 0.05,
+    "median": 0.05,
+    "max": 0.05
+   },
+   "SE": {
+    "n": 96,
+    "min": 0.15,
+    "median": 0.15,
+    "max": 0.15
+   },
+   "W": {
+    "n": 1,
+    "min": 0.03,
+    "median": 0.03,
+    "max": 0.03
+   }
+  }
+ }
+]

@@ -1,0 +1,30 @@
+{
+ "GR1": {
+  "coeffs": [
+   2.575,
+   0.6665,
+   0.1096
+  ],
+  "asymptote_1_over_p3": 9.12,
+  "rss_calm(0.1km/h)": 0.397
+ },
+ "SH5": {
+  "coeffs": [
+   0.0483,
+   0.0781,
+   0.002783
+  ],
+  "asymptote_1_over_p3": 359.32,
+  "rss_calm(0.1km/h)": 19.721
+ },
+ "TL2": {
+  "coeffs": [
+   11.01,
+   0.3366,
+   0.7639
+  ],
+  "asymptote_1_over_p3": 1.31,
+  "rss_calm(0.1km/h)": 0.088,
+  "min_wind_ms_for_head_rss_0.1": 0.145
+ }
+}

@@ -1,0 +1,1777 @@
+{
+ "GR1 (grass) | W,N,E,S at 4 m/s, 6 h each": {
+  "fuel": 101,
+  "hours": [
+   {
+    "hour": 0,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 253,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 1,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 838,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 2,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 1423,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 3,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 2012,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 4,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 2586,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 5,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 3187,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 6,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 2594,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 7,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 3121,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 1.33,
+     "NE": 1.52,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 8,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 3704,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 1.33,
+     "NE": 1.52,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 9,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 4312,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 1.33,
+     "NE": 1.52,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 10,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 4885,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 1.33,
+     "NE": 1.52,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 11,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 5475,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 1.33,
+     "NE": 1.52,
+     "NW": 1.52,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 12,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 4669,
+    "max_ros": 9.11,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 9.11,
+     "SE": 4.91,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 13,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 5221,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 1.33,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 14,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 5778,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 1.33,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 15,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 6363,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 1.33,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 16,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 6982,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 1.33,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 17,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 7550,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 1.33,
+     "N": 2.32,
+     "NE": 1.52,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 18,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 6930,
+    "max_ros": 9.11,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 2.32,
+     "SE": 1.52,
+     "SW": 4.91,
+     "W": 9.11
+    }
+   },
+   {
+    "hour": 19,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 7667,
+    "max_ros": 9.11,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 1.33,
+     "SE": 1.52,
+     "SW": 1.52,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 20,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 8195,
+    "max_ros": 9.11,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 1.33,
+     "SE": 1.52,
+     "SW": 1.52,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 21,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 8791,
+    "max_ros": 9.11,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 1.33,
+     "SE": 1.52,
+     "SW": 1.52,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 22,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 9452,
+    "max_ros": 9.11,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 1.33,
+     "SE": 1.52,
+     "SW": 1.52,
+     "W": 2.32
+    }
+   },
+   {
+    "hour": 23,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 9975,
+    "max_ros": 9.11,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 2.32,
+     "N": 9.11,
+     "NE": 4.91,
+     "NW": 4.91,
+     "S": 1.33,
+     "SE": 1.52,
+     "SW": 1.52,
+     "W": 2.32
+    }
+   }
+  ],
+  "extent_at_hour": {
+   "6": {
+    "cells": 5310,
+    "east_m": 2700,
+    "west_m": 450,
+    "north_m": 1200,
+    "south_m": 1200
+   },
+   "12": {
+    "cells": 23128,
+    "east_m": 3900,
+    "west_m": 1650,
+    "north_m": 1650,
+    "south_m": 3900
+   },
+   "18": {
+    "cells": 52845,
+    "east_m": 4350,
+    "west_m": 4350,
+    "north_m": 2850,
+    "south_m": 5100
+   },
+   "24": {
+    "cells": 94981,
+    "east_m": 5550,
+    "west_m": 5550,
+    "north_m": 5550,
+    "south_m": 5550
+   }
+  },
+  "last_frame": 24
+ },
+ "GR1 (grass) | W at 1,4,8,2 m/s, 6 h each": {
+  "fuel": 101,
+  "hours": [
+   {
+    "hour": 0,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 61,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 1,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 216,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 2,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 404,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 3,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 532,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 4,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 688,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 5,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 916,
+    "max_ros": 2.92,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 2.92,
+     "N": 1.77,
+     "NE": 2.45,
+     "NW": 1.38,
+     "S": 1.77,
+     "SE": 2.45,
+     "SW": 1.38,
+     "W": 1.27
+    }
+   },
+   {
+    "hour": 6,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 1275,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 7,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 1872,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 8,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 2405,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 9,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 3038,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 10,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 3620,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 11,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 4167,
+    "max_ros": 9.11,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.11,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 1.33
+    }
+   },
+   {
+    "hour": 12,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 2386,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 2.32,
+     "NE": 4.91,
+     "NW": 1.52,
+     "S": 2.32,
+     "SE": 4.91,
+     "SW": 1.52,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 13,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 2526,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 0.83,
+     "NE": 2.32,
+     "NW": 0.51,
+     "S": 0.83,
+     "SE": 2.32,
+     "SW": 0.51,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 14,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 2742,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 0.83,
+     "NE": 2.32,
+     "NW": 0.51,
+     "S": 0.83,
+     "SE": 2.32,
+     "SW": 0.51,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 15,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 2970,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 0.83,
+     "NE": 2.32,
+     "NW": 0.51,
+     "S": 0.83,
+     "SE": 2.32,
+     "SW": 0.51,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 16,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 3173,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 0.83,
+     "NE": 2.32,
+     "NW": 0.51,
+     "S": 0.83,
+     "SE": 2.32,
+     "SW": 0.51,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 17,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 3388,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 0.83,
+     "NE": 2.32,
+     "NW": 0.51,
+     "S": 0.83,
+     "SE": 2.32,
+     "SW": 0.51,
+     "W": 0.44
+    }
+   },
+   {
+    "hour": 18,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 6194,
+    "max_ros": 9.13,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 9.13,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   },
+   {
+    "hour": 19,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 7107,
+    "max_ros": 7.65,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 7.65,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   },
+   {
+    "hour": 20,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 7779,
+    "max_ros": 7.65,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 7.65,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   },
+   {
+    "hour": 21,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 7894,
+    "max_ros": 7.65,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 7.65,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   },
+   {
+    "hour": 22,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 7761,
+    "max_ros": 7.65,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 7.65,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   },
+   {
+    "hour": 23,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 7704,
+    "max_ros": 7.65,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 7.65,
+     "N": 3.41,
+     "NE": 5.61,
+     "NW": 2.45,
+     "S": 3.41,
+     "SE": 5.61,
+     "SW": 2.45,
+     "W": 2.19
+    }
+   }
+  ],
+  "extent_at_hour": {
+   "6": {
+    "cells": 1492,
+    "east_m": 960,
+    "west_m": 450,
+    "north_m": 600,
+    "south_m": 600
+   },
+   "12": {
+    "cells": 13019,
+    "east_m": 3660,
+    "west_m": 900,
+    "north_m": 1800,
+    "south_m": 1800
+   },
+   "18": {
+    "cells": 28274,
+    "east_m": 6360,
+    "west_m": 1050,
+    "north_m": 2340,
+    "south_m": 2340
+   },
+   "24": {
+    "cells": 62047,
+    "east_m": 7470,
+    "west_m": 1830,
+    "north_m": 3690,
+    "south_m": 3690
+   }
+  },
+  "last_frame": 24
+ },
+ "TL2 (broadleaf litter) | W,N,E,S at 4 m/s, 6 h each": {
+  "fuel": 182,
+  "hours": [
+   {
+    "hour": 0,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 2,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18
+    }
+   },
+   {
+    "hour": 1,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 14,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "S": 0.3,
+     "SE": 0.64
+    }
+   },
+   {
+    "hour": 2,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 21,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "S": 0.3,
+     "SE": 0.64,
+     "W": 0.18
+    }
+   },
+   {
+    "hour": 3,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 37,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2
+    }
+   },
+   {
+    "hour": 4,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 36,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "S": 0.3,
+     "SE": 0.64
+    }
+   },
+   {
+    "hour": 5,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 59,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2,
+     "W": 0.18
+    }
+   },
+   {
+    "hour": 6,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 46,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 0.18,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 7,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 57,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 0.18,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 8,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 66,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 0.18,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 9,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 77,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 0.18,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 10,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 88,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 11,
+    "wind_ms": 4.0,
+    "wind_from": 0.0,
+    "edges": 98,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 0.18,
+     "NE": 0.2,
+     "NW": 0.2,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 12,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 88,
+    "max_ros": 1.18,
+    "max_ros_dir": "S",
+    "ros_by_dir_max": {
+     "E": 0.18,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 1.18,
+     "SE": 0.64,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 13,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 89,
+    "max_ros": 1.18,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 0.18,
+     "N": 0.3,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 0.3,
+     "SE": 0.2,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 14,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 104,
+    "max_ros": 1.18,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 0.18,
+     "N": 0.3,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 0.3,
+     "SE": 0.2,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 15,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 117,
+    "max_ros": 1.18,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "N": 0.3,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 0.3,
+     "SE": 0.2,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 16,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 124,
+    "max_ros": 1.18,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "N": 0.3,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 0.3,
+     "SE": 0.2,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 17,
+    "wind_ms": 4.0,
+    "wind_from": 90.0,
+    "edges": 130,
+    "max_ros": 1.18,
+    "max_ros_dir": "W",
+    "ros_by_dir_max": {
+     "E": 0.18,
+     "N": 0.3,
+     "NE": 0.2,
+     "NW": 0.64,
+     "S": 0.3,
+     "SE": 0.2,
+     "SW": 0.64,
+     "W": 1.18
+    }
+   },
+   {
+    "hour": 18,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 130,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 19,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 138,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 20,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 154,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 21,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 168,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 22,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 162,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   },
+   {
+    "hour": 23,
+    "wind_ms": 4.0,
+    "wind_from": 180.0,
+    "edges": 185,
+    "max_ros": 1.18,
+    "max_ros_dir": "N",
+    "ros_by_dir_max": {
+     "E": 0.3,
+     "N": 1.18,
+     "NE": 0.64,
+     "NW": 0.64,
+     "S": 0.18,
+     "SE": 0.2,
+     "SW": 0.2,
+     "W": 0.3
+    }
+   }
+  ],
+  "extent_at_hour": {
+   "6": {
+    "cells": 102,
+    "east_m": 390,
+    "west_m": 60,
+    "north_m": 150,
+    "south_m": 150
+   },
+   "12": {
+    "cells": 477,
+    "east_m": 570,
+    "west_m": 210,
+    "north_m": 210,
+    "south_m": 570
+   },
+   "18": {
+    "cells": 1072,
+    "east_m": 630,
+    "west_m": 630,
+    "north_m": 360,
+    "south_m": 720
+   },
+   "24": {
+    "cells": 1943,
+    "east_m": 780,
+    "west_m": 780,
+    "north_m": 780,
+    "south_m": 780
+   }
+  },
+  "last_frame": 24
+ },
+ "TL2 (broadleaf litter) | W at 1,4,8,2 m/s, 6 h each": {
+  "fuel": 182,
+  "hours": [
+   {
+    "hour": 0,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 0
+   },
+   {
+    "hour": 1,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 0
+   },
+   {
+    "hour": 2,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 1,
+    "max_ros": 0.25,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.25
+    }
+   },
+   {
+    "hour": 3,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 4,
+    "max_ros": 0.21,
+    "max_ros_dir": "NE",
+    "ros_by_dir_max": {
+     "N": 0.15,
+     "NE": 0.21,
+     "S": 0.15,
+     "SE": 0.21
+    }
+   },
+   {
+    "hour": 4,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 2,
+    "max_ros": 0.25,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.25,
+     "W": 0.11
+    }
+   },
+   {
+    "hour": 5,
+    "wind_ms": 1.0,
+    "wind_from": 270.0,
+    "edges": 4,
+    "max_ros": 0.25,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.25,
+     "NE": 0.21,
+     "SE": 0.21
+    }
+   },
+   {
+    "hour": 6,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 17,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2
+    }
+   },
+   {
+    "hour": 7,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 22,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "S": 0.3,
+     "SE": 0.64
+    }
+   },
+   {
+    "hour": 8,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 37,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2,
+     "W": 0.18
+    }
+   },
+   {
+    "hour": 9,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 43,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2
+    }
+   },
+   {
+    "hour": 10,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 56,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "S": 0.3,
+     "SE": 0.64
+    }
+   },
+   {
+    "hour": 11,
+    "wind_ms": 4.0,
+    "wind_from": 270.0,
+    "edges": 69,
+    "max_ros": 1.18,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.18,
+     "N": 0.3,
+     "NE": 0.64,
+     "NW": 0.2,
+     "S": 0.3,
+     "SE": 0.64,
+     "SW": 0.2,
+     "W": 0.18
+    }
+   },
+   {
+    "hour": 12,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 41,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "NE": 0.64,
+     "SE": 0.64
+    }
+   },
+   {
+    "hour": 13,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 50,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "N": 0.12,
+     "NE": 0.34,
+     "NW": 0.08,
+     "S": 0.12,
+     "SE": 0.34,
+     "SW": 0.08
+    }
+   },
+   {
+    "hour": 14,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 53,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "N": 0.12,
+     "NE": 0.34,
+     "S": 0.12,
+     "SE": 0.34
+    }
+   },
+   {
+    "hour": 15,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 53,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "NE": 0.34,
+     "NW": 0.08,
+     "SE": 0.34,
+     "SW": 0.08
+    }
+   },
+   {
+    "hour": 16,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 62,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "NE": 0.34,
+     "SE": 0.34
+    }
+   },
+   {
+    "hour": 17,
+    "wind_ms": 8.0,
+    "wind_from": 270.0,
+    "edges": 56,
+    "max_ros": 1.31,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 1.31,
+     "NE": 0.34,
+     "SE": 0.34,
+     "W": 0.07
+    }
+   },
+   {
+    "hour": 18,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 53,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19
+    }
+   },
+   {
+    "hour": 19,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 61,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19
+    }
+   },
+   {
+    "hour": 20,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 66,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19,
+     "W": 0.17
+    }
+   },
+   {
+    "hour": 21,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 69,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19,
+     "W": 0.17
+    }
+   },
+   {
+    "hour": 22,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 72,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19,
+     "W": 0.17
+    }
+   },
+   {
+    "hour": 23,
+    "wind_ms": 2.0,
+    "wind_from": 270.0,
+    "edges": 78,
+    "max_ros": 0.58,
+    "max_ros_dir": "E",
+    "ros_by_dir_max": {
+     "E": 0.58,
+     "N": 0.26,
+     "NE": 0.43,
+     "NW": 0.19,
+     "S": 0.26,
+     "SE": 0.43,
+     "SW": 0.19,
+     "W": 0.17
+    }
+   }
+  ],
+  "extent_at_hour": {
+   "6": {
+    "cells": 10,
+    "east_m": 60,
+    "west_m": 30,
+    "north_m": 30,
+    "south_m": 30
+   },
+   "12": {
+    "cells": 196,
+    "east_m": 480,
+    "west_m": 90,
+    "north_m": 210,
+    "south_m": 210
+   },
+   "18": {
+    "cells": 499,
+    "east_m": 960,
+    "west_m": 120,
+    "north_m": 270,
+    "south_m": 270
+   },
+   "24": {
+    "cells": 870,
+    "east_m": 1170,
+    "west_m": 180,
+    "north_m": 390,
+    "south_m": 390
+   }
+  },
+  "last_frame": 24
+ }
+}

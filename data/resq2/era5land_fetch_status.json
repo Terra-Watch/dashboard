@@ -1,0 +1,70 @@
+{
+ "E2024-131853": {
+  "ok": true,
+  "grid_cell": [
+   19.2,
+   78.6
+  ],
+  "hours": 120,
+  "first": "2024-02-15 00:00:00",
+  "last": "2024-02-19 23:00:00",
+  "nulls": 0,
+  "step_ok": true,
+  "distance_km": 0.44,
+  "grid_points_in_request": [
+   2,
+   2
+  ]
+ },
+ "E2024-135332": {
+  "ok": true,
+  "grid_cell": [
+   20.0,
+   78.7
+  ],
+  "hours": 120,
+  "first": "2024-03-04 00:00:00",
+  "last": "2024-03-08 23:00:00",
+  "nulls": 0,
+  "step_ok": true,
+  "distance_km": 5.54,
+  "grid_points_in_request": [
+   2,
+   2
+  ]
+ },
+ "E2023-084925": {
+  "ok": true,
+  "grid_cell": [
+   19.3,
+   83.9
+  ],
+  "hours": 120,
+  "first": "2023-03-09 00:00:00",
+  "last": "2023-03-13 23:00:00",
+  "nulls": 0,
+  "step_ok": true,
+  "distance_km": 4.89,
+  "grid_points_in_request": [
+   2,
+   2
+  ]
+ },
+ "E2024-155286": {
+  "ok": true,
+  "grid_cell": [
+   19.1,
+   80.9
+  ],
+  "hours": 120,
+  "first": "2024-04-11 00:00:00",
+  "last": "2024-04-15 23:00:00",
+  "nulls": 0,
+  "step_ok": true,
+  "distance_km": 2.49,
+  "grid_points_in_request": [
+   2,
+   3
+  ]
+ }
+}
