@@ -1,0 +1,248 @@
+{
+ "incident_id": "E2024-135332",
+ "forest": {
+  "ignition_pixel_class": 10,
+  "ignition_pixel_class_name": "tree cover",
+  "domain_pixels": 1003043,
+  "domain_class_share_pct": {
+   "10 tree cover": 50.3,
+   "20 shrubland": 4.6,
+   "30 grassland": 13.8,
+   "40 cropland": 31.0,
+   "50 built-up": 0.2,
+   "60 bare/sparse": 0.0,
+   "80 water": 0.1
+  },
+  "domain_forest_share_pct": 50.3,
+  "domain_tree_or_shrub_share_pct": 55.0,
+  "context": {
+   "within_190m": {
+    "pixels": 1402,
+    "forest_share_pct": 99.9,
+    "classes": {
+     "tree cover": 99.9,
+     "shrubland": 0.1
+    }
+   },
+   "within_1km": {
+    "pixels": 38869,
+    "forest_share_pct": 82.6,
+    "classes": {
+     "tree cover": 82.6,
+     "shrubland": 5.2,
+     "grassland": 8.4,
+     "cropland": 3.8
+    }
+   }
+  },
+  "nearest_forest_pixel_km": 0.002,
+  "forest_pass": true,
+  "pixel_size_m": [
+   8.7,
+   9.3
+  ],
+  "dem": {
+   "shape": [
+    324,
+    344
+   ],
+   "min_m": 263.4522705078125,
+   "max_m": 458.9928894042969,
+   "mean_m": 337.4,
+   "at_ignition_m": 386.80511474609375,
+   "pixel_size_m": [
+    29.1,
+    30.9
+   ]
+  }
+ },
+ "viirs_cluster": {
+  "detections_in_fetched_box_type0": 101,
+  "event_detections": 62,
+  "event_n_h": 52,
+  "csv_n_det": 62,
+  "first": "2024-03-05 0753 UTC",
+  "last_date": "2024-03-10",
+  "overpasses": 19,
+  "csv_extent_km": 5.24,
+  "centroid": [
+   19.9712,
+   78.7195
+  ]
+ },
+ "scar": {
+  "files": [
+   {
+    "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+    "pixel_size_m": [
+     463.313,
+     463.313
+    ],
+    "burned_pixels_in_tile": 4415
+   },
+   {
+    "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+    "pixel_size_m": [
+     463.313,
+     463.313
+    ],
+    "burned_pixels_in_tile": 5491
+   }
+  ],
+  "pixels_in_domain_plus_3km_any_date": 12,
+  "pixels_event_window": 12,
+  "pixels_outside_event_window": 0,
+  "scar_area_km2": 2.58,
+  "scar_bbox_km": {
+   "east_west": 1.88,
+   "north_south": 2.32
+  },
+  "viirs_bbox_km": {
+   "east_west": 4.16,
+   "north_south": 4.42
+  },
+  "scar_centroid": [
+   19.9632,
+   78.7241
+  ],
+  "viirs_centroid": [
+   19.9712,
+   78.7195
+  ],
+  "centroid_offset_km": 1.01,
+  "detections_within_1km_of_scar_pct_all": 58.1,
+  "detections_within_1km_of_scar_pct_nh": 57.7,
+  "median_detection_to_scar_km": 0.89,
+  "median_scar_pixel_to_detection_km": 0.23,
+  "scar_pixels_within_1km_of_a_detection_pct": 100.0,
+  "burn_date_range": [
+   "2024-03-08",
+   "2024-03-09"
+  ],
+  "uncertainty_days_median": 1.0,
+  "burn_date_first_minus_first_detection_days": 3,
+  "scar_area_over_viirs_hull_area": 0.17,
+  "verdict": "not consistent (see numbers)"
+ },
+ "weather": {
+  "era5land_temperature_humidity": {
+   "grid_cell": [
+    20.0,
+    78.70001
+   ],
+   "distance_ignition_to_cell_km": 5.5,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0,
+    "dew_point_2m": 0
+   },
+   "temperature_2m": {
+    "min": 19.9,
+    "mean": 27.6,
+    "max": 35.4
+   },
+   "relative_humidity_2m": {
+    "min": 17.0,
+    "mean": 32.6,
+    "max": 62.0
+   },
+   "dew_point_2m": {
+    "min": 3.4,
+    "mean": 9.1,
+    "max": 15.3
+   }
+  },
+  "era5_wind_and_surface": {
+   "grid_cell": [
+    20.0,
+    78.75
+   ],
+   "distance_ignition_to_cell_km": 6.6,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "wind_gusts_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   },
+   "wind_speed_10m": {
+    "min": 0.5,
+    "mean": 2.3,
+    "max": 3.6
+   },
+   "wind_direction_10m": {
+    "min": 2.0,
+    "mean": 204.8,
+    "max": 360.0
+   },
+   "wind_gusts_10m": {
+    "min": 1.6,
+    "mean": 4.7,
+    "max": 8.3
+   },
+   "temperature_2m": {
+    "min": 19.8,
+    "mean": 28.0,
+    "max": 36.6
+   },
+   "relative_humidity_2m": {
+    "min": 25.0,
+    "mean": 40.8,
+    "max": 66.0
+   },
+   "window_first_det_to_plus48h": {
+    "hours": 49,
+    "wind_ms_mean": 1.96,
+    "wind_ms_max": 3.36,
+    "rh_min_pct": 28.0,
+    "t_max_c": 36.6
+   }
+  },
+  "best_match_sensitivity_not_reanalysis": {
+   "grid_cell": [
+    19.9297,
+    78.671326
+   ],
+   "distance_ignition_to_cell_km": 5.0,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   },
+   "wind_speed_10m": {
+    "min": 0.6,
+    "mean": 2.7,
+    "max": 5.7
+   },
+   "wind_direction_10m": {
+    "min": 1.0,
+    "mean": 197.5,
+    "max": 360.0
+   },
+   "temperature_2m": {
+    "min": 20.0,
+    "mean": 28.2,
+    "max": 36.3
+   },
+   "relative_humidity_2m": {
+    "min": 16.0,
+    "mean": 33.6,
+    "max": 73.0
+   },
+   "window_first_det_to_plus48h": {
+    "hours": 49,
+    "wind_ms_mean": 2.47,
+    "wind_ms_max": 4.7,
+    "rh_min_pct": 22.0,
+    "t_max_c": 36.3
+   }
+  }
+ }
+}

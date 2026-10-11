@@ -1,0 +1,160 @@
+{
+ "incident_id": "E2024-131853",
+ "state": "TS",
+ "ignition": [
+  19.20262,
+  78.60316
+ ],
+ "domain_centre": [
+  19.20052,
+  78.59087
+ ],
+ "domain_side_km": 11.0,
+ "window_pad_km": 0.5,
+ "window_bounds_wsen": [
+  78.53379652532668,
+  19.146563165467626,
+  78.64794347467331,
+  19.254476834532376
+ ],
+ "first_detection_utc": "2024-02-16 20:11",
+ "last_detection_date": "2024-02-24",
+ "worldcover": {
+  "file": "worldcover_2021_window.tif",
+  "shape": [
+   1295,
+   1370
+  ],
+  "res_deg": [
+   8.333333333333333e-05,
+   8.333333333333333e-05
+  ],
+  "cached": false,
+  "sources": [
+   "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif"
+  ]
+ },
+ "copernicus_dem": {
+  "file": "copernicus_dem_glo30_window.tif",
+  "shape": [
+   388,
+   411
+  ],
+  "res_deg": [
+   0.0002777777777777778,
+   0.0002777777777777778
+  ],
+  "cached": false,
+  "sources": [
+   "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif"
+  ]
+ },
+ "viirs": {
+  "file": "viirs_detections.csv",
+  "rows": 81,
+  "date_range": [
+   "2024-02-13",
+   "2024-02-27"
+  ],
+  "margin_km": 3.0,
+  "types": {
+   "0": 81
+  },
+  "confidence": {
+   "n": 63,
+   "l": 18
+  }
+ },
+ "weather": {
+  "era5land_temperature_humidity": {
+   "model": "era5_land",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.20262&longitude=78.60316&start_date=2024-02-15&end_date=2024-02-19&timezone=GMT&wind_speed_unit=ms&models=era5_land&hourly=temperature_2m%2Crelative_humidity_2m%2Cdew_point_2m",
+   "grid_cell_lat": 19.200005,
+   "grid_cell_lon": 78.600006,
+   "elevation_m": 363.0,
+   "units": {
+    "time": "iso8601",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%",
+    "dew_point_2m": "\u00b0C"
+   },
+   "hours": 120,
+   "first": "2024-02-15 00:00:00",
+   "last": "2024-02-19 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0,
+    "dew_point_2m": 0
+   }
+  },
+  "era5_wind_and_surface": {
+   "model": "era5",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.20262&longitude=78.60316&start_date=2024-02-15&end_date=2024-02-19&timezone=GMT&wind_speed_unit=ms&models=era5&hourly=wind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Ctemperature_2m%2Crelative_humidity_2m",
+   "grid_cell_lat": 19.25,
+   "grid_cell_lon": 78.5,
+   "elevation_m": 363.0,
+   "units": {
+    "time": "iso8601",
+    "wind_speed_10m": "m/s",
+    "wind_direction_10m": "\u00b0",
+    "wind_gusts_10m": "m/s",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%"
+   },
+   "hours": 120,
+   "first": "2024-02-15 00:00:00",
+   "last": "2024-02-19 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "wind_gusts_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   }
+  },
+  "best_match_sensitivity_not_reanalysis": {
+   "model": "best_match",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.20262&longitude=78.60316&start_date=2024-02-15&end_date=2024-02-19&timezone=GMT&wind_speed_unit=ms&models=best_match&hourly=wind_speed_10m%2Cwind_direction_10m%2Ctemperature_2m%2Crelative_humidity_2m",
+   "grid_cell_lat": 19.226713,
+   "grid_cell_lon": 78.60535,
+   "elevation_m": 363.0,
+   "units": {
+    "time": "iso8601",
+    "wind_speed_10m": "m/s",
+    "wind_direction_10m": "\u00b0",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%"
+   },
+   "hours": 120,
+   "first": "2024-02-15 00:00:00",
+   "last": "2024-02-19 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   }
+  }
+ },
+ "mcd64a1": [
+  {
+   "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+   "bytes": 1864576,
+   "laads_listing_bytes": 1864576,
+   "size_matches_laads": true,
+   "month": "2024-02",
+   "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024032/MCD64A1.A2024032.h25v07.061.2024100025301.hdf"
+  },
+  {
+   "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+   "bytes": 1439093,
+   "laads_listing_bytes": 1439093,
+   "size_matches_laads": true,
+   "month": "2024-03",
+   "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024061/MCD64A1.A2024061.h25v07.061.2024134020338.hdf"
+  }
+ ]
+}

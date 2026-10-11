@@ -1,0 +1,217 @@
+{
+ "incident_id": "E2024-131853",
+ "forest": {
+  "ignition_pixel_class": 10,
+  "ignition_pixel_class_name": "tree cover",
+  "domain_pixels": 1490872,
+  "domain_class_share_pct": {
+   "10 tree cover": 57.6,
+   "20 shrubland": 5.6,
+   "30 grassland": 12.2,
+   "40 cropland": 23.6,
+   "50 built-up": 0.4,
+   "60 bare/sparse": 0.2,
+   "80 water": 0.4
+  },
+  "domain_forest_share_pct": 57.6,
+  "domain_tree_or_shrub_share_pct": 63.2,
+  "context": {
+   "within_190m": {
+    "pixels": 1394,
+    "forest_share_pct": 99.0,
+    "classes": {
+     "tree cover": 99.0,
+     "shrubland": 1.0
+    }
+   },
+   "within_1km": {
+    "pixels": 38698,
+    "forest_share_pct": 97.2,
+    "classes": {
+     "tree cover": 97.2,
+     "shrubland": 2.1,
+     "grassland": 0.6
+    }
+   }
+  },
+  "nearest_forest_pixel_km": 0.002,
+  "forest_pass": true,
+  "pixel_size_m": [
+   8.8,
+   9.3
+  ],
+  "dem": {
+   "shape": [
+    388,
+    411
+   ],
+   "min_m": 216.1060028076172,
+   "max_m": 472.8169250488281,
+   "mean_m": 311.4,
+   "at_ignition_m": 362.40960693359375,
+   "pixel_size_m": [
+    29.2,
+    30.9
+   ]
+  }
+ },
+ "viirs_cluster": {
+  "detections_in_fetched_box_type0": 81,
+  "event_detections": 51,
+  "event_n_h": 43,
+  "csv_n_det": 51,
+  "first": "2024-02-16 2011 UTC",
+  "last_date": "2024-02-24",
+  "overpasses": 18,
+  "csv_extent_km": 5.91,
+  "centroid": [
+   19.2004,
+   78.5915
+  ]
+ },
+ "scar": {
+  "files": [
+   {
+    "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+    "pixel_size_m": [
+     463.313,
+     463.313
+    ],
+    "burned_pixels_in_tile": 4415
+   },
+   {
+    "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+    "pixel_size_m": [
+     463.313,
+     463.313
+    ],
+    "burned_pixels_in_tile": 5491
+   }
+  ],
+  "pixels_in_domain_plus_3km_any_date": 8,
+  "pixels_event_window": 0,
+  "pixels_outside_event_window": 8,
+  "verdict": "no burned pixels in the event window"
+ },
+ "weather": {
+  "era5land_temperature_humidity": {
+   "grid_cell": [
+    19.200005,
+    78.600006
+   ],
+   "distance_ignition_to_cell_km": 0.4,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0,
+    "dew_point_2m": 0
+   },
+   "temperature_2m": {
+    "min": 18.9,
+    "mean": 25.9,
+    "max": 33.0
+   },
+   "relative_humidity_2m": {
+    "min": 20.0,
+    "mean": 39.2,
+    "max": 76.0
+   },
+   "dew_point_2m": {
+    "min": 6.1,
+    "mean": 10.2,
+    "max": 15.4
+   }
+  },
+  "era5_wind_and_surface": {
+   "grid_cell": [
+    19.25,
+    78.5
+   ],
+   "distance_ignition_to_cell_km": 12.1,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "wind_gusts_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   },
+   "wind_speed_10m": {
+    "min": 0.6,
+    "mean": 2.2,
+    "max": 4.0
+   },
+   "wind_direction_10m": {
+    "min": 11.0,
+    "mean": 153.5,
+    "max": 267.0
+   },
+   "wind_gusts_10m": {
+    "min": 1.1,
+    "mean": 4.2,
+    "max": 8.4
+   },
+   "temperature_2m": {
+    "min": 18.7,
+    "mean": 26.5,
+    "max": 34.6
+   },
+   "relative_humidity_2m": {
+    "min": 23.0,
+    "mean": 46.8,
+    "max": 72.0
+   },
+   "window_first_det_to_plus48h": {
+    "hours": 49,
+    "wind_ms_mean": 2.01,
+    "wind_ms_max": 3.2,
+    "rh_min_pct": 23.0,
+    "t_max_c": 34.6
+   }
+  },
+  "best_match_sensitivity_not_reanalysis": {
+   "grid_cell": [
+    19.226713,
+    78.60535
+   ],
+   "distance_ignition_to_cell_km": 2.7,
+   "hours": 120,
+   "covers_first_detection_to_plus_48h": true,
+   "nulls": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   },
+   "wind_speed_10m": {
+    "min": 0.1,
+    "mean": 1.6,
+    "max": 4.1
+   },
+   "wind_direction_10m": {
+    "min": 6.0,
+    "mean": 181.0,
+    "max": 347.0
+   },
+   "temperature_2m": {
+    "min": 17.2,
+    "mean": 25.8,
+    "max": 34.5
+   },
+   "relative_humidity_2m": {
+    "min": 21.0,
+    "mean": 42.0,
+    "max": 79.0
+   },
+   "window_first_det_to_plus48h": {
+    "hours": 49,
+    "wind_ms_mean": 1.49,
+    "wind_ms_max": 3.89,
+    "rh_min_pct": 21.0,
+    "t_max_c": 34.5
+   }
+  }
+ }
+}

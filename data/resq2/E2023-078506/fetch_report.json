@@ -1,0 +1,160 @@
+{
+ "incident_id": "E2023-078506",
+ "state": "OD",
+ "ignition": [
+  19.61632,
+  83.94147
+ ],
+ "domain_centre": [
+  19.61026,
+  83.94216
+ ],
+ "domain_side_km": 8.0,
+ "window_pad_km": 0.5,
+ "window_bounds_wsen": [
+  83.89924692588414,
+  19.569792374100718,
+  83.98507307411586,
+  19.650727625899282
+ ],
+ "first_detection_utc": "2023-03-03 19:34",
+ "last_detection_date": "2023-03-07",
+ "worldcover": {
+  "file": "worldcover_2021_window.tif",
+  "shape": [
+   971,
+   1030
+  ],
+  "res_deg": [
+   8.333333333333333e-05,
+   8.333333333333333e-05
+  ],
+  "cached": false,
+  "sources": [
+   "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E081_Map.tif"
+  ]
+ },
+ "copernicus_dem": {
+  "file": "copernicus_dem_glo30_window.tif",
+  "shape": [
+   291,
+   309
+  ],
+  "res_deg": [
+   0.0002777777777777778,
+   0.0002777777777777778
+  ],
+  "cached": false,
+  "sources": [
+   "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E083_00_DEM/Copernicus_DSM_COG_10_N19_00_E083_00_DEM.tif"
+  ]
+ },
+ "viirs": {
+  "file": "viirs_detections.csv",
+  "rows": 91,
+  "date_range": [
+   "2023-02-28",
+   "2023-03-10"
+  ],
+  "margin_km": 3.0,
+  "types": {
+   "0": 91
+  },
+  "confidence": {
+   "n": 86,
+   "l": 5
+  }
+ },
+ "weather": {
+  "era5land_temperature_humidity": {
+   "model": "era5_land",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.61632&longitude=83.94147&start_date=2023-03-02&end_date=2023-03-06&timezone=GMT&wind_speed_unit=ms&models=era5_land&hourly=temperature_2m%2Crelative_humidity_2m%2Cdew_point_2m",
+   "grid_cell_lat": 19.599998,
+   "grid_cell_lon": 83.899994,
+   "elevation_m": 976.0,
+   "units": {
+    "time": "iso8601",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%",
+    "dew_point_2m": "\u00b0C"
+   },
+   "hours": 120,
+   "first": "2023-03-02 00:00:00",
+   "last": "2023-03-06 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0,
+    "dew_point_2m": 0
+   }
+  },
+  "era5_wind_and_surface": {
+   "model": "era5",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.61632&longitude=83.94147&start_date=2023-03-02&end_date=2023-03-06&timezone=GMT&wind_speed_unit=ms&models=era5&hourly=wind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Ctemperature_2m%2Crelative_humidity_2m",
+   "grid_cell_lat": 19.5,
+   "grid_cell_lon": 84.0,
+   "elevation_m": 976.0,
+   "units": {
+    "time": "iso8601",
+    "wind_speed_10m": "m/s",
+    "wind_direction_10m": "\u00b0",
+    "wind_gusts_10m": "m/s",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%"
+   },
+   "hours": 120,
+   "first": "2023-03-02 00:00:00",
+   "last": "2023-03-06 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "wind_gusts_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   }
+  },
+  "best_match_sensitivity_not_reanalysis": {
+   "model": "best_match",
+   "request_url": "https://archive-api.open-meteo.com/v1/archive?latitude=19.61632&longitude=83.94147&start_date=2023-03-02&end_date=2023-03-06&timezone=GMT&wind_speed_unit=ms&models=best_match&hourly=wind_speed_10m%2Cwind_direction_10m%2Ctemperature_2m%2Crelative_humidity_2m",
+   "grid_cell_lat": 19.648504,
+   "grid_cell_lon": 84.0,
+   "elevation_m": 976.0,
+   "units": {
+    "time": "iso8601",
+    "wind_speed_10m": "m/s",
+    "wind_direction_10m": "\u00b0",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%"
+   },
+   "hours": 120,
+   "first": "2023-03-02 00:00:00",
+   "last": "2023-03-06 23:00:00",
+   "hourly_step_ok": true,
+   "null_counts": {
+    "wind_speed_10m": 0,
+    "wind_direction_10m": 0,
+    "temperature_2m": 0,
+    "relative_humidity_2m": 0
+   }
+  }
+ },
+ "mcd64a1": [
+  {
+   "file": "MCD64A1.A2023032.h25v07.061.2023102030746.hdf",
+   "bytes": 2325955,
+   "laads_listing_bytes": 2325955,
+   "size_matches_laads": true,
+   "month": "2023-02",
+   "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2023032/MCD64A1.A2023032.h25v07.061.2023102030746.hdf"
+  },
+  {
+   "file": "MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+   "bytes": 2159249,
+   "laads_listing_bytes": 2159249,
+   "size_matches_laads": true,
+   "month": "2023-03",
+   "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2023060/MCD64A1.A2023060.h25v07.061.2023132021740.hdf"
+  }
+ ]
+}
