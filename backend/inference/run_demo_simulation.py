@@ -63,7 +63,10 @@ def _build_grid() -> dict[str, object]:
         import rasterio
         from rasterio.windows import Window
     except ModuleNotFoundError as exc:
-        raise RuntimeError("rasterio is required only to regenerate the staged raster inputs; install backend requirements or keep the prepared scenario files.") from exc
+        # The domain is fixed, so the staged fuels/elevation files do not depend on the request.
+        if all((SCENARIO / name).exists() for name in ("fuels.asc", "elevation.asc", "slope.asc", "saz.asc")):
+            return _existing_grid_meta()
+        raise RuntimeError("rasterio is required to build the raster inputs and no staged scenario files exist; run `pip install -r backend/requirements.txt`.") from exc
     landcover = DATA / "landcover/worldcover_similipal_demo.tif"
     elevation = DATA / "terrain/elevation_similipal_demo.tif"
     with rasterio.open(landcover) as lc, rasterio.open(elevation) as dem:

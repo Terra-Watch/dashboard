@@ -87,8 +87,7 @@
   "inputs": {
     "grid": {
       "worldcover_classes": [
-        10,
-        30
+        10
       ],
       "fuel_ids": [
         101,
