@@ -1,0 +1,356 @@
+{
+ "E2024-131853": {
+  "state": "TS",
+  "ignition_lat_lon": [
+   19.20262,
+   78.60316
+  ],
+  "ignition_utm_m": [
+   247981.8,
+   2124981.7
+  ],
+  "first_detection_utc": "2024-02-16 20:11:00",
+  "t0_utc": "2024-02-16 08:00:00",
+  "weather_rows_hours": 72,
+  "last_overpass_hours_since_t0": 71.57,
+  "domain": {
+   "crs": "EPSG:32644",
+   "west_m": 240938,
+   "north_m": 2130375,
+   "cells_per_side": 375,
+   "side_km": 11.25,
+   "cluster_bbox_km": [
+    4.88,
+    5.25
+   ],
+   "n_cells": 140625
+  },
+  "ignition_cell_rowcol": [
+   179,
+   234
+  ],
+  "jitter_seed": 5001,
+  "jitter_offsets_m_first3": [
+   [
+    -240.1,
+    15.3
+   ],
+   [
+    341.6,
+    -276.0
+   ],
+   [
+    -73.0,
+    -105.2
+   ]
+  ],
+  "cluster_detections_all_conf": 51,
+  "cluster_detections_nh": 43,
+  "overpasses_all_listed": 16,
+  "overpasses_used": [
+   {
+    "pass": "N|2024-02-16|N",
+    "time_utc": "2024-02-16 20:11:00",
+    "n_nh": 2,
+    "hours_since_t0": 12.18
+   },
+   {
+    "pass": "N20|2024-02-16|N",
+    "time_utc": "2024-02-16 21:00:00",
+    "n_nh": 1,
+    "hours_since_t0": 13.0
+   },
+   {
+    "pass": "N|2024-02-17|D",
+    "time_utc": "2024-02-17 07:22:00",
+    "n_nh": 1,
+    "hours_since_t0": 23.37
+   },
+   {
+    "pass": "N20|2024-02-17|D",
+    "time_utc": "2024-02-17 08:12:00",
+    "n_nh": 1,
+    "hours_since_t0": 24.2
+   },
+   {
+    "pass": "N20|2024-02-18|N",
+    "time_utc": "2024-02-18 20:23:00",
+    "n_nh": 5,
+    "hours_since_t0": 60.38
+   },
+   {
+    "pass": "N20|2024-02-19|D",
+    "time_utc": "2024-02-19 07:34:00",
+    "n_nh": 4,
+    "hours_since_t0": 71.57
+   }
+  ]
+ },
+ "E2024-135332": {
+  "state": "MH",
+  "ignition_lat_lon": [
+   19.95163,
+   78.71265
+  ],
+  "ignition_utm_m": [
+   260609.1,
+   2207759.8
+  ],
+  "first_detection_utc": "2024-03-05 07:53:00",
+  "t0_utc": "2024-03-04 19:00:00",
+  "weather_rows_hours": 50,
+  "last_overpass_hours_since_t0": 49.9,
+  "domain": {
+   "crs": "EPSG:32644",
+   "west_m": 256492,
+   "north_m": 2214758,
+   "cells_per_side": 338,
+   "side_km": 10.14,
+   "cluster_bbox_km": [
+    4.12,
+    4.12
+   ],
+   "n_cells": 114244
+  },
+  "ignition_cell_rowcol": [
+   233,
+   137
+  ],
+  "jitter_seed": 5002,
+  "jitter_offsets_m_first3": [
+   [
+    79.5,
+    -326.5
+   ],
+   [
+    -203.3,
+    -387.7
+   ],
+   [
+    -125.6,
+    222.1
+   ]
+  ],
+  "cluster_detections_all_conf": 62,
+  "cluster_detections_nh": 52,
+  "overpasses_all_listed": 17,
+  "overpasses_used": [
+   {
+    "pass": "N20|2024-03-05|D",
+    "time_utc": "2024-03-05 07:53:00",
+    "n_nh": 1,
+    "hours_since_t0": 12.88
+   },
+   {
+    "pass": "N|2024-03-05|D",
+    "time_utc": "2024-03-05 08:43:00",
+    "n_nh": 1,
+    "hours_since_t0": 13.72
+   },
+   {
+    "pass": "N20|2024-03-05|N",
+    "time_utc": "2024-03-05 20:23:00",
+    "n_nh": 2,
+    "hours_since_t0": 25.38
+   },
+   {
+    "pass": "N20|2024-03-06|D",
+    "time_utc": "2024-03-06 07:34:00",
+    "n_nh": 2,
+    "hours_since_t0": 36.57
+   },
+   {
+    "pass": "N|2024-03-06|D",
+    "time_utc": "2024-03-06 08:24:00",
+    "n_nh": 2,
+    "hours_since_t0": 37.4
+   },
+   {
+    "pass": "N20|2024-03-06|N",
+    "time_utc": "2024-03-06 20:04:00",
+    "n_nh": 1,
+    "hours_since_t0": 49.07
+   },
+   {
+    "pass": "N|2024-03-06|N",
+    "time_utc": "2024-03-06 20:54:00",
+    "n_nh": 1,
+    "hours_since_t0": 49.9
+   }
+  ]
+ },
+ "E2023-084925": {
+  "state": "OD",
+  "ignition_lat_lon": [
+   19.32648,
+   83.93716
+  ],
+  "ignition_utm_m": [
+   808634.2,
+   2139572.1
+  ],
+  "first_detection_utc": "2023-03-10 19:51:00",
+  "t0_utc": "2023-03-10 07:00:00",
+  "weather_rows_hours": 62,
+  "last_overpass_hours_since_t0": 61.9,
+  "domain": {
+   "crs": "EPSG:32644",
+   "west_m": 800618,
+   "north_m": 2145945,
+   "cells_per_side": 388,
+   "side_km": 11.64,
+   "cluster_bbox_km": [
+    5.62,
+    3.75
+   ],
+   "n_cells": 150544
+  },
+  "ignition_cell_rowcol": [
+   212,
+   267
+  ],
+  "jitter_seed": 5003,
+  "jitter_offsets_m_first3": [
+   [
+    107.6,
+    -294.7
+   ],
+   [
+    -130.2,
+    124.2
+   ],
+   [
+    69.3,
+    348.1
+   ]
+  ],
+  "cluster_detections_all_conf": 52,
+  "cluster_detections_nh": 49,
+  "overpasses_all_listed": 15,
+  "overpasses_used": [
+   {
+    "pass": "N20|2023-03-10|N",
+    "time_utc": "2023-03-10 19:51:00",
+    "n_nh": 1,
+    "hours_since_t0": 12.85
+   },
+   {
+    "pass": "N20|2023-03-11|D",
+    "time_utc": "2023-03-11 07:02:00",
+    "n_nh": 4,
+    "hours_since_t0": 24.03
+   },
+   {
+    "pass": "N|2023-03-11|D",
+    "time_utc": "2023-03-11 07:54:00",
+    "n_nh": 7,
+    "hours_since_t0": 24.9
+   },
+   {
+    "pass": "N20|2023-03-11|N",
+    "time_utc": "2023-03-11 19:32:00",
+    "n_nh": 7,
+    "hours_since_t0": 36.53
+   },
+   {
+    "pass": "N|2023-03-11|N",
+    "time_utc": "2023-03-11 20:24:00",
+    "n_nh": 3,
+    "hours_since_t0": 37.4
+   },
+   {
+    "pass": "N|2023-03-12|D",
+    "time_utc": "2023-03-12 07:35:00",
+    "n_nh": 1,
+    "hours_since_t0": 48.58
+   },
+   {
+    "pass": "N|2023-03-12|N",
+    "time_utc": "2023-03-12 20:05:00",
+    "n_nh": 8,
+    "hours_since_t0": 61.08
+   },
+   {
+    "pass": "N20|2023-03-12|N",
+    "time_utc": "2023-03-12 20:54:00",
+    "n_nh": 1,
+    "hours_since_t0": 61.9
+   }
+  ]
+ },
+ "E2024-155286": {
+  "state": "CG",
+  "ignition_lat_lon": [
+   19.12243,
+   80.89992
+  ],
+  "ignition_utm_m": [
+   489474.3,
+   2114377.2
+  ],
+  "first_detection_utc": "2024-04-12 19:46:00",
+  "t0_utc": "2024-04-12 07:00:00",
+  "weather_rows_hours": 62,
+  "last_overpass_hours_since_t0": 61.8,
+  "domain": {
+   "crs": "EPSG:32644",
+   "west_m": 483555,
+   "north_m": 2119508,
+   "cells_per_side": 338,
+   "side_km": 10.14,
+   "cluster_bbox_km": [
+    3.0,
+    4.12
+   ],
+   "n_cells": 114244
+  },
+  "ignition_cell_rowcol": [
+   171,
+   197
+  ],
+  "jitter_seed": 5004,
+  "jitter_offsets_m_first3": [
+   [
+    -104.5,
+    -100.0
+   ],
+   [
+    -131.3,
+    -318.9
+   ],
+   [
+    173.4,
+    -95.4
+   ]
+  ],
+  "cluster_detections_all_conf": 49,
+  "cluster_detections_nh": 41,
+  "overpasses_all_listed": 9,
+  "overpasses_used": [
+   {
+    "pass": "N20|2024-04-12|N",
+    "time_utc": "2024-04-12 19:46:00",
+    "n_nh": 3,
+    "hours_since_t0": 12.77
+   },
+   {
+    "pass": "N|2024-04-14|D",
+    "time_utc": "2024-04-14 07:53:00",
+    "n_nh": 1,
+    "hours_since_t0": 48.88
+   },
+   {
+    "pass": "N|2024-04-14|N",
+    "time_utc": "2024-04-14 20:23:00",
+    "n_nh": 6,
+    "hours_since_t0": 61.38
+   },
+   {
+    "pass": "N20|2024-04-14|N",
+    "time_utc": "2024-04-14 20:48:00",
+    "n_nh": 4,
+    "hours_since_t0": 61.8
+   }
+  ]
+ }
+}
