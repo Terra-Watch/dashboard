@@ -2,7 +2,7 @@
 
 ## Executive assessment
 
-RESQ currently demonstrates the application flow, archived ignition-risk records, a MapLibre map, patrol and incident shells, and a Cell2Fire spread animation. The spread runner and MCD64A1 comparison now execute with real downloaded Earth-observation data.
+RESQ currently demonstrates the application flow, archived ignition-risk records, a MapLibre map, patrol and incident shells, and a Cell2Fire spread animation. The spread runner is a synthetic, uncalibrated example at a point in Similipal; it is not an observed event. (Correction, RESQ-3: the earlier MCD64A1 comparison placed pixels with a 500 m step; the true pixel is 463.31 m and the "March 2024 observed" burn is about 75 km north-east of the demo point. See `docs/RESQ2_INCIDENTS.md`.)
 
 It is not yet a real operational wildfire system. The current outputs are suitable for a clearly labeled development demonstration and engineering tests, not for dispatching crews or declaring that a fire will spread in a particular direction.
 
@@ -43,9 +43,9 @@ Current limitation: the current scenario uses uncalibrated fuel proxies, staged 
 
 ### 5. Compare with observed burned area
 
-The app can compare the final simulation with MCD64A1 burned-area pixels at the MODIS 500 m scale.
+The validation command can compare a footprint with MCD64A1 burned-area pixels (463.31 m pixels, positioned from the file's own georeferencing). The demo point has no observed burned pixels, so the app no longer shows an observed comparison for it.
 
-Current limitation: MCD64A1 is monthly. It cannot verify the exact hour-24 or hour-48 perimeter. The current March 2024 comparison is a development-only spatial check and uses January weather forcing, so its overlap value is not an operational accuracy score.
+Current limitation: MCD64A1 is monthly. It cannot verify the exact hour-24 or hour-48 perimeter. The earlier "March 2024 comparison" was mislocated (see the correction above) and is withdrawn; no observed score exists for the demo.
 
 ## What is working
 
@@ -72,11 +72,11 @@ An overlap value could be mistaken for a validated forecast score. The UI and do
 
 ### MODIS resolution mismatch
 
-The simulation grid is 30 m while MCD64A1 is 500 m. The comparison now aggregates the simulation to the MCD64A1 grid before calculating overlap.
+The simulation grid is 30 m while MCD64A1 pixels are 463.31 m (2400 pixels per 1,111,950 m tile; the earlier 500 m figure was wrong). A comparison must aggregate the simulation to the MCD64A1 grid before calculating overlap.
 
 ### Geographic extent mismatch
 
-The first demo location had no observed burned-area pixels in the same extent. The current development case uses a 2024 observed MCD64A1 location, while still keeping the weather limitation explicit.
+The first demo location had no observed burned-area pixels in the same extent, and neither has the current one: the 2024-03-31 MCD64A1 cluster that was believed to be there lies at 22.463 N, 86.849 E (RESQ-2). The demo is a synthetic example.
 
 ### Demo data versus operational data
 
@@ -217,11 +217,11 @@ The Cell2Fire run uses proxy fuel parameters and repeated weather inputs. The re
 
 ### Current validation is not independent
 
-The development case is centered near an observed burned-area location. That is useful for integration testing but can overstate performance if the ignition is chosen after looking at the observation. Independent incidents must be selected before running the simulation.
+The development case is a synthetic example, not an observed burned-area location. Independent incidents must be selected before running the simulation (see `docs/RESQ2_INCIDENTS.md`).
 
 ### Resolution and timing are inconsistent
 
-The simulation uses 30 m cells and hourly frames. MCD64A1 is approximately 500 m and monthly. A valid comparison must use a common grid and must not claim hourly timing from monthly data.
+The simulation uses 30 m cells and hourly frames. MCD64A1 is 463.31 m and monthly. A valid comparison must use a common grid and must not claim hourly timing from monthly data.
 
 ### Weather is not event-specific
 

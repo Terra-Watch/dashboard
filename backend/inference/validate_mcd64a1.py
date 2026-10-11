@@ -1,6 +1,7 @@
-"""Compare a completed demo footprint with an observed MCD64A1 month.
+"""Compare a completed demo footprint with an MCD64A1 month.
 
-MCD64A1 is monthly 500 m burned area, so this validates spatial overlap only;
+MCD64A1 is monthly ~463 m burned area (the tile is 2400 pixels, not 500 m
+ones; pixel positions come from the file's own metadata), so this validates spatial overlap only;
 it does not validate the simulated hour 24/48 timing.
 """
 from __future__ import annotations
@@ -13,34 +14,22 @@ from pathlib import Path
 import numpy as np
 from pyhdf.SD import SD, SDC
 
+from mcd64a1_geo import grid_from_hdf
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MCD_ROOT = ROOT / "runtime_data/mcd64a1"
 RUN_ROOT = ROOT / "runtime_data/simulation_demo/run/Grids/Grids1"
 RADIUS_M = 6_371_007.181
-TILE_SIZE_M = 1_111_950.5196666666
-
-
-def _tile_origin(filename: Path) -> tuple[float, float]:
-    name = filename.name
-    horizontal = int(name.split(".h", 1)[1][:2])
-    vertical = int(name.split(".h", 1)[1][3:5])
-    return (-20_015_109.354 + horizontal * TILE_SIZE_M, 10_007_554.677 - vertical * TILE_SIZE_M)
 
 
 def _mcd_pixels(path: Path) -> list[tuple[float, float]]:
+    """(latitude, longitude) of every burned pixel centre, from the file's own georeferencing."""
     dataset = SD(str(path), SDC.READ)
     burn_date = np.asarray(dataset.select("Burn Date").get())
     rows, cols = np.where(burn_date > 0)
-    x_origin, y_origin = _tile_origin(path)
-    pixels: list[tuple[float, float]] = []
-    for row, col in zip(rows.tolist(), cols.tolist()):
-        x = x_origin + (col + 0.5) * 500.0
-        y = y_origin - (row + 0.5) * 500.0
-        latitude = math.degrees(y / RADIUS_M)
-        longitude = math.degrees(x / (RADIUS_M * math.cos(math.radians(latitude))))
-        pixels.append((latitude, longitude))
-    return pixels
+    longitude, latitude = grid_from_hdf(path, dataset).lonlat(rows, cols)
+    return list(zip(latitude.tolist(), longitude.tolist()))
 
 
 def _mcd_indices(path: Path) -> set[tuple[int, int]]:
@@ -51,15 +40,14 @@ def _mcd_indices(path: Path) -> set[tuple[int, int]]:
 
 
 def _predicted_mcd_indices(path: Path, predicted: np.ndarray, origin: tuple[float, float], cell_size_m: float) -> set[tuple[int, int]]:
-    x_origin, y_origin = _tile_origin(path)
+    grid = grid_from_hdf(path)
     latitude, longitude = origin
     indices: set[tuple[int, int]] = set()
-    for row, col in zip(*np.where(predicted)):
-        cell_latitude = latitude - ((row + 0.5) - predicted.shape[0] / 2) * cell_size_m / RADIUS_M * 180 / math.pi
-        cell_longitude = longitude + ((col + 0.5) - predicted.shape[1] / 2) * cell_size_m / (RADIUS_M * math.cos(math.radians(latitude))) * 180 / math.pi
-        x = RADIUS_M * math.radians(cell_longitude) * math.cos(math.radians(cell_latitude))
-        y = RADIUS_M * math.radians(cell_latitude)
-        indices.add((int((y_origin - y) / 500.0), int((x - x_origin) / 500.0)))
+    rows, cols = np.where(predicted)
+    cell_latitude = latitude - ((rows + 0.5) - predicted.shape[0] / 2) * cell_size_m / RADIUS_M * 180 / math.pi
+    cell_longitude = longitude + ((cols + 0.5) - predicted.shape[1] / 2) * cell_size_m / (RADIUS_M * math.cos(math.radians(latitude))) * 180 / math.pi
+    pixel_rows, pixel_cols = grid.rowcol(cell_longitude, cell_latitude)
+    indices.update(zip(pixel_rows.tolist(), pixel_cols.tolist()))
     return indices
 
 

@@ -110,5 +110,5 @@
   },
   "georeferenced": true,
   "production_eligible": false,
-  "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo with a fixed wind profile; not an operational forecast."
+  "disclaimer": "Synthetic, uncalibrated WorldCover/GFS/SRTM example at a point in Similipal with a fixed wind profile; not an observed event and not an operational forecast."
 }

@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> None:
         "inputs": {"grid": grid_meta, "weather": weather_meta, "fuel_mapping": PROXY_STATUS},
         "georeferenced": True,
         "production_eligible": False,
-        "disclaimer": "Uncalibrated WorldCover/GFS/SRTM development demo with a fixed wind profile; not an operational forecast.",
+        "disclaimer": "Synthetic, uncalibrated WorldCover/GFS/SRTM example at a point in Similipal with a fixed wind profile; not an observed event and not an operational forecast.",
     }
     (PUBLIC / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({"frames": len(burned), "burned_cells": burned, "grid": grid_meta, "weather": weather_meta}))

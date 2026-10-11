@@ -80,15 +80,15 @@ export function MapPage() {
       <span className="eyebrow">Sample data from a past date</span>
       <label className="date-picker">Forecast date<input type="date" min="2023-01-01" max="2024-12-31" value={targetDate} onChange={event => setTargetDate(event.target.value)} /></label>
       <h1>Fire-occurrence risk outlook</h1><p className="muted">Bands compare available records with each other on the same day. They rank where a fire is more likely to occur; they do not describe how a fire would spread.</p>
-      {layers.simulation && <div className="empty simulation-notice">Simulated spread (48 h) is shown for a fixed demo start. It uses uncalibrated fuel proxies and a fixed wind profile (one January 2024 GFS 12-hour profile, repeated), not this forecast.</div>}
+      {layers.simulation && <div className="empty simulation-notice">Synthetic simulated spread (48 h) from a fixed example point, not an observed fire. It uses uncalibrated fuel proxies and a fixed wind profile (one January 2024 GFS 12-hour profile, repeated), not this forecast.</div>}
       {layers.simulation && <div className="simulation-timeline"><strong>Simulation time: hour {simulationHour} / 48</strong><progress value={simulationHour} max={48} /><span className="muted">{simulationDone ? 'Final 48-hour footprint shown.' : 'Advancing one model step per hour.'}</span></div>}
       <RiskLegend />
       <label className="priority-control">Plan for your teams: top {limit}<input type="range" min="20" max="200" step="10" value={limit} onChange={event => setLimit(Number(event.target.value))} /></label>
       {riskLoading && <LoadingState label="Loading the risk map…" />}
       {!riskLoading && riskError && <ErrorState message={riskError} />}
       {!riskLoading && !riskError && (risk?.forest_cell_count ? <><p className="cell-count">Available records: {risk.forest_cell_count.toLocaleString()}</p>{!risk.coverage_complete && <div className="empty">This is an archived validation subset, not a complete forest-grid forecast.</div>}</> : <div className="empty">No forecast for this date. Choose another date.</div>)}
-      <button className="primary-link" disabled={simulationRunning} onClick={() => void runSimulationAt(21.867894, 86.500688)}>{simulationRunning ? 'Running simulation…' : 'Run simulated-spread demo (fixed Similipal start)'}</button>
-      <p className="model-note">The simulator starts from a verified burned location, not from a risk cell, and is separate from the archived risk replay.</p>
+      <button className="primary-link" disabled={simulationRunning} onClick={() => void runSimulationAt(21.867894, 86.500688)}>{simulationRunning ? 'Running simulation…' : 'Run synthetic spread example (Similipal point)'}</button>
+      <p className="model-note">The simulator is a synthetic, uncalibrated example at a fixed Similipal point. It is not an observed event and does not start from a risk cell.</p>
       <p className="model-note">{risk?.model ? `Source: ${risk.model}` : 'Forecast data is unavailable.'}</p>
     </section>
     {showList && <aside className="priority-sheet"><button className="close-sheet" onClick={() => setShowList(false)}>Close</button><PriorityList records={risk?.records || []} limit={limit} onSelect={setSelected} /></aside>}
