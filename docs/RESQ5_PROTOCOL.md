@@ -145,4 +145,4 @@ Expectation recorded before running (not a criterion): TL2 head rates are 0.2-1.
 
 ## Amendments
 
-(none)
+**Amendment 1 (2026-10-11, before any replay run): raster windows.** Sections 4 and 6 say the WorldCover and DEM windows "already stored" are used. A coverage check showed that the RESQ-3/4 windows (cut for the earlier 9-12 km CSV domains) do not cover the protocol domain for E2024-135332 and E2024-155286 (corners missing by up to 0.0022 degrees, about 240 m). The windows were therefore re-read for all four incidents from the same sources by the same method (anonymous COG range reads: ESA WorldCover 2021 v200 and Copernicus GLO-30), covering the protocol domain plus 0.5 km (`scripts/resq5/fetch_windows.py`, stored in `data/resq5/<id>/`). Nothing else changes: no rule, class mapping, domain, weather or metric is altered.
