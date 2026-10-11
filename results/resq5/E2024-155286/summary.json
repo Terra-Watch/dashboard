@@ -1,0 +1,127 @@
+{
+ "incident": "E2024-155286",
+ "domain": {
+  "crs": "EPSG:32644",
+  "west_m": 483555,
+  "north_m": 2119508,
+  "cells_per_side": 338,
+  "side_km": 10.14,
+  "cluster_bbox_km": [
+   3.0,
+   4.12
+  ],
+  "n_cells": 114244
+ },
+ "overpasses": [
+  {
+   "pass": "N20|2024-04-12|N",
+   "time_utc": "2024-04-12 19:46:00",
+   "n_nh": 3,
+   "hours_since_t0": 12.77
+  },
+  {
+   "pass": "N|2024-04-14|D",
+   "time_utc": "2024-04-14 07:53:00",
+   "n_nh": 1,
+   "hours_since_t0": 48.88
+  },
+  {
+   "pass": "N|2024-04-14|N",
+   "time_utc": "2024-04-14 20:23:00",
+   "n_nh": 6,
+   "hours_since_t0": 61.38
+  },
+  {
+   "pass": "N20|2024-04-14|N",
+   "time_utc": "2024-04-14 20:48:00",
+   "n_nh": 4,
+   "hours_since_t0": 61.8
+  }
+ ],
+ "frames_used": [
+  12,
+  48,
+  61,
+  61
+ ],
+ "fuel_summary": {
+  "fuel_cell_share": {
+   "91": 0.0,
+   "93": 4.1,
+   "98": 3.6,
+   "99": 1.1,
+   "101": 7.6,
+   "182": 83.7
+  },
+  "worldcover_class_share": {
+   "10": 83.7,
+   "20": 0.0,
+   "30": 7.6,
+   "40": 4.1,
+   "50": 0.0,
+   "60": 1.0,
+   "80": 3.6
+  },
+  "elevation_m": [
+   266.0,
+   759.1797485351562
+  ],
+  "max_slope_deg": 46.2,
+  "max_slope_ratio_between_neighbours": 1.061
+ },
+ "members_ok": 90,
+ "members_failed": 0,
+ "errors": [],
+ "edge_clipping": {
+  "era5land_native": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "era5_025": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "best_match": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "pooled": {
+   "members": 90,
+   "touch_outer_ring_at_last_overpass": 0
+  }
+ },
+ "weather_window": {
+  "era5land_native": {
+   "hours": 62,
+   "mean_ms": 1.4,
+   "max_ms": 2.17,
+   "min_ms": 0.36,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "era5_025": {
+   "hours": 62,
+   "mean_ms": 1.75,
+   "max_ms": 2.71,
+   "min_ms": 0.73,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "best_match": {
+   "hours": 62,
+   "mean_ms": 1.5,
+   "max_ms": 3.32,
+   "min_ms": 0.3,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  }
+ },
+ "baseline_circle_radius_m": 707.0,
+ "old_check_demonstration": null,
+ "nextpass_style_rows": 18,
+ "wall_s_per_member_median": 10.350000000000001,
+ "non_burnable_ignition_members": 0
+}

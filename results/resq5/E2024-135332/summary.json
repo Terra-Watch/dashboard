@@ -1,0 +1,199 @@
+{
+ "incident": "E2024-135332",
+ "domain": {
+  "crs": "EPSG:32644",
+  "west_m": 256492,
+  "north_m": 2214758,
+  "cells_per_side": 338,
+  "side_km": 10.14,
+  "cluster_bbox_km": [
+   4.12,
+   4.12
+  ],
+  "n_cells": 114244
+ },
+ "overpasses": [
+  {
+   "pass": "N20|2024-03-05|D",
+   "time_utc": "2024-03-05 07:53:00",
+   "n_nh": 1,
+   "hours_since_t0": 12.88
+  },
+  {
+   "pass": "N|2024-03-05|D",
+   "time_utc": "2024-03-05 08:43:00",
+   "n_nh": 1,
+   "hours_since_t0": 13.72
+  },
+  {
+   "pass": "N20|2024-03-05|N",
+   "time_utc": "2024-03-05 20:23:00",
+   "n_nh": 2,
+   "hours_since_t0": 25.38
+  },
+  {
+   "pass": "N20|2024-03-06|D",
+   "time_utc": "2024-03-06 07:34:00",
+   "n_nh": 2,
+   "hours_since_t0": 36.57
+  },
+  {
+   "pass": "N|2024-03-06|D",
+   "time_utc": "2024-03-06 08:24:00",
+   "n_nh": 2,
+   "hours_since_t0": 37.4
+  },
+  {
+   "pass": "N20|2024-03-06|N",
+   "time_utc": "2024-03-06 20:04:00",
+   "n_nh": 1,
+   "hours_since_t0": 49.07
+  },
+  {
+   "pass": "N|2024-03-06|N",
+   "time_utc": "2024-03-06 20:54:00",
+   "n_nh": 1,
+   "hours_since_t0": 49.9
+  }
+ ],
+ "frames_used": [
+  12,
+  13,
+  25,
+  36,
+  37,
+  49,
+  49
+ ],
+ "fuel_summary": {
+  "fuel_cell_share": {
+   "91": 0.2,
+   "93": 37.3,
+   "98": 0.1,
+   "99": 3.9,
+   "101": 13.2,
+   "182": 45.3
+  },
+  "worldcover_class_share": {
+   "10": 45.3,
+   "20": 3.9,
+   "30": 13.2,
+   "40": 37.3,
+   "50": 0.2,
+   "80": 0.1
+  },
+  "elevation_m": [
+   262.5433654785156,
+   458.8067321777344
+  ],
+  "max_slope_deg": 29.8,
+  "max_slope_ratio_between_neighbours": 0.574
+ },
+ "members_ok": 90,
+ "members_failed": 0,
+ "errors": [],
+ "edge_clipping": {
+  "era5land_native": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "era5_025": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "best_match": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "pooled": {
+   "members": 90,
+   "touch_outer_ring_at_last_overpass": 0
+  }
+ },
+ "weather_window": {
+  "era5land_native": {
+   "hours": 50,
+   "mean_ms": 1.82,
+   "max_ms": 3.18,
+   "min_ms": 0.19,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "era5_025": {
+   "hours": 50,
+   "mean_ms": 2.03,
+   "max_ms": 3.36,
+   "min_ms": 0.5,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "best_match": {
+   "hours": 50,
+   "mean_ms": 2.43,
+   "max_ms": 4.7,
+   "min_ms": 0.86,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  }
+ },
+ "baseline_circle_radius_m": 637.6,
+ "old_check_demonstration": {
+  "scar_pixels_event_window": 12,
+  "old_check": {
+   "simulation_median_area_member": {
+    "predicted_pixels": 29,
+    "observed_pixels_kept": 1,
+    "iou": 0.0
+   },
+   "fully_burned_domain": {
+    "predicted_pixels": 533,
+    "observed_pixels_kept": 12,
+    "iou": 0.0225
+   },
+   "cross_through_ignition": {
+    "predicted_pixels": 54,
+    "observed_pixels_kept": 0,
+    "iou": 0.0
+   }
+  },
+  "new_metrics_same_shapes_vs_cumulative_footprint": {
+   "simulation_median_area_member": {
+    "sim_cells": 3788,
+    "obs_cells": 1419,
+    "iou": 0.029458283906682484,
+    "precision": 0.039334741288278775,
+    "recall": 0.10500352360817478,
+    "area_ratio": 2.6694855532064836,
+    "auc": 0.5363750168450802,
+    "ap": 0.015246843978988605
+   },
+   "fully_burned_domain": {
+    "sim_cells": 114244,
+    "obs_cells": 1419,
+    "iou": 0.012420783586008894,
+    "precision": 0.012420783586008894,
+    "recall": 1.0,
+    "area_ratio": 80.51021846370683,
+    "auc": 0.5,
+    "ap": 0.012420783586008894
+   },
+   "cross_through_ignition": {
+    "sim_cells": 675,
+    "obs_cells": 1419,
+    "iou": 0.01208313194780087,
+    "precision": 0.037037037037037035,
+    "recall": 0.017618040873854827,
+    "area_ratio": 0.47568710359408034,
+    "auc": 0.5059284531867613,
+    "ap": 0.012854473745470276
+   }
+  },
+  "note": "old_check: set of MCD64A1 463.31 m pixels touched by the shape; observed scar pixels kept only if inside or within 2 rows/cols of the predicted min row/col"
+ },
+ "nextpass_style_rows": 36,
+ "wall_s_per_member_median": 8.3,
+ "non_burnable_ignition_members": 0
+}

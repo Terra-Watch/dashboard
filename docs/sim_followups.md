@@ -36,3 +36,16 @@ Also not addressed (data or validation scope): fuel and canopy layers and fuel
 moisture (item 3 of the report), the `validate_mcd64a1.py` IoU (a fully burned
 square scores 0.73 against the simulation's 0.64), and the up to 11 % size
 mismatch and ~60 m offset between the fuel and DEM windows and the nominal grid.
+
+## UI needs for a burn-probability map (RESQ-5; not implemented, UI unchanged)
+
+The replay in `docs/RESQ5_RESULTS.md` produces, per incident, an ensemble burn probability per cell at each VIIRS overpass time, not a single hourly animation. The current spread UI (`SpreadPage.tsx`, `SimulationCanvas.tsx`, hourly `frame-NN.png`) cannot show it. For the later redesign it would need:
+
+1. **Data contract.** A manifest per incident: domain georeference (UTM zone, west and north edge in metres, cells per side, cell size 30 m, plus the four corner longitudes/latitudes, because a UTM-aligned square is a slightly rotated quadrilateral in WGS84), overpass list (time UTC, satellite, day/night, hours after ignition time), members per source, source names and labels (ERA5-Land primary, ERA5 0.25°, best_match, pooled), ignition point and jitter radius, ignition-time rule, fuel rule and "uncalibrated" flag, fixed temperature/RH note. Rasters: one probability image per source and overpass (the stored `burn_count_*.npz` divided by members; 340-390 px square, 8-bit is enough), and the observed cumulative footprint per overpass (375 m cells).
+2. **Rendering.** An image source with four corner coordinates; a continuous probability colour ramp with a legend (not a binary footprint); a threshold control with the 50 % contour as the default and an explicit "no cell reaches 50 % (maximum p = x)" state; observed footprints and individual detections on the same map; ignition point with the 500 m jitter disc; domain boundary.
+3. **Time control.** A slider keyed to overpass times (4-8 steps), not hours; label each step with UTC and IST and hours after the assumed ignition time.
+4. **Source switch and disagreement.** Toggle the three wind sources and the pooled ensemble; show a small panel with the wind series (speed, direction) used and the hours below 0.145 m/s where the model cannot spread; make the result's dependence on the source visible (RESQ-5 section 3).
+5. **Baselines and metrics.** Toggle the proximity and final-area-circle baselines; a metrics panel (AUC, AP, IoU at 50 %, precision, recall, area ratio) per overpass, with the baselines beside the simulation and a plain statement when a baseline is higher.
+6. **Wording.** "Simulated burn probability (uncalibrated)", never "forecast"; show ensemble size, wind source, fuel rule and ignition assumption on the map; separate this from the fire-occurrence risk map.
+7. **Backend.** An asynchronous job (90 members of 8-15 s, about 3-5 min with 7 workers) with progress and per-member failure reporting; domain and windows derived from the detection cluster; storage of rasters rather than frames; removal of the observed-comparison endpoint for the synthetic demo.
+8. **Not in scope of the UI:** changing the simulator, the fuel crosswalk or the ROS (options in `docs/RESQ4_SPREAD_TEST.md`).

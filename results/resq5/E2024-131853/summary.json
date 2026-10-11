@@ -1,0 +1,141 @@
+{
+ "incident": "E2024-131853",
+ "domain": {
+  "crs": "EPSG:32644",
+  "west_m": 240938,
+  "north_m": 2130375,
+  "cells_per_side": 375,
+  "side_km": 11.25,
+  "cluster_bbox_km": [
+   4.88,
+   5.25
+  ],
+  "n_cells": 140625
+ },
+ "overpasses": [
+  {
+   "pass": "N|2024-02-16|N",
+   "time_utc": "2024-02-16 20:11:00",
+   "n_nh": 2,
+   "hours_since_t0": 12.18
+  },
+  {
+   "pass": "N20|2024-02-16|N",
+   "time_utc": "2024-02-16 21:00:00",
+   "n_nh": 1,
+   "hours_since_t0": 13.0
+  },
+  {
+   "pass": "N|2024-02-17|D",
+   "time_utc": "2024-02-17 07:22:00",
+   "n_nh": 1,
+   "hours_since_t0": 23.37
+  },
+  {
+   "pass": "N20|2024-02-17|D",
+   "time_utc": "2024-02-17 08:12:00",
+   "n_nh": 1,
+   "hours_since_t0": 24.2
+  },
+  {
+   "pass": "N20|2024-02-18|N",
+   "time_utc": "2024-02-18 20:23:00",
+   "n_nh": 5,
+   "hours_since_t0": 60.38
+  },
+  {
+   "pass": "N20|2024-02-19|D",
+   "time_utc": "2024-02-19 07:34:00",
+   "n_nh": 4,
+   "hours_since_t0": 71.57
+  }
+ ],
+ "frames_used": [
+  12,
+  13,
+  23,
+  24,
+  60,
+  71
+ ],
+ "fuel_summary": {
+  "fuel_cell_share": {
+   "91": 0.4,
+   "93": 23.8,
+   "98": 0.4,
+   "99": 5.4,
+   "101": 12.2,
+   "182": 57.8
+  },
+  "worldcover_class_share": {
+   "10": 57.8,
+   "20": 5.1,
+   "30": 12.2,
+   "40": 23.8,
+   "50": 0.4,
+   "60": 0.2,
+   "80": 0.4
+  },
+  "elevation_m": [
+   217.49371337890625,
+   472.7017822265625
+  ],
+  "max_slope_deg": 33.5,
+  "max_slope_ratio_between_neighbours": 0.677
+ },
+ "members_ok": 90,
+ "members_failed": 0,
+ "errors": [],
+ "edge_clipping": {
+  "era5land_native": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "era5_025": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "best_match": {
+   "members": 30,
+   "touch_outer_ring_at_last_overpass": 0
+  },
+  "pooled": {
+   "members": 90,
+   "touch_outer_ring_at_last_overpass": 0
+  }
+ },
+ "weather_window": {
+  "era5land_native": {
+   "hours": 72,
+   "mean_ms": 1.57,
+   "max_ms": 2.79,
+   "min_ms": 0.46,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "era5_025": {
+   "hours": 72,
+   "mean_ms": 2.04,
+   "max_ms": 3.32,
+   "min_ms": 0.58,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  },
+  "best_match": {
+   "hours": 72,
+   "mean_ms": 1.55,
+   "max_ms": 3.89,
+   "min_ms": 0.22,
+   "hours_below_0.145_ms": 0,
+   "share_below_pct": 0.0,
+   "hours_below_by_ist_hour": {}
+  }
+ },
+ "baseline_circle_radius_m": 740.3,
+ "old_check_demonstration": null,
+ "nextpass_style_rows": 30,
+ "wall_s_per_member_median": 15.05,
+ "non_burnable_ignition_members": 0
+}
