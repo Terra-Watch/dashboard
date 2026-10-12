@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const SCREENS: { path: string; name: string }[] = [
+  { path: '/redesign', name: 'landing' },
   { path: '/redesign/today', name: 'today' },
   { path: '/redesign/watch', name: 'watch' },
   { path: '/redesign/incident/E2023-084925', name: 'incident' },
@@ -18,6 +19,7 @@ for (const screen of SCREENS) {
     test(`${screen.name}: sample-data badge, no "live" wording, axe clean`, async ({ page }) => {
       await page.goto(screen.path);
       await page.waitForSelector('[data-rq-app]');
+      await page.waitForTimeout(700); // let the landing page's one-time fade-in settle before scanning contrast
       await expect(page.getByTestId('sample-data-badge').first()).toBeVisible();
 
       const text = await textOf(page);

@@ -50,7 +50,7 @@ export function App() {
   useEffect(() => { const onOnline = () => setOnline(true); const onOffline = () => setOnline(false); window.addEventListener('online', onOnline); window.addEventListener('offline', onOffline); return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); }; }, []);
   function go(next: string) { history.pushState({}, '', next); setPath(next); }
 
-  if (path.startsWith('/redesign')) return <RedesignRoot path={path} />;
+  if (path.startsWith('/redesign')) return <RedesignRoot path={path} go={go} />;
   if (['/403', '/404', '/500', '/offline', '/maintenance', '/session-expired'].includes(path)) return <SystemPage path={path} go={go} />;
   if (path === '/login' || (path.startsWith('/app') && !user)) return <Login done={setUser} go={go} />;
   if (!user && path === '/request-access') return <RequestAccessPage go={go} />;
