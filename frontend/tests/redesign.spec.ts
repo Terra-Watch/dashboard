@@ -36,6 +36,10 @@ for (const screen of SCREENS) {
         await expect(page.locator('.maplibregl-canvas').first()).toBeVisible({ timeout: 10_000 });
         // The attribution control proves it's the real OSM-derived PMTiles basemap, not a placeholder.
         await expect(page.locator('.maplibregl-ctrl-attrib')).toContainText(/OpenStreetMap/i);
+        // 'idle' (exposed as data-map-idle) only flips true once MapLibre has actually painted
+        // the pmtiles basemap's tiles, not just created the canvas — proves real tiles rendered,
+        // not merely that a MapLibre instance exists over a blank/unloaded source.
+        await expect(page.locator('[data-map-idle="true"]').first()).toBeVisible({ timeout: 15_000 });
       });
     }
 
@@ -44,6 +48,16 @@ for (const screen of SCREENS) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(screen.path);
         await page.waitForSelector('[data-rq-app]');
+        if (screen.hasMap) {
+          // Wait for every MapShell on the page (styleguide-style pages can have more than one)
+          // to finish loading real basemap tiles before capturing, so the screenshot isn't a
+          // race against pmtiles' async range-request fetches.
+          const maps = page.getByTestId('map-shell');
+          const count = await maps.count();
+          for (let i = 0; i < count; i++) {
+            await expect(maps.nth(i)).toHaveAttribute('data-map-idle', 'true', { timeout: 15_000 });
+          }
+        }
         await page.screenshot({ path: `../docs/redesign/screenshots/phase2/${screen.name}_${width}.png`, fullPage: true });
       });
     }
@@ -115,6 +129,11 @@ test('incident: Uncalibrated-scenario badge is always present, not dismissible',
 test('styleguide: renders and is axe-clean', async ({ page }) => {
   await page.goto('/redesign/styleguide');
   await page.waitForSelector('[data-rq-app]');
+  const maps = page.getByTestId('map-shell');
+  const count = await maps.count();
+  for (let i = 0; i < count; i++) {
+    await expect(maps.nth(i)).toHaveAttribute('data-map-idle', 'true', { timeout: 15_000 });
+  }
   await page.screenshot({ path: '../docs/redesign/screenshots/phase2/styleguide_1440.png', fullPage: true });
   const results = await new AxeBuilder({ page }).include('[data-rq-app]').analyze();
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);

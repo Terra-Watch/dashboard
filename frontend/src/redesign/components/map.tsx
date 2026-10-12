@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Map, { Source, Layer, Marker, NavigationControl, AttributionControl } from 'react-map-gl/maplibre';
 import type { StyleSpecification, DataDrivenPropertyValueSpecification } from '@maplibre/maplibre-gl-style-spec';
 import maplibregl from 'maplibre-gl';
@@ -63,6 +63,7 @@ const INDIA_CENTER: [number, number] = [80.4, 20.3];
  *  (Source/Layer/Marker). */
 export function MapShell({ label, children, center, zoom, bounds, aspect = 'square' }: MapShellProps) {
   const style = useBasemapStyle();
+  const [idle, setIdle] = useState(false);
   const initialViewState = bounds
     ? { bounds, fitBoundsOptions: { padding: 24 } }
     : { longitude: (center ?? INDIA_CENTER)[0], latitude: (center ?? INDIA_CENTER)[1], zoom: zoom ?? (center ? 10 : 4.6) };
@@ -71,6 +72,12 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
     <div
       role="group"
       aria-label={label}
+      data-testid="map-shell"
+      // 'idle' fires once MapLibre has finished loading and rendering every source (including
+      // the pmtiles basemap's range-request fetches) — tests wait on this instead of racing the
+      // screenshot against async tile loading, which otherwise captures a blank basemap under
+      // the real vector overlays (canvas + attribution present, no tiles painted yet).
+      data-map-idle={idle}
       className={`relative w-full overflow-hidden rounded-rq border border-contour bg-paper ${aspect === 'square' ? 'aspect-square' : 'aspect-[16/9]'}`}
     >
       <Map
@@ -81,6 +88,7 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
         attributionControl={false}
         locale={{ 'Map.Title': label }}
         aria-label={label}
+        onIdle={() => setIdle(true)}
       >
         <AttributionControl compact position="bottom-right" />
         <NavigationControl position="top-right" showCompass={false} />
