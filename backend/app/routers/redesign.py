@@ -90,6 +90,7 @@ def incident_scenario(incident_id: str, wind_source: str = "era5land_native", ov
     bands = _downsampled_bands(incident_id, wind_source, overpass_k)
     replay = redesign_data.replay_for(incident_id)
     n_overpasses = len(replay["series"].get(f"simulation:{wind_source}", []))
+    time_utc = redesign_data.overpass_time_utc(incident_id, overpass_k)
     return {
         "incident_id": incident_id,
         "sample_data": True,
@@ -99,6 +100,11 @@ def incident_scenario(incident_id: str, wind_source: str = "era5land_native", ov
         "overpass_k": overpass_k,
         "overpass_count": n_overpasses,
         "probability_bands_grid": bands,
+        "bounds": redesign_data.domain_bounds_wgs84(incident_id),
+        "ignition": redesign_data.nominal_ignition(incident_id),
+        "probability_bands_geojson": redesign_data.probability_grid_geojson(incident_id, wind_source, overpass_k),
+        "baselines_geojson": redesign_data.baseline_circles_geojson(incident_id),
+        "wind_arrow": redesign_data.wind_arrow(incident_id, wind_source, time_utc),
         "assumptions": {
             "fuel": "Fuel mapping INDIAN_RUNTIME is blocked; this run uses the RESQ-5 protocol's uncalibrated crosswalk (TL2 for tree cover, GR1 for grassland, all other classes non-burnable). See docs/RESQ5_PROTOCOL.md §4.",
             "weather": "Temperature fixed at 27°C and relative humidity at 40% by the simulator; wind is the only varying weather input.",
@@ -117,9 +123,20 @@ def incident_scenario(incident_id: str, wind_source: str = "era5land_native", ov
 @router.get("/replay/{incident_id}")
 def replay(incident_id: str) -> dict:
     try:
-        return redesign_data.replay_for(incident_id)
+        detail = redesign_data.replay_for(incident_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="unknown incident")
+    last_k = detail["headline_last_overpass"]["last_overpass_k"]
+    primary_model = "era5land_native"
+    detail["bounds"] = redesign_data.domain_bounds_wgs84(incident_id)
+    detail["ignition"] = redesign_data.nominal_ignition(incident_id)
+    try:
+        detail["probability_bands_geojson"] = redesign_data.probability_grid_geojson(incident_id, primary_model, last_k)
+    except FileNotFoundError:
+        detail["probability_bands_geojson"] = None
+    detail["observed_footprint_geojson"] = redesign_data.observed_footprint_geojson(incident_id, last_k)
+    detail["baselines_geojson"] = redesign_data.baseline_circles_geojson(incident_id)
+    return detail
 
 
 @router.get("/replay")
