@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RESQ — Incident scenario wireframe</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+.layout { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .layout { grid-template-columns: 1fr 320px; } }
+.map-col { padding: 16px; }
+.side-col { padding: 16px; border-left: 1px solid var(--contour); }
+.timeline { display: flex; gap: 10px; margin: 14px 0; }
+.timeline button { flex: 1; padding: 10px; border: 1px solid var(--contour); background: var(--sheet); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.timeline button.active { background: var(--canopy); color: #fff; border-color: var(--canopy); }
+.prob-legend { display: flex; gap: 12px; font-size: 12px; margin-top: 10px; flex-wrap: wrap; }
+.assumptions summary { cursor: pointer; font-weight: 600; }
+.assumptions li { font-size: 13px; margin-bottom: 8px; color: var(--ink-muted); }
+.wind-switch label { display: block; font-size: 13px; margin: 6px 0; }
+.reminder-chip { background: #fff3e0; border: 1px solid var(--warn); color: var(--warn); font-size: 12px; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <strong class="serif">RESQ</strong>
+  <nav><a href="today.html">Today</a><a href="watch.html">Watch</a><a href="incident-24-48.html">Incidents</a><a href="replay.html">Replay</a></nav>
+  <span class="badge verified">Verified</span>
+</header>
+<div class="step-indicator">Forecast &nbsp;→&nbsp; Detection &nbsp;→&nbsp; Verified incident &nbsp;→&nbsp; <span class="current">Scenario (current)</span></div>
+
+<div style="padding:12px 20px 0;"><span class="badge scenario">Uncalibrated scenario — one simulation run, not a forecast</span></div>
+
+<div class="layout">
+  <div class="map-col">
+    <div class="map-placeholder" style="min-height:360px; margin-top:12px;">
+      Map: probability bands + baseline outline (dashed) + wind arrows + ignition point
+    </div>
+    <div class="prob-legend">
+      <span><span class="legend-swatch" style="background:var(--prob-1);"></span>0-20%</span>
+      <span><span class="legend-swatch" style="background:var(--prob-2);"></span>20-50%</span>
+      <span><span class="legend-swatch" style="background:var(--prob-3);"></span>50-80%</span>
+      <span><span class="legend-swatch" style="background:var(--prob-4);"></span>80-100%</span>
+      <span class="chip">— — — Simple guess (proximity baseline)</span>
+    </div>
+    <div class="timeline">
+      <button>6h</button><button>12h</button><button class="active">24h</button><button>48h</button>
+    </div>
+    <label><input type="checkbox" checked /> Show simple guess (proximity baseline)</label>
+    <div><span class="chip">Baseline hidden — ask why</span> <small style="color:var(--ink-muted);">(appears only if the baseline toggle above is turned off)</small></div>
+    <label style="display:block; margin-top:10px;"><input type="checkbox" checked /> Wind arrows (hourly)</label>
+    <div style="margin-top:14px;"><button class="btn secondary">Export briefing</button></div>
+  </div>
+  <div class="side-col">
+    <details class="assumptions" open>
+      <summary>Assumptions (4)</summary>
+      <ul style="margin-top:10px; padding-left:16px;">
+        <li>Fuel: derived from ESA WorldCover land cover, mapped to Spanish fuel models (TL2 forest, GR1 grass). Uncalibrated — no canopy, load or moisture data. India-specific fuel mapping is blocked (not yet available).</li>
+        <li>Weather: ERA5-Land (primary). Temperature and humidity are fixed at 27°C / 40% by the simulator regardless of actual conditions.</li>
+        <li>Terrain: Copernicus GLO-30 elevation. Slope has almost no effect on this result (RESQ-5 measured less than 1% effect at a 20° slope).</li>
+        <li>Ignition: point and time are estimates from the first satellite detection, not a confirmed exact ignition.</li>
+      </ul>
+    </details>
+    <div class="wind-switch panel" style="margin-top:14px;">
+      <strong>Wind source</strong>
+      <label><input type="radio" name="wind" checked /> ERA5-Land (primary)</label>
+      <label><input type="radio" name="wind" /> ERA5 0.25° (sensitivity)</label>
+      <label><input type="radio" name="wind" /> best_match (not a reanalysis, sensitivity)</label>
+      <p class="chip">Wind source changes this result more than anything else tested. Compare it yourself.</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer-line">Advisory forecast. Confirm with field observations.</div>
+</body>
+</html>

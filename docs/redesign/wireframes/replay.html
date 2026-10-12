@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RESQ — Replay / evidence wireframe</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+.incident-tabs { display: flex; gap: 8px; padding: 12px 20px; flex-wrap: wrap; }
+.incident-tabs button { padding: 8px 14px; border: 1px solid var(--contour); background: var(--sheet); border-radius: 999px; font-size: 13px; cursor: pointer; }
+.incident-tabs button.active { background: var(--canopy); color: #fff; border-color: var(--canopy); }
+.layout { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 0 20px; }
+@media (min-width: 900px) { .layout { grid-template-columns: 1fr 360px; } }
+.conclusions { background: var(--sheet); border: 1px solid var(--contour); border-radius: 8px; padding: 16px; margin: 20px; font-size: 13px; color: var(--ink-muted); }
+.conclusions ol { padding-left: 18px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <strong class="serif">RESQ</strong>
+  <nav><a href="today.html">Today</a><a href="watch.html">Watch</a><a href="incident-24-48.html">Incidents</a><a href="replay.html">Replay</a></nav>
+</header>
+<div style="padding:12px 20px 0;"><span class="badge baseline">Tested against 4 real fires used to build this tool (not held out, not independent)</span></div>
+
+<div class="incident-tabs">
+  <button class="active">E2024-131853 TS</button>
+  <button>E2024-135332 MH</button>
+  <button>E2023-084925 OD</button>
+  <button>E2024-155286 CG</button>
+</div>
+
+<div class="layout">
+  <div>
+    <div class="map-placeholder" style="min-height:300px;">Map: sim probability bands + baseline outline + observed VIIRS footprint (solid outline, no fill)</div>
+    <div style="margin-top:10px;">Overpass: <select><option>k=0 (12.18h after t0)</option><option selected>k=5 (71.57h after t0, last)</option></select></div>
+    <table class="metrics" style="margin-top:14px;">
+      <tr><th>Model</th><th>AUC</th><th>AP</th><th>IoU@0.5</th><th>Precision</th><th>Recall</th><th>Area ratio</th></tr>
+      <tr><td>Simulation (ERA5-Land, primary)</td><td>0.837</td><td>0.191</td><td>0.167</td><td>0.212</td><td>0.438</td><td>2.065</td></tr>
+      <tr><td>Baseline (a) proximity</td><td class="winner-baseline">0.960</td><td class="winner-baseline">0.367</td><td class="winner-baseline">0.230</td><td>0.401</td><td>0.351</td><td>0.876</td></tr>
+      <tr><td>Baseline (b) circle, final area</td><td>0.683</td><td>0.149</td><td>0.230</td><td>0.375</td><td>0.374</td><td>0.998</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <strong>Headline comparison (last overpass)</strong>
+    <p>AP: sim 0.191 vs proximity 0.367 → <span class="winner-baseline">baseline wins</span></p>
+    <p>IoU@0.5: sim 0.167 vs proximity 0.230 → <span class="winner-baseline">baseline wins</span></p>
+    <p>AP: sim 0.191 vs circle 0.149 → <span class="winner-sim">simulation wins</span></p>
+    <hr style="border-color:var(--contour);" />
+    <strong>Wind-source sensitivity (last overpass)</strong>
+    <table class="metrics">
+      <tr><th>Source</th><th>AUC</th><th>AP</th><th>IoU@0.5</th></tr>
+      <tr><td>ERA5-Land (primary)</td><td>0.837</td><td>0.191</td><td>0.167</td></tr>
+      <tr><td>ERA5 0.25° (sensitivity)</td><td>0.942</td><td>0.183</td><td>0.163</td></tr>
+      <tr><td>best_match (sensitivity)</td><td>0.822</td><td>0.215</td><td>0.171</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="conclusions">
+  <strong>Honest conclusions (docs/RESQ5_RESULTS.md §6)</strong>
+  <ol>
+    <li>Skill beyond location is not shown. The proximity baseline has the higher AUC in 4 of 4 incidents and the higher AP in 4 of 4.</li>
+    <li>The primary-wind ensemble can be empty, and one calm hour decides it.</li>
+    <li>Footprint size is over-predicted where the fire does not die.</li>
+    <li>With 3-day windows, 0-1 hours per source fall below the no-spread threshold.</li>
+    <li>Edge clipping: none, 0 of 90 members touch the outer ring in any incident.</li>
+    <li>In three of four incidents the simulated area overtakes the observed footprint from 48-72h.</li>
+    <li>This does not validate the model, the fuel mapping, the ROS curve, or the 12h ignition lead.</li>
+  </ol>
+</div>
+
+<div class="footer-line">Advisory forecast. Confirm with field observations.</div>
+</body>
+</html>

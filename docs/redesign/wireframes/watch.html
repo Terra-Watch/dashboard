@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RESQ — Watch wireframe</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+.layout { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .layout { grid-template-columns: 380px 1fr; } }
+.queue-col { padding: 16px; border-right: 1px solid var(--contour); }
+.detail-col { padding: 16px; }
+.detection-card { background: var(--sheet); border: 1px solid var(--contour); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+.detection-card .meta { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+.actions { display: flex; gap: 10px; margin-top: 14px; }
+.actions .btn.danger { background: var(--danger); border-color: var(--danger); }
+.actions .btn.secondary2 { background: transparent; color: var(--ink); border-color: var(--contour); }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <strong class="serif">RESQ</strong>
+  <nav><a href="today.html">Today</a><a href="watch.html">Watch</a><a href="incident-24-48.html">Incidents</a><a href="replay.html">Replay</a></nav>
+  <span class="chip">Updated 06:40 IST</span>
+</header>
+<div class="step-indicator">Forecast &nbsp;→&nbsp; <span class="current">Detection (current)</span> &nbsp;→&nbsp; Verified incident &nbsp;→&nbsp; Scenario</div>
+
+<div class="layout">
+  <div class="queue-col">
+    <strong>Queue (12 open)</strong>
+    <div style="margin-top:10px;">
+      <div class="detection-card">
+        <span class="badge unverified">Not yet verified</span>
+        <div class="meta">Satellite · 08:12 IST · Inside a Very high cell · 2h ago</div>
+      </div>
+      <div class="detection-card">
+        <span class="badge unverified">Not yet verified</span>
+        <div class="meta">Field report · 07:41 IST · Bargarh · 3h ago</div>
+      </div>
+      <div class="detection-card">
+        <span class="badge unverified">Not yet verified</span>
+        <div class="meta">Satellite · 06:55 IST · Similipal North · 4h ago</div>
+      </div>
+    </div>
+  </div>
+  <div class="detail-col">
+    <h1 style="font-size:20px;">Detection detail <span class="badge unverified">Not yet verified</span></h1>
+    <div class="map-placeholder" style="min-height:300px; margin-top:12px;">Map: detection ring, risk-cell context</div>
+    <div class="panel" style="margin-top:14px;">
+      <div>Satellite (VIIRS) · 08:12 IST, 16 Oct 2026</div>
+      <div>Inside a Very high risk cell</div>
+      <div>No prior detections nearby in the last 14 days</div>
+    </div>
+    <div class="actions">
+      <button class="btn">Verify</button>
+      <button class="btn secondary2">Escalate to field crew</button>
+      <button class="btn danger">Dismiss as false alarm</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer-line">Advisory forecast. Confirm with field observations.</div>
+</body>
+</html>

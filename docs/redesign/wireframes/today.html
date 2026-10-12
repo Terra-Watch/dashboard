@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RESQ — Today wireframe</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+.layout { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .layout { grid-template-columns: 1fr 320px; } }
+.map-col { padding: 16px; }
+.side-col { padding: 16px; border-left: 1px solid var(--contour); }
+.legend { display: flex; gap: 14px; font-size: 12px; margin-top: 10px; flex-wrap: wrap; }
+.cell-row { display: flex; justify-content: space-between; font-size: 13px; padding: 10px 0; border-bottom: 1px solid var(--contour); }
+.rank-badge { font-size: 12px; color: var(--ink-muted); }
+.why-box { margin-top: 10px; font-size: 13px; color: var(--ink-muted); }
+.date-chip { font-size: 13px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <strong class="serif">RESQ</strong>
+  <nav><a href="today.html">Today</a><a href="watch.html">Watch</a><a href="incident-24-48.html">Incidents</a><a href="replay.html">Replay</a></nav>
+  <span class="date-chip chip">14 Apr 2024 · Sample data</span>
+</header>
+<div class="step-indicator">Forecast (current) &nbsp;→&nbsp; Detection &nbsp;→&nbsp; Verified incident &nbsp;→&nbsp; Scenario</div>
+
+<div class="layout">
+  <div class="map-col">
+    <h1 style="font-size:20px;">Today's ranked cells <span class="badge forecast">Rank for tomorrow</span></h1>
+    <div class="map-placeholder" style="min-height:420px;">Map: risk cells (5km grid), colour = band, hatch = Very high</div>
+    <div class="legend">
+      <span><span class="legend-swatch" style="background:var(--risk-low);"></span>Low</span>
+      <span><span class="legend-swatch" style="background:var(--risk-moderate);"></span>Moderate (top 15%)</span>
+      <span><span class="legend-swatch" style="background:var(--risk-high);"></span>High (top 5%)</span>
+      <span><span class="legend-swatch" style="background:var(--risk-veryhigh);"></span>Very high (top 1%)</span>
+    </div>
+    <p class="chip" style="margin-top:10px;">Bands compare cells with each other on the same day. Not a prediction of where fire will start.</p>
+  </div>
+  <div class="side-col">
+    <strong>Priority cells (50)</strong>
+    <div class="hairline-list">
+      <div class="cell-row"><span>1. Bargarh, Odisha</span><span class="rank-badge">Very high</span></div>
+      <div class="cell-row"><span>2. Similipal North</span><span class="rank-badge">Very high</span></div>
+      <div class="cell-row"><span>3. Keonjhar edge</span><span class="rank-badge">High</span></div>
+    </div>
+    <div class="panel" style="margin-top:14px;">
+      <strong>Cell: Bargarh, Odisha</strong>
+      <div>Rank 12 of 17,764 forest cells</div>
+      <div class="why-box">Why it is elevated: hot, dry spell and strong wind forecast. Fires were detected nearby in the last 14 days.</div>
+      <div style="margin-top:10px;"><a class="btn secondary" href="#">Add to patrol list</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-line">Advisory forecast. Confirm with field observations.</div>
+</body>
+</html>

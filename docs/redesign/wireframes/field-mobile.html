@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RESQ — Field wireframe (mobile)</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+body { max-width: 480px; margin: 0 auto; }
+.offline-banner { background: var(--warn); color: #fff; font-size: 13px; padding: 10px 16px; }
+.task-card { background: var(--sheet); border: 1px solid var(--contour); border-radius: 8px; padding: 14px; margin: 12px; }
+.photo-row { display: flex; gap: 8px; margin: 10px 0; }
+.photo-slot { width: 64px; height: 64px; border: 1px dashed var(--contour); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-muted); }
+.sync-queue { margin: 12px; font-size: 13px; }
+.sync-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--contour); }
+.big-btn { display: block; width: calc(100% - 24px); margin: 12px; padding: 14px; font-size: 16px; }
+.bottom-tabs { position: sticky; bottom: 0; display: flex; justify-content: space-around; background: var(--sheet); border-top: 1px solid var(--contour); padding: 10px 0; font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="topbar"><strong class="serif">RESQ</strong><span class="chip">Field crew</span></header>
+<div class="offline-banner">Offline. Showing data saved at 06:40. Changes will sync when you reconnect.</div>
+
+<div class="task-card">
+  <strong>Verify: Similipal North</strong>
+  <div class="chip" style="margin-top:6px;">Detected 08:12 IST · Not yet verified</div>
+  <div class="map-placeholder" style="min-height:160px; margin-top:10px;">Map (cached, works offline)</div>
+</div>
+
+<div class="task-card">
+  <strong>Submit verification</strong>
+  <label style="display:block; font-size:13px; margin-top:8px;">Photos (up to 5)</label>
+  <div class="photo-row">
+    <div class="photo-slot">+</div>
+    <div class="photo-slot">+</div>
+    <div class="photo-slot">+</div>
+  </div>
+  <label style="display:block; font-size:13px;">Note</label>
+  <textarea style="width:100%; min-height:60px; border:1px solid var(--contour); border-radius:6px; padding:8px;" placeholder="Smoke visible, no flame yet"></textarea>
+  <div class="chip" style="margin-top:8px;">GPS: 21.8679, 86.5007 (captured)</div>
+</div>
+
+<button class="btn big-btn">Confirm fire seen</button>
+<button class="btn secondary big-btn" style="border-color:var(--contour); color:var(--ink);">No fire found</button>
+
+<div class="sync-queue">
+  <strong>Sync queue</strong>
+  <div class="sync-item"><span>Verification — Bargarh stop 2</span><span class="chip">Waiting to sync</span></div>
+  <div class="sync-item"><span>Verification — Keonjhar edge</span><span class="chip">Synced</span></div>
+</div>
+
+<div class="bottom-tabs"><span>Tasks</span><span>Map</span><span>Sync</span></div>
+</body>
+</html>
