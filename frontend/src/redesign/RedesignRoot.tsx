@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LandingPage } from './pages/LandingPage';
+import { StyleguidePage } from './pages/StyleguidePage';
 import { TodayPage } from './pages/TodayPage';
 import { WatchPage } from './pages/WatchPage';
 import { ReplayPage } from './pages/ReplayPage';
@@ -19,6 +20,7 @@ const NAV: { path: string; label: string }[] = [
   { path: '/redesign/incident/E2023-084925', label: 'Incident' },
   { path: '/redesign/replay', label: 'Replay' },
   { path: '/redesign/field', label: 'Field' },
+  { path: '/redesign/styleguide', label: 'Styleguide' },
 ];
 
 /** Entry point for the redesign-v2 surfaces, mounted at /redesign/* in the existing App shell
@@ -32,6 +34,7 @@ export function RedesignRoot({ path, go }: { path: string; go: (next: string) =>
   else if (path === '/redesign/replay' || path.startsWith('/redesign/replay/')) body = <ReplayPage />;
   else if (path.startsWith('/redesign/incident/')) body = <IncidentPage incidentId={path.split('/').pop() || 'E2023-084925'} />;
   else if (path === '/redesign/field') body = <FieldPage />;
+  else if (path === '/redesign/styleguide') body = <StyleguidePage />;
 
   return (
     <QueryClientProvider client={queryClient}>

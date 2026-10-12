@@ -64,6 +64,14 @@ test('incident: switching wind source changes the rendered scenario', async ({ p
   expect(after).not.toEqual(before);
 });
 
+test('styleguide: renders and is axe-clean', async ({ page }) => {
+  await page.goto('/redesign/styleguide');
+  await page.waitForSelector('[data-rq-app]');
+  await page.screenshot({ path: '../docs/redesign/screenshots/phase2/styleguide_1440.png', fullPage: true });
+  const results = await new AxeBuilder({ page }).include('[data-rq-app]').analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+});
+
 test('field: duplicate idempotency key is deduped server-side', async ({ page, request }) => {
   const base = process.env.VITE_API_BASE_URL || 'http://localhost:8201';
   const body = {

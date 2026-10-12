@@ -23,6 +23,7 @@ export interface Detection {
   status: 'new' | 'verify' | 'dismiss' | 'escalate';
   lat: number;
   lon: number;
+  frp?: number;
 }
 
 export interface TriageAction {
