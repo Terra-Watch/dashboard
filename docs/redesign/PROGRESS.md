@@ -54,12 +54,73 @@ Stopped at Gate 1 per instructions. Awaiting "Gate 1 approved" before any app co
 - [x] 9b52d47 — `/redesign/styleguide` route: every component from `08_design_system.md`'s inventory (TrustBadge ×4 levels, SampleDataBadge, Chip, StepIndicator, legends, MapShell/LayerPanel/WindArrowsControl (new), DetectionCard/VerifyActions across new/verified/dismissed/loading, TimelineSlider/BaselineToggle (on + hidden-reminder-off)/WindSourceSwitch/AssumptionsPanel/BriefingExport, PhotoCapture/SyncQueue (pending/syncing/synced/failed), RoleSwitcher, EmptyState/OfflineBanner/Toast/Dialog, Button ×4 variants + disabled + focus). axe-clean. 23/23 tests pass.
 - [x] Lighthouse: run against a **production build** (`vite build` + `vite preview`), not the dev server (an initial dev-server pass gave misleadingly low performance scores, 43–56, from unbundled dev-mode JS — not representative, discarded). Full results and the root-cause of Today/Styleguide's lower performance scores (a legacy-route MapLibre bundle loading on every `/redesign/*` route) are in `docs/redesign/LIGHTHOUSE.md`. Headline: **accessibility 100 and best-practices 100 on every screen**; performance 77–98; SEO 82 on every screen (one shared, non-regression finding: no per-route `<title>`/meta description, normal for this SPA shape, not fixed here).
 
-## Known gaps at Gate 2 (explicitly flagged, not fixed — scope decisions for the user)
-- **MapShell fidelity**: `MapShell`/`LayerPanel`/`WindArrowsControl` (added for the styleguide) and the Incident screen's probability-grid renderer are **not** a georeferenced MapLibre + PMTiles map. There is no real basemap, no real lat/lon projection, no pannable/zoomable interaction anywhere in the redesign yet — Today lists ranked cells in a table, Watch/Replay/Field have no map view at all, and Incident renders its burn-probability data as a plain CSS grid of coloured divs (correct data, placeholder visualization). This is the single largest remaining gap between the design docs (`07_maps.md`, `06_simulation_ui.md`) and the built screens. Real MapLibre+PMTiles integration (picking/confirming a self-hosted or provider PMTiles source per the Gate 1 basemap amendment, wiring real coordinates, building the layer-render-order table from `07_maps.md`) is a substantial, separately-scoped task.
+## Gate 2 round 2 — real MapShell (user declined the first Gate 2 report)
+
+The user reviewed the first Gate 2 report's screenshots and explicitly declined to approve,
+requiring a real MapLibre+PMTiles map (not the CSS-grid/table placeholders) before Gate 2 could
+be reconsidered. Built in two commits:
+
+1. **Backend geometry** (`backend/app/services/redesign_data.py`): `domain_bounds_wgs84`,
+   `nominal_ignition` (medoid of first-overpass VIIRS detections, same method as
+   `scripts/resq2/build_incident_candidates.py`), `probability_grid_geojson` /
+   `observed_footprint_geojson` (real dissolved polygons via `rasterio.features.shapes`,
+   reprojected from each incident's EPSG:32644 domain), `baseline_circles_geojson` (both
+   RESQ5_PROTOCOL.md §8 baselines as real circles), `wind_arrow` (nearest-time point
+   observation per source). Everything computed at request time from existing source files —
+   nothing hand-digitized. `pyproj` and `shapely` added to `backend/requirements.txt`
+   (`rasterio` was already there).
+2. **Basemap**: a 38 MB self-hosted PMTiles extract (`frontend/public/tiles/resq-basemap.pmtiles`,
+   zoom 0–10, bbox covering OD/CG/TS/MP/MH/JH + margin), cut via `go-pmtiles extract` from
+   Protomaps' public daily build (`build.protomaps.com`, OSM-derived data, ODbL) — never
+   `tile.openstreetmap.org`, per the Gate 1 basemap amendment. `@protomaps/basemaps` (the
+   maintained successor to the deprecated `protomaps-themes-base`) supplies the light-flavor
+   vector style layers.
+3. **Frontend wiring**: `MapShell` is now a real `react-map-gl/maplibre` map registered against
+   the `pmtiles://` protocol. Today shows risk cells + an optional detections overlay; Watch and
+   Field show detection/task pins; Incident shows real dissolved burn-probability-band polygons,
+   bounds-fit to the incident domain, with the proximity baseline outline, a wind arrow at the
+   ignition point, and an ignition marker; Replay shows simulation vs both baselines vs the
+   observed VIIRS footprint at the last overpass, also bounds-fit. The styleguide's map section
+   now shows the real MapShell (a regional view and a bounds-fit incident view) instead of the
+   old placeholder boxes.
+
+**What's still a real map vs what isn't**: every one of Today/Watch/Incident/Replay/Field now
+renders an actual pannable/zoomable MapLibre view over the real basemap, with real georeferenced
+data layers for everything `07_maps.md` marks "Exists" (risk cells, VIIRS detections, burn-
+probability bands, both baselines, wind arrows at a point). What's still honestly absent, same as
+before and unchanged by this pass: admin boundaries, roads, settlements/villages — `07_maps.md`
+already lists these as "Missing" / "Partially exists, unexploited" and they still show
+"Unavailable" in the `LayerPanel`, not silently faked.
+
+**Verification**: `frontend/tests/redesign.spec.ts` is 31/31 passing (was 23/23) against a
+production build and a live standalone backend. New coverage added for the real map specifically:
+every map screen's test now asserts a real `.maplibregl-canvas` renders with an OpenStreetMap-
+attributed basemap (not a placeholder); the wind-source-switch test was rewritten to diff the
+actual `probability_bands_geojson` in the two scenario API responses, since the old DOM-innerHTML
+diff no longer detects anything once the map updates via MapLibre's imperative `setData` instead
+of React-rendered markup; new tests confirm the wind arrow and ignition marker render as real
+accessible map features, the Uncalibrated-scenario badge has no dismiss control, and Today's
+ranked list never shows a 24/48h value. Axe-core is clean (0 violations) on all 7 screens,
+including the two new MapShell-specific checks this round surfaced and fixed: a scrollable-region-
+keyboard-focus violation on Today's now-shorter ranked list, and a `landmark-unique` violation from
+two same-named "Map" regions on the styleguide page (fixed via `locale={{ 'Map.Title': label }}`
+on each MapShell so every map gets a distinct accessible name).
+
+Lighthouse was re-run on all 7 screens (not just landing/styleguide) against the same production-
+build method as the first pass — see `LIGHTHOUSE.md` for the full table and root-cause writeup.
+Accessibility and best-practices are 100 on every screen, same as before. Performance is honestly
+lower on the five map screens (65–81, was 77–98) — this is the real CPU cost of initializing a
+WebGL MapLibre context on every map screen instead of rendering static coloured divs, not a
+regression to silently patch over; `LIGHTHOUSE.md` explains the measured cause (main-thread GL
+setup time, not network payload — the pmtiles basemap only streams the tiles in view).
+
+## Known gaps at Gate 2, round 2 (explicitly flagged, not fixed — scope decisions for the user)
 - **Real authentication**: still the client-side `RoleSwitcher` only, per the Gate 1 decision; real auth is a named later phase in `11_build_plan.md`, not started.
 - **Live FIRMS/VIIRS ingestion**: still absent; Watch/Field serve the 4 fixed replay incidents as sample data, per the Gate 1 decision.
-- **Bundle size / code-splitting**: the whole app (legacy + redesign) ships as one JS entry including a ~1MB MapLibre chunk even on redesign routes that don't use it yet; see `LIGHTHOUSE.md`.
+- **Admin boundaries, roads, settlements/villages layers**: still "Unavailable" in every screen's `LayerPanel` — `07_maps.md` already lists these as missing or unexploited locally (not changed by this round; the real MapShell now exists, but these three optional layers were never in this round's scope).
+- **Bundle size / code-splitting**: the whole app (legacy + redesign) ships as one JS entry including the ~1MB MapLibre chunk. This is no longer dead weight on redesign routes (every map screen uses it for real now), but it's still not code-split, so non-map redesign routes and the legacy app's non-map routes pay for it unnecessarily; see `LIGHTHOUSE.md`.
+- **MapShell is eagerly mounted**: each map screen initializes a MapLibre GL WebGL context immediately on page load, which is the main driver of this round's Lighthouse performance drop (65–81, was 77–98 with the placeholder). Lazy-mounting (e.g. only initialize once the map scrolls into view) is a real, scoped follow-up noted in `LIGHTHOUSE.md`, not attempted here.
 - **SEO per-route metadata**: not implemented (see `LIGHTHOUSE.md`).
 - Backend verified without Docker/Postgres by running a standalone uvicorn instance including only the risk + redesign routers (both are file-based, no DB dependency) — see commit messages for exact commands. The main app (auth, full operations.py) still needs Postgres and was not started in this environment.
 
-Stopped at Gate 2 per instructions. No push, no merge, no files moved to `/legacy`. Awaiting the user's Gate 2 review.
+Stopped at Gate 2 (round 2) per instructions. No push, no merge, no files moved to `/legacy`. Awaiting the user's Gate 2 review.
