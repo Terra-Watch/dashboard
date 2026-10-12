@@ -17,10 +17,10 @@ export interface Detection {
   incident_id: string;
   source: 'VIIRS' | 'field_report';
   state: string;
-  district: string;
+  label: string;
   detected_at: string;
   confidence: 'low' | 'nominal' | 'high';
-  status: 'new' | 'verified' | 'dismissed' | 'escalated';
+  status: 'new' | 'verify' | 'dismiss' | 'escalate';
   lat: number;
   lon: number;
 }

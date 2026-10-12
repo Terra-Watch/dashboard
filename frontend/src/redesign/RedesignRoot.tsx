@@ -1,0 +1,50 @@
+import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TodayPage } from './pages/TodayPage';
+import { WatchPage } from './pages/WatchPage';
+import { ReplayPage } from './pages/ReplayPage';
+import { IncidentPage } from './pages/IncidentPage';
+import { FieldPage } from './pages/FieldPage';
+import { RoleSwitcher, readRole } from './components/RoleSwitcher';
+import type { Role } from './lib/types';
+import './styles/index.css';
+
+const queryClient = new QueryClient();
+
+const NAV: { path: string; label: string }[] = [
+  { path: '/redesign/today', label: 'Today' },
+  { path: '/redesign/watch', label: 'Watch' },
+  { path: '/redesign/incident/E2023-084925', label: 'Incident' },
+  { path: '/redesign/replay', label: 'Replay' },
+  { path: '/redesign/field', label: 'Field' },
+];
+
+/** Entry point for the redesign-v2 surfaces, mounted at /redesign/* in the existing App shell
+ *  (frontend/src/app/App.tsx) without touching the legacy routes. See docs/redesign/04_information_architecture.md. */
+export function RedesignRoot({ path }: { path: string }) {
+  const [role, setRole] = useState<Role>(() => readRole());
+
+  let body = <TodayPage />;
+  if (path === '/redesign/watch') body = <WatchPage />;
+  else if (path === '/redesign/replay' || path.startsWith('/redesign/replay/')) body = <ReplayPage />;
+  else if (path.startsWith('/redesign/incident/')) body = <IncidentPage incidentId={path.split('/').pop() || 'E2023-084925'} />;
+  else if (path === '/redesign/field') body = <FieldPage />;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div data-rq-app className="min-h-screen">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-contour bg-sheet px-5 py-3">
+          <nav aria-label="RESQ redesign navigation" className="flex gap-4 text-sm">
+            {NAV.map((item) => (
+              <a key={item.path} href={item.path} className={path === item.path || (item.path.includes('incident') && path.startsWith('/redesign/incident')) ? 'font-bold text-ink' : 'text-ink-muted'}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+          <RoleSwitcher role={role} onChange={setRole} />
+        </div>
+        {body}
+      </div>
+    </QueryClientProvider>
+  );
+}
