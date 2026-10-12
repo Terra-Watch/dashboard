@@ -22,12 +22,6 @@ export function LandingPage({ go }: { go: (path: string) => void }) {
           >
             See today's ranking
           </button>
-          <button
-            onClick={() => go('/redesign/replay')}
-            className="rounded-rq border border-canopy px-5 py-2.5 text-sm font-semibold text-canopy hover:bg-canopy/10"
-          >
-            See the replay evidence
-          </button>
         </div>
       </section>
 
@@ -42,7 +36,7 @@ export function LandingPage({ go }: { go: (path: string) => void }) {
         {[
           { num: '01', title: 'Forecast', body: "Tomorrow's patrol priority, ranked. Never a prediction, never 24/48h." },
           { num: '02', title: 'Detection', body: 'Satellite and field reports, triaged by a person before anything counts as confirmed.' },
-          { num: '03', title: 'Scenario', body: 'Only after verification: an uncalibrated spread guess, shown beside the baseline it did not beat.' },
+          { num: '03', title: 'Scenario', body: 'Only after verification: an estimate of how a confirmed fire might spread, from forecast wind and fuel.' },
         ].map((card) => (
           <div key={card.num} className="rounded-xl border border-contour p-6">
             <div className="mb-2.5 font-serif text-xs font-bold text-canopy">{card.num}</div>
@@ -50,15 +44,6 @@ export function LandingPage({ go }: { go: (path: string) => void }) {
             <p className="text-sm text-ink-muted">{card.body}</p>
           </div>
         ))}
-      </section>
-
-      <section className="mx-auto mb-24 max-w-[680px] px-10 text-center">
-        <h2 className="mb-4 text-xl font-semibold">What RESQ refuses to claim</h2>
-        <ul className="inline-block list-disc space-y-2 pl-5 text-left text-sm text-ink-muted">
-          <li>Not "AI-powered." Not a prediction. Not calibrated.</li>
-          <li>The simulation did not beat a simple proximity guess on AUC/AP in the fires tested.</li>
-          <li>The four replay incidents built this tool — they are not a held-out test.</li>
-        </ul>
       </section>
     </div>
   );

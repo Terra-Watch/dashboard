@@ -6,7 +6,6 @@ const SCREENS: { path: string; name: string; hasMap: boolean }[] = [
   { path: '/redesign/today', name: 'today', hasMap: true },
   { path: '/redesign/watch', name: 'watch', hasMap: true },
   { path: '/redesign/incident/E2023-084925', name: 'incident', hasMap: true },
-  { path: '/redesign/replay', name: 'replay', hasMap: true },
   { path: '/redesign/field', name: 'field', hasMap: true },
 ];
 
@@ -64,14 +63,24 @@ for (const screen of SCREENS) {
   });
 }
 
-test('incident: baseline overlay visible by default', async ({ page }) => {
+test('incident: shows the forecast-estimate caveat, not a baseline comparison', async ({ page }) => {
   await page.goto('/redesign/incident/E2023-084925');
-  await expect(page.getByTestId('baseline-overlay')).toBeVisible();
+  await expect(page.getByTestId('scenario-caveat')).toHaveText('Estimate from forecast wind and fuel. Real fires can differ.');
+  // The proximity-baseline toggle/outline and the Replay/evidence screen were removed per the
+  // user's amendment (research content, not something the user-facing product should surface).
+  await expect(page.getByText('Show proximity baseline outline')).toHaveCount(0);
+  await expect(page.locator('a[href="/redesign/replay"]')).toHaveCount(0);
 });
 
-test('replay: baseline overlay visible', async ({ page }) => {
-  await page.goto('/redesign/replay');
-  await expect(page.getByTestId('baseline-overlay')).toBeVisible();
+test('no AUC/AP/IoU numbers or research framing appear anywhere in the app', async ({ page }) => {
+  for (const path of ['/redesign', '/redesign/today', '/redesign/watch', '/redesign/incident/E2023-084925', '/redesign/field']) {
+    await page.goto(path);
+    await page.waitForSelector('[data-rq-app]');
+    const text = await textOf(page);
+    expect(text, `${path} should not mention AUC/AP/IoU`).not.toMatch(/\bAUC\b|\bIoU\b|\bAP\s+(vs|baseline)\b/i);
+    expect(text, `${path} should not link to the removed Replay/evidence screen`).not.toContain('replay evidence');
+    expect(text, `${path} should not render the removed "refuses to claim" section`).not.toContain('What RESQ refuses to claim');
+  }
 });
 
 test('today: ranked cells never show a 24/48h horizon value', async ({ page }) => {

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { rqFetch } from '../lib/api';
 import { SampleDataBadge, StepIndicator, TrustBadge } from '../components/primitives';
-import { WindSourceSwitch, BaselineToggle, AssumptionsPanel, TimelineSlider, ProbabilityBandLegend, BriefingExport } from '../components/scenario';
+import { WindSourceSwitch, AssumptionsPanel, TimelineSlider, ProbabilityBandLegend, BriefingExport } from '../components/scenario';
 import {
-  MapShell, LayerPanel, WindArrowsControl, ProbabilityBandsLayer, BaselineLayer, WindArrowsLayer, IgnitionMarker,
+  MapShell, LayerPanel, WindArrowsControl, ProbabilityBandsLayer, WindArrowsLayer, IgnitionMarker,
   type LayerDef, type MapBounds,
 } from '../components/map';
 
@@ -19,10 +19,8 @@ interface ScenarioResponse {
   bounds: MapBounds;
   ignition: { lat: number; lon: number };
   probability_bands_geojson: GeoJSON.FeatureCollection;
-  baselines_geojson: { proximity: GeoJSON.FeatureCollection; circle_final_area: GeoJSON.FeatureCollection };
   wind_arrow: { lat: number; lon: number; direction_deg: number; speed_ms: number; source_time_utc: string };
   assumptions: { fuel: string; weather: string; terrain: string };
-  baseline: { proximity_label: string; circle_label: string; visible_by_default: boolean };
 }
 
 const INCIDENT_LAYERS: LayerDef[] = [
@@ -35,7 +33,6 @@ const INCIDENT_LAYERS: LayerDef[] = [
 export function IncidentPage({ incidentId }: { incidentId: string }) {
   const [windSource, setWindSource] = useState('era5land_native');
   const [overpassK, setOverpassK] = useState(0);
-  const [baselineVisible, setBaselineVisible] = useState(true);
   const [windArrowsVisible, setWindArrowsVisible] = useState(true);
   const [activeLayers, setActiveLayers] = useState(new Set(['probability']));
   const toggleLayer = (id: string) => setActiveLayers((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
@@ -66,18 +63,13 @@ export function IncidentPage({ incidentId }: { incidentId: string }) {
               <div data-testid="probability-grid">
                 <MapShell label={`Burn probability bands, overpass ${overpassK}`} bounds={data.bounds}>
                   <ProbabilityBandsLayer data={data.probability_bands_geojson} visible={activeLayers.has('probability')} />
-                  {baselineVisible && (
-                    <BaselineLayer id="proximity" data={data.baselines_geojson.proximity} visible dash={[2, 2]} />
-                  )}
                   <WindArrowsLayer arrows={[data.wind_arrow]} visible={windArrowsVisible} />
                   <IgnitionMarker lat={data.ignition.lat} lon={data.ignition.lon} />
                 </MapShell>
               </div>
-              {baselineVisible && (
-                <p data-testid="baseline-overlay" className="mt-2 rounded-rq border border-dashed border-ink bg-paper p-2 text-xs">
-                  Baseline shown: {data.baseline.proximity_label}.
-                </p>
-              )}
+              <p data-testid="scenario-caveat" className="mt-2 rounded-rq border border-dashed border-ink bg-paper p-2 text-xs">
+                Estimate from forecast wind and fuel. Real fires can differ.
+              </p>
               <div className="mt-3">
                 <ProbabilityBandLegend />
               </div>
@@ -90,7 +82,6 @@ export function IncidentPage({ incidentId }: { incidentId: string }) {
             </div>
             <div className="space-y-4">
               <WindSourceSwitch value={windSource} onChange={setWindSource} />
-              <BaselineToggle visible={baselineVisible} onChange={setBaselineVisible} />
               <WindArrowsControl visible={windArrowsVisible} onChange={setWindArrowsVisible} />
               <AssumptionsPanel {...data.assumptions} />
               <BriefingExport onExport={() => window.print()} />

@@ -4,7 +4,6 @@ import { LandingPage } from './pages/LandingPage';
 import { StyleguidePage } from './pages/StyleguidePage';
 import { TodayPage } from './pages/TodayPage';
 import { WatchPage } from './pages/WatchPage';
-import { ReplayPage } from './pages/ReplayPage';
 import { IncidentPage } from './pages/IncidentPage';
 import { FieldPage } from './pages/FieldPage';
 import { RoleSwitcher, readRole } from './components/RoleSwitcher';
@@ -18,7 +17,6 @@ const NAV: { path: string; label: string }[] = [
   { path: '/redesign/today', label: 'Today' },
   { path: '/redesign/watch', label: 'Watch' },
   { path: '/redesign/incident/E2023-084925', label: 'Incident' },
-  { path: '/redesign/replay', label: 'Replay' },
   { path: '/redesign/field', label: 'Field' },
   { path: '/redesign/styleguide', label: 'Styleguide' },
 ];
@@ -31,7 +29,6 @@ export function RedesignRoot({ path, go }: { path: string; go: (next: string) =>
   let body = <LandingPage go={go} />;
   if (path === '/redesign/today') body = <TodayPage />;
   else if (path === '/redesign/watch') body = <WatchPage />;
-  else if (path === '/redesign/replay' || path.startsWith('/redesign/replay/')) body = <ReplayPage />;
   else if (path.startsWith('/redesign/incident/')) body = <IncidentPage incidentId={path.split('/').pop() || 'E2023-084925'} />;
   else if (path === '/redesign/field') body = <FieldPage />;
   else if (path === '/redesign/styleguide') body = <StyleguidePage />;

@@ -19,16 +19,18 @@ export function TrustBadge({ level, children }: { level: TrustLevel; children: R
   );
 }
 
-/** SampleDataBadge — every redesign screen shows this until live FIRMS ingestion exists (it does not). */
+/** SampleDataBadge — every redesign screen shows this until live FIRMS ingestion exists (it does
+ *  not). Rendered text is "Demo data" (renamed per the user's amendment); the testid and prop
+ *  name stay as-is so existing callers/tests don't need to change. */
 export function SampleDataBadge({ note }: { note?: string }) {
   return (
     <span
       data-testid="sample-data-badge"
       role="note"
       className="inline-flex items-center gap-1.5 rounded-full border border-ink-muted px-2.5 py-1 text-xs font-semibold text-ink-muted"
-      title={note ?? 'Sample data from the 4 replay incidents, not a real-time feed.'}
+      title={note ?? 'Demo data from the 4 replay incidents, not a real-time feed.'}
     >
-      Sample data
+      Demo data
     </span>
   );
 }
@@ -37,9 +39,9 @@ export function Chip({ children }: { children: ReactNode }) {
   return <span className="inline-block rounded-full border border-contour bg-paper px-2.5 py-1 text-xs text-ink-muted">{children}</span>;
 }
 
-/** StepIndicator — which of the three steps (plus Replay) a screen belongs to. */
+/** StepIndicator — which of the three steps a screen belongs to. */
 const STEPS = ['Forecast', 'Detection', 'Verified incident', 'Scenario'] as const;
-export function StepIndicator({ current }: { current: typeof STEPS[number] | 'Replay' }) {
+export function StepIndicator({ current }: { current: typeof STEPS[number] }) {
   return (
     <ol aria-label="RESQ step" className="flex gap-2 border-b border-contour bg-sheet px-5 py-2.5 text-[13px] text-ink-muted">
       {STEPS.map((step) => (
@@ -47,7 +49,6 @@ export function StepIndicator({ current }: { current: typeof STEPS[number] | 'Re
           {step}
         </li>
       ))}
-      {current === 'Replay' && <li aria-current="step" className="font-bold text-ink">Replay / evidence</li>}
     </ol>
   );
 }
