@@ -8,7 +8,7 @@
   --rq-sheet: #ffffff;
   --rq-contour: #c7d1cc;
   --rq-info: #1f6fb2;
-  --rq-warn: #b26a00;
+  --rq-warn: #8a5300; /* darkened from #b26a00 — 3.83:1 on --rq-paper failed WCAG AA 4.5:1 (axe-core caught this on TrustBadge) */
   --rq-danger: #b0183a;
 
   /* Colour-blind-safe risk scale (sequential, distinguishable under deuteranopia/protanopia): light -> dark + shape/label redundancy in components, never colour alone. */

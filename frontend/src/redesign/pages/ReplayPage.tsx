@@ -137,7 +137,7 @@ export function ReplayPage() {
 
             <div data-testid="baseline-overlay" className="mt-4 rounded-rq border border-dashed border-ink bg-paper p-3 text-sm">
               Baseline outline shown by default: proximity (fire stays near the ignition point) and circle-of-final-area
-              (uses information not available during a live incident) are both plotted against the observed VIIRS footprint.
+              (uses information only known after the fact) are both plotted against the observed VIIRS footprint.
             </div>
           </section>
         )}

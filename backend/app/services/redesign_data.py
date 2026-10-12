@@ -24,7 +24,7 @@ REPLAY_INCIDENTS: dict[str, dict] = {
 
 BASELINE_LABELS = {
     "baseline_a_proximity": "Proximity (fire stays near the ignition point)",
-    "baseline_b_circle_final_area": "Circle, final observed area (uses information not available live)",
+    "baseline_b_circle_final_area": "Circle, final observed area (uses information only known after the fact)",
 }
 MODEL_LABELS = {
     "simulation:era5land_native": "Simulation (ERA5-Land, primary)",

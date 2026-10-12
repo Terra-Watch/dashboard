@@ -29,10 +29,10 @@ export function TodayPage() {
           <div>
             <h1 className="font-serif text-2xl">Tomorrow's patrol priority</h1>
             <p className="mt-1 text-sm text-ink-muted">
-              Model: <strong>Bar v3</strong> · Date: {DEMO_DATE} (archived replay, not live) · Coverage: Odisha, Chhattisgarh, Telangana, Madhya Pradesh, Maharashtra, Jharkhand only
+              Model: <strong>Bar v3</strong> · Date: {DEMO_DATE} (archived replay of a past date) · Coverage: Odisha, Chhattisgarh, Telangana, Madhya Pradesh, Maharashtra, Jharkhand only
             </p>
           </div>
-          <SampleDataBadge note="Archived Bar v3 replay for a 2023–2024 demo date, not a live model run." />
+          <SampleDataBadge note="Archived Bar v3 replay for a 2023–2024 demo date, not a real-time model run." />
         </div>
 
         <p className="mt-4 max-w-2xl text-sm text-ink-muted">

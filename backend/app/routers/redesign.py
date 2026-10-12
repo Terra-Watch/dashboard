@@ -40,7 +40,7 @@ def list_detections() -> dict:
     for item in detections:
         status = status_by_id.get(item["id"])
         item["status"] = status["action"] if status else "new"
-    return {"sample_data": True, "note": "The 4 replay incidents' VIIRS detections, not a live feed.", "items": detections}
+    return {"sample_data": True, "note": "The 4 replay incidents' VIIRS detections, a fixed sample set, not a real-time feed.", "items": detections}
 
 
 class TriageActionRequest(BaseModel):
