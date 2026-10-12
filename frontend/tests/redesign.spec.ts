@@ -1,13 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const SCREENS: { path: string; name: string }[] = [
-  { path: '/redesign', name: 'landing' },
-  { path: '/redesign/today', name: 'today' },
-  { path: '/redesign/watch', name: 'watch' },
-  { path: '/redesign/incident/E2023-084925', name: 'incident' },
-  { path: '/redesign/replay', name: 'replay' },
-  { path: '/redesign/field', name: 'field' },
+const SCREENS: { path: string; name: string; hasMap: boolean }[] = [
+  { path: '/redesign', name: 'landing', hasMap: false },
+  { path: '/redesign/today', name: 'today', hasMap: true },
+  { path: '/redesign/watch', name: 'watch', hasMap: true },
+  { path: '/redesign/incident/E2023-084925', name: 'incident', hasMap: true },
+  { path: '/redesign/replay', name: 'replay', hasMap: true },
+  { path: '/redesign/field', name: 'field', hasMap: true },
 ];
 
 async function textOf(page: Page): Promise<string> {
@@ -28,6 +28,16 @@ for (const screen of SCREENS) {
       const results = await new AxeBuilder({ page }).include('[data-rq-app]').analyze();
       expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
     });
+
+    if (screen.hasMap) {
+      test(`${screen.name}: renders a real MapLibre canvas over the self-hosted PMTiles basemap`, async ({ page }) => {
+        await page.goto(screen.path);
+        await page.waitForSelector('[data-rq-app]');
+        await expect(page.locator('.maplibregl-canvas').first()).toBeVisible({ timeout: 10_000 });
+        // The attribution control proves it's the real OSM-derived PMTiles basemap, not a placeholder.
+        await expect(page.locator('.maplibregl-ctrl-attrib')).toContainText(/OpenStreetMap/i);
+      });
+    }
 
     for (const width of [390, 1440]) {
       test(`${screen.name}: screenshot at ${width}px`, async ({ page }) => {
@@ -50,18 +60,56 @@ test('replay: baseline overlay visible', async ({ page }) => {
   await expect(page.getByTestId('baseline-overlay')).toBeVisible();
 });
 
+test('today: ranked cells never show a 24/48h horizon value', async ({ page }) => {
+  await page.goto('/redesign/today');
+  await page.waitForSelector('.hairline-list');
+  const listText = await page.locator('.hairline-list').innerText();
+  expect(listText).not.toMatch(/\b24\s*h\b|\b48\s*h\b/i);
+});
+
 test('incident: switching wind source changes the rendered scenario', async ({ page }) => {
+  // The map is a real MapLibre canvas now (WebGL), so DOM-diffing the container no longer
+  // detects a change — react-map-gl updates the GeoJSON source imperatively via setData, not
+  // by touching the surrounding DOM. Instead, capture the actual scenario responses the page
+  // fetches for each wind source and compare the georeferenced probability-band geometry.
+  const responses: Record<string, unknown> = {};
+  page.on('response', async (response) => {
+    const url = response.url();
+    if (url.includes('/api/redesign/incidents/') && url.includes('/scenario')) {
+      const match = url.match(/wind_source=([^&]+)/);
+      if (match) responses[match[1]] = await response.json().catch(() => null);
+    }
+  });
+
   await page.goto('/redesign/incident/E2023-084925');
   await page.waitForSelector('[data-testid="probability-grid"]');
   // Move to the last overpass where the fire has spread, so the grids have something to differ on.
   const slider = page.locator('#timeline');
   await slider.fill('7');
   await page.waitForTimeout(300);
-  const before = await page.locator('[data-testid="probability-grid"]').innerHTML();
   await page.getByLabel('Wind source').selectOption('era5_025');
   await page.waitForTimeout(300);
-  const after = await page.locator('[data-testid="probability-grid"]').innerHTML();
+
+  expect(responses['era5land_native']).toBeTruthy();
+  expect(responses['era5_025']).toBeTruthy();
+  const before = JSON.stringify((responses['era5land_native'] as { probability_bands_geojson: unknown }).probability_bands_geojson);
+  const after = JSON.stringify((responses['era5_025'] as { probability_bands_geojson: unknown }).probability_bands_geojson);
   expect(after).not.toEqual(before);
+});
+
+test('incident: wind arrow and ignition marker are real, georeferenced map features', async ({ page }) => {
+  await page.goto('/redesign/incident/E2023-084925');
+  await page.waitForSelector('[data-testid="probability-grid"]');
+  await expect(page.getByRole('img', { name: /Nominal ignition point/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Wind .* m\/s toward/i })).toBeVisible();
+});
+
+test('incident: Uncalibrated-scenario badge is always present, not dismissible', async ({ page }) => {
+  await page.goto('/redesign/incident/E2023-084925');
+  const badge = page.getByText('Uncalibrated scenario — one simulation run, not a forecast.');
+  await expect(badge).toBeVisible();
+  // No close/dismiss control anywhere near the badge.
+  await expect(page.locator('[role="note"]:has-text("Uncalibrated") button')).toHaveCount(0);
 });
 
 test('styleguide: renders and is axe-clean', async ({ page }) => {

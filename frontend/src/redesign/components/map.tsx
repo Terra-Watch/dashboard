@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import Map, { Source, Layer, Marker, NavigationControl, AttributionControl } from 'react-map-gl/maplibre';
-import type { StyleSpecification } from 'maplibre-gl';
+import type { StyleSpecification, DataDrivenPropertyValueSpecification } from '@maplibre/maplibre-gl-style-spec';
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
@@ -79,6 +79,7 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
         mapStyle={style}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false}
+        locale={{ 'Map.Title': label }}
         aria-label={label}
       >
         <AttributionControl compact position="bottom-right" />
@@ -145,7 +146,7 @@ export function WindArrowsControl({ visible, onChange }: { visible: boolean; onC
 
 // ---------- Reusable georeferenced overlay layers ----------
 
-const RISK_COLOR_EXPR: maplibregl.DataDrivenPropertyValueSpecification<string> = [
+const RISK_COLOR_EXPR: DataDrivenPropertyValueSpecification<string> = [
   'match',
   ['get', 'band'],
   'Very high', '#b0183a',
@@ -203,7 +204,7 @@ export function DetectionsLayer({ detections, visible }: { detections: MapDetect
   );
 }
 
-const PROB_COLOR_EXPR: maplibregl.DataDrivenPropertyValueSpecification<string> = [
+const PROB_COLOR_EXPR: DataDrivenPropertyValueSpecification<string> = [
   'match',
   ['get', 'band'],
   0, '#d8e3ec',

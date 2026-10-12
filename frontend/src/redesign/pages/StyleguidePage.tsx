@@ -5,7 +5,7 @@ import {
 import {
   RiskLegend, ProbabilityBandLegend, WindSourceSwitch, BaselineToggle, AssumptionsPanel, TimelineSlider, BriefingExport,
 } from '../components/scenario';
-import { MapShell, LayerPanel, WindArrowsControl } from '../components/map';
+import { MapShell, LayerPanel, WindArrowsControl, RiskCellsLayer, DetectionsLayer } from '../components/map';
 import { DetectionCard, VerifyActions } from '../components/watch';
 import { PhotoCapture, SyncQueue } from '../components/field';
 import { RoleSwitcher } from '../components/RoleSwitcher';
@@ -74,9 +74,16 @@ export function StyleguidePage() {
         <StateLabel label="Probability bands"><ProbabilityBandLegend /></StateLabel>
       </Section>
 
-      <Section id="map" title="MapShell / LayerPanel / WindArrowsControl">
-        <StateLabel label="Default"><MapShell label="Map placeholder" /></StateLabel>
-        <StateLabel label="Empty"><MapShell label="No data for this view" /></StateLabel>
+      <Section id="map" title="MapShell / LayerPanel / WindArrowsControl (real MapLibre + PMTiles)">
+        <StateLabel label="Default (regional)">
+          <MapShell label="Regional overview" center={[81.5, 20.3]} zoom={5.4}>
+            <RiskCellsLayer data={{ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [83.9, 19.3] }, properties: { band: 'High' } }] }} visible />
+            <DetectionsLayer detections={[{ id: 'sg-1', lat: SAMPLE_DETECTION.lat, lon: SAMPLE_DETECTION.lon, label: SAMPLE_DETECTION.label, status: SAMPLE_DETECTION.status }]} visible />
+          </MapShell>
+        </StateLabel>
+        <StateLabel label="Bounds-fit (incident-scoped)">
+          <MapShell label="Incident-scoped view" bounds={[83.86, 19.28, 83.97, 19.39]} />
+        </StateLabel>
         <StateLabel label="Layer panel"><LayerPanel active={layers} onToggle={(id) => setLayers((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; })} /></StateLabel>
         <StateLabel label="Wind arrows toggle"><WindArrowsControl visible={windArrows} onChange={setWindArrows} /></StateLabel>
       </Section>

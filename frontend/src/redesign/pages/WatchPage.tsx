@@ -4,6 +4,7 @@ import { rqFetch, deviceId } from '../lib/api';
 import { readRole } from '../components/RoleSwitcher';
 import { SampleDataBadge, StepIndicator } from '../components/primitives';
 import { QueueList } from '../components/watch';
+import { MapShell, DetectionsLayer } from '../components/map';
 import type { Detection } from '../lib/types';
 
 interface DetectionsResponse {
@@ -45,6 +46,17 @@ export function WatchPage() {
         <p className="mt-1 text-sm text-ink-muted">
           Satellite and field reports needing a human check. Nothing here is a confirmed fire until someone verifies it.
         </p>
+
+        {data && !!data.items.length && (
+          <div className="mt-5">
+            <MapShell label="Detection queue — satellite and field reports" center={[81.5, 20.3]} zoom={5.4} aspect="wide">
+              <DetectionsLayer
+                detections={data.items.map((d) => ({ id: d.id, lat: d.lat, lon: d.lon, label: d.label, status: d.status }))}
+                visible
+              />
+            </MapShell>
+          </div>
+        )}
 
         <div className="mt-5">
           {isLoading && <p className="text-sm text-ink-muted">Loading the triage queue…</p>}

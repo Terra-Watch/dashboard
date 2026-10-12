@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { API } from '../../app/config';
+import { rqFetch } from '../lib/api';
 import { SampleDataBadge, StepIndicator, EmptyState } from '../components/primitives';
 import { RiskLegend } from '../components/scenario';
+import { MapShell, LayerPanel, RiskCellsLayer, DetectionsLayer, type LayerDef } from '../components/map';
+import type { Detection } from '../lib/types';
 
 const SIX_STATES = ['OD', 'CG', 'TS', 'MP', 'MH', 'JH'];
 const DEMO_DATE = '2024-03-10';
@@ -18,8 +22,24 @@ async function fetchRisk(target: string) {
   return response.json() as Promise<{ type: string; features: RiskFeature[] }>;
 }
 
+const TODAY_LAYERS: LayerDef[] = [
+  { id: 'risk', label: 'Risk cells', available: true },
+  { id: 'detections', label: 'Detections', available: true },
+  { id: 'incidents', label: 'Incidents', available: false },
+  { id: 'boundaries', label: 'Boundaries', available: false },
+  { id: 'roads', label: 'Roads', available: false },
+  { id: 'villages', label: 'Settlements', available: false },
+];
+
 export function TodayPage() {
   const { data, isLoading, isError } = useQuery({ queryKey: ['today', DEMO_DATE], queryFn: () => fetchRisk(DEMO_DATE), staleTime: 24 * 60 * 60 * 1000 });
+  const { data: detections } = useQuery({
+    queryKey: ['today-detections'],
+    queryFn: () => rqFetch<{ items: Detection[] }>('/api/redesign/detections'),
+    staleTime: 60_000,
+  });
+  const [activeLayers, setActiveLayers] = useState(new Set(['risk']));
+  const toggleLayer = (id: string) => setActiveLayers((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
 
   return (
     <div data-rq-app>
@@ -52,7 +72,23 @@ export function TodayPage() {
             <EmptyState title="Not validated here" body="No archived ranking exists for this date/region. Outside the six scoped states, RESQ does not show a risk value." />
           )}
           {data && data.features.length > 0 && (
-            <ul className="hairline-list divide-y divide-contour rounded-rq border border-contour bg-sheet">
+            <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
+              <MapShell label="Tomorrow's patrol priority — ranked forest cells" center={[81.5, 20.3]} zoom={5.4} aspect="wide">
+                <RiskCellsLayer data={data as unknown as GeoJSON.FeatureCollection} visible={activeLayers.has('risk')} />
+                <DetectionsLayer
+                  detections={(detections?.items ?? []).map((d) => ({ id: d.id, lat: d.lat, lon: d.lon, label: d.label, status: d.status }))}
+                  visible={activeLayers.has('detections')}
+                />
+              </MapShell>
+              <LayerPanel active={activeLayers} onToggle={toggleLayer} layers={TODAY_LAYERS} />
+            </div>
+          )}
+          {data && data.features.length > 0 && (
+            <ul
+              tabIndex={0}
+              aria-label="Ranked forest cells"
+              className="hairline-list mt-4 max-h-80 divide-y divide-contour overflow-y-auto rounded-rq border border-contour bg-sheet focus-visible:outline focus-visible:outline-2 focus-visible:outline-canopy"
+            >
               {data.features.slice(0, 25).map((feature) => (
                 <li key={feature.properties.cell_id} className="flex items-center justify-between px-4 py-3">
                   <span className="text-sm">

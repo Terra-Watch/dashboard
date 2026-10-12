@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { rqFetch } from '../lib/api';
 import { SampleDataBadge, StepIndicator, TrustBadge } from '../components/primitives';
+import { MapShell, ProbabilityBandsLayer, ObservedFootprintLayer, BaselineLayer, IgnitionMarker, type MapBounds } from '../components/map';
 
 interface ReplayIndex {
   incidents: { incident_id: string; state: string; label: string }[];
@@ -34,6 +35,11 @@ interface ReplayDetail {
   series: Record<string, OverpassRow[]>;
   headline_last_overpass: { last_overpass_k: number; auc: Record<string, number>; ap: Record<string, number>; iou: Record<string, number> };
   source: string;
+  bounds: MapBounds;
+  ignition: { lat: number; lon: number };
+  probability_bands_geojson: GeoJSON.FeatureCollection | null;
+  observed_footprint_geojson: GeoJSON.FeatureCollection;
+  baselines_geojson: { proximity: GeoJSON.FeatureCollection; circle_final_area: GeoJSON.FeatureCollection };
 }
 
 const METRIC_LABELS: Record<string, string> = {
@@ -111,6 +117,19 @@ export function ReplayPage() {
           <section className="mt-6">
             <h2 className="font-serif text-lg">{detail.label}</h2>
             <p className="text-xs text-ink-muted">Development incident used to build the tool, not held out, not independent. Source: {detail.source}.</p>
+
+            <div data-testid="probability-grid" className="mt-4">
+              <MapShell label={`${detail.label} — simulation vs baselines vs observed footprint, last overpass`} bounds={detail.bounds}>
+                {detail.probability_bands_geojson && <ProbabilityBandsLayer data={detail.probability_bands_geojson} visible />}
+                <ObservedFootprintLayer data={detail.observed_footprint_geojson} visible />
+                <BaselineLayer id="proximity" data={detail.baselines_geojson.proximity} visible dash={[2, 2]} />
+                <BaselineLayer id="circle" data={detail.baselines_geojson.circle_final_area} visible dash={[1, 2]} />
+                <IgnitionMarker lat={detail.ignition.lat} lon={detail.ignition.lon} />
+              </MapShell>
+              <p className="mt-2 text-xs text-ink-muted">
+                Solid dark outline: observed VIIRS footprint. Dashed: proximity baseline. Dotted: circle (final-area) baseline. Fill: simulation (ERA5-Land, primary) probability bands.
+              </p>
+            </div>
 
             <div className="mt-4 overflow-x-auto">
               <table className="metrics w-full border-collapse text-sm">

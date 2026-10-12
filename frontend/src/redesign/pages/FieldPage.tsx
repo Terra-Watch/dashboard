@@ -4,6 +4,7 @@ import { rqFetch, deviceId } from '../lib/api';
 import { enqueueReport, readQueue, updateReportState } from '../lib/fieldQueue';
 import { SampleDataBadge, StepIndicator, OfflineBanner } from '../components/primitives';
 import { PhotoCapture, SyncQueue } from '../components/field';
+import { MapShell, DetectionsLayer } from '../components/map';
 import type { QueuedFieldReport } from '../lib/types';
 
 interface FieldTask {
@@ -11,6 +12,8 @@ interface FieldTask {
   incident_id: string;
   label: string;
   status: string;
+  lat: number;
+  lon: number;
 }
 
 async function syncOne(report: QueuedFieldReport) {
@@ -83,6 +86,17 @@ export function FieldPage() {
           <SampleDataBadge />
         </div>
         <p className="mt-1 text-sm text-ink-muted">Verify assigned detections from the ground. Reports queue and sync automatically when you have signal.</p>
+
+        {activeTasks.length > 0 && (
+          <div className="mt-5">
+            <MapShell label="Assigned verification tasks" center={[81.5, 20.3]} zoom={5.4} aspect="wide">
+              <DetectionsLayer
+                detections={activeTasks.map((t) => ({ id: t.task_id, lat: t.lat, lon: t.lon, label: t.label, status: t.status }))}
+                visible
+              />
+            </MapShell>
+          </div>
+        )}
 
         {activeTasks.map((task) => (
           <div key={task.task_id} className="mt-5 rounded-rq border border-contour bg-sheet p-4">
