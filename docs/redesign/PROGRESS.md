@@ -34,3 +34,19 @@ Branch: `redesign-v2`. Started 2026-10-12. Gate 1 = Phase 0 (audit) + Phase 1 (d
 - Actual rendered Lighthouse/axe scores — out of scope for Phase 1 (that's Phase 2 per the brief).
 
 Stopped at Gate 1 per instructions. Awaiting "Gate 1 approved" before any app code.
+
+## Gate 1 approved — amendments applied (commit 582ad6f)
+- Basemap: PMTiles via Protomaps, no raw OSM tile server; licence chain in 07_maps.md.
+- Sample-data labeling + "no live wording in UI copy" rule added to 09_trust_rules.md.
+- Idempotency-key + SyncQueue pending/synced/failed/retry spec added to 08/10.
+- Exact per-metric replay win-counts recomputed from RESQ5_RESULTS.md, placed on Replay screen only (06_simulation_ui.md).
+- Today screen's six-states-only coverage rule; corrected an unverified "6+2 zero-shot states" claim that does not exist in the repo — see 00_audit.md.
+- Cross-cutting test checklist (sample-data badge, no "live" string, wind-source-switch actually changes output, baseline visible by default, duplicate-idempotency-key dedupe) added to 11_build_plan.md.
+
+## Phase 2 build — in progress (frequent commits, per instruction)
+- [x] 9bc7258 — Tailwind + redesign-scoped design tokens (light/dark, colour-blind-safe risk scale, trust scale), new deps (@tanstack/react-query, motion, pmtiles, clsx).
+- [ ] Backend: `backend/app/services/redesign_store.py` (SQLite demo store: triage_actions w/ device_id+timestamp, field_reports w/ idempotency_key) and `redesign_data.py` (real-data loaders: VIIRS detections, replay metrics recomputed from `results/resq5/*/metrics_by_overpass.csv` at request time, cross-incident win-counts). Router (`backend/app/routers/redesign.py`) not yet wired into `main.py` — next step.
+- [ ] **Landing page direction note (new instruction, not yet executed):** before building the final landing page, must produce 2 visually distinct direction wireframes (shadcn/ui + `motion`, calm/map-first restraint, Magic-UI-style entrance animations allowed ONLY on landing) and get the user's pick via the coordinating session — do NOT build a final landing page component until a direction is chosen. Today/Watch/Incident/Field stay static/functional, motion only for meaningful state transitions (timeline slider). Will produce the 2 directions as static HTML near the end of this run, for the coordinator to relay.
+- [ ] Today, Watch, Incident, Replay, Field screens: not yet built.
+- [ ] /styleguide + component library: not yet built.
+- [ ] Playwright/axe/Lighthouse test pass: not yet run (no live backend available in this environment — no Docker daemon running locally, so Postgres-backed endpoints can't be exercised; the new SQLite demo store and file-based data loaders are designed to run without Postgres and will be used for real testing).

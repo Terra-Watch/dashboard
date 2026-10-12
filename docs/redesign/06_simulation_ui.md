@@ -77,12 +77,12 @@ Read `01_narrative.md`, `03_flows.md`. This screen only exists downstream of a *
 ```
 
 - Every number on this screen must come from `results/resq5/<incident>/` or `docs/RESQ5_RESULTS.md` — no rounding beyond what those sources already show, no rephrasing of "did not beat" into softer language.
-- **Cross-incident win-count summary** (shown once, above the per-incident table; computed by counting winners in `RESQ5_RESULTS.md` §1's table, not estimated — recount if that table ever changes):
-  - **AUC** (rank-based ability) vs proximity baseline: simulation wins in **0 of 4** incidents (RESQ5_RESULTS.md §1: "proximity baseline is higher than the simulation's in all four incidents").
-  - **AP** vs proximity baseline (baseline a): simulation wins in **0 of 4** incidents (E2024-131853, E2024-135332, E2023-084925, E2024-155286 all baseline).
+- **Cross-incident win-count summary** (shown once, above the per-incident table). This is computed programmatically at request time from `metrics_by_overpass.csv`'s `reference=obs_nh` rows (nominal+high confidence detections — the protocol's stated primary reference, `RESQ5_PROTOCOL.md` §2; **not** `obs_all`, which is the secondary, all-confidence reference and gives different numbers), comparing the primary simulation (`era5land_native`) to each baseline at each incident's last overpass. Implemented in `backend/app/services/redesign_data.py::cross_incident_win_counts()` so the UI never hand-transcribes these — a first draft of this doc miscounted `IoU vs proximity` by reading the wrong reference column by eye, which is exactly the failure mode this function exists to prevent.
+  - **AUC** (rank-based ability) vs proximity baseline: simulation wins in **0 of 4** incidents.
+  - **AP** vs proximity baseline (baseline a): simulation wins in **0 of 4** incidents.
   - **AP** vs circle-of-final-area baseline (baseline b, information-advantaged): simulation wins in **3 of 4** incidents (E2024-131853, E2024-135332, E2024-155286; E2023-084925 still baseline).
-  - **IoU@0.5** vs proximity baseline (baseline a): simulation wins in **0 of 4** incidents.
+  - **IoU@0.5** vs proximity baseline (baseline a): simulation wins in **1 of 4** incidents (E2024-135332 only).
   - **IoU@0.5** vs circle-of-final-area baseline (baseline b): simulation wins in **1 of 4** incidents (E2024-135332 only).
-  - This is the only place these win-counts appear with this precision; the narrative/landing copy stays qualitative ("did not beat a simple proximity baseline on AUC/AP in the replayed incidents; won IoU against one baseline in one incident") and must link here for the breakdown rather than restating counts.
+  - This is the only place these win-counts appear with this precision; the narrative/landing copy stays qualitative ("did not beat a simple proximity baseline on AUC/AP in the replayed incidents; won IoU against both baselines in one incident") and must link here for the breakdown rather than restating counts.
 - The incident selector always shows all 4 replayed incidents; there is no way to filter to only the one where simulation won on IoU (E2024-135332) — the headline comparison table is shown in full for all 4 every time, per `02_users_and_use_cases.md` user 5's "must never misread" rule.
 - **Empty/loading/error states:** this is static precomputed data; loading is near-instant (brief skeleton only), error is "Replay data could not load" (a deploy/data issue, not expected in normal operation), no offline-specific state needed beyond standard caching since the dataset is small and static.
