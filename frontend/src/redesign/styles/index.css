@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import './tokens.css';
+
+[data-rq-app] {
+  font-family: '"Noto Sans"', Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  background: var(--rq-paper);
+  color: var(--rq-ink);
+}
+
+[data-rq-app] h1,
+[data-rq-app] h2,
+[data-rq-app] h3 {
+  font-family: '"Noto Serif"', Georgia, serif;
+}

@@ -1,0 +1,67 @@
+/* Design tokens for redesign-v2, per docs/redesign/08_design_system.md. Scoped under [data-rq-app] so legacy pages are unaffected. */
+[data-rq-app] {
+  --rq-canopy: #1f5b4a;
+  --rq-canopy-deep: #143d32;
+  --rq-ink: #1d2a27;
+  --rq-ink-muted: #55645f;
+  --rq-paper: #f1f4f2;
+  --rq-sheet: #ffffff;
+  --rq-contour: #c7d1cc;
+  --rq-info: #1f6fb2;
+  --rq-warn: #b26a00;
+  --rq-danger: #b0183a;
+
+  /* Colour-blind-safe risk scale (sequential, distinguishable under deuteranopia/protanopia): light -> dark + shape/label redundancy in components, never colour alone. */
+  --rq-risk-low: #bfd8cf;
+  --rq-risk-moderate: #e9b824;
+  --rq-risk-high: #e5701f;
+  --rq-risk-veryhigh: #b0183a;
+
+  /* Burn-probability bands, sequential blue so it never collides with the risk scale's warm hues. */
+  --rq-prob-1: #d8e3ec;
+  --rq-prob-2: #7fa8c9;
+  --rq-prob-3: #3d6e97;
+  --rq-prob-4: #16314a;
+
+  /* Trust scale: forecast (most trusted/plain) -> uncalibrated scenario (least, always flagged). */
+  --rq-trust-forecast: #1f5b4a;
+  --rq-trust-detection: #1f6fb2;
+  --rq-trust-verified: #143d32;
+  --rq-trust-scenario: #b26a00;
+
+  color-scheme: light;
+}
+
+[data-rq-app][data-rq-theme='dark'] {
+  --rq-canopy: #4fae8e;
+  --rq-canopy-deep: #2f8068;
+  --rq-ink: #e8ece9;
+  --rq-ink-muted: #a3b0ab;
+  --rq-paper: #121815;
+  --rq-sheet: #1a211d;
+  --rq-contour: #324038;
+  --rq-info: #6fb6ee;
+  --rq-warn: #e0a233;
+  --rq-danger: #ef5c7e;
+
+  --rq-risk-low: #3c5c51;
+  --rq-risk-moderate: #e9b824;
+  --rq-risk-high: #e5701f;
+  --rq-risk-veryhigh: #ef5c7e;
+
+  --rq-prob-1: #2a3542;
+  --rq-prob-2: #4c6e8c;
+  --rq-prob-3: #7fa8c9;
+  --rq-prob-4: #d8e3ec;
+
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rq-app] * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
