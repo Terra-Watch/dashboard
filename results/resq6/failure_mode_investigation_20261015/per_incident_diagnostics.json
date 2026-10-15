@@ -1,0 +1,1123 @@
+{
+  "official_score_source": "results/resq6/temporal_alignment_audit_20261015/official_score_reproduction.json",
+  "official_score_source_sha256": "523e388fb06a56d776932a889add1af49f35624add0beaeed5023989dcaca5f6",
+  "per_incident": [
+    {
+      "dmm_onset_prediction": {
+        "meaning": "no DMM prediction or DMM-to-Cell2Fire handoff is present in this simulation setup",
+        "status": "unavailable"
+      },
+      "domain": {
+        "cells_per_side": 375,
+        "cluster_bbox_km": [
+          4.88,
+          5.25
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 140625,
+        "north_m": 2130375,
+        "side_km": 11.25,
+        "west_m": 240938
+      },
+      "ensemble_transitions": [
+        {
+          "from_horizon_h": 6,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.26865671641791045,
+            0.3145614353026459,
+            0.3448275862068966
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            48,
+            86.0,
+            158
+          ],
+          "to_horizon_h": 12
+        },
+        {
+          "from_horizon_h": 12,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.3444976076555024,
+            0.367992019757253,
+            0.3879472693032015
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            123,
+            206.0,
+            370
+          ],
+          "to_horizon_h": 24
+        },
+        {
+          "from_horizon_h": 24,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.23011844331641285,
+            0.24946930548705964,
+            0.2584
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            573,
+            956.0,
+            1820
+          ],
+          "to_horizon_h": 48
+        }
+      ],
+      "first_detection_utc": "2024-02-16 20:11:00",
+      "incident_id": "E2024-131853",
+      "prescribed_setup_ignition_lat_lon": [
+        19.20262,
+        78.60316
+      ],
+      "prescribed_setup_ignition_utm_m": [
+        247981.8,
+        2124981.7
+      ],
+      "scored_horizons": [
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 23.366666666666667,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 24,
+            "hours_before_forecast": 0.6333333333333329,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2024-131853",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-02-17T07:22:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.5781845575097959,
+              "ap_baseline_b_blurred": 0.561109247593601,
+              "ap_engine": 0.5079576787212875,
+              "brier_baseline_a_blurred": 0.01094600078288974,
+              "brier_baseline_b_blurred": 0.09708829229685062,
+              "brier_engine": 0.002375784691358025,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.07022687878850842,
+              "horizon_h": 24,
+              "incident_id": "E2024-131853",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.5781845575097959,
+              "ap_baseline_b_blurred": 0.561109247593601,
+              "ap_engine": 0.5079576787212875,
+              "brier_baseline_a_blurred": 0.01094600078288974,
+              "brier_baseline_b_blurred": 0.09708829229685062,
+              "brier_engine": 0.002375784691358025
+            },
+            "selected_pass": "N|2024-02-17|D",
+            "target_positive_cells": 494
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.5781845575097959,
+              "brier": 0.01094600078288974
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.561109247593601,
+              "brier": 0.09708829229685062
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 271.853151216351,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              181.0,
+              224.5
+            ],
+            "positive_cells_with_any_simulated_member_burned": 472,
+            "positive_mask_cells": 494,
+            "probability_centroid_row_col": [
+              176.77828624795708,
+              232.518281578333
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.34648610786831663
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.5079576787212875,
+            "brier": 0.002375784691358025
+          },
+          "horizon_h": 24,
+          "incident_id": "E2024-131853",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.07022687878850842,
+          "target_positive_cells": 494,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        },
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 24.2,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 48,
+            "hours_before_forecast": 23.8,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2024-131853",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-02-17T08:12:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.5353845683314847,
+              "ap_baseline_b_blurred": 0.4548275013490767,
+              "ap_engine": 0.3324417225957856,
+              "brier_baseline_a_blurred": 0.0109091340351755,
+              "brier_baseline_b_blurred": 0.25093805063064656,
+              "brier_engine": 0.004991824197530865,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.20294284573569915,
+              "horizon_h": 48,
+              "incident_id": "E2024-131853",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.5353845683314847,
+              "ap_baseline_b_blurred": 0.4548275013490767,
+              "ap_engine": 0.3324417225957856,
+              "brier_baseline_a_blurred": 0.0109091340351755,
+              "brier_baseline_b_blurred": 0.25093805063064656,
+              "brier_engine": 0.004991824197530865
+            },
+            "selected_pass": "N20|2024-02-17|D",
+            "target_positive_cells": 638
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.5353845683314847,
+              "brier": 0.0109091340351755
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.4548275013490767,
+              "brier": 0.25093805063064656
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 361.23146819358095,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              183.82131661442006,
+              230.1426332288401
+            ],
+            "positive_cells_with_any_simulated_member_burned": 638,
+            "positive_mask_cells": 638,
+            "probability_centroid_row_col": [
+              172.1110329639921,
+              232.94550967935342
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.23300780574419758
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.3324417225957856,
+            "brier": 0.004991824197530865
+          },
+          "horizon_h": 48,
+          "incident_id": "E2024-131853",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.20294284573569915,
+          "target_positive_cells": 638,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        }
+      ],
+      "setup_ignition_row_col": [
+        179,
+        234
+      ],
+      "source_mask_path": "results/resq5/E2024-131853/observed_footprints.npz",
+      "source_mask_sha256": "8a2feeef671c761910e49c613edb839d01b505970287814f507c78ddd1ebba04",
+      "t0_utc": "2024-02-16 08:00:00"
+    },
+    {
+      "dmm_onset_prediction": {
+        "meaning": "no DMM prediction or DMM-to-Cell2Fire handoff is present in this simulation setup",
+        "status": "unavailable"
+      },
+      "domain": {
+        "cells_per_side": 338,
+        "cluster_bbox_km": [
+          4.12,
+          4.12
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 114244,
+        "north_m": 2214758,
+        "side_km": 10.14,
+        "west_m": 256492
+      },
+      "ensemble_transitions": [
+        {
+          "from_horizon_h": 6,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.07982261640798226,
+            0.29396604002425714,
+            0.5
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            55,
+            144.5,
+            713
+          ],
+          "to_horizon_h": 12
+        },
+        {
+          "from_horizon_h": 12,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.20588235294117646,
+            0.38308444642027195,
+            0.6026344676180022
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            129,
+            370.5,
+            2223
+          ],
+          "to_horizon_h": 24
+        },
+        {
+          "from_horizon_h": 24,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.06720132743362832,
+            0.11855826860522717,
+            0.30612873421619957
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            1388,
+            4587.5,
+            8740
+          ],
+          "to_horizon_h": 48
+        }
+      ],
+      "first_detection_utc": "2024-03-05 07:53:00",
+      "incident_id": "E2024-135332",
+      "prescribed_setup_ignition_lat_lon": [
+        19.95163,
+        78.71265
+      ],
+      "prescribed_setup_ignition_utm_m": [
+        260609.1,
+        2207759.8
+      ],
+      "scored_horizons": [
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 13.716666666666667,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 24,
+            "hours_before_forecast": 10.283333333333333,
+            "ignition_cell_inside_positive_mask": false,
+            "incident_id": "E2024-135332",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-03-05T08:43:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.14213750515688706,
+              "ap_baseline_b_blurred": 0.1174551013105499,
+              "ap_engine": 0.04247603322315869,
+              "brier_baseline_a_blurred": 0.014388146559024281,
+              "brier_baseline_b_blurred": 0.11433385967087538,
+              "brier_engine": 0.0036899433571031203,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.09966147193372837,
+              "horizon_h": 24,
+              "incident_id": "E2024-135332",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.14213750515688706,
+              "ap_baseline_b_blurred": 0.1174551013105499,
+              "ap_engine": 0.04247603322315869,
+              "brier_baseline_a_blurred": 0.014388146559024281,
+              "brier_baseline_b_blurred": 0.11433385967087538,
+              "brier_engine": 0.0036899433571031203
+            },
+            "selected_pass": "N|2024-03-05|D",
+            "target_positive_cells": 312
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.14213750515688706,
+              "brier": 0.014388146559024281
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.1174551013105499,
+              "brier": 0.11433385967087538
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 787.4380952957632,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              224.75,
+              124.75
+            ],
+            "positive_cells_with_any_simulated_member_burned": 167,
+            "positive_mask_cells": 312,
+            "probability_centroid_row_col": [
+              243.30076523640338,
+              143.31941787373597
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.05848592511615196
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.04247603322315869,
+            "brier": 0.0036899433571031203
+          },
+          "horizon_h": 24,
+          "incident_id": "E2024-135332",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.09966147193372837,
+          "target_positive_cells": 312,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        },
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 37.4,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 48,
+            "hours_before_forecast": 10.600000000000001,
+            "ignition_cell_inside_positive_mask": false,
+            "incident_id": "E2024-135332",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-03-06T08:24:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.1281332180702359,
+              "ap_baseline_b_blurred": 0.0851073227459748,
+              "ap_engine": 0.0632388564958546,
+              "brier_baseline_a_blurred": 0.017386209355437457,
+              "brier_baseline_b_blurred": 0.2800340061180755,
+              "brier_engine": 0.030052283319522744,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.06489436157438129,
+              "horizon_h": 48,
+              "incident_id": "E2024-135332",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.1281332180702359,
+              "ap_baseline_b_blurred": 0.0851073227459748,
+              "ap_engine": 0.0632388564958546,
+              "brier_baseline_a_blurred": 0.017386209355437457,
+              "brier_baseline_b_blurred": 0.2800340061180755,
+              "brier_engine": 0.030052283319522744
+            },
+            "selected_pass": "N|2024-03-06|D",
+            "target_positive_cells": 1131
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.1281332180702359,
+              "brier": 0.017386209355437457
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.0851073227459748,
+              "brier": 0.2800340061180755
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 1135.6737471327397,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              216.632183908046,
+              156.57471264367817
+            ],
+            "positive_cells_with_any_simulated_member_burned": 1051,
+            "positive_mask_cells": 1131,
+            "probability_centroid_row_col": [
+              254.32772824418868,
+              160.0542086812977
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.05738468925649405
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.0632388564958546,
+            "brier": 0.030052283319522744
+          },
+          "horizon_h": 48,
+          "incident_id": "E2024-135332",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.06489436157438129,
+          "target_positive_cells": 1131,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        }
+      ],
+      "setup_ignition_row_col": [
+        233,
+        137
+      ],
+      "source_mask_path": "results/resq5/E2024-135332/observed_footprints.npz",
+      "source_mask_sha256": "518ae642965671abd6bbff4af72503ef16e0c5732987cb02e5b2ac9a755ea817",
+      "t0_utc": "2024-03-04 19:00:00"
+    },
+    {
+      "dmm_onset_prediction": {
+        "meaning": "no DMM prediction or DMM-to-Cell2Fire handoff is present in this simulation setup",
+        "status": "unavailable"
+      },
+      "domain": {
+        "cells_per_side": 388,
+        "cluster_bbox_km": [
+          5.62,
+          3.75
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 150544,
+        "north_m": 2145945,
+        "side_km": 11.64,
+        "west_m": 800618
+      },
+      "ensemble_transitions": [
+        {
+          "from_horizon_h": 6,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.03684210526315789,
+            0.3100686498855835,
+            0.49382716049382713
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            12,
+            19.0,
+            430
+          ],
+          "to_horizon_h": 12
+        },
+        {
+          "from_horizon_h": 12,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.08232445520581114,
+            0.25675675675675674,
+            0.5109254498714653
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            50,
+            78.5,
+            795
+          ],
+          "to_horizon_h": 24
+        },
+        {
+          "from_horizon_h": 24,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.04394012554321584,
+            0.11244828113850429,
+            0.3082173082173082
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            410,
+            1061.0,
+            3564
+          ],
+          "to_horizon_h": 48
+        }
+      ],
+      "first_detection_utc": "2023-03-10 19:51:00",
+      "incident_id": "E2023-084925",
+      "prescribed_setup_ignition_lat_lon": [
+        19.32648,
+        83.93716
+      ],
+      "prescribed_setup_ignition_utm_m": [
+        808634.2,
+        2139572.1
+      ],
+      "scored_horizons": [
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 12.85,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 24,
+            "hours_before_forecast": 11.15,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2023-084925",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2023-03-10T19:51:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.8665634316268137,
+              "ap_baseline_b_blurred": 0.8874930223743323,
+              "ap_engine": 0.2613698766666437,
+              "brier_baseline_a_blurred": 0.010587223231784485,
+              "brier_baseline_b_blurred": 0.06348364242976098,
+              "brier_engine": 0.000931209849316848,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.6261231457076886,
+              "horizon_h": 24,
+              "incident_id": "E2023-084925",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.8665634316268137,
+              "ap_baseline_b_blurred": 0.8874930223743323,
+              "ap_engine": 0.2613698766666437,
+              "brier_baseline_a_blurred": 0.010587223231784485,
+              "brier_baseline_b_blurred": 0.06348364242976098,
+              "brier_engine": 0.000931209849316848
+            },
+            "selected_pass": "N20|2023-03-10|N",
+            "target_positive_cells": 144
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.8665634316268137,
+              "brier": 0.010587223231784485
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.8874930223743323,
+              "brier": 0.06348364242976098
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 263.3217003829587,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              212.5,
+              268.5
+            ],
+            "positive_cells_with_any_simulated_member_burned": 144,
+            "positive_mask_cells": 144,
+            "probability_centroid_row_col": [
+              217.94450379533313,
+              275.38476244025856
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.09721675569299972
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.2613698766666437,
+            "brier": 0.000931209849316848
+          },
+          "horizon_h": 24,
+          "incident_id": "E2023-084925",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.6261231457076886,
+          "target_positive_cells": 144,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        },
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 37.4,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 48,
+            "hours_before_forecast": 10.600000000000001,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2023-084925",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2023-03-11T20:24:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.6003061545521688,
+              "ap_baseline_b_blurred": 0.5272602790106204,
+              "ap_engine": 0.42998216100353215,
+              "brier_baseline_a_blurred": 0.01188223239864542,
+              "brier_baseline_b_blurred": 0.19672226970995024,
+              "brier_engine": 0.011241702315159245,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.1703239935486367,
+              "horizon_h": 48,
+              "incident_id": "E2023-084925",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.6003061545521688,
+              "ap_baseline_b_blurred": 0.5272602790106204,
+              "ap_engine": 0.42998216100353215,
+              "brier_baseline_a_blurred": 0.01188223239864542,
+              "brier_baseline_b_blurred": 0.19672226970995024,
+              "brier_engine": 0.011241702315159245
+            },
+            "selected_pass": "N|2023-03-11|N",
+            "target_positive_cells": 2343
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.6003061545521688,
+              "brier": 0.01188223239864542
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.5272602790106204,
+              "brier": 0.19672226970995024
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 553.0309262527992,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              209.2296201451131,
+              257.60051216389246
+            ],
+            "positive_cells_with_any_simulated_member_burned": 1961,
+            "positive_mask_cells": 2343,
+            "probability_centroid_row_col": [
+              217.55869134489927,
+              274.04594790508867
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.3861209104528101
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.42998216100353215,
+            "brier": 0.011241702315159245
+          },
+          "horizon_h": 48,
+          "incident_id": "E2023-084925",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.1703239935486367,
+          "target_positive_cells": 2343,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        }
+      ],
+      "setup_ignition_row_col": [
+        212,
+        267
+      ],
+      "source_mask_path": "results/resq5/E2023-084925/observed_footprints.npz",
+      "source_mask_sha256": "ebb5d741ee72e0e75bbfacc376fcadf5fc3b77e0cbd844dfa9d4df85adcd6545",
+      "t0_utc": "2023-03-10 07:00:00"
+    },
+    {
+      "dmm_onset_prediction": {
+        "meaning": "no DMM prediction or DMM-to-Cell2Fire handoff is present in this simulation setup",
+        "status": "unavailable"
+      },
+      "domain": {
+        "cells_per_side": 338,
+        "cluster_bbox_km": [
+          3.0,
+          4.12
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 114244,
+        "north_m": 2119508,
+        "side_km": 10.14,
+        "west_m": 483555
+      },
+      "ensemble_transitions": [
+        {
+          "from_horizon_h": 6,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.16470588235294117,
+            0.19648018166804293,
+            0.23636363636363636
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            42,
+            80.0,
+            146
+          ],
+          "to_horizon_h": 12
+        },
+        {
+          "from_horizon_h": 12,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.24380165289256198,
+            0.26193215869591274,
+            0.2737752161383285
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            158,
+            276.0,
+            487
+          ],
+          "to_horizon_h": 24
+        },
+        {
+          "from_horizon_h": 24,
+          "interpretation": "saved-frame descriptive transition; not an accuracy score",
+          "median_frame_iou_min_max": [
+            0.27,
+            0.2787187474687475,
+            0.287223823246878
+          ],
+          "members": 60,
+          "members_with_burned_cells_lost": 0,
+          "new_cells_min_median_max": [
+            554,
+            962.0,
+            1704
+          ],
+          "to_horizon_h": 48
+        }
+      ],
+      "first_detection_utc": "2024-04-12 19:46:00",
+      "incident_id": "E2024-155286",
+      "prescribed_setup_ignition_lat_lon": [
+        19.12243,
+        80.89992
+      ],
+      "prescribed_setup_ignition_utm_m": [
+        489474.3,
+        2114377.2
+      ],
+      "scored_horizons": [
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 12.766666666666667,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 24,
+            "hours_before_forecast": 11.233333333333333,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2024-155286",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-04-12T19:46:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.49204032312109147,
+              "ap_baseline_b_blurred": 0.4848093086824698,
+              "ap_engine": 0.3663814244064937,
+              "brier_baseline_a_blurred": 0.01360894519855868,
+              "brier_baseline_b_blurred": 0.12053192015585909,
+              "brier_engine": 0.00306699549502235,
+              "call": "LOSS",
+              "delta_vs_best_fair_baseline": -0.1256588987145978,
+              "horizon_h": 24,
+              "incident_id": "E2024-155286",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.49204032312109147,
+              "ap_baseline_b_blurred": 0.4848093086824698,
+              "ap_engine": 0.3663814244064937,
+              "brier_baseline_a_blurred": 0.01360894519855868,
+              "brier_baseline_b_blurred": 0.12053192015585909,
+              "brier_engine": 0.00306699549502235
+            },
+            "selected_pass": "N20|2024-04-12|N",
+            "target_positive_cells": 482
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.49204032312109147,
+              "brier": 0.01360894519855868
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.4848093086824698,
+              "brier": 0.12053192015585909
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 247.2166695180174,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              159.7344398340249,
+              199.5
+            ],
+            "positive_cells_with_any_simulated_member_burned": 472,
+            "positive_mask_cells": 482,
+            "probability_centroid_row_col": [
+              165.35790506562003,
+              193.47642994398788
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.3166114722596999
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.3663814244064937,
+            "brier": 0.00306699549502235
+          },
+          "horizon_h": 24,
+          "incident_id": "E2024-155286",
+          "observation_available": true,
+          "recomputed_call": "LOSS",
+          "recomputed_delta_vs_best_baseline": -0.1256588987145978,
+          "target_positive_cells": 482,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        },
+        {
+          "archived_official_cell": {
+            "absolute_differences": {
+              "ap_baseline_a_blurred": 0.0,
+              "ap_baseline_b_blurred": 0.0,
+              "ap_engine": 0.0,
+              "brier_baseline_a_blurred": 0.0,
+              "brier_baseline_b_blurred": 0.0,
+              "brier_engine": 0.0
+            },
+            "actual_elapsed_hours": 12.766666666666667,
+            "exact_prediction_frame_verified": true,
+            "horizon_h": 48,
+            "hours_before_forecast": 35.233333333333334,
+            "ignition_cell_inside_positive_mask": true,
+            "incident_id": "E2024-155286",
+            "max_absolute_difference": 0.0,
+            "member_count": 60,
+            "member_hashes_verified": true,
+            "observation_timestamp_utc": "2024-04-12T19:46:00Z",
+            "official_cell": {
+              "ap_baseline_a_blurred": 0.49204032312109147,
+              "ap_baseline_b_blurred": 0.48280780576041876,
+              "ap_engine": 0.46527200450224626,
+              "brier_baseline_a_blurred": 0.01360894519855868,
+              "brier_baseline_b_blurred": 0.2905403412962166,
+              "brier_engine": 0.005357830608171983,
+              "call": "TIE",
+              "delta_vs_best_fair_baseline": -0.02676831861884521,
+              "horizon_h": 48,
+              "incident_id": "E2024-155286",
+              "scorable": true
+            },
+            "recomputed_cell": {
+              "ap_baseline_a_blurred": 0.49204032312109147,
+              "ap_baseline_b_blurred": 0.48280780576041876,
+              "ap_engine": 0.46527200450224626,
+              "brier_baseline_a_blurred": 0.01360894519855868,
+              "brier_baseline_b_blurred": 0.2905403412962166,
+              "brier_engine": 0.005357830608171983
+            },
+            "selected_pass": "N20|2024-04-12|N",
+            "target_positive_cells": 482
+          },
+          "baseline_scores_recomputed": {
+            "baseline_a_ap_brier": {
+              "ap": 0.49204032312109147,
+              "brier": 0.01360894519855868
+            },
+            "baseline_b_ap_brier": {
+              "ap": 0.48280780576041876,
+              "brier": 0.2905403412962166
+            },
+            "jitter_members": 60,
+            "jitter_radius_m": 500.0,
+            "wind_source": "existing cached development ERA5-Land wind; scorer helper only; no network fallback"
+          },
+          "descriptive_spatial": {
+            "centroid_distance_m": 222.95390268542744,
+            "interpretation": "descriptive overlap only; target is active detections, not perimeter; outside-mask cells are not validated negatives",
+            "obs_positive_centroid_row_col": [
+              159.7344398340249,
+              199.5
+            ],
+            "positive_cells_with_any_simulated_member_burned": 482,
+            "positive_mask_cells": 482,
+            "probability_centroid_row_col": [
+              162.65873559283352,
+              192.66771653543304
+            ],
+            "probability_mass_inside_positive_cells_fraction": 0.23595800524934385
+          },
+          "engine_score_abs_difference_from_frozen_record": {
+            "ap_baseline_a_blurred": 0.0,
+            "ap_baseline_b_blurred": 0.0,
+            "ap_engine": 0.0,
+            "brier_baseline_a_blurred": 0.0,
+            "brier_baseline_b_blurred": 0.0,
+            "brier_engine": 0.0
+          },
+          "engine_score_matches_frozen_record_1e_12": true,
+          "engine_score_recomputed": {
+            "ap": 0.46527200450224626,
+            "brier": 0.005357830608171983
+          },
+          "horizon_h": 48,
+          "incident_id": "E2024-155286",
+          "observation_available": true,
+          "recomputed_call": "TIE",
+          "recomputed_delta_vs_best_baseline": -0.02676831861884521,
+          "target_positive_cells": 482,
+          "target_semantics": "cumulative VIIRS n/h active-fire detection mask; no coverage/unknown mask"
+        }
+      ],
+      "setup_ignition_row_col": [
+        171,
+        197
+      ],
+      "source_mask_path": "results/resq5/E2024-155286/observed_footprints.npz",
+      "source_mask_sha256": "01ef9ee32b9369846ba928e340c93e772c2a8c40c52d818ce47501cc41ceb494",
+      "t0_utc": "2024-04-12 07:00:00"
+    }
+  ],
+  "scope": "four development cases only; descriptive; no held-out inputs",
+  "scoring_reproduction": {
+    "all_six_metric_values_per_cell_matching_frozen_values_1e_12": 8,
+    "direct_scoring_helpers": "rescore_fair.score and rescore_fair.blurred_baseline; the latter used already-cached ERA5-Land weather only; no network acquisition",
+    "engine_and_baseline_ap_brier_recomputed_from_saved_grids_and_cached_weather": true,
+    "full_cli_rescore_status": "BLOCKED: current rescore_fair.py requires ignition_jitter_radius_m in each member manifest; archived horizon-aligned manifests omit it. The CLI was invoked once and raised ValueError before writing output.",
+    "official_call_tally_recomputed": {
+      "losses": 7,
+      "ties": 1,
+      "wins": 0
+    },
+    "scorable_cells_recomputed": 8
+  }
+}

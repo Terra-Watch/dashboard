@@ -9,11 +9,11 @@ export class RouteErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State { return { error }; }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('RESQ route failed', error, info.componentStack);
+    console.error('TerraWatch route failed', error, info.componentStack);
   }
 
   render() {
     if (!this.state.error) return this.props.children;
-    return <section className="shell-page" role="alert"><span className="eyebrow">Page error</span><h1>This page could not be displayed.</h1><p className="muted">The rest of RESQ is still available. Return to the map and try again.</p><button onClick={() => { this.setState({ error: null }); history.pushState({}, '', '/app/map'); window.dispatchEvent(new PopStateEvent('popstate')); }}>Return to map</button><details><summary>Technical detail</summary><pre>{this.state.error.message}</pre></details></section>;
+    return <section className="shell-page" role="alert"><span className="eyebrow">Page unavailable</span><h1>This page could not be displayed.</h1><p className="muted">Something went wrong. The rest of TerraWatch may still be available. Return to the map or try again later.</p><button onClick={() => { this.setState({ error: null }); history.pushState({}, '', '/app/map'); window.dispatchEvent(new PopStateEvent('popstate')); }}>Return to map</button></section>;
   }
 }

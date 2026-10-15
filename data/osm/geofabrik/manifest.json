@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-10-14T18:18:56Z",
+  "source": "Official Geofabrik OpenStreetMap regional extracts",
+  "license": "ODbL 1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "download_method": "aria2c resumable segmented HTTP transfer; max 2 active regional downloads",
+  "remote_metadata_check": {
+    "checked_at": "2026-10-14T17:08:30+00:00",
+    "result": "unchanged",
+    "notes": "Southern, Eastern, and Central HEAD sizes, ETags, Last-Modified values, byte-range support, and published MD5 files matched the existing manifest metadata."
+  },
+  "throughput_test": {
+    "tested_at": "2026-10-14T17:08:30+00:00",
+    "region": "Central Zone",
+    "request": "HTTP byte range 0-1048575 against the official latest PBF",
+    "timeout_seconds": 30,
+    "result": "timed_out",
+    "diagnostic": "The bounded range request produced no completed HTTP/status or byte-count result within 30 seconds; the test process was then stopped cleanly.",
+    "decision": "Do not resume large transfers under current server conditions."
+  },
+  "latest_attempt": {
+    "attempted_at": "2026-10-14T18:18:56Z",
+    "region": "Southern Zone",
+    "tool": "aria2c",
+    "resume": true,
+    "connections": 1,
+    "active_seconds": "approximately 2 minutes",
+    "observed_rate": "92 KiB/s average at clean stop; instantaneous range approximately 55–286 KiB/s",
+    "observed_progress": "Resumed from the existing 6176768-byte partial file and reached 20811776 bytes",
+    "estimated_remaining_at_stop": "approximately 1h40m–3h at the observed rate",
+    "result": "stopped_cleanly_due_to_session_limit_and_throttling",
+    "retries_used": 0,
+    "process_left_running": false
+  },
+  "entries": [
+    {
+      "region": "Southern Zone",
+      "source_url": "https://download.geofabrik.de/asia/india/southern-zone-latest.osm.pbf",
+      "published_source_timestamp": "2026-10-13T23:05:24+00:00",
+      "expected_size_bytes": 558191437,
+      "published_md5": "cd4deedec8d7d607668849445d5fbbc5",
+      "file_path": "data/osm/geofabrik/southern-zone-latest.osm.pbf",
+      "retrieval_timestamp": "2026-10-14T19:22:03.862321+00:00",
+      "actual_size_bytes": 558191437,
+      "calculated_md5": "cd4deedec8d7d607668849445d5fbbc5",
+      "calculated_sha256": "96e748cee47e5ec00beb9823b8260fc2f40dd3eecb18c5acd86e7163cc3880d5",
+      "status": "validated",
+      "pbf_validation": "passed",
+      "warnings": []
+    },
+    {
+      "region": "Western Zone",
+      "source_url": "https://download.geofabrik.de/asia/india/western-zone-latest.osm.pbf",
+      "published_source_timestamp": "2026-10-13T23:05:38+00:00",
+      "expected_size_bytes": 221215934,
+      "published_md5": "a6fba2e9da0b2b85928aa9060b6720d0",
+      "file_path": "data/osm/geofabrik/western-zone-latest.osm.pbf",
+      "retrieval_timestamp": "2026-10-14T17:02:44+00:00",
+      "actual_size_bytes": 221215934,
+      "calculated_md5": "a6fba2e9da0b2b85928aa9060b6720d0",
+      "calculated_sha256": "d616089efcf2102eb5303a10443a14a3abe852c2fc186f05a3488bebe15fcaf6",
+      "status": "validated",
+      "pbf_validation": "passed",
+      "validation_command": "osmium fileinfo -e data/osm/geofabrik/western-zone-latest.osm.pbf",
+      "validation_summary": "Format PBF; readable; 34377674 nodes, 3476900 ways, 23066 relations; source timestamp 2026-10-13T20:21:31Z",
+      "warnings": []
+    },
+    {
+      "region": "Eastern Zone",
+      "source_url": "https://download.geofabrik.de/asia/india/eastern-zone-latest.osm.pbf",
+      "published_source_timestamp": "2026-10-13T23:04:43+00:00",
+      "expected_size_bytes": 247272544,
+      "published_md5": "190724e4b21ed59e8d6334bd125684fa",
+      "file_path": "data/osm/geofabrik/eastern-zone-latest.osm.pbf",
+      "retrieval_timestamp": "2026-10-14T17:49:58Z",
+      "actual_size_bytes": 247272544,
+      "calculated_md5": "190724e4b21ed59e8d6334bd125684fa",
+      "calculated_sha256": "2134a2604524714198ef3963a2ef023245b6660a92f883646e2c46c65b971dfd",
+      "status": "validated",
+      "pbf_validation": "passed",
+      "validation_command": "osmium fileinfo -e data/osm/geofabrik/eastern-zone-latest.osm.pbf",
+      "validation_summary": "Format PBF; readable; 40598758 nodes, 3879381 ways, 11649 relations; source timestamp 2026-10-13T20:21:31Z",
+      "warnings": []
+    },
+    {
+      "region": "Central Zone",
+      "source_url": "https://download.geofabrik.de/asia/india/central-zone-latest.osm.pbf",
+      "published_source_timestamp": "2026-10-13T23:05:21+00:00",
+      "expected_size_bytes": 351766093,
+      "published_md5": "0c5030767774dc49bad2bf5458035912",
+      "file_path": "data/osm/geofabrik/central-zone-latest.osm.pbf",
+      "retrieval_timestamp": "2026-10-14T18:16:03Z",
+      "actual_size_bytes": 351766093,
+      "calculated_md5": "0c5030767774dc49bad2bf5458035912",
+      "calculated_sha256": "4e277df297f3a488e45b27ae3833d834628e7ff526efd2cdf34a87884a92ee2f",
+      "status": "validated",
+      "pbf_validation": "passed",
+      "validation_command": "osmium fileinfo -e data/osm/geofabrik/central-zone-latest.osm.pbf",
+      "validation_summary": "Format PBF; readable; 58506476 nodes, 5803931 ways, 108452 relations; source timestamp 2026-10-13T20:21:31Z",
+      "warnings": []
+    }
+  ]
+}

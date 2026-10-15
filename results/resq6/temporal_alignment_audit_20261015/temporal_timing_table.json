@@ -1,0 +1,524 @@
+{
+  "timezone_assumption": "Acquisition timestamps are interpreted as UTC as labelled in setup/protocol; source acq_time is HHMM and has minute precision.",
+  "selection_rule": "latest pass with >=1 n/h detection and elapsed_hours_since_t0 <= horizon; code uses setup elapsed rounded to 0.01 h, raw pass timestamps independently verified here.",
+  "rows": [
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N|2024-02-16|N",
+      "timestamp_utc": "2024-02-16T20:11:00Z",
+      "raw_detection_time_min_utc": "2024-02-16T20:11:00Z",
+      "raw_detection_time_max_utc": "2024-02-16T20:11:00Z",
+      "elapsed_hours_exact": 12.183333333333334,
+      "elapsed_hours_setup_rounded": 12.18,
+      "detections_all_confidence": 2,
+      "detections_nh": 2,
+      "confidence_counts": {
+        "n": 2
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N20|2024-02-16|N",
+      "timestamp_utc": "2024-02-16T21:00:00Z",
+      "raw_detection_time_min_utc": "2024-02-16T21:00:00Z",
+      "raw_detection_time_max_utc": "2024-02-16T21:00:00Z",
+      "elapsed_hours_exact": 13.0,
+      "elapsed_hours_setup_rounded": 13.0,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N|2024-02-17|D",
+      "timestamp_utc": "2024-02-17T07:22:00Z",
+      "raw_detection_time_min_utc": "2024-02-17T07:22:00Z",
+      "raw_detection_time_max_utc": "2024-02-17T07:22:00Z",
+      "elapsed_hours_exact": 23.366666666666667,
+      "elapsed_hours_setup_rounded": 23.37,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": true,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N20|2024-02-17|D",
+      "timestamp_utc": "2024-02-17T08:12:00Z",
+      "raw_detection_time_min_utc": "2024-02-17T08:12:00Z",
+      "raw_detection_time_max_utc": "2024-02-17T08:12:00Z",
+      "elapsed_hours_exact": 24.2,
+      "elapsed_hours_setup_rounded": 24.2,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": true
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N20|2024-02-18|D",
+      "timestamp_utc": "2024-02-18T07:53:00Z",
+      "raw_detection_time_min_utc": "2024-02-18T07:53:00Z",
+      "raw_detection_time_max_utc": "2024-02-18T07:53:00Z",
+      "elapsed_hours_exact": 47.88333333333333,
+      "elapsed_hours_setup_rounded": 47.88,
+      "detections_all_confidence": 1,
+      "detections_nh": 0,
+      "confidence_counts": {
+        "l": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N20|2024-02-18|N",
+      "timestamp_utc": "2024-02-18T20:23:00Z",
+      "raw_detection_time_min_utc": "2024-02-18T20:23:00Z",
+      "raw_detection_time_max_utc": "2024-02-18T20:23:00Z",
+      "elapsed_hours_exact": 60.38333333333333,
+      "elapsed_hours_setup_rounded": 60.38,
+      "detections_all_confidence": 5,
+      "detections_nh": 5,
+      "confidence_counts": {
+        "n": 5
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-131853",
+      "t0_utc": "2024-02-16T08:00:00Z",
+      "pass_id": "N20|2024-02-19|D",
+      "timestamp_utc": "2024-02-19T07:34:00Z",
+      "raw_detection_time_min_utc": "2024-02-19T07:34:00Z",
+      "raw_detection_time_max_utc": "2024-02-19T07:34:00Z",
+      "elapsed_hours_exact": 71.56666666666666,
+      "elapsed_hours_setup_rounded": 71.57,
+      "detections_all_confidence": 5,
+      "detections_nh": 4,
+      "confidence_counts": {
+        "n": 4,
+        "l": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N20|2024-03-05|D",
+      "timestamp_utc": "2024-03-05T07:53:00Z",
+      "raw_detection_time_min_utc": "2024-03-05T07:53:00Z",
+      "raw_detection_time_max_utc": "2024-03-05T07:53:00Z",
+      "elapsed_hours_exact": 12.883333333333333,
+      "elapsed_hours_setup_rounded": 12.88,
+      "detections_all_confidence": 2,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "l": 1,
+        "n": 1
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N|2024-03-05|D",
+      "timestamp_utc": "2024-03-05T08:43:00Z",
+      "raw_detection_time_min_utc": "2024-03-05T08:43:00Z",
+      "raw_detection_time_max_utc": "2024-03-05T08:43:00Z",
+      "elapsed_hours_exact": 13.716666666666667,
+      "elapsed_hours_setup_rounded": 13.72,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": true,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N20|2024-03-05|N",
+      "timestamp_utc": "2024-03-05T20:23:00Z",
+      "raw_detection_time_min_utc": "2024-03-05T20:23:00Z",
+      "raw_detection_time_max_utc": "2024-03-05T20:23:00Z",
+      "elapsed_hours_exact": 25.383333333333333,
+      "elapsed_hours_setup_rounded": 25.38,
+      "detections_all_confidence": 2,
+      "detections_nh": 2,
+      "confidence_counts": {
+        "n": 2
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N20|2024-03-06|D",
+      "timestamp_utc": "2024-03-06T07:34:00Z",
+      "raw_detection_time_min_utc": "2024-03-06T07:34:00Z",
+      "raw_detection_time_max_utc": "2024-03-06T07:34:00Z",
+      "elapsed_hours_exact": 36.56666666666667,
+      "elapsed_hours_setup_rounded": 36.57,
+      "detections_all_confidence": 3,
+      "detections_nh": 2,
+      "confidence_counts": {
+        "n": 2,
+        "l": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N|2024-03-06|D",
+      "timestamp_utc": "2024-03-06T08:24:00Z",
+      "raw_detection_time_min_utc": "2024-03-06T08:24:00Z",
+      "raw_detection_time_max_utc": "2024-03-06T08:24:00Z",
+      "elapsed_hours_exact": 37.4,
+      "elapsed_hours_setup_rounded": 37.4,
+      "detections_all_confidence": 2,
+      "detections_nh": 2,
+      "confidence_counts": {
+        "n": 2
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": true
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N20|2024-03-06|N",
+      "timestamp_utc": "2024-03-06T20:04:00Z",
+      "raw_detection_time_min_utc": "2024-03-06T20:04:00Z",
+      "raw_detection_time_max_utc": "2024-03-06T20:04:00Z",
+      "elapsed_hours_exact": 49.06666666666667,
+      "elapsed_hours_setup_rounded": 49.07,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N|2024-03-06|N",
+      "timestamp_utc": "2024-03-06T20:54:00Z",
+      "raw_detection_time_min_utc": "2024-03-06T20:54:00Z",
+      "raw_detection_time_max_utc": "2024-03-06T20:54:00Z",
+      "elapsed_hours_exact": 49.9,
+      "elapsed_hours_setup_rounded": 49.9,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-135332",
+      "t0_utc": "2024-03-04T19:00:00Z",
+      "pass_id": "N|2024-03-07|D",
+      "timestamp_utc": "2024-03-07T08:05:00Z",
+      "raw_detection_time_min_utc": "2024-03-07T08:05:00Z",
+      "raw_detection_time_max_utc": "2024-03-07T08:05:00Z",
+      "elapsed_hours_exact": 61.083333333333336,
+      "elapsed_hours_setup_rounded": 61.08,
+      "detections_all_confidence": 1,
+      "detections_nh": 0,
+      "confidence_counts": {
+        "l": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N20|2023-03-10|N",
+      "timestamp_utc": "2023-03-10T19:51:00Z",
+      "raw_detection_time_min_utc": "2023-03-10T19:51:00Z",
+      "raw_detection_time_max_utc": "2023-03-10T19:51:00Z",
+      "elapsed_hours_exact": 12.85,
+      "elapsed_hours_setup_rounded": 12.85,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": true,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N20|2023-03-11|D",
+      "timestamp_utc": "2023-03-11T07:02:00Z",
+      "raw_detection_time_min_utc": "2023-03-11T07:02:00Z",
+      "raw_detection_time_max_utc": "2023-03-11T07:02:00Z",
+      "elapsed_hours_exact": 24.033333333333335,
+      "elapsed_hours_setup_rounded": 24.03,
+      "detections_all_confidence": 4,
+      "detections_nh": 4,
+      "confidence_counts": {
+        "n": 4
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N|2023-03-11|D",
+      "timestamp_utc": "2023-03-11T07:54:00Z",
+      "raw_detection_time_min_utc": "2023-03-11T07:54:00Z",
+      "raw_detection_time_max_utc": "2023-03-11T07:54:00Z",
+      "elapsed_hours_exact": 24.9,
+      "elapsed_hours_setup_rounded": 24.9,
+      "detections_all_confidence": 8,
+      "detections_nh": 7,
+      "confidence_counts": {
+        "n": 7,
+        "l": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N20|2023-03-11|N",
+      "timestamp_utc": "2023-03-11T19:32:00Z",
+      "raw_detection_time_min_utc": "2023-03-11T19:32:00Z",
+      "raw_detection_time_max_utc": "2023-03-11T19:32:00Z",
+      "elapsed_hours_exact": 36.53333333333333,
+      "elapsed_hours_setup_rounded": 36.53,
+      "detections_all_confidence": 7,
+      "detections_nh": 7,
+      "confidence_counts": {
+        "n": 7
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N|2023-03-11|N",
+      "timestamp_utc": "2023-03-11T20:24:00Z",
+      "raw_detection_time_min_utc": "2023-03-11T20:24:00Z",
+      "raw_detection_time_max_utc": "2023-03-11T20:24:00Z",
+      "elapsed_hours_exact": 37.4,
+      "elapsed_hours_setup_rounded": 37.4,
+      "detections_all_confidence": 3,
+      "detections_nh": 3,
+      "confidence_counts": {
+        "n": 3
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": true,
+      "selected_for_24h": false,
+      "selected_for_48h": true
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N|2023-03-12|D",
+      "timestamp_utc": "2023-03-12T07:35:00Z",
+      "raw_detection_time_min_utc": "2023-03-12T07:35:00Z",
+      "raw_detection_time_max_utc": "2023-03-12T07:35:00Z",
+      "elapsed_hours_exact": 48.583333333333336,
+      "elapsed_hours_setup_rounded": 48.58,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N|2023-03-12|N",
+      "timestamp_utc": "2023-03-12T20:05:00Z",
+      "raw_detection_time_min_utc": "2023-03-12T20:05:00Z",
+      "raw_detection_time_max_utc": "2023-03-12T20:05:00Z",
+      "elapsed_hours_exact": 61.083333333333336,
+      "elapsed_hours_setup_rounded": 61.08,
+      "detections_all_confidence": 8,
+      "detections_nh": 8,
+      "confidence_counts": {
+        "n": 8
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2023-084925",
+      "t0_utc": "2023-03-10T07:00:00Z",
+      "pass_id": "N20|2023-03-12|N",
+      "timestamp_utc": "2023-03-12T20:54:00Z",
+      "raw_detection_time_min_utc": "2023-03-12T20:54:00Z",
+      "raw_detection_time_max_utc": "2023-03-12T20:54:00Z",
+      "elapsed_hours_exact": 61.9,
+      "elapsed_hours_setup_rounded": 61.9,
+      "detections_all_confidence": 1,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-155286",
+      "t0_utc": "2024-04-12T07:00:00Z",
+      "pass_id": "N20|2024-04-12|N",
+      "timestamp_utc": "2024-04-12T19:46:00Z",
+      "raw_detection_time_min_utc": "2024-04-12T19:46:00Z",
+      "raw_detection_time_max_utc": "2024-04-12T19:46:00Z",
+      "elapsed_hours_exact": 12.766666666666667,
+      "elapsed_hours_setup_rounded": 12.77,
+      "detections_all_confidence": 3,
+      "detections_nh": 3,
+      "confidence_counts": {
+        "n": 3
+      },
+      "eligible_at_24h": true,
+      "eligible_at_48h": true,
+      "selected_for_24h": true,
+      "selected_for_48h": true
+    },
+    {
+      "incident_id": "E2024-155286",
+      "t0_utc": "2024-04-12T07:00:00Z",
+      "pass_id": "N|2024-04-14|D",
+      "timestamp_utc": "2024-04-14T07:53:00Z",
+      "raw_detection_time_min_utc": "2024-04-14T07:53:00Z",
+      "raw_detection_time_max_utc": "2024-04-14T07:53:00Z",
+      "elapsed_hours_exact": 48.88333333333333,
+      "elapsed_hours_setup_rounded": 48.88,
+      "detections_all_confidence": 3,
+      "detections_nh": 1,
+      "confidence_counts": {
+        "l": 2,
+        "n": 1
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-155286",
+      "t0_utc": "2024-04-12T07:00:00Z",
+      "pass_id": "N|2024-04-14|N",
+      "timestamp_utc": "2024-04-14T20:23:00Z",
+      "raw_detection_time_min_utc": "2024-04-14T20:23:00Z",
+      "raw_detection_time_max_utc": "2024-04-14T20:23:00Z",
+      "elapsed_hours_exact": 61.38333333333333,
+      "elapsed_hours_setup_rounded": 61.38,
+      "detections_all_confidence": 6,
+      "detections_nh": 6,
+      "confidence_counts": {
+        "n": 6
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    },
+    {
+      "incident_id": "E2024-155286",
+      "t0_utc": "2024-04-12T07:00:00Z",
+      "pass_id": "N20|2024-04-14|N",
+      "timestamp_utc": "2024-04-14T20:48:00Z",
+      "raw_detection_time_min_utc": "2024-04-14T20:48:00Z",
+      "raw_detection_time_max_utc": "2024-04-14T20:48:00Z",
+      "elapsed_hours_exact": 61.8,
+      "elapsed_hours_setup_rounded": 61.8,
+      "detections_all_confidence": 4,
+      "detections_nh": 4,
+      "confidence_counts": {
+        "n": 4
+      },
+      "eligible_at_24h": false,
+      "eligible_at_48h": false,
+      "selected_for_24h": false,
+      "selected_for_48h": false
+    }
+  ]
+}

@@ -1,0 +1,522 @@
+{
+  "audit_timestamp_utc": "2026-10-14T22:22:59Z",
+  "worktree": "/Users/kireeti/Desktop/Projects/RESQ/website/.claude/worktrees/agent-a8baea5d7612360f5",
+  "git_revision": "4650cc599d4476bdc29cedcc1d05b7ab3cf28334",
+  "branch": "resq6/simulation-engine",
+  "preexisting_git_status_short": [
+    " M docs/simulation/INTEGRATION_CONTRACTS.md",
+    " M docs/simulation/PROGRESS.md",
+    " M docs/simulation/RESULTS_DEV.md",
+    " M scripts/resq6/rescore_fair.py",
+    " M scripts/resq6/run_dev.py",
+    "?? backend/tests/test_run_dev_artifacts.py",
+    "?? backend/tests/test_spread_integration_readiness.py",
+    "?? backend/tests/test_time_wind_baselines.py",
+    "?? results/resq6/dev_baseline_timewind_20261015_final/",
+    "?? results/resq6/dev_baseline_timewind_20261015_verified/",
+    "?? results/resq6/dev_member_grids_corrected_20261015/",
+    "?? results/resq6/dev_member_grids_horizon_aligned_20261015/",
+    "?? results/resq6/dev_member_grids_recovered_20261015/",
+    "?? results/resq6/dev_member_grids_zero_jitter_20261015/",
+    "?? results/resq6/target_feasibility_20261015/",
+    "?? results/resq6/temporal_alignment_audit_20261015/",
+    "?? results/resq6/wind_direction_cardinal_20261015/",
+    "?? results/resq6/wind_direction_cardinal_20261015_corrected/",
+    "?? results/resq6/wind_direction_cardinal_20261015_final/",
+    "?? results/resq6/wind_direction_cardinal_20261015_verified/",
+    "?? scripts/resq6/score_time_wind_baselines.py",
+    "?? scripts/resq6/time_wind_variants.py",
+    "?? scripts/resq6/validate_wind_direction.py"
+  ],
+  "scope_incident_ids": [
+    "E2024-131853",
+    "E2024-135332",
+    "E2023-084925",
+    "E2024-155286"
+  ],
+  "heldout_data_accessed": false,
+  "network_requests_made": false,
+  "new_data_acquired": false,
+  "simulation_or_model_evaluation_run": false,
+  "labels_or_historical_artifacts_modified": false,
+  "source_code_modified": false,
+  "inventory_artifact_paths": [
+    "results/resq6/target_feasibility_20261015/feasibility_report.md",
+    "results/resq6/target_feasibility_20261015/data_inventory.json",
+    "results/resq6/target_feasibility_20261015/target_feasibility.json",
+    "results/resq6/target_feasibility_20261015/owner_decisions.md"
+  ],
+  "input_hashes": [
+    {
+      "path": "data/resq2/E2023-084925/copernicus_dem_glo30_window.tif",
+      "sha256": "cce1deb1c968d1569be031d5f43145985b66cef918eb754773624de57ba296d1",
+      "bytes": 529503
+    },
+    {
+      "path": "data/resq2/E2023-084925/fetch_report.json",
+      "sha256": "9e54593748ba717dc41e8b3a4ccb5fc55623ebdbf5ceae4d9f38ed35b3c22ba4",
+      "bytes": 4019
+    },
+    {
+      "path": "data/resq2/E2023-084925/input_checks.json",
+      "sha256": "00a217c56693222480da7ad915f9f2d47bf741d0b5d86a247ff251d827d1c8a4",
+      "bytes": 4726
+    },
+    {
+      "path": "data/resq2/E2023-084925/mcd64a1/MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+      "sha256": "8eb481c4f108d92f41a5d4b3219a8f16c346f1ab127630e1436e3a82aabc842d",
+      "bytes": 2159249
+    },
+    {
+      "path": "data/resq2/E2023-084925/mcd64a1_burned_pixels_domain_plus_3km.csv",
+      "sha256": "8294bc1ab1ce74acd2fa0470b8286971c87a188987a204456bd5ff1033f3d9b5",
+      "bytes": 636
+    },
+    {
+      "path": "data/resq2/E2023-084925/viirs_detections.csv",
+      "sha256": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f",
+      "bytes": 11369
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_best_match_sensitivity_not_reanalysis.csv",
+      "sha256": "3d8babf8819bc092674e42423733540186e585c0f15828924e663db2f155c003",
+      "bytes": 4098
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_best_match_sensitivity_not_reanalysis.json",
+      "sha256": "c9faa5220442440daa8d14064d0dc52567c17f8d0fdc50212b6b919510d7e8dd",
+      "bytes": 7167
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5_wind_and_surface.csv",
+      "sha256": "13c76dbfcdfe4d7a8eb0ea6de9191d3945041a8673a746c50253dfe04edef0b5",
+      "bytes": 4595
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5_wind_and_surface.json",
+      "sha256": "b4ea2ffa8e62d99905f6155a52c5d811872b035de9fd92f3746e20b1dbbf9e84",
+      "bytes": 8173
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5land_native_u10_v10_202303.nc",
+      "sha256": "891921b830ac1983b9f00b329a2ddba11a9a51e5b767d693de15ef4b45443f8d",
+      "bytes": 42774
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5land_native_wind.csv",
+      "sha256": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3",
+      "bytes": 11439
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5land_temperature_humidity.csv",
+      "sha256": "c709567db387a7c6ed60b94f8b1e1eab01a2f7544afa5b4a6b0fb233ea076d73",
+      "bytes": 3609
+    },
+    {
+      "path": "data/resq2/E2023-084925/weather_era5land_temperature_humidity.json",
+      "sha256": "ab5a1a16110b156583f488c0d6d73f780aa45c76e473f9d406348b2feb8004b2",
+      "bytes": 6156
+    },
+    {
+      "path": "data/resq2/E2023-084925/worldcover_2021_window.tif",
+      "sha256": "4112fe7116aa7c68c8a3cc302a1f4ee279095bb482763cb9c639e79814589350",
+      "bytes": 116188
+    },
+    {
+      "path": "data/resq2/E2024-131853/copernicus_dem_glo30_window.tif",
+      "sha256": "743cc3b73e5cf14ad181bf05be4e445986176ebab200b37cf42bd52fcd48e809",
+      "bytes": 539659
+    },
+    {
+      "path": "data/resq2/E2024-131853/fetch_report.json",
+      "sha256": "2a33363ec5bc90861d3378e6564dd1b896ca7b4a6c0f19e8cbe4affc681daeb3",
+      "bytes": 4462
+    },
+    {
+      "path": "data/resq2/E2024-131853/input_checks.json",
+      "sha256": "7cc8b59e9cf58e515602af92086ea5f25c56157f24b6065fd2bb2662e30dbba5",
+      "bytes": 4147
+    },
+    {
+      "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+      "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece",
+      "bytes": 1864576
+    },
+    {
+      "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+      "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b",
+      "bytes": 1439093
+    },
+    {
+      "path": "data/resq2/E2024-131853/mcd64a1_burned_pixels_domain_plus_3km.csv",
+      "sha256": "aa682e200a4113cb4fd0fbd6689988df4d99554032170d6b79c6ca45b5c57bc9",
+      "bytes": 982
+    },
+    {
+      "path": "data/resq2/E2024-131853/viirs_detections.csv",
+      "sha256": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb",
+      "bytes": 9357
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_best_match_sensitivity_not_reanalysis.csv",
+      "sha256": "6889aa7684c49d24362d30a7aa4d5639d633cdfe3e24430fdef69449826c9bd6",
+      "bytes": 4116
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_best_match_sensitivity_not_reanalysis.json",
+      "sha256": "8a6b06948332962cbbc50f8163351c2fbe90837d7fd43793f529e9a366ffde24",
+      "bytes": 7185
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5_wind_and_surface.csv",
+      "sha256": "a2450274bd67c1434b25190ff930ec1f4ad6f4fea4ccd1284b9ee6d2495988dd",
+      "bytes": 4609
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5_wind_and_surface.json",
+      "sha256": "390897898d0c153be251c4dc11497ae4ca16224936f65459a3354a121e7cb682",
+      "bytes": 8187
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5land_native_u10_v10_202402.nc",
+      "sha256": "0ef6b67f73805f433e3b895eb66a72d4cd85862d4db575894a6c90b6fdf3ee53",
+      "bytes": 42785
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5land_native_wind.csv",
+      "sha256": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1",
+      "bytes": 11398
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5land_temperature_humidity.csv",
+      "sha256": "14cf6c95c522e74a3428a5f60d561e1ea97c848dbc3b035cc9b223fe3ea8e148",
+      "bytes": 3604
+    },
+    {
+      "path": "data/resq2/E2024-131853/weather_era5land_temperature_humidity.json",
+      "sha256": "50d8370e7e88af5f602ffd8e4602f9ddff2f2af028cf32cbb76b222220230ad5",
+      "bytes": 6151
+    },
+    {
+      "path": "data/resq2/E2024-131853/worldcover_2021_window.tif",
+      "sha256": "b54b8c9fd5c1167509548d45e310a633a3f7f9f1b40177cdfbca72ce81db9dc6",
+      "bytes": 137336
+    },
+    {
+      "path": "data/resq2/E2024-135332/copernicus_dem_glo30_window.tif",
+      "sha256": "300cfa1fb548a02b95a79fb761cbebb5d9cb2fcd74e6b8f95d8b842e0c62720d",
+      "bytes": 374464
+    },
+    {
+      "path": "data/resq2/E2024-135332/fetch_report.json",
+      "sha256": "f5be3be651ed3bc61b20e697e6ac0c767475623e4132dc474f8a55a51a66c4a8",
+      "bytes": 4615
+    },
+    {
+      "path": "data/resq2/E2024-135332/input_checks.json",
+      "sha256": "69e9831b286705c4767006fce4301959bd05d090784df1cdda9d88613472a9e0",
+      "bytes": 4872
+    },
+    {
+      "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+      "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece",
+      "bytes": 1864576
+    },
+    {
+      "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+      "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b",
+      "bytes": 1439093
+    },
+    {
+      "path": "data/resq2/E2024-135332/mcd64a1_burned_pixels_domain_plus_3km.csv",
+      "sha256": "e7cfa1e135ee7d2ffdbdd40ed8f340f2876823617ceb91f0478df359a7e288a6",
+      "bytes": 1390
+    },
+    {
+      "path": "data/resq2/E2024-135332/viirs_detections.csv",
+      "sha256": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d",
+      "bytes": 11645
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_best_match_sensitivity_not_reanalysis.csv",
+      "sha256": "0103d54a23717635000c95955e7dc414c85b485fa223fcec994aa95ab76bf795",
+      "bytes": 4084
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_best_match_sensitivity_not_reanalysis.json",
+      "sha256": "a01bc4d6fcc389e74b6f9ff23f7f099c7b347c52dcd9146874e5d207831d2ca3",
+      "bytes": 7151
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5_wind_and_surface.csv",
+      "sha256": "c2621e9dc8b75ffd9bc179de0250ca25a64678dfe2ff64d348d656165d87684f",
+      "bytes": 4568
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5_wind_and_surface.json",
+      "sha256": "fc2be8248500cef3689e420aaa7fd4d8705ace8f74ce9e3f538f157a4a39df16",
+      "bytes": 8147
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5land_native_u10_v10_202403.nc",
+      "sha256": "86f75d86a758262a1f0cde406c88c2fdecf5e66d69d876f237130fb6118c83ee",
+      "bytes": 42722
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5land_native_wind.csv",
+      "sha256": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461",
+      "bytes": 11430
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5land_temperature_humidity.csv",
+      "sha256": "dd62b698f9fba97238e60782d7068eabae3593ec61db382cd2228db6f15f5004",
+      "bytes": 3588
+    },
+    {
+      "path": "data/resq2/E2024-135332/weather_era5land_temperature_humidity.json",
+      "sha256": "5daf8125e0c38d5a6229cd5a570d690ea540ce338e0999753a68920fd561b0d2",
+      "bytes": 6129
+    },
+    {
+      "path": "data/resq2/E2024-135332/worldcover_2021_window.tif",
+      "sha256": "eef1836764d78aba6fe551265ffca5d3943b5e1622d13924197acc6d9c8b833d",
+      "bytes": 91977
+    },
+    {
+      "path": "data/resq2/E2024-155286/copernicus_dem_glo30_window.tif",
+      "sha256": "617edfc3fd1748f433d7ddbbd65d6d4b95bef76adedd8009b6997c70859b2fa6",
+      "bytes": 367392
+    },
+    {
+      "path": "data/resq2/E2024-155286/fetch_report.json",
+      "sha256": "9708b8c9bd082f7756cbe0983e3355362b85ceceb5995bb1928eeaa9825303c5",
+      "bytes": 4009
+    },
+    {
+      "path": "data/resq2/E2024-155286/input_checks.json",
+      "sha256": "011425b3302d6ae879bc7e12db5224612cc8750e69fb4f6fb9081f66eaa43b3f",
+      "bytes": 3892
+    },
+    {
+      "path": "data/resq2/E2024-155286/mcd64a1/MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+      "sha256": "af9c161e9c6bf0554b8566c596c1ccd8d8ff0ea22264e6b6fe929db4d3bb9fbe",
+      "bytes": 2309415
+    },
+    {
+      "path": "data/resq2/E2024-155286/viirs_detections.csv",
+      "sha256": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92",
+      "bytes": 28032
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_best_match_sensitivity_not_reanalysis.csv",
+      "sha256": "4b6d04e4faddaf2c71087d5a71260820ea2fd41d38ca7541ccfe95af84a56858",
+      "bytes": 4077
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_best_match_sensitivity_not_reanalysis.json",
+      "sha256": "819cfd10afad17efaece3b2a2fcad6a1b9682fd16ab13648f8e348d26c283bd1",
+      "bytes": 7147
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5_wind_and_surface.csv",
+      "sha256": "5c09953e55d93daff4c61880b2e50accc0f4976e463c0260816c13bbd95303b7",
+      "bytes": 4582
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5_wind_and_surface.json",
+      "sha256": "1fa272fb462ac88e60b1914a4b0f721020e5d86b041d13bc97fb930dbe820432",
+      "bytes": 8160
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5land_native_u10_v10_202404.nc",
+      "sha256": "3def026113d35c474a13734fe2661e5b7f2eb14b43844cf10d971999a91541fa",
+      "bytes": 43805
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5land_native_wind.csv",
+      "sha256": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a",
+      "bytes": 11380
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5land_temperature_humidity.csv",
+      "sha256": "8fde99bf780b1d366f079d075a79f203d3b4da3b2a0c2db5faef9dfee77c1a6f",
+      "bytes": 3652
+    },
+    {
+      "path": "data/resq2/E2024-155286/weather_era5land_temperature_humidity.json",
+      "sha256": "b6eefbab051b589d67b6cf046a1255576188fe8ee42e72e5dba409481f764e94",
+      "bytes": 6197
+    },
+    {
+      "path": "data/resq2/E2024-155286/worldcover_2021_window.tif",
+      "sha256": "400a8cccc8fa972b56e6a40d9ac4b776b1deed64d7cac747a8d09b0310a09d2b",
+      "bytes": 60179
+    },
+    {
+      "path": "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif",
+      "sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+      "bytes": 614197
+    },
+    {
+      "path": "data/resq5/E2023-084925/worldcover_2021_domain_window.tif",
+      "sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+      "bytes": 132093
+    },
+    {
+      "path": "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif",
+      "sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+      "bytes": 580598
+    },
+    {
+      "path": "data/resq5/E2024-131853/worldcover_2021_domain_window.tif",
+      "sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+      "bytes": 146292
+    },
+    {
+      "path": "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif",
+      "sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+      "bytes": 475990
+    },
+    {
+      "path": "data/resq5/E2024-135332/worldcover_2021_domain_window.tif",
+      "sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+      "bytes": 121472
+    },
+    {
+      "path": "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif",
+      "sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+      "bytes": 459941
+    },
+    {
+      "path": "data/resq5/E2024-155286/worldcover_2021_domain_window.tif",
+      "sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+      "bytes": 78085
+    },
+    {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+      "bytes": 6422
+    },
+    {
+      "path": "docs/simulation/DECISION_RULE.md",
+      "sha256": "512556cdab356a180826bbd408b1a6cc00a1092b988a7ab8f04bb47ead508955",
+      "bytes": 2684
+    },
+    {
+      "path": "docs/simulation/PROTOCOL.md",
+      "sha256": "98f5d19330812e18be7ef449c70e415b12233389b6956b2ae57129e341cc60e3",
+      "bytes": 15126
+    },
+    {
+      "path": "docs/simulation/RESULTS_DEV.md",
+      "sha256": "8d03d9d81add6518727b302c6afb54e77296aa11dc6db62b7901c65fb2c0111d",
+      "bytes": 28939
+    },
+    {
+      "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/dev_all.json",
+      "sha256": "34fd1e3912a0b48d7394cc3b53ba04d6f43a28de7373a78fa611bb4ec1017398",
+      "bytes": 5985
+    },
+    {
+      "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/fair_rescore.json",
+      "sha256": "3861be1e2cc61f17f70f9dcf26c694386654187a92ef0857a331584919f4ec8d",
+      "bytes": 4655
+    },
+    {
+      "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/recovery_provenance.json",
+      "sha256": "225fbd28859509c98bc33288d2e897893306d1108862a2b98b80aa8532592a88",
+      "bytes": 3660
+    },
+    {
+      "path": "results/resq6/temporal_alignment_audit_20261015/official_score_reproduction.json",
+      "sha256": "523e388fb06a56d776932a889add1af49f35624add0beaeed5023989dcaca5f6",
+      "bytes": 13417
+    },
+    {
+      "path": "results/resq6/temporal_alignment_audit_20261015/provenance_manifest.json",
+      "sha256": "ddb8a9ab62cabda79939553537ce37a3629a0fa9826ad1a7f3af6ae13c35827d",
+      "bytes": 16119
+    },
+    {
+      "path": "results/resq6/temporal_alignment_audit_20261015/temporal_audit_report.md",
+      "sha256": "6ec82abbef58f960b3d8ce85a918fc686e9c1451b42bd86bf5042dfc48b4c0a4",
+      "bytes": 13695
+    },
+    {
+      "path": "results/resq6/temporal_alignment_audit_20261015/temporal_timing_table.json",
+      "sha256": "c39e99ea0371c724a898211426ccba521bcb8cea1650e3f753b362f81f0592f6",
+      "bytes": 17339
+    },
+    {
+      "path": "scripts/resq3/check_inputs.py",
+      "sha256": "3d8892f9dd0085211a92f22a7d5133e5d112b676d0df4957826ef0ac64680fe1",
+      "bytes": 12976
+    },
+    {
+      "path": "scripts/resq5/analyze.py",
+      "sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "bytes": 15697
+    },
+    {
+      "path": "scripts/resq5/setup_incidents.py",
+      "sha256": "9ff3cff0071a8d16aeb2ac43e90195d16dad4dcbed7c6947f6de880c867c0b5d",
+      "bytes": 4626
+    },
+    {
+      "path": "scripts/resq6/rescore_fair.py",
+      "sha256": "30225ecb9032d53c7394dc9b12d1bca83f0b56ff0a0149879264e1db776f270c",
+      "bytes": 8847
+    },
+    {
+      "path": "scripts/resq6/run_dev.py",
+      "sha256": "a309e9a2967ca6f7a329db9128c451f32392020d619775b5470d8ff755706154",
+      "bytes": 25430
+    }
+  ],
+  "commands_executed": [
+    "git rev-parse --show-toplevel; git rev-parse --show-prefix; git status --short",
+    "sed/read-only inspection of latest temporal audit artifacts and cited target/setup implementations",
+    "python3 standard-library CSV/JSON/pathlib inventory of the four development incident directories",
+    "ls -l of the four development resq5 raster directories",
+    "git diff --check",
+    "git worktree list --porcelain",
+    "rg -n and sed read-only inspection of docs/simulation/PROTOCOL.md, DECISION_RULE.md, FALLBACK.md, RESULTS_DEV.md",
+    "python3 -m json.tool on each generated JSON artifact",
+    "git diff --check after artifact creation"
+  ],
+  "environment_limitations": [
+    "Current python3 did not expose numpy, pandas, rasterio, xarray, or pyhdf; raster/netCDF detail in this assessment is cited from existing fetch_report.json/input_checks.json and existing audit artifacts, not newly decoded."
+  ],
+  "notes": [
+    "No held-out candidate file or held-out incident directory was enumerated or opened.",
+    "No official score was rerun in this task; the score reproduction result is referenced from the latest audit.",
+    "Pre-existing dirty files/artifacts listed under preexisting_git_status_short were preserved."
+  ],
+  "assessment_artifact_hashes": [
+    {
+      "path": "results/resq6/target_feasibility_20261015/feasibility_report.md",
+      "sha256": "66d8ce3010ac6f6bae435226b4de7fa8ec9bef1a0fa4ecab970739a8e485631d",
+      "bytes": 18837
+    },
+    {
+      "path": "results/resq6/target_feasibility_20261015/data_inventory.json",
+      "sha256": "33066bcb7c3c121bd5e042ad6b23c2a5411243548439e813f8b0453f9deacea8",
+      "bytes": 117832
+    },
+    {
+      "path": "results/resq6/target_feasibility_20261015/target_feasibility.json",
+      "sha256": "7404caae2a2114ecfffd66520b952cc1930d2f3b9d8cb1414cd2c5f232a08090",
+      "bytes": 155482
+    },
+    {
+      "path": "results/resq6/target_feasibility_20261015/owner_decisions.md",
+      "sha256": "74f7e723c725f31701487d843b1f674e47d02869207670c688cb4c2ea8d77616",
+      "bytes": 7476
+    }
+  ],
+  "verification": {
+    "json_files_validated_with_python_json_tool": true,
+    "git_diff_check": "passed",
+    "source_code_compilation_or_tests": "not run; no source code changed"
+  }
+}

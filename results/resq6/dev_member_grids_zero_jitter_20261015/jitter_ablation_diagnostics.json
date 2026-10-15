@@ -1,0 +1,1195 @@
+{
+  "experiment": "paired ignition jitter ablation, development set only",
+  "arms": {
+    "A": {
+      "run_dir": "dev_member_grids_horizon_aligned_20261015",
+      "jitter_radius_m": 500
+    },
+    "B": {
+      "run_dir": "dev_member_grids_zero_jitter_20261015",
+      "jitter_radius_m": 0
+    }
+  },
+  "controlled_factors": "same 60 member indices; wind RNG seed = incident jitter_seed + member; ERA5-Land cached inputs, fuel/weather/raster data, simulator, ROS threshold, cell size, forecast horizons, observations, metrics, and decision rule unchanged; baselines matched to arm jitter radius",
+  "member_success": [
+    {
+      "run": "dev_member_grids_horizon_aligned_20261015",
+      "requested": 240,
+      "succeeded": 240,
+      "errors": 0,
+      "per_incident": {
+        "E2024-131853": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 88.4
+        },
+        "E2024-135332": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 57.8
+        },
+        "E2023-084925": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 76.1
+        },
+        "E2024-155286": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 65.7
+        }
+      },
+      "provenance_sha256": "225fbd28859509c98bc33288d2e897893306d1108862a2b98b80aa8532592a88"
+    },
+    {
+      "run": "dev_member_grids_zero_jitter_20261015",
+      "requested": 240,
+      "succeeded": 240,
+      "errors": 0,
+      "per_incident": {
+        "E2024-131853": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 90.9
+        },
+        "E2024-135332": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 51.0
+        },
+        "E2023-084925": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 73.8
+        },
+        "E2024-155286": {
+          "ok": 60,
+          "errors": 0,
+          "wall_s": 59.9
+        }
+      },
+      "provenance_sha256": "0751a7b2b59d7ced8e3d9a619f5c63cb4d43e0fe6ad96971efd3f611539d3bf6"
+    }
+  ],
+  "fair_gate_tallies": {
+    "A": {
+      "wins": 0,
+      "ties": 1,
+      "losses": 7
+    },
+    "B": {
+      "wins": 0,
+      "ties": 0,
+      "losses": 8
+    }
+  },
+  "shared_noncode_input_hash_mismatches": [],
+  "wind_perturbation_draws_verified": 240,
+  "reference_A_archives_unchanged": 240,
+  "cells": [
+    {
+      "incident_id": "E2024-131853",
+      "horizon_h": 24,
+      "observed_pass_hours_since_t0": 23.37,
+      "observed_cells": 494,
+      "observed_prevalence": 0.0035128888888888887,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.5079576787212875,
+            "brier": 0.002375784691358025,
+            "auc": 0.97497221151394
+          },
+          "fair_baselines": {
+            "a_ap": 0.5781845575097959,
+            "a_brier": 0.01094600078288974,
+            "b_ap": 0.561109247593601,
+            "b_brier": 0.09708829229685062,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.07022687878850842
+          },
+          "probability": {
+            "mean": 0.002538074074074074,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.08333333333333333,
+              0.36666666666666664,
+              0.43333333333333335
+            ],
+            "nonzero_cells": 2223,
+            "nonzero_fraction": 0.015808,
+            "p_ge_0_5_cells": 0,
+            "observed_positive_cells": 494,
+            "p_ge_0_5_intersection": 0,
+            "high_precision": null,
+            "high_recall": 0.0,
+            "high_jaccard": 0.0,
+            "expected_probability_mass_in_observed_mask": 0.3464861078683166
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": null,
+              "p90": null,
+              "min": null
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": null,
+              "p90": null,
+              "max": null
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 271.8531512162686,
+            "prediction_downwind": 87.66601894153737,
+            "prediction_crosswind": 27.714819635840158,
+            "observed_downwind": 203.28514108880665,
+            "observed_crosswind": -218.32654765858499,
+            "wind_to_bearing_deg": 307.0630513384502
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2223,
+            "p_ge_0_5": 0,
+            "observed_positive": 494,
+            "ratio_p_gt_0_to_observed": 4.5,
+            "ratio_p_ge_0_5_to_observed": 0.0
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.4645860156867835,
+            "brier": 0.002389127901234568,
+            "auc": 0.8231133825991682
+          },
+          "fair_baselines": {
+            "a_ap": 0.6243270955279138,
+            "a_brier": 0.011042025390090925,
+            "b_ap": 0.5516330389233262,
+            "b_brier": 0.09811554796786708,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.15974107984113028
+          },
+          "probability": {
+            "mean": 0.002502874074074074,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 620,
+            "nonzero_fraction": 0.004408888888888889,
+            "p_ge_0_5_cells": 319,
+            "observed_positive_cells": 494,
+            "p_ge_0_5_intersection": 214,
+            "high_precision": 0.670846394984326,
+            "high_recall": 0.4331983805668016,
+            "high_jaccard": 0.3572621035058431,
+            "expected_probability_mass_in_observed_mask": 0.6344350790794583
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 0.0,
+              "p90": 150.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 42.42640687119285,
+              "p90": 420.0,
+              "max": 531.6013544000805
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 235.84893611066042,
+            "prediction_downwind": 107.52706173410436,
+            "prediction_crosswind": -2.792070363584891,
+            "observed_downwind": 203.28514108880665,
+            "observed_crosswind": -218.32654765858499,
+            "wind_to_bearing_deg": 307.0630513384502
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 620,
+            "p_ge_0_5": 319,
+            "observed_positive": 494,
+            "ratio_p_gt_0_to_observed": 1.2550607287449393,
+            "ratio_p_ge_0_5_to_observed": 0.645748987854251
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.043371663034504015,
+        "brier": 1.334320987654309e-05,
+        "probability_capture": 0.2879489712111417
+      }
+    },
+    {
+      "incident_id": "E2024-131853",
+      "horizon_h": 48,
+      "observed_pass_hours_since_t0": 24.2,
+      "observed_cells": 638,
+      "observed_prevalence": 0.004536888888888889,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.3324417225957856,
+            "brier": 0.004991824197530865,
+            "auc": 0.9935814908742198
+          },
+          "fair_baselines": {
+            "a_ap": 0.5353845683314847,
+            "a_brier": 0.0109091340351755,
+            "b_ap": 0.4548275013490767,
+            "b_brier": 0.25093805063064656,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.20294284573569915
+          },
+          "probability": {
+            "mean": 0.010279229629629629,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.4,
+              0.8833333333333333,
+              0.9833333333333333
+            ],
+            "nonzero_cells": 5207,
+            "nonzero_fraction": 0.03702755555555556,
+            "p_ge_0_5_cells": 1041,
+            "observed_positive_cells": 638,
+            "p_ge_0_5_intersection": 338,
+            "high_precision": 0.32468780019212296,
+            "high_recall": 0.5297805642633229,
+            "high_jaccard": 0.25205070842654737,
+            "expected_probability_mass_in_observed_mask": 0.23300780574419758
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 120.0,
+              "p90": 450.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 0.0,
+              "p90": 323.10988842807024,
+              "max": 499.29950931279717
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 361.2314681935479,
+            "prediction_downwind": 213.37027339435136,
+            "prediction_crosswind": 48.16396888058999,
+            "observed_downwind": -75.75297193863506,
+            "observed_crosswind": -168.3906953993279,
+            "wind_to_bearing_deg": 336.62722440804583
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 5207,
+            "p_ge_0_5": 1041,
+            "observed_positive": 638,
+            "ratio_p_gt_0_to_observed": 8.161442006269592,
+            "ratio_p_ge_0_5_to_observed": 1.6316614420062696
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.3184520992636712,
+            "brier": 0.007010453333333333,
+            "auc": 0.9037106121340913
+          },
+          "fair_baselines": {
+            "a_ap": 0.5729223507016034,
+            "a_brier": 0.010972893689737624,
+            "b_ap": 0.43838210318330156,
+            "b_brier": 0.252257794188874,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.25447025143793217
+          },
+          "probability": {
+            "mean": 0.010018607407407407,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.42933333333348855,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 2564,
+            "nonzero_fraction": 0.01823288888888889,
+            "p_ge_0_5_cells": 1281,
+            "observed_positive_cells": 638,
+            "p_ge_0_5_intersection": 386,
+            "high_precision": 0.3013270882123341,
+            "high_recall": 0.6050156739811913,
+            "high_jaccard": 0.2517938682322244,
+            "expected_probability_mass_in_observed_mask": 0.28433019448256286
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 120.0,
+              "p90": 480.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 0.0,
+              "p90": 241.86773244895647,
+              "max": 445.9820624195552
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 330.07499547405683,
+            "prediction_downwind": 211.0301014682476,
+            "prediction_crosswind": -4.974137350575717,
+            "observed_downwind": -75.75297193863506,
+            "observed_crosswind": -168.3906953993279,
+            "wind_to_bearing_deg": 336.62722440804583
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2564,
+            "p_ge_0_5": 1281,
+            "observed_positive": 638,
+            "ratio_p_gt_0_to_observed": 4.018808777429467,
+            "ratio_p_ge_0_5_to_observed": 2.0078369905956115
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.013989623332114398,
+        "brier": 0.0020186291358024683,
+        "probability_capture": 0.05132238873836528
+      }
+    },
+    {
+      "incident_id": "E2024-135332",
+      "horizon_h": 24,
+      "observed_pass_hours_since_t0": 13.72,
+      "observed_cells": 312,
+      "observed_prevalence": 0.0027309968138370506,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.04247603322315869,
+            "brier": 0.0036899433571031203,
+            "auc": 0.7509050607784941
+          },
+          "fair_baselines": {
+            "a_ap": 0.14213750515688706,
+            "a_brier": 0.014388146559024281,
+            "b_ap": 0.1174551013105499,
+            "b_brier": 0.11433385967087538,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.09966147193372837
+          },
+          "probability": {
+            "mean": 0.006405588039634466,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.21666666666666667,
+              0.5333333333333333,
+              0.6666666666666666
+            ],
+            "nonzero_cells": 5791,
+            "nonzero_fraction": 0.05068975175939218,
+            "p_ge_0_5_cells": 204,
+            "observed_positive_cells": 312,
+            "p_ge_0_5_intersection": 6,
+            "high_precision": 0.029411764705882353,
+            "high_recall": 0.019230769230769232,
+            "high_jaccard": 0.011764705882352941,
+            "expected_probability_mass_in_observed_mask": 0.058485925116151964
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 241.86773244895647,
+              "p90": 374.45309770065194,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 488.96170071603194,
+              "p90": 894.9860334105779,
+              "max": 1039.6634070698074
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 787.4380952954707,
+            "prediction_downwind": 242.44623465701437,
+            "prediction_crosswind": -282.7778556312509,
+            "observed_downwind": -122.34220152833103,
+            "observed_crosswind": 415.0675074313757,
+            "wind_to_bearing_deg": 197.37355017564957
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 5791,
+            "p_ge_0_5": 204,
+            "observed_positive": 312,
+            "ratio_p_gt_0_to_observed": 18.560897435897434,
+            "ratio_p_ge_0_5_to_observed": 0.6538461538461539
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.07998661367734418,
+            "brier": 0.004732726056121596,
+            "auc": 0.6868460027213714
+          },
+          "fair_baselines": {
+            "a_ap": 0.20847586945114044,
+            "a_brier": 0.014827014599527743,
+            "b_ap": 0.13706628908072657,
+            "b_brier": 0.115920827553181,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.12848925577379627
+          },
+          "probability": {
+            "mean": 0.004465880046216869,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 1141,
+            "nonzero_fraction": 0.009987395399320751,
+            "p_ge_0_5_cells": 427,
+            "observed_positive_cells": 312,
+            "p_ge_0_5_intersection": 75,
+            "high_precision": 0.1756440281030445,
+            "high_recall": 0.2403846153846154,
+            "high_jaccard": 0.11295180722891567,
+            "expected_probability_mass_in_observed_mask": 0.1555925780739579
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 180.0,
+              "p90": 379.47331922020555,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 354.3245696512283,
+              "p90": 823.3336334607692,
+              "max": 960.4686356149273
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 571.2512643984508,
+            "prediction_downwind": 203.38717478106136,
+            "prediction_crosswind": -54.21745981765412,
+            "observed_downwind": -122.34220152833103,
+            "observed_crosswind": 415.0675074313757,
+            "wind_to_bearing_deg": 197.37355017564957
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 1141,
+            "p_ge_0_5": 427,
+            "observed_positive": 312,
+            "ratio_p_gt_0_to_observed": 3.657051282051282,
+            "ratio_p_ge_0_5_to_observed": 1.3685897435897436
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": 0.03751058045418549,
+        "brier": 0.0010427826990184754,
+        "probability_capture": 0.09710665295780593
+      }
+    },
+    {
+      "incident_id": "E2024-135332",
+      "horizon_h": 48,
+      "observed_pass_hours_since_t0": 37.4,
+      "observed_cells": 1131,
+      "observed_prevalence": 0.009899863450159307,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.0632388564958546,
+            "brier": 0.030052283319522744,
+            "auc": 0.8862118062371578
+          },
+          "fair_baselines": {
+            "a_ap": 0.1281332180702359,
+            "a_brier": 0.017386209355437457,
+            "b_ap": 0.0851073227459748,
+            "b_brier": 0.2800340061180755,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.06489436157438129
+          },
+          "probability": {
+            "mean": 0.046485154581422224,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.11666666666666667,
+              0.8166666666666667,
+              0.9833333333333333,
+              1.0
+            ],
+            "nonzero_cells": 17467,
+            "nonzero_fraction": 0.15289205560029412,
+            "p_ge_0_5_cells": 4694,
+            "observed_positive_cells": 1131,
+            "p_ge_0_5_intersection": 200,
+            "high_precision": 0.04260758414997869,
+            "high_recall": 0.1768346595932803,
+            "high_jaccard": 0.035555555555555556,
+            "expected_probability_mass_in_observed_mask": 0.05738468925649402
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 630.0,
+              "p90": 1346.1265232514813,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 323.10988842807024,
+              "p90": 792.5906888173744,
+              "max": 1073.3126291998992
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 1135.673747132847,
+            "prediction_downwind": 680.191753819915,
+            "prediction_crosswind": -666.9399621066967,
+            "observed_downwind": -454.43539450585723,
+            "observed_crosswind": -618.1947653290889,
+            "wind_to_bearing_deg": 177.18623920944745
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 17467,
+            "p_ge_0_5": 4694,
+            "observed_positive": 1131,
+            "ratio_p_gt_0_to_observed": 15.443854995579134,
+            "ratio_p_ge_0_5_to_observed": 4.150309460654288
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.039552280314499026,
+            "brier": 0.042977289835790064,
+            "auc": 0.6905923001202454
+          },
+          "fair_baselines": {
+            "a_ap": 0.15378820910674268,
+            "a_brier": 0.017612987115311396,
+            "b_ap": 0.09462253985315724,
+            "b_brier": 0.28186611977344406,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.11423592879224365
+          },
+          "probability": {
+            "mean": 0.048123460896560576,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 10868,
+            "nonzero_fraction": 0.09512972234865726,
+            "p_ge_0_5_cells": 5120,
+            "observed_positive_cells": 1131,
+            "p_ge_0_5_intersection": 344,
+            "high_precision": 0.0671875,
+            "high_recall": 0.3041556145004421,
+            "high_jaccard": 0.05823599119688505,
+            "expected_probability_mass_in_observed_mask": 0.06226714241107834
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 540.8326913195983,
+              "p90": 1413.951857119253,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 270.0,
+              "p90": 758.9466384404111,
+              "max": 1020.0
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 1055.6493958317892,
+            "prediction_downwind": 598.8682391660732,
+            "prediction_crosswind": -688.5304050399022,
+            "observed_downwind": -454.43539450585723,
+            "observed_crosswind": -618.1947653290889,
+            "wind_to_bearing_deg": 177.18623920944745
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 10868,
+            "p_ge_0_5": 5120,
+            "observed_positive": 1131,
+            "ratio_p_gt_0_to_observed": 9.60919540229885,
+            "ratio_p_ge_0_5_to_observed": 4.5269672855879755
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.023686576181355577,
+        "brier": 0.01292500651626732,
+        "probability_capture": 0.0048824531545843194
+      }
+    },
+    {
+      "incident_id": "E2023-084925",
+      "horizon_h": 24,
+      "observed_pass_hours_since_t0": 12.85,
+      "observed_cells": 144,
+      "observed_prevalence": 0.0009565309809756616,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.2613698766666437,
+            "brier": 0.000931209849316848,
+            "auc": 0.9965401752733452
+          },
+          "fair_baselines": {
+            "a_ap": 0.8665634316268137,
+            "a_brier": 0.010587223231784485,
+            "b_ap": 0.8874930223743323,
+            "b_brier": 0.06348364242976098,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.6261231457076886
+          },
+          "probability": {
+            "mean": 0.0019689703121125164,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.08333333333333333,
+              0.25,
+              0.31666666666666665
+            ],
+            "nonzero_cells": 2383,
+            "nonzero_fraction": 0.015829259219895843,
+            "p_ge_0_5_cells": 0,
+            "observed_positive_cells": 144,
+            "p_ge_0_5_intersection": 0,
+            "high_precision": null,
+            "high_recall": 0.0,
+            "high_jaccard": 0.0,
+            "expected_probability_mass_in_observed_mask": 0.09721675569299972
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": null,
+              "p90": null,
+              "min": null
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": null,
+              "p90": null,
+              "max": null
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 263.3217003831438,
+            "prediction_downwind": -312.21339711853545,
+            "prediction_crosswind": -53.46060796149767,
+            "observed_downwind": -55.985122341911556,
+            "observed_crosswind": 7.246797663064063,
+            "wind_to_bearing_deg": 295.00798083335064
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2383,
+            "p_ge_0_5": 0,
+            "observed_positive": 144,
+            "ratio_p_gt_0_to_observed": 16.54861111111111,
+            "ratio_p_ge_0_5_to_observed": 0.0
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.6022550870540382,
+            "brier": 0.0004583562133182178,
+            "auc": 0.8193943696439125
+          },
+          "fair_baselines": {
+            "a_ap": 0.9163987853449526,
+            "a_brier": 0.01088212436852011,
+            "b_ap": 0.8929898565090785,
+            "b_brier": 0.0641292051912358,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.3141436982909144
+          },
+          "probability": {
+            "mean": 0.0005845467105962377,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "nonzero_cells": 119,
+            "nonzero_fraction": 0.0007904665745562759,
+            "p_ge_0_5_cells": 84,
+            "observed_positive_cells": 144,
+            "p_ge_0_5_intersection": 77,
+            "high_precision": 0.9166666666666666,
+            "high_recall": 0.5347222222222222,
+            "high_jaccard": 0.5099337748344371,
+            "expected_probability_mass_in_observed_mask": 0.8814393939393939
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 0.0,
+              "p90": 0.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 0.0,
+              "p90": 90.0,
+              "max": 150.0
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 78.85973431530475,
+            "prediction_downwind": 22.79432598212572,
+            "prediction_crosswind": 3.6892397871058886,
+            "observed_downwind": -55.985122341911556,
+            "observed_crosswind": 7.246797663064063,
+            "wind_to_bearing_deg": 295.00798083335064
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 119,
+            "p_ge_0_5": 84,
+            "observed_positive": 144,
+            "ratio_p_gt_0_to_observed": 0.8263888888888888,
+            "ratio_p_ge_0_5_to_observed": 0.5833333333333334
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": 0.3408852103873945,
+        "brier": -0.0004728536359986302,
+        "probability_capture": 0.7842226382463942
+      }
+    },
+    {
+      "incident_id": "E2023-084925",
+      "horizon_h": 48,
+      "observed_pass_hours_since_t0": 37.4,
+      "observed_cells": 2343,
+      "observed_prevalence": 0.015563556169624827,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.42998216100353215,
+            "brier": 0.011241702315159245,
+            "auc": 0.9064991048438348
+          },
+          "fair_baselines": {
+            "a_ap": 0.6003061545521688,
+            "a_brier": 0.01188223239864542,
+            "b_ap": 0.5272602790106204,
+            "b_brier": 0.19672226970995024,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.1703239935486367
+          },
+          "probability": {
+            "mean": 0.011454569206787826,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.4166666666666667,
+              0.6833333333333333,
+              0.8666666666666667
+            ],
+            "nonzero_cells": 6816,
+            "nonzero_fraction": 0.04527579976618132,
+            "p_ge_0_5_cells": 847,
+            "observed_positive_cells": 2343,
+            "p_ge_0_5_intersection": 547,
+            "high_precision": 0.6458087367178277,
+            "high_recall": 0.23346137430644473,
+            "high_jaccard": 0.20696178584941355,
+            "expected_probability_mass_in_observed_mask": 0.3861209104528101
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 0.0,
+              "p90": 180.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 295.4657340538831,
+              "p90": 724.9827584156743,
+              "max": 979.4896630388705
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 553.0309262529499,
+            "prediction_downwind": -277.4359515238649,
+            "prediction_crosswind": 4.667613909935312,
+            "observed_downwind": 264.3213510734014,
+            "observed_crosswind": -106.42797769805716,
+            "wind_to_bearing_deg": 308.44942454910597
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 6816,
+            "p_ge_0_5": 847,
+            "observed_positive": 2343,
+            "ratio_p_gt_0_to_observed": 2.909090909090909,
+            "ratio_p_ge_0_5_to_observed": 0.3615023474178404
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.21550660856431414,
+            "brier": 0.015155059871753992,
+            "auc": 0.7128962637265456
+          },
+          "fair_baselines": {
+            "a_ap": 0.6011103940944444,
+            "a_brier": 0.011746396309915216,
+            "b_ap": 0.5185217786862936,
+            "b_brier": 0.19741012311755646,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.3856037855301303
+          },
+          "probability": {
+            "mean": 0.008955299890176072,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.35,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 2379,
+            "nonzero_fraction": 0.015802688914868742,
+            "p_ge_0_5_cells": 1245,
+            "observed_positive_cells": 2343,
+            "p_ge_0_5_intersection": 515,
+            "high_precision": 0.41365461847389556,
+            "high_recall": 0.21980367050789587,
+            "high_jaccard": 0.16758867556134072,
+            "expected_probability_mass_in_observed_mask": 0.42839658795895663
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 60.0,
+              "p90": 360.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 276.5863337187866,
+              "p90": 724.9827584156743,
+              "max": 966.0745312862771
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 478.9466490034,
+            "prediction_downwind": -202.51244976564368,
+            "prediction_crosswind": 0.605171306150325,
+            "observed_downwind": 264.3213510734014,
+            "observed_crosswind": -106.42797769805716,
+            "wind_to_bearing_deg": 308.44942454910597
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2379,
+            "p_ge_0_5": 1245,
+            "observed_positive": 2343,
+            "ratio_p_gt_0_to_observed": 1.0153649167733674,
+            "ratio_p_ge_0_5_to_observed": 0.5313700384122919
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.214475552439218,
+        "brier": 0.003913357556594747,
+        "probability_capture": 0.042275677506146525
+      }
+    },
+    {
+      "incident_id": "E2024-155286",
+      "horizon_h": 24,
+      "observed_pass_hours_since_t0": 12.77,
+      "observed_cells": 482,
+      "observed_prevalence": 0.004219039949581597,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.3663814244064937,
+            "brier": 0.00306699549502235,
+            "auc": 0.9851354516720173
+          },
+          "fair_baselines": {
+            "a_ap": 0.49204032312109147,
+            "a_brier": 0.01360894519855868,
+            "b_ap": 0.4848093086824698,
+            "b_brier": 0.12053192015585909,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.1256588987145978
+          },
+          "probability": {
+            "mean": 0.0035682399075662617,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.13333333333333333,
+              0.48333333333333334,
+              0.5833333333333334
+            ],
+            "nonzero_cells": 2346,
+            "nonzero_fraction": 0.020534995273274747,
+            "p_ge_0_5_cells": 103,
+            "observed_positive_cells": 482,
+            "p_ge_0_5_intersection": 51,
+            "high_precision": 0.49514563106796117,
+            "high_recall": 0.10580912863070539,
+            "high_jaccard": 0.09550561797752809,
+            "expected_probability_mass_in_observed_mask": 0.31661147225969993
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 30.0,
+              "p90": 90.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 212.13203435596427,
+              "p90": 445.9820624195552,
+              "max": 591.6924876994806
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 247.2166695181857,
+            "prediction_downwind": 178.1136824292127,
+            "prediction_crosswind": 48.18115147551882,
+            "observed_downwind": 156.8940750372692,
+            "observed_crosswind": 294.48545503068533,
+            "wind_to_bearing_deg": 312.0434922202638
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2346,
+            "p_ge_0_5": 103,
+            "observed_positive": 482,
+            "ratio_p_gt_0_to_observed": 4.867219917012448,
+            "ratio_p_ge_0_5_to_observed": 0.21369294605809128
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.272100507846186,
+            "brier": 0.003978618862551498,
+            "auc": 0.780325121508316
+          },
+          "fair_baselines": {
+            "a_ap": 0.4186742418692945,
+            "a_brier": 0.014032285123729058,
+            "b_ap": 0.37296543801981646,
+            "b_brier": 0.12181829754070037,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.14657373402310847
+          },
+          "probability": {
+            "mean": 0.0035669269283288402,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 774,
+            "nonzero_fraction": 0.0067749728650957595,
+            "p_ge_0_5_cells": 369,
+            "observed_positive_cells": 482,
+            "p_ge_0_5_intersection": 166,
+            "high_precision": 0.44986449864498645,
+            "high_recall": 0.34439834024896265,
+            "high_jaccard": 0.24233576642335766,
+            "expected_probability_mass_in_observed_mask": 0.43096114519427403
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 30.0,
+              "p90": 170.75021335688888,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 125.48619469105418,
+              "p90": 424.26406871192853,
+              "max": 593.9696961966999
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 306.1710422109453,
+            "prediction_downwind": 132.23235306567295,
+            "prediction_crosswind": -10.69073433855774,
+            "observed_downwind": 156.8940750372692,
+            "observed_crosswind": 294.48545503068533,
+            "wind_to_bearing_deg": 312.0434922202638
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 774,
+            "p_ge_0_5": 369,
+            "observed_positive": 482,
+            "ratio_p_gt_0_to_observed": 1.6058091286307055,
+            "ratio_p_ge_0_5_to_observed": 0.7655601659751037
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.09428091656030768,
+        "brier": 0.000911623367529148,
+        "probability_capture": 0.1143496729345741
+      }
+    },
+    {
+      "incident_id": "E2024-155286",
+      "horizon_h": 48,
+      "observed_pass_hours_since_t0": 12.77,
+      "observed_cells": 482,
+      "observed_prevalence": 0.004219039949581597,
+      "arms": [
+        {
+          "arm": "A_500m",
+          "engine": {
+            "ap": 0.46527200450224626,
+            "brier": 0.005357830608171983,
+            "auc": 0.9962448902385639
+          },
+          "fair_baselines": {
+            "a_ap": 0.49204032312109147,
+            "a_brier": 0.01360894519855868,
+            "b_ap": 0.48280780576041876,
+            "b_brier": 0.2905403412962166,
+            "call": "TIE",
+            "delta_vs_best_ap": -0.02676831861884521
+          },
+          "probability": {
+            "mean": 0.012784041175028885,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.5,
+              0.95,
+              1.0
+            ],
+            "nonzero_cells": 4949,
+            "nonzero_fraction": 0.0433195616399986,
+            "p_ge_0_5_cells": 1189,
+            "observed_positive_cells": 482,
+            "p_ge_0_5_intersection": 400,
+            "high_precision": 0.33641715727502103,
+            "high_recall": 0.8298755186721992,
+            "high_jaccard": 0.3147128245476003,
+            "expected_probability_mass_in_observed_mask": 0.23595800524934385
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 60.0,
+              "p90": 218.40329667841553,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 0.0,
+              "p90": 83.07573630064711,
+              "max": 228.47319317591726
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 222.9539026856624,
+            "prediction_downwind": 262.36917293663885,
+            "prediction_crosswind": 48.15582630688516,
+            "observed_downwind": 204.6842918161112,
+            "observed_crosswind": 263.51807279609324,
+            "wind_to_bearing_deg": 321.83379637492976
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 4949,
+            "p_ge_0_5": 1189,
+            "observed_positive": 482,
+            "ratio_p_gt_0_to_observed": 10.267634854771785,
+            "ratio_p_ge_0_5_to_observed": 2.466804979253112
+          }
+        },
+        {
+          "arm": "B_0m",
+          "engine": {
+            "ap": 0.32174762233397813,
+            "brier": 0.007806439628242087,
+            "auc": 0.9906367544938581
+          },
+          "fair_baselines": {
+            "a_ap": 0.4186742418692945,
+            "a_brier": 0.014032285123729058,
+            "b_ap": 0.3942787121073468,
+            "b_brier": 0.29195786884662756,
+            "call": "LOSS",
+            "delta_vs_best_ap": -0.09692661953531634
+          },
+          "probability": {
+            "mean": 0.012771494928982411,
+            "quantiles_p50_p90_p99_p999_max": [
+              0.0,
+              0.0,
+              0.6666666666666666,
+              1.0,
+              1.0
+            ],
+            "nonzero_cells": 2638,
+            "nonzero_fraction": 0.023090928188788908,
+            "p_ge_0_5_cells": 1342,
+            "observed_positive_cells": 482,
+            "p_ge_0_5_intersection": 386,
+            "high_precision": 0.28763040238450077,
+            "high_recall": 0.8008298755186722,
+            "high_jaccard": 0.26842837273991654,
+            "expected_probability_mass_in_observed_mask": 0.262028237229279
+          },
+          "high_probability_distance_m": {
+            "predicted_high_to_nearest_observation_m": {
+              "median": 90.0,
+              "p90": 300.0,
+              "min": 0.0
+            },
+            "observed_positive_to_nearest_high_m": {
+              "median": 0.0,
+              "p90": 108.16653826391968,
+              "max": 254.5584412271571
+            }
+          },
+          "centroid_displacement_m": {
+            "prediction_to_observed_euclidean": 265.7462977041163,
+            "prediction_downwind": 207.44619972476727,
+            "prediction_crosswind": -2.213872231502009,
+            "observed_downwind": 204.6842918161112,
+            "observed_crosswind": 263.51807279609324,
+            "wind_to_bearing_deg": 321.83379637492976
+          },
+          "prediction_footprint_cells": {
+            "p_gt_0": 2638,
+            "p_ge_0_5": 1342,
+            "observed_positive": 482,
+            "ratio_p_gt_0_to_observed": 5.473029045643154,
+            "ratio_p_ge_0_5_to_observed": 2.784232365145228
+          }
+        }
+      ],
+      "paired_delta_B_minus_A": {
+        "ap": -0.14352438216826813,
+        "brier": 0.0024486090200701036,
+        "probability_capture": 0.026070231979935132
+      }
+    }
+  ]
+}

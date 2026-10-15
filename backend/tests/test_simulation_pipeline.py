@@ -66,10 +66,14 @@ class RunnerTests(unittest.TestCase):
             tmp = Path(tmp)
             data, public = tmp / "data", tmp / "public"
             (data / "weather").mkdir(parents=True)
+            (data / "landcover").mkdir()
+            (data / "terrain").mkdir()
+            (data / "landcover/worldcover_similipal_demo.tif").write_bytes(b"mocked raster input")
+            (data / "terrain/elevation_similipal_demo.tif").write_bytes(b"mocked raster input")
             columns = [f"{kind}10_h{hour:02d}" for hour in range(6, 18) for kind in ("u", "v")]
             with (data / "weather/gfs00_2024_01.csv").open("w", newline="") as handle:
                 writer = csv.writer(handle); writer.writerow(columns); writer.writerow([100] * len(columns))
-            binary = tmp / "Cell2Fire"; binary.write_text("")
+            binary = tmp / "Cell2Fire"; binary.write_text(""); binary.chmod(0o755)
             calls = []
 
             def fake_run(command, **kwargs):
@@ -121,16 +125,35 @@ class ServiceAndRouterTests(unittest.TestCase):
         from fastapi import HTTPException
         from app.contracts.schemas import SpreadRequest
         from app.routers import operations
-        manifest = {"scenario_id": "x", "frame_count": 25, "grid": {"rows": 40, "columns": 40, "cell_size_m": 30}, "burned_cells": [1], "inputs": {"weather": {"profile": "fixed"}}, "georeferenced": True}
-        with mock.patch.object(operations, "run_simulation", return_value=manifest) as run:
-            result = operations.create_spread_job(SpreadRequest(latitude=ORIGIN_LATITUDE + 0.002, longitude=ORIGIN_LONGITUDE, duration_hours=24), {})
-            run.assert_called_once_with(ORIGIN_LATITUDE + 0.002, ORIGIN_LONGITUDE, 24)
-            self.assertEqual(result["status"], "development_demo")
-            self.assertEqual(result["wind_profile"]["kind"], "fixed")
+        from app.services import simulation_service
+        with mock.patch.object(simulation_service, "run_simulation") as run:
+            with self.assertRaises(HTTPException) as caught:
+                operations.create_spread_job(SpreadRequest(latitude=ORIGIN_LATITUDE + 0.002, longitude=ORIGIN_LONGITUDE, duration_hours=24), {})
+            self.assertEqual(caught.exception.status_code, 503)
+            run.assert_not_called()
             with self.assertRaises(HTTPException) as caught:
                 operations.create_spread_job(SpreadRequest(latitude=ORIGIN_LATITUDE + 0.05, longitude=ORIGIN_LONGITUDE, duration_hours=24), {})
-            self.assertEqual(caught.exception.status_code, 422)
-            self.assertEqual(run.call_count, 1)
+            self.assertEqual(caught.exception.status_code, 503)
+            run.assert_not_called()
+
+    def test_http_spread_job_is_unavailable_without_invoking_runner(self):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from app.core.security import require_write
+        from app.routers import operations
+        from app.services import simulation_service
+
+        app = FastAPI()
+        app.include_router(operations.router)
+        app.dependency_overrides[require_write] = lambda: {"id": 1, "role": "officer"}
+        client = TestClient(app)
+        with mock.patch.object(simulation_service, "run_simulation") as run:
+            response = client.post(
+                "/api/spread/jobs",
+                json={"latitude": ORIGIN_LATITUDE, "longitude": ORIGIN_LONGITUDE, "duration_hours": 12},
+            )
+        self.assertEqual(response.status_code, 503)
+        run.assert_not_called()
 
 
 if __name__ == "__main__":

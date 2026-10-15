@@ -1,23 +1,65 @@
 from datetime import date
 import json
-from fastapi import APIRouter
+from typing import Literal
+
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from ..barv3 import daily_geojson, daily_risk
+from ..core.permissions import user_scopes
+from ..core.security import require_risk_roles
 from ..database.session import engine
 
 router = APIRouter(prefix="/api/risk", tags=["risk"])
 
+RISK_ROLES = ("range_officer", "control_room_operator", "incident_commander")
+_HIGH_RISK_BANDS = {"Very high", "High"}
+
+
+def _scope_filter_features(features: list[dict], user: dict) -> list[dict]:
+    if user["role"] == "admin":
+        return features
+    scopes = user_scopes(user["id"])
+    return [f for f in features if f.get("properties", {}).get("state") in scopes]
+
+
+def _filter_risk_band(
+    collection: dict[str, object], risk_band: Literal["high"] | None
+) -> dict[str, object]:
+    """Filter existing pre-classified risk bands without changing their thresholds."""
+    if risk_band is None:
+        return collection
+    features = collection.get("features", [])
+    return {
+        **collection,
+        "features": [
+            feature
+            for feature in features
+            if feature.get("properties", {}).get("band") in _HIGH_RISK_BANDS
+        ],
+    }
+
+
 @router.get("/daily")
-def daily_risk_endpoint(target: date) -> dict[str, object]:
+def daily_risk_endpoint(target: date, user: dict = Depends(require_risk_roles(*RISK_ROLES))) -> dict[str, object]:
     result = daily_risk(target)
-    return result or {"model": "bar-v3", "date": target.isoformat(), "forest_cell_count": 0, "coverage": "unavailable", "coverage_complete": False, "records": []}
+    result = result or {"model": "bar-v3", "date": target.isoformat(), "forest_cell_count": 0, "coverage": "unavailable", "coverage_complete": False, "records": []}
+    if user["role"] != "admin":
+        scopes = user_scopes(user["id"])
+        result = {**result, "records": [r for r in result["records"] if r.get("state") in scopes]}
+    return result
+
 
 @router.get("/geojson")
-def risk_geojson_endpoint(target: date) -> dict[str, object]:
+def risk_geojson_endpoint(
+    target: date,
+    risk_band: Literal["high"] | None = None,
+    user: dict = Depends(require_risk_roles(*RISK_ROLES)),
+) -> dict[str, object]:
     """Return ranked imported cell geometry without exposing model scores."""
     replay = daily_geojson(target)
     if replay["features"]:
-        return replay
+        scoped = {**replay, "features": _scope_filter_features(replay["features"], user)}
+        return _filter_risk_band(scoped, risk_band)
     with engine.connect() as db:
         run_id = db.execute(text("SELECT id FROM forecast_runs WHERE forecast_date=:date AND mode='replay' ORDER BY issued_at DESC LIMIT 1"), {"date": target}).scalar()
         if run_id is None:
@@ -28,8 +70,10 @@ def risk_geojson_endpoint(target: date) -> dict[str, object]:
             FROM cell_scores s JOIN cells c ON c.id=s.cell_id
             WHERE s.run_id=:run_id ORDER BY s.rank
         """), {"run_id": run_id}).mappings().all()
-    return {"type": "FeatureCollection", "features": [
+    features = [
         {"type": "Feature", "geometry": json.loads(row["geometry"]) if row["geometry"] else None,
          "properties": {"cell_id": row["id"], "state": row["state"], "place_name": row["place_name"], "rank": row["rank"], "rank_percentile": row["rank_percentile"], "band": row["band"]}}
         for row in rows if row["geometry"]
-    ]}
+    ]
+    scoped = {"type": "FeatureCollection", "features": _scope_filter_features(features, user)}
+    return _filter_risk_band(scoped, risk_band)

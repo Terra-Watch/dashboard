@@ -1,0 +1,3230 @@
+{
+  "scope": {
+    "incident_ids": [
+      "E2024-131853",
+      "E2024-135332",
+      "E2023-084925",
+      "E2024-155286"
+    ],
+    "heldout_data_accessed": false,
+    "scope_note": "Inventory is restricted to these four frozen development cases; no test-set candidate file was opened."
+  },
+  "temporal_source": {
+    "path": "results/resq6/temporal_alignment_audit_20261015/temporal_timing_table.json",
+    "selection_rule": "latest pass with >=1 n/h detection and elapsed_hours_since_t0 <= horizon; code uses setup elapsed rounded to 0.01 h, raw pass timestamps independently verified here.",
+    "timezone_assumption": "Acquisition timestamps are interpreted as UTC as labelled in setup/protocol; source acq_time is HHMM and has minute precision.",
+    "event_linked_pass_rows": [
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N|2024-02-16|N",
+        "timestamp_utc": "2024-02-16T20:11:00Z",
+        "raw_detection_time_min_utc": "2024-02-16T20:11:00Z",
+        "raw_detection_time_max_utc": "2024-02-16T20:11:00Z",
+        "elapsed_hours_exact": 12.183333333333334,
+        "elapsed_hours_setup_rounded": 12.18,
+        "detections_all_confidence": 2,
+        "detections_nh": 2,
+        "confidence_counts": {
+          "n": 2
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N20|2024-02-16|N",
+        "timestamp_utc": "2024-02-16T21:00:00Z",
+        "raw_detection_time_min_utc": "2024-02-16T21:00:00Z",
+        "raw_detection_time_max_utc": "2024-02-16T21:00:00Z",
+        "elapsed_hours_exact": 13.0,
+        "elapsed_hours_setup_rounded": 13.0,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N|2024-02-17|D",
+        "timestamp_utc": "2024-02-17T07:22:00Z",
+        "raw_detection_time_min_utc": "2024-02-17T07:22:00Z",
+        "raw_detection_time_max_utc": "2024-02-17T07:22:00Z",
+        "elapsed_hours_exact": 23.366666666666667,
+        "elapsed_hours_setup_rounded": 23.37,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": true,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N20|2024-02-17|D",
+        "timestamp_utc": "2024-02-17T08:12:00Z",
+        "raw_detection_time_min_utc": "2024-02-17T08:12:00Z",
+        "raw_detection_time_max_utc": "2024-02-17T08:12:00Z",
+        "elapsed_hours_exact": 24.2,
+        "elapsed_hours_setup_rounded": 24.2,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": true
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N20|2024-02-18|D",
+        "timestamp_utc": "2024-02-18T07:53:00Z",
+        "raw_detection_time_min_utc": "2024-02-18T07:53:00Z",
+        "raw_detection_time_max_utc": "2024-02-18T07:53:00Z",
+        "elapsed_hours_exact": 47.88333333333333,
+        "elapsed_hours_setup_rounded": 47.88,
+        "detections_all_confidence": 1,
+        "detections_nh": 0,
+        "confidence_counts": {
+          "l": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N20|2024-02-18|N",
+        "timestamp_utc": "2024-02-18T20:23:00Z",
+        "raw_detection_time_min_utc": "2024-02-18T20:23:00Z",
+        "raw_detection_time_max_utc": "2024-02-18T20:23:00Z",
+        "elapsed_hours_exact": 60.38333333333333,
+        "elapsed_hours_setup_rounded": 60.38,
+        "detections_all_confidence": 5,
+        "detections_nh": 5,
+        "confidence_counts": {
+          "n": 5
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-131853",
+        "t0_utc": "2024-02-16T08:00:00Z",
+        "pass_id": "N20|2024-02-19|D",
+        "timestamp_utc": "2024-02-19T07:34:00Z",
+        "raw_detection_time_min_utc": "2024-02-19T07:34:00Z",
+        "raw_detection_time_max_utc": "2024-02-19T07:34:00Z",
+        "elapsed_hours_exact": 71.56666666666666,
+        "elapsed_hours_setup_rounded": 71.57,
+        "detections_all_confidence": 5,
+        "detections_nh": 4,
+        "confidence_counts": {
+          "n": 4,
+          "l": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N20|2024-03-05|D",
+        "timestamp_utc": "2024-03-05T07:53:00Z",
+        "raw_detection_time_min_utc": "2024-03-05T07:53:00Z",
+        "raw_detection_time_max_utc": "2024-03-05T07:53:00Z",
+        "elapsed_hours_exact": 12.883333333333333,
+        "elapsed_hours_setup_rounded": 12.88,
+        "detections_all_confidence": 2,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "l": 1,
+          "n": 1
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N|2024-03-05|D",
+        "timestamp_utc": "2024-03-05T08:43:00Z",
+        "raw_detection_time_min_utc": "2024-03-05T08:43:00Z",
+        "raw_detection_time_max_utc": "2024-03-05T08:43:00Z",
+        "elapsed_hours_exact": 13.716666666666667,
+        "elapsed_hours_setup_rounded": 13.72,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": true,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N20|2024-03-05|N",
+        "timestamp_utc": "2024-03-05T20:23:00Z",
+        "raw_detection_time_min_utc": "2024-03-05T20:23:00Z",
+        "raw_detection_time_max_utc": "2024-03-05T20:23:00Z",
+        "elapsed_hours_exact": 25.383333333333333,
+        "elapsed_hours_setup_rounded": 25.38,
+        "detections_all_confidence": 2,
+        "detections_nh": 2,
+        "confidence_counts": {
+          "n": 2
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N20|2024-03-06|D",
+        "timestamp_utc": "2024-03-06T07:34:00Z",
+        "raw_detection_time_min_utc": "2024-03-06T07:34:00Z",
+        "raw_detection_time_max_utc": "2024-03-06T07:34:00Z",
+        "elapsed_hours_exact": 36.56666666666667,
+        "elapsed_hours_setup_rounded": 36.57,
+        "detections_all_confidence": 3,
+        "detections_nh": 2,
+        "confidence_counts": {
+          "n": 2,
+          "l": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N|2024-03-06|D",
+        "timestamp_utc": "2024-03-06T08:24:00Z",
+        "raw_detection_time_min_utc": "2024-03-06T08:24:00Z",
+        "raw_detection_time_max_utc": "2024-03-06T08:24:00Z",
+        "elapsed_hours_exact": 37.4,
+        "elapsed_hours_setup_rounded": 37.4,
+        "detections_all_confidence": 2,
+        "detections_nh": 2,
+        "confidence_counts": {
+          "n": 2
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": true
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N20|2024-03-06|N",
+        "timestamp_utc": "2024-03-06T20:04:00Z",
+        "raw_detection_time_min_utc": "2024-03-06T20:04:00Z",
+        "raw_detection_time_max_utc": "2024-03-06T20:04:00Z",
+        "elapsed_hours_exact": 49.06666666666667,
+        "elapsed_hours_setup_rounded": 49.07,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N|2024-03-06|N",
+        "timestamp_utc": "2024-03-06T20:54:00Z",
+        "raw_detection_time_min_utc": "2024-03-06T20:54:00Z",
+        "raw_detection_time_max_utc": "2024-03-06T20:54:00Z",
+        "elapsed_hours_exact": 49.9,
+        "elapsed_hours_setup_rounded": 49.9,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-135332",
+        "t0_utc": "2024-03-04T19:00:00Z",
+        "pass_id": "N|2024-03-07|D",
+        "timestamp_utc": "2024-03-07T08:05:00Z",
+        "raw_detection_time_min_utc": "2024-03-07T08:05:00Z",
+        "raw_detection_time_max_utc": "2024-03-07T08:05:00Z",
+        "elapsed_hours_exact": 61.083333333333336,
+        "elapsed_hours_setup_rounded": 61.08,
+        "detections_all_confidence": 1,
+        "detections_nh": 0,
+        "confidence_counts": {
+          "l": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N20|2023-03-10|N",
+        "timestamp_utc": "2023-03-10T19:51:00Z",
+        "raw_detection_time_min_utc": "2023-03-10T19:51:00Z",
+        "raw_detection_time_max_utc": "2023-03-10T19:51:00Z",
+        "elapsed_hours_exact": 12.85,
+        "elapsed_hours_setup_rounded": 12.85,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": true,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N20|2023-03-11|D",
+        "timestamp_utc": "2023-03-11T07:02:00Z",
+        "raw_detection_time_min_utc": "2023-03-11T07:02:00Z",
+        "raw_detection_time_max_utc": "2023-03-11T07:02:00Z",
+        "elapsed_hours_exact": 24.033333333333335,
+        "elapsed_hours_setup_rounded": 24.03,
+        "detections_all_confidence": 4,
+        "detections_nh": 4,
+        "confidence_counts": {
+          "n": 4
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N|2023-03-11|D",
+        "timestamp_utc": "2023-03-11T07:54:00Z",
+        "raw_detection_time_min_utc": "2023-03-11T07:54:00Z",
+        "raw_detection_time_max_utc": "2023-03-11T07:54:00Z",
+        "elapsed_hours_exact": 24.9,
+        "elapsed_hours_setup_rounded": 24.9,
+        "detections_all_confidence": 8,
+        "detections_nh": 7,
+        "confidence_counts": {
+          "n": 7,
+          "l": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N20|2023-03-11|N",
+        "timestamp_utc": "2023-03-11T19:32:00Z",
+        "raw_detection_time_min_utc": "2023-03-11T19:32:00Z",
+        "raw_detection_time_max_utc": "2023-03-11T19:32:00Z",
+        "elapsed_hours_exact": 36.53333333333333,
+        "elapsed_hours_setup_rounded": 36.53,
+        "detections_all_confidence": 7,
+        "detections_nh": 7,
+        "confidence_counts": {
+          "n": 7
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N|2023-03-11|N",
+        "timestamp_utc": "2023-03-11T20:24:00Z",
+        "raw_detection_time_min_utc": "2023-03-11T20:24:00Z",
+        "raw_detection_time_max_utc": "2023-03-11T20:24:00Z",
+        "elapsed_hours_exact": 37.4,
+        "elapsed_hours_setup_rounded": 37.4,
+        "detections_all_confidence": 3,
+        "detections_nh": 3,
+        "confidence_counts": {
+          "n": 3
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": true,
+        "selected_for_24h": false,
+        "selected_for_48h": true
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N|2023-03-12|D",
+        "timestamp_utc": "2023-03-12T07:35:00Z",
+        "raw_detection_time_min_utc": "2023-03-12T07:35:00Z",
+        "raw_detection_time_max_utc": "2023-03-12T07:35:00Z",
+        "elapsed_hours_exact": 48.583333333333336,
+        "elapsed_hours_setup_rounded": 48.58,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N|2023-03-12|N",
+        "timestamp_utc": "2023-03-12T20:05:00Z",
+        "raw_detection_time_min_utc": "2023-03-12T20:05:00Z",
+        "raw_detection_time_max_utc": "2023-03-12T20:05:00Z",
+        "elapsed_hours_exact": 61.083333333333336,
+        "elapsed_hours_setup_rounded": 61.08,
+        "detections_all_confidence": 8,
+        "detections_nh": 8,
+        "confidence_counts": {
+          "n": 8
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2023-084925",
+        "t0_utc": "2023-03-10T07:00:00Z",
+        "pass_id": "N20|2023-03-12|N",
+        "timestamp_utc": "2023-03-12T20:54:00Z",
+        "raw_detection_time_min_utc": "2023-03-12T20:54:00Z",
+        "raw_detection_time_max_utc": "2023-03-12T20:54:00Z",
+        "elapsed_hours_exact": 61.9,
+        "elapsed_hours_setup_rounded": 61.9,
+        "detections_all_confidence": 1,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-155286",
+        "t0_utc": "2024-04-12T07:00:00Z",
+        "pass_id": "N20|2024-04-12|N",
+        "timestamp_utc": "2024-04-12T19:46:00Z",
+        "raw_detection_time_min_utc": "2024-04-12T19:46:00Z",
+        "raw_detection_time_max_utc": "2024-04-12T19:46:00Z",
+        "elapsed_hours_exact": 12.766666666666667,
+        "elapsed_hours_setup_rounded": 12.77,
+        "detections_all_confidence": 3,
+        "detections_nh": 3,
+        "confidence_counts": {
+          "n": 3
+        },
+        "eligible_at_24h": true,
+        "eligible_at_48h": true,
+        "selected_for_24h": true,
+        "selected_for_48h": true
+      },
+      {
+        "incident_id": "E2024-155286",
+        "t0_utc": "2024-04-12T07:00:00Z",
+        "pass_id": "N|2024-04-14|D",
+        "timestamp_utc": "2024-04-14T07:53:00Z",
+        "raw_detection_time_min_utc": "2024-04-14T07:53:00Z",
+        "raw_detection_time_max_utc": "2024-04-14T07:53:00Z",
+        "elapsed_hours_exact": 48.88333333333333,
+        "elapsed_hours_setup_rounded": 48.88,
+        "detections_all_confidence": 3,
+        "detections_nh": 1,
+        "confidence_counts": {
+          "l": 2,
+          "n": 1
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-155286",
+        "t0_utc": "2024-04-12T07:00:00Z",
+        "pass_id": "N|2024-04-14|N",
+        "timestamp_utc": "2024-04-14T20:23:00Z",
+        "raw_detection_time_min_utc": "2024-04-14T20:23:00Z",
+        "raw_detection_time_max_utc": "2024-04-14T20:23:00Z",
+        "elapsed_hours_exact": 61.38333333333333,
+        "elapsed_hours_setup_rounded": 61.38,
+        "detections_all_confidence": 6,
+        "detections_nh": 6,
+        "confidence_counts": {
+          "n": 6
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      },
+      {
+        "incident_id": "E2024-155286",
+        "t0_utc": "2024-04-12T07:00:00Z",
+        "pass_id": "N20|2024-04-14|N",
+        "timestamp_utc": "2024-04-14T20:48:00Z",
+        "raw_detection_time_min_utc": "2024-04-14T20:48:00Z",
+        "raw_detection_time_max_utc": "2024-04-14T20:48:00Z",
+        "elapsed_hours_exact": 61.8,
+        "elapsed_hours_setup_rounded": 61.8,
+        "detections_all_confidence": 4,
+        "detections_nh": 4,
+        "confidence_counts": {
+          "n": 4
+        },
+        "eligible_at_24h": false,
+        "eligible_at_48h": false,
+        "selected_for_24h": false,
+        "selected_for_48h": false
+      }
+    ]
+  },
+  "incident_inputs": [
+    {
+      "incident_id": "E2024-131853",
+      "source_files": {
+        "viirs": {
+          "path": "data/resq2/E2024-131853/viirs_detections.csv",
+          "bytes": 9357,
+          "sha256": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb",
+          "schema": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "rows": 81,
+          "source_versions": [
+            "2"
+          ],
+          "platforms": [
+            "N",
+            "N20"
+          ],
+          "confidence_counts": {
+            "l": 18,
+            "n": 63
+          },
+          "acquisition_date_min": "2024-02-16",
+          "acquisition_date_max": "2024-02-27",
+          "detection_timestamps_min_utc": "2024-02-16T20:11:00Z",
+          "detection_timestamps_max_utc": "2024-02-27T20:04:00Z",
+          "pre_t0_raw_row_count": 0,
+          "pre_t0_raw_rows": [],
+          "raw_acquisition_groups_all_csv_rows": [
+            {
+              "group_id": "N|2024-02-16|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-16T2011",
+              "timestamp_max_utc_minute_precision": "2024-02-16T2011",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-16|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-16T2100",
+              "timestamp_max_utc_minute_precision": "2024-02-16T2100",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-17|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-17T0722",
+              "timestamp_max_utc_minute_precision": "2024-02-17T0722",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-17|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-17T0812",
+              "timestamp_max_utc_minute_precision": "2024-02-17T0812",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-18|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-18T0753",
+              "timestamp_max_utc_minute_precision": "2024-02-18T0753",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-18|N",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "n": 5
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-18T2023",
+              "timestamp_max_utc_minute_precision": "2024-02-18T2023",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-19|D",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 5,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-19T0734",
+              "timestamp_max_utc_minute_precision": "2024-02-19T0734",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-19|D",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "l": 5,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-19T0824",
+              "timestamp_max_utc_minute_precision": "2024-02-19T0824",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-20|D",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "l": 3,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-20T0805",
+              "timestamp_max_utc_minute_precision": "2024-02-20T0805",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-20|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-20T2036",
+              "timestamp_max_utc_minute_precision": "2024-02-20T2036",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-21|D",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "n": 2,
+                "l": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-21T0747",
+              "timestamp_max_utc_minute_precision": "2024-02-21T0747",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-21|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-21T0837",
+              "timestamp_max_utc_minute_precision": "2024-02-21T0837",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-21|N",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "n": 8
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-21T2017",
+              "timestamp_max_utc_minute_precision": "2024-02-21T2017",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-22|D",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 2,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-22T0818",
+              "timestamp_max_utc_minute_precision": "2024-02-22T0818",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-22|N",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 6
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-22T1958",
+              "timestamp_max_utc_minute_precision": "2024-02-22T1958",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-22|N",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 6
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-22T2048",
+              "timestamp_max_utc_minute_precision": "2024-02-22T2048",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-23|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-23T0709",
+              "timestamp_max_utc_minute_precision": "2024-02-23T0709",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-23|D",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "l": 3,
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-23T0759",
+              "timestamp_max_utc_minute_precision": "2024-02-23T0759",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-23|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-23T1939",
+              "timestamp_max_utc_minute_precision": "2024-02-23T2119",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-23|N",
+              "detection_count_all_confidence": 9,
+              "confidence_counts": {
+                "n": 9
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-23T2029",
+              "timestamp_max_utc_minute_precision": "2024-02-23T2029",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-24|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-24T0740",
+              "timestamp_max_utc_minute_precision": "2024-02-24T0740",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-24.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-02-24|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-24T2010",
+              "timestamp_max_utc_minute_precision": "2024-02-24T2010",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-02-24.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-27|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-27T0734",
+              "timestamp_max_utc_minute_precision": "2024-02-27T0734",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-24.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-02-27|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-02-27T2004",
+              "timestamp_max_utc_minute_precision": "2024-02-27T2004",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-02-24.csv"
+              ]
+            }
+          ]
+        },
+        "fetch_report": {
+          "path": "data/resq2/E2024-131853/fetch_report.json",
+          "sha256": "2a33363ec5bc90861d3378e6564dd1b896ca7b4a6c0f19e8cbe4affc681daeb3"
+        },
+        "input_checks": {
+          "path": "data/resq2/E2024-131853/input_checks.json",
+          "sha256": "7cc8b59e9cf58e515602af92086ea5f25c56157f24b6065fd2bb2662e30dbba5"
+        },
+        "mcd64a1": [
+          {
+            "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "bytes": 1864576,
+            "laads_listing_bytes": 1864576,
+            "size_matches_laads": true,
+            "month": "2024-02",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024032/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "local_path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "exists": true,
+            "actual_bytes": 1864576,
+            "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+          },
+          {
+            "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "bytes": 1439093,
+            "laads_listing_bytes": 1439093,
+            "size_matches_laads": true,
+            "month": "2024-03",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024061/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "local_path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "exists": true,
+            "actual_bytes": 1439093,
+            "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+          }
+        ],
+        "mcd64a1_derived": {
+          "path": "data/resq2/E2024-131853/mcd64a1_burned_pixels_domain_plus_3km.csv",
+          "exists": true,
+          "rows": 8,
+          "schema": [
+            "row",
+            "col",
+            "lon",
+            "lat",
+            "burn_doy",
+            "burn_date",
+            "uncertainty_days",
+            "file",
+            "in_event_window"
+          ],
+          "burn_date_values": [
+            "2024-03-05"
+          ],
+          "uncertainty_days_min": 1,
+          "uncertainty_days_max": 1,
+          "sha256": "aa682e200a4113cb4fd0fbd6689988df4d99554032170d6b79c6ca45b5c57bc9"
+        },
+        "weather_csvs": [
+          {
+            "path": "data/resq2/E2024-131853/weather_era5land_native_wind.csv",
+            "schema": [
+              "time",
+              "u10_ms",
+              "v10_ms",
+              "wind_speed_ms",
+              "wind_from_deg"
+            ],
+            "rows": 120,
+            "first_time": "2024-02-15 00:00:00",
+            "last_time": "2024-02-19 23:00:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "u10_ms": 0,
+              "v10_ms": 0,
+              "wind_speed_ms": 0,
+              "wind_from_deg": 0
+            },
+            "sha256": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1"
+          },
+          {
+            "path": "data/resq2/E2024-131853/weather_era5land_temperature_humidity.csv",
+            "schema": [
+              "time",
+              "temperature_2m",
+              "relative_humidity_2m",
+              "dew_point_2m"
+            ],
+            "rows": 120,
+            "first_time": "2024-02-15T00:00",
+            "last_time": "2024-02-19T23:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "temperature_2m": 0,
+              "relative_humidity_2m": 0,
+              "dew_point_2m": 0
+            },
+            "sha256": "14cf6c95c522e74a3428a5f60d561e1ea97c848dbc3b035cc9b223fe3ea8e148"
+          }
+        ],
+        "weather_netcdf": [
+          {
+            "path": "data/resq2/E2024-131853/weather_era5land_native_u10_v10_202402.nc",
+            "bytes": 42785,
+            "sha256": "0ef6b67f73805f433e3b895eb66a72d4cd85862d4db575894a6c90b6fdf3ee53",
+            "details": "ERA5-Land native u10/v10; fetch/input metadata records 120 hourly points and coarse 2x2 or 2x3 spatial grid; current Python lacks xarray for a fresh NetCDF decode."
+          }
+        ],
+        "rasters": [
+          {
+            "path": "data/resq2/E2024-131853/copernicus_dem_glo30_window.tif",
+            "bytes": 539659,
+            "sha256": "743cc3b73e5cf14ad181bf05be4e445986176ebab200b37cf42bd52fcd48e809",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                388,
+                411
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq2/E2024-131853/worldcover_2021_window.tif",
+            "bytes": 137336,
+            "sha256": "b54b8c9fd5c1167509548d45e310a633a3f7f9f1b40177cdfbca72ce81db9dc6",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1295,
+                1370
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": false,
+              "sources": [
+                "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif",
+            "bytes": 580598,
+            "sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                388,
+                411
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2024-131853/worldcover_2021_domain_window.tif",
+            "bytes": 146292,
+            "sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1295,
+                1370
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": false,
+              "sources": [
+                "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif"
+              ]
+            }
+          }
+        ],
+        "protocol_setup": {
+          "path": "data/resq5/protocol_setup.json",
+          "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+          "t0_utc": "2024-02-16 08:00:00",
+          "first_detection_utc": "2024-02-16 20:11:00",
+          "ignition_lat_lon": [
+            19.20262,
+            78.60316
+          ],
+          "domain": {
+            "crs": "EPSG:32644",
+            "west_m": 240938,
+            "north_m": 2130375,
+            "cells_per_side": 375,
+            "side_km": 11.25,
+            "cluster_bbox_km": [
+              4.88,
+              5.25
+            ],
+            "n_cells": 140625
+          },
+          "event_linked_nh_pass_count": 6
+        }
+      },
+      "local_event_linkage": {
+        "event_rows": 51,
+        "event_nh_rows": 43,
+        "overpasses": 18,
+        "event_first_utc": "2024-02-16 2011 UTC",
+        "event_last_date": "2024-02-24",
+        "input_check_scar_summary": {
+          "files": [
+            {
+              "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 4415
+            },
+            {
+              "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 5491
+            }
+          ],
+          "pixels_in_domain_plus_3km_any_date": 8,
+          "pixels_event_window": 0,
+          "pixels_outside_event_window": 8,
+          "verdict": "no burned pixels in the event window"
+        }
+      },
+      "model_artifacts": {
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-131853",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-131853/manifest.json",
+            "sha256": "2dca98ccc24796e36942c330f7a354a63d9274dd14d2c659ccf73b8c765dc458"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "note": "NPZ hashes are recorded in the existing per-incident manifest; previous temporal audit verified the hashes. This feasibility assessment did not reload or rescore archives."
+      }
+    },
+    {
+      "incident_id": "E2024-135332",
+      "source_files": {
+        "viirs": {
+          "path": "data/resq2/E2024-135332/viirs_detections.csv",
+          "bytes": 11645,
+          "sha256": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d",
+          "schema": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "rows": 101,
+          "source_versions": [
+            "2"
+          ],
+          "platforms": [
+            "N",
+            "N20"
+          ],
+          "confidence_counts": {
+            "h": 4,
+            "l": 15,
+            "n": 82
+          },
+          "acquisition_date_min": "2024-03-05",
+          "acquisition_date_max": "2024-03-13",
+          "detection_timestamps_min_utc": "2024-03-05T07:53:00Z",
+          "detection_timestamps_max_utc": "2024-03-13T20:23:00Z",
+          "pre_t0_raw_row_count": 0,
+          "pre_t0_raw_rows": [],
+          "raw_acquisition_groups_all_csv_rows": [
+            {
+              "group_id": "N20|2024-03-05|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "l": 1,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-05T0753",
+              "timestamp_max_utc_minute_precision": "2024-03-05T0753",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-05|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-05T0843",
+              "timestamp_max_utc_minute_precision": "2024-03-05T0843",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-05|N",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-05T2023",
+              "timestamp_max_utc_minute_precision": "2024-03-05T2023",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-06|D",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 2,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-06T0734",
+              "timestamp_max_utc_minute_precision": "2024-03-06T0734",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-06|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-06T0824",
+              "timestamp_max_utc_minute_precision": "2024-03-06T0824",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-06|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-06T2004",
+              "timestamp_max_utc_minute_precision": "2024-03-06T2004",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-06|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-06T2054",
+              "timestamp_max_utc_minute_precision": "2024-03-06T2054",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-07|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "l": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-07T0805",
+              "timestamp_max_utc_minute_precision": "2024-03-07T0805",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-07|N",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "n": 5
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-07T2035",
+              "timestamp_max_utc_minute_precision": "2024-03-07T2035",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-08|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "l": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-08T0747",
+              "timestamp_max_utc_minute_precision": "2024-03-08T0747",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-08|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-08T0837",
+              "timestamp_max_utc_minute_precision": "2024-03-08T0837",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-08|N",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "n": 8
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-08T1926",
+              "timestamp_max_utc_minute_precision": "2024-03-08T2106",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-08|N",
+              "detection_count_all_confidence": 9,
+              "confidence_counts": {
+                "n": 9
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-08T2016",
+              "timestamp_max_utc_minute_precision": "2024-03-08T2016",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-09|D",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 2,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-09T0728",
+              "timestamp_max_utc_minute_precision": "2024-03-09T0728",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-09|D",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "l": 2,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-09T0818",
+              "timestamp_max_utc_minute_precision": "2024-03-09T0818",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-09|N",
+              "detection_count_all_confidence": 11,
+              "confidence_counts": {
+                "n": 11
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-09T1958",
+              "timestamp_max_utc_minute_precision": "2024-03-09T1958",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-09|N",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 6
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-09T2048",
+              "timestamp_max_utc_minute_precision": "2024-03-09T2048",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-05.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-10|D",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 3,
+                "l": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-10T0759",
+              "timestamp_max_utc_minute_precision": "2024-03-10T0759",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-10|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-10T2029",
+              "timestamp_max_utc_minute_precision": "2024-03-10T2029",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-11|N",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "n": 8
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-11T2010",
+              "timestamp_max_utc_minute_precision": "2024-03-11T2010",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-11|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-11T2100",
+              "timestamp_max_utc_minute_precision": "2024-03-11T2100",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-12|D",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "h": 4,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-12T0721",
+              "timestamp_max_utc_minute_precision": "2024-03-12T0721",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-12|D",
+              "detection_count_all_confidence": 7,
+              "confidence_counts": {
+                "l": 3,
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-12T0812",
+              "timestamp_max_utc_minute_precision": "2024-03-12T0812",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-03-13|N",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-13T1932",
+              "timestamp_max_utc_minute_precision": "2024-03-13T1932",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-03-10.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-03-13|N",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "n": 5
+              },
+              "timestamp_min_utc_minute_precision": "2024-03-13T2023",
+              "timestamp_max_utc_minute_precision": "2024-03-13T2023",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-03-10.csv"
+              ]
+            }
+          ]
+        },
+        "fetch_report": {
+          "path": "data/resq2/E2024-135332/fetch_report.json",
+          "sha256": "f5be3be651ed3bc61b20e697e6ac0c767475623e4132dc474f8a55a51a66c4a8"
+        },
+        "input_checks": {
+          "path": "data/resq2/E2024-135332/input_checks.json",
+          "sha256": "69e9831b286705c4767006fce4301959bd05d090784df1cdda9d88613472a9e0"
+        },
+        "mcd64a1": [
+          {
+            "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "bytes": 1864576,
+            "laads_listing_bytes": 1864576,
+            "size_matches_laads": true,
+            "month": "2024-02",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024032/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "local_path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "exists": true,
+            "actual_bytes": 1864576,
+            "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+          },
+          {
+            "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "bytes": 1439093,
+            "laads_listing_bytes": 1439093,
+            "size_matches_laads": true,
+            "month": "2024-03",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024061/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "local_path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "exists": true,
+            "actual_bytes": 1439093,
+            "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+          }
+        ],
+        "mcd64a1_derived": {
+          "path": "data/resq2/E2024-135332/mcd64a1_burned_pixels_domain_plus_3km.csv",
+          "exists": true,
+          "rows": 12,
+          "schema": [
+            "row",
+            "col",
+            "lon",
+            "lat",
+            "burn_doy",
+            "burn_date",
+            "uncertainty_days",
+            "file",
+            "in_event_window"
+          ],
+          "burn_date_values": [
+            "2024-03-08",
+            "2024-03-09"
+          ],
+          "uncertainty_days_min": 1,
+          "uncertainty_days_max": 1,
+          "sha256": "e7cfa1e135ee7d2ffdbdd40ed8f340f2876823617ceb91f0478df359a7e288a6"
+        },
+        "weather_csvs": [
+          {
+            "path": "data/resq2/E2024-135332/weather_era5land_native_wind.csv",
+            "schema": [
+              "time",
+              "u10_ms",
+              "v10_ms",
+              "wind_speed_ms",
+              "wind_from_deg"
+            ],
+            "rows": 120,
+            "first_time": "2024-03-04 00:00:00",
+            "last_time": "2024-03-08 23:00:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "u10_ms": 0,
+              "v10_ms": 0,
+              "wind_speed_ms": 0,
+              "wind_from_deg": 0
+            },
+            "sha256": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461"
+          },
+          {
+            "path": "data/resq2/E2024-135332/weather_era5land_temperature_humidity.csv",
+            "schema": [
+              "time",
+              "temperature_2m",
+              "relative_humidity_2m",
+              "dew_point_2m"
+            ],
+            "rows": 120,
+            "first_time": "2024-03-04T00:00",
+            "last_time": "2024-03-08T23:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "temperature_2m": 0,
+              "relative_humidity_2m": 0,
+              "dew_point_2m": 0
+            },
+            "sha256": "dd62b698f9fba97238e60782d7068eabae3593ec61db382cd2228db6f15f5004"
+          }
+        ],
+        "weather_netcdf": [
+          {
+            "path": "data/resq2/E2024-135332/weather_era5land_native_u10_v10_202403.nc",
+            "bytes": 42722,
+            "sha256": "86f75d86a758262a1f0cde406c88c2fdecf5e66d69d876f237130fb6118c83ee",
+            "details": "ERA5-Land native u10/v10; fetch/input metadata records 120 hourly points and coarse 2x2 or 2x3 spatial grid; current Python lacks xarray for a fresh NetCDF decode."
+          }
+        ],
+        "rasters": [
+          {
+            "path": "data/resq2/E2024-135332/copernicus_dem_glo30_window.tif",
+            "bytes": 374464,
+            "sha256": "300cfa1fb548a02b95a79fb761cbebb5d9cb2fcd74e6b8f95d8b842e0c62720d",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                324,
+                344
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif",
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N20_00_E078_00_DEM/Copernicus_DSM_COG_10_N20_00_E078_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq2/E2024-135332/worldcover_2021_window.tif",
+            "bytes": 91977,
+            "sha256": "eef1836764d78aba6fe551265ffca5d3943b5e1622d13924197acc6d9c8b833d",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1079,
+                1147
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": false,
+              "sources": [
+                "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif",
+            "bytes": 475990,
+            "sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                324,
+                344
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif",
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N20_00_E078_00_DEM/Copernicus_DSM_COG_10_N20_00_E078_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2024-135332/worldcover_2021_domain_window.tif",
+            "bytes": 121472,
+            "sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1079,
+                1147
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": false,
+              "sources": [
+                "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif"
+              ]
+            }
+          }
+        ],
+        "protocol_setup": {
+          "path": "data/resq5/protocol_setup.json",
+          "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+          "t0_utc": "2024-03-04 19:00:00",
+          "first_detection_utc": "2024-03-05 07:53:00",
+          "ignition_lat_lon": [
+            19.95163,
+            78.71265
+          ],
+          "domain": {
+            "crs": "EPSG:32644",
+            "west_m": 256492,
+            "north_m": 2214758,
+            "cells_per_side": 338,
+            "side_km": 10.14,
+            "cluster_bbox_km": [
+              4.12,
+              4.12
+            ],
+            "n_cells": 114244
+          },
+          "event_linked_nh_pass_count": 7
+        }
+      },
+      "local_event_linkage": {
+        "event_rows": 62,
+        "event_nh_rows": 52,
+        "overpasses": 19,
+        "event_first_utc": "2024-03-05 0753 UTC",
+        "event_last_date": "2024-03-10",
+        "input_check_scar_summary": {
+          "files": [
+            {
+              "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 4415
+            },
+            {
+              "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 5491
+            }
+          ],
+          "pixels_in_domain_plus_3km_any_date": 12,
+          "pixels_event_window": 12,
+          "pixels_outside_event_window": 0,
+          "scar_area_km2": 2.58,
+          "scar_bbox_km": {
+            "east_west": 1.88,
+            "north_south": 2.32
+          },
+          "viirs_bbox_km": {
+            "east_west": 4.16,
+            "north_south": 4.42
+          },
+          "scar_centroid": [
+            19.9632,
+            78.7241
+          ],
+          "viirs_centroid": [
+            19.9712,
+            78.7195
+          ],
+          "centroid_offset_km": 1.01,
+          "detections_within_1km_of_scar_pct_all": 58.1,
+          "detections_within_1km_of_scar_pct_nh": 57.7,
+          "median_detection_to_scar_km": 0.89,
+          "median_scar_pixel_to_detection_km": 0.23,
+          "scar_pixels_within_1km_of_a_detection_pct": 100.0,
+          "burn_date_range": [
+            "2024-03-08",
+            "2024-03-09"
+          ],
+          "uncertainty_days_median": 1.0,
+          "burn_date_first_minus_first_detection_days": 3,
+          "scar_area_over_viirs_hull_area": 0.17,
+          "verdict": "not consistent (see numbers)"
+        }
+      },
+      "model_artifacts": {
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-135332",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-135332/manifest.json",
+            "sha256": "e3d56741eb54542f6caad9911ef4f39a3c1a29347eabc2e8fea415f3d4780334"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "note": "NPZ hashes are recorded in the existing per-incident manifest; previous temporal audit verified the hashes. This feasibility assessment did not reload or rescore archives."
+      }
+    },
+    {
+      "incident_id": "E2023-084925",
+      "source_files": {
+        "viirs": {
+          "path": "data/resq2/E2023-084925/viirs_detections.csv",
+          "bytes": 11369,
+          "sha256": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f",
+          "schema": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "rows": 99,
+          "source_versions": [
+            "2"
+          ],
+          "platforms": [
+            "N",
+            "N20"
+          ],
+          "confidence_counts": {
+            "h": 1,
+            "l": 6,
+            "n": 92
+          },
+          "acquisition_date_min": "2023-03-07",
+          "acquisition_date_max": "2023-03-16",
+          "detection_timestamps_min_utc": "2023-03-07T07:29:00Z",
+          "detection_timestamps_max_utc": "2023-03-16T08:00:00Z",
+          "pre_t0_raw_row_count": 11,
+          "pre_t0_raw_rows": [
+            {
+              "acq_date": "2023-03-07",
+              "acq_time": "729",
+              "latitude": "19.32654",
+              "longitude": "83.90141",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "D",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-07",
+              "acq_time": "817",
+              "latitude": "19.32508",
+              "longitude": "83.90125",
+              "confidence": "n",
+              "satellite": "N20",
+              "daynight": "D",
+              "source_file": "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-07",
+              "acq_time": "818",
+              "latitude": "19.32366",
+              "longitude": "83.90096",
+              "confidence": "n",
+              "satellite": "N20",
+              "daynight": "D",
+              "source_file": "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-07",
+              "acq_time": "1959",
+              "latitude": "19.40389",
+              "longitude": "83.90926",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "N",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "710",
+              "latitude": "19.25207",
+              "longitude": "83.83778",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "D",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "710",
+              "latitude": "19.2528",
+              "longitude": "83.84059",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "D",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "759",
+              "latitude": "19.37306",
+              "longitude": "83.84924",
+              "confidence": "n",
+              "satellite": "N20",
+              "daynight": "D",
+              "source_file": "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "1940",
+              "latitude": "19.40549",
+              "longitude": "83.91911",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "N",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "1940",
+              "latitude": "19.41157",
+              "longitude": "83.90479",
+              "confidence": "n",
+              "satellite": "N",
+              "daynight": "N",
+              "source_file": "VIIRS_SNPP_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "2029",
+              "latitude": "19.40677",
+              "longitude": "83.91862",
+              "confidence": "n",
+              "satellite": "N20",
+              "daynight": "N",
+              "source_file": "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+            },
+            {
+              "acq_date": "2023-03-08",
+              "acq_time": "2029",
+              "latitude": "19.41049",
+              "longitude": "83.89948",
+              "confidence": "n",
+              "satellite": "N20",
+              "daynight": "N",
+              "source_file": "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+            }
+          ],
+          "raw_acquisition_groups_all_csv_rows": [
+            {
+              "group_id": "N|2023-03-07|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-07T0729",
+              "timestamp_max_utc_minute_precision": "2023-03-07T0729",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-07|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-07T0817",
+              "timestamp_max_utc_minute_precision": "2023-03-07T0818",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-07|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-07T1959",
+              "timestamp_max_utc_minute_precision": "2023-03-07T1959",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-08|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-08T0710",
+              "timestamp_max_utc_minute_precision": "2023-03-08T0710",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-08|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-08T0759",
+              "timestamp_max_utc_minute_precision": "2023-03-08T0759",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-08|N",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-08T1940",
+              "timestamp_max_utc_minute_precision": "2023-03-08T1940",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-08|N",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-08T2029",
+              "timestamp_max_utc_minute_precision": "2023-03-08T2029",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-10|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-10T0721",
+              "timestamp_max_utc_minute_precision": "2023-03-10T0721",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-10|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-10T0813",
+              "timestamp_max_utc_minute_precision": "2023-03-10T0813",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-10|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-10T1951",
+              "timestamp_max_utc_minute_precision": "2023-03-10T1951",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-10|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-10T2043",
+              "timestamp_max_utc_minute_precision": "2023-03-10T2043",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-06.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-11|D",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-11T0702",
+              "timestamp_max_utc_minute_precision": "2023-03-11T0702",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-11|D",
+              "detection_count_all_confidence": 12,
+              "confidence_counts": {
+                "n": 10,
+                "l": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-11T0754",
+              "timestamp_max_utc_minute_precision": "2023-03-11T0754",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-11|N",
+              "detection_count_all_confidence": 7,
+              "confidence_counts": {
+                "n": 7
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-11T1932",
+              "timestamp_max_utc_minute_precision": "2023-03-11T1932",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-11|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-11T2024",
+              "timestamp_max_utc_minute_precision": "2023-03-11T2024",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-12|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-12T0643",
+              "timestamp_max_utc_minute_precision": "2023-03-12T0643",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-12|D",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 3,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-12T0735",
+              "timestamp_max_utc_minute_precision": "2023-03-12T0735",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-12|N",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "n": 8
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-12T2005",
+              "timestamp_max_utc_minute_precision": "2023-03-12T2005",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-12|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-12T2054",
+              "timestamp_max_utc_minute_precision": "2023-03-12T2054",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-13|D",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 1,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-13T0805",
+              "timestamp_max_utc_minute_precision": "2023-03-13T0805",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-13|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-13T1946",
+              "timestamp_max_utc_minute_precision": "2023-03-13T1946",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-13|N",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-13T2035",
+              "timestamp_max_utc_minute_precision": "2023-03-13T2035",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-14|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-14T0658",
+              "timestamp_max_utc_minute_precision": "2023-03-14T0658",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-14|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-14T0746",
+              "timestamp_max_utc_minute_precision": "2023-03-14T0746",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-14|N",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "n": 5
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-14T1928",
+              "timestamp_max_utc_minute_precision": "2023-03-14T1928",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-15|D",
+              "detection_count_all_confidence": 7,
+              "confidence_counts": {
+                "n": 6,
+                "l": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-15T0727",
+              "timestamp_max_utc_minute_precision": "2023-03-15T0727",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-15|D",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "l": 1,
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-15T0819",
+              "timestamp_max_utc_minute_precision": "2023-03-15T0819",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-11.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2023-03-16|D",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 3,
+                "h": 1
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-16T0708",
+              "timestamp_max_utc_minute_precision": "2023-03-16T0708",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2023-03-16.csv"
+              ]
+            },
+            {
+              "group_id": "N|2023-03-16|D",
+              "detection_count_all_confidence": 10,
+              "confidence_counts": {
+                "n": 10
+              },
+              "timestamp_min_utc_minute_precision": "2023-03-16T0800",
+              "timestamp_max_utc_minute_precision": "2023-03-16T0800",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2023-03-16.csv"
+              ]
+            }
+          ]
+        },
+        "fetch_report": {
+          "path": "data/resq2/E2023-084925/fetch_report.json",
+          "sha256": "9e54593748ba717dc41e8b3a4ccb5fc55623ebdbf5ceae4d9f38ed35b3c22ba4"
+        },
+        "input_checks": {
+          "path": "data/resq2/E2023-084925/input_checks.json",
+          "sha256": "00a217c56693222480da7ad915f9f2d47bf741d0b5d86a247ff251d827d1c8a4"
+        },
+        "mcd64a1": [
+          {
+            "file": "MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+            "bytes": 2159249,
+            "laads_listing_bytes": 2159249,
+            "size_matches_laads": true,
+            "month": "2023-03",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2023060/MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+            "local_path": "data/resq2/E2023-084925/mcd64a1/MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+            "exists": true,
+            "actual_bytes": 2159249,
+            "sha256": "8eb481c4f108d92f41a5d4b3219a8f16c346f1ab127630e1436e3a82aabc842d"
+          }
+        ],
+        "mcd64a1_derived": {
+          "path": "data/resq2/E2023-084925/mcd64a1_burned_pixels_domain_plus_3km.csv",
+          "exists": true,
+          "rows": 5,
+          "schema": [
+            "row",
+            "col",
+            "lon",
+            "lat",
+            "burn_doy",
+            "burn_date",
+            "uncertainty_days",
+            "file",
+            "in_event_window"
+          ],
+          "burn_date_values": [
+            "2023-03-04",
+            "2023-03-11",
+            "2023-03-12",
+            "2023-03-17"
+          ],
+          "uncertainty_days_min": 1,
+          "uncertainty_days_max": 6,
+          "sha256": "8294bc1ab1ce74acd2fa0470b8286971c87a188987a204456bd5ff1033f3d9b5"
+        },
+        "weather_csvs": [
+          {
+            "path": "data/resq2/E2023-084925/weather_era5land_native_wind.csv",
+            "schema": [
+              "time",
+              "u10_ms",
+              "v10_ms",
+              "wind_speed_ms",
+              "wind_from_deg"
+            ],
+            "rows": 120,
+            "first_time": "2023-03-09 00:00:00",
+            "last_time": "2023-03-13 23:00:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "u10_ms": 0,
+              "v10_ms": 0,
+              "wind_speed_ms": 0,
+              "wind_from_deg": 0
+            },
+            "sha256": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3"
+          },
+          {
+            "path": "data/resq2/E2023-084925/weather_era5land_temperature_humidity.csv",
+            "schema": [
+              "time",
+              "temperature_2m",
+              "relative_humidity_2m",
+              "dew_point_2m"
+            ],
+            "rows": 120,
+            "first_time": "2023-03-09T00:00",
+            "last_time": "2023-03-13T23:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "temperature_2m": 0,
+              "relative_humidity_2m": 0,
+              "dew_point_2m": 0
+            },
+            "sha256": "c709567db387a7c6ed60b94f8b1e1eab01a2f7544afa5b4a6b0fb233ea076d73"
+          }
+        ],
+        "weather_netcdf": [
+          {
+            "path": "data/resq2/E2023-084925/weather_era5land_native_u10_v10_202303.nc",
+            "bytes": 42774,
+            "sha256": "891921b830ac1983b9f00b329a2ddba11a9a51e5b767d693de15ef4b45443f8d",
+            "details": "ERA5-Land native u10/v10; fetch/input metadata records 120 hourly points and coarse 2x2 or 2x3 spatial grid; current Python lacks xarray for a fresh NetCDF decode."
+          }
+        ],
+        "rasters": [
+          {
+            "path": "data/resq2/E2023-084925/copernicus_dem_glo30_window.tif",
+            "bytes": 529503,
+            "sha256": "cce1deb1c968d1569be031d5f43145985b66cef918eb754773624de57ba296d1",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                388,
+                411
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E083_00_DEM/Copernicus_DSM_COG_10_N19_00_E083_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq2/E2023-084925/worldcover_2021_window.tif",
+            "bytes": 116188,
+            "sha256": "4112fe7116aa7c68c8a3cc302a1f4ee279095bb482763cb9c639e79814589350",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1295,
+                1371
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": true
+            }
+          },
+          {
+            "path": "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif",
+            "bytes": 614197,
+            "sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                388,
+                411
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E083_00_DEM/Copernicus_DSM_COG_10_N19_00_E083_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2023-084925/worldcover_2021_domain_window.tif",
+            "bytes": 132093,
+            "sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1295,
+                1371
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": true
+            }
+          }
+        ],
+        "protocol_setup": {
+          "path": "data/resq5/protocol_setup.json",
+          "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+          "t0_utc": "2023-03-10 07:00:00",
+          "first_detection_utc": "2023-03-10 19:51:00",
+          "ignition_lat_lon": [
+            19.32648,
+            83.93716
+          ],
+          "domain": {
+            "crs": "EPSG:32644",
+            "west_m": 800618,
+            "north_m": 2145945,
+            "cells_per_side": 388,
+            "side_km": 11.64,
+            "cluster_bbox_km": [
+              5.62,
+              3.75
+            ],
+            "n_cells": 150544
+          },
+          "event_linked_nh_pass_count": 8
+        }
+      },
+      "local_event_linkage": {
+        "event_rows": 52,
+        "event_nh_rows": 49,
+        "overpasses": 16,
+        "event_first_utc": "2023-03-10 1951 UTC",
+        "event_last_date": "2023-03-16",
+        "input_check_scar_summary": {
+          "files": [
+            {
+              "file": "MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 11296
+            }
+          ],
+          "pixels_in_domain_plus_3km_any_date": 5,
+          "pixels_event_window": 5,
+          "pixels_outside_event_window": 0,
+          "scar_area_km2": 1.07,
+          "scar_bbox_km": {
+            "east_west": 5.46,
+            "north_south": 9.27
+          },
+          "viirs_bbox_km": {
+            "east_west": 5.4,
+            "north_south": 4.06
+          },
+          "scar_centroid": [
+            19.3354,
+            83.9276
+          ],
+          "viirs_centroid": [
+            19.3303,
+            83.9263
+          ],
+          "centroid_offset_km": 0.58,
+          "detections_within_1km_of_scar_pct_all": 44.2,
+          "detections_within_1km_of_scar_pct_nh": 42.9,
+          "median_detection_to_scar_km": 1.05,
+          "median_scar_pixel_to_detection_km": 0.31,
+          "scar_pixels_within_1km_of_a_detection_pct": 60.0,
+          "burn_date_range": [
+            "2023-03-04",
+            "2023-03-17"
+          ],
+          "uncertainty_days_median": 1.0,
+          "burn_date_first_minus_first_detection_days": -6,
+          "scar_area_over_viirs_hull_area": 0.06,
+          "verdict": "not consistent (see numbers)"
+        }
+      },
+      "model_artifacts": {
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2023-084925",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2023-084925/manifest.json",
+            "sha256": "0aa41c9c34c79372df320d5f8fa7f1b65850e48fba8b85789fba4847d12fa40a"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "note": "NPZ hashes are recorded in the existing per-incident manifest; previous temporal audit verified the hashes. This feasibility assessment did not reload or rescore archives."
+      }
+    },
+    {
+      "incident_id": "E2024-155286",
+      "source_files": {
+        "viirs": {
+          "path": "data/resq2/E2024-155286/viirs_detections.csv",
+          "bytes": 28032,
+          "sha256": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92",
+          "schema": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "rows": 245,
+          "source_versions": [
+            "2"
+          ],
+          "platforms": [
+            "N",
+            "N20"
+          ],
+          "confidence_counts": {
+            "l": 51,
+            "n": 194
+          },
+          "acquisition_date_min": "2024-04-12",
+          "acquisition_date_max": "2024-04-20",
+          "detection_timestamps_min_utc": "2024-04-12T19:46:00Z",
+          "detection_timestamps_max_utc": "2024-04-20T20:36:00Z",
+          "pre_t0_raw_row_count": 0,
+          "pre_t0_raw_rows": [],
+          "raw_acquisition_groups_all_csv_rows": [
+            {
+              "group_id": "N20|2024-04-12|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-12T1946",
+              "timestamp_max_utc_minute_precision": "2024-04-12T1946",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-09.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-14|D",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "l": 5,
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-14T0753",
+              "timestamp_max_utc_minute_precision": "2024-04-14T0753",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-14|N",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "n": 8
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-14T2023",
+              "timestamp_max_utc_minute_precision": "2024-04-14T2023",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-14|N",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 6
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-14T2048",
+              "timestamp_max_utc_minute_precision": "2024-04-14T2049",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-15|D",
+              "detection_count_all_confidence": 5,
+              "confidence_counts": {
+                "l": 4,
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-15T0734",
+              "timestamp_max_utc_minute_precision": "2024-04-15T0734",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-15|D",
+              "detection_count_all_confidence": 8,
+              "confidence_counts": {
+                "l": 5,
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-15T0800",
+              "timestamp_max_utc_minute_precision": "2024-04-15T0800",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-15|N",
+              "detection_count_all_confidence": 22,
+              "confidence_counts": {
+                "n": 22
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-15T2004",
+              "timestamp_max_utc_minute_precision": "2024-04-15T2004",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-15|N",
+              "detection_count_all_confidence": 20,
+              "confidence_counts": {
+                "n": 20
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-15T2030",
+              "timestamp_max_utc_minute_precision": "2024-04-15T2030",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-16|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-16T0715",
+              "timestamp_max_utc_minute_precision": "2024-04-16T0715",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-16|D",
+              "detection_count_all_confidence": 16,
+              "confidence_counts": {
+                "l": 14,
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-16T0741",
+              "timestamp_max_utc_minute_precision": "2024-04-16T0741",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-16|N",
+              "detection_count_all_confidence": 3,
+              "confidence_counts": {
+                "n": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-16T1946",
+              "timestamp_max_utc_minute_precision": "2024-04-16T1946",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-16|N",
+              "detection_count_all_confidence": 14,
+              "confidence_counts": {
+                "n": 14
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-16T2011",
+              "timestamp_max_utc_minute_precision": "2024-04-16T2011",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-17|D",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "l": 2,
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-17T0722",
+              "timestamp_max_utc_minute_precision": "2024-04-17T0722",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-17|D",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-17T0837",
+              "timestamp_max_utc_minute_precision": "2024-04-17T0837",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-17|N",
+              "detection_count_all_confidence": 2,
+              "confidence_counts": {
+                "n": 2
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-17T1927",
+              "timestamp_max_utc_minute_precision": "2024-04-17T1927",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-17|N",
+              "detection_count_all_confidence": 22,
+              "confidence_counts": {
+                "n": 22
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-17T1952",
+              "timestamp_max_utc_minute_precision": "2024-04-17T1952",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-18|D",
+              "detection_count_all_confidence": 13,
+              "confidence_counts": {
+                "n": 10,
+                "l": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-18T0818",
+              "timestamp_max_utc_minute_precision": "2024-04-18T0818",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-14.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-19|D",
+              "detection_count_all_confidence": 21,
+              "confidence_counts": {
+                "n": 17,
+                "l": 4
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-19T0759",
+              "timestamp_max_utc_minute_precision": "2024-04-19T0759",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-19|D",
+              "detection_count_all_confidence": 4,
+              "confidence_counts": {
+                "n": 4
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-19T0825",
+              "timestamp_max_utc_minute_precision": "2024-04-19T0825",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-19|N",
+              "detection_count_all_confidence": 14,
+              "confidence_counts": {
+                "n": 14
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-19T2030",
+              "timestamp_max_utc_minute_precision": "2024-04-19T2030",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-19|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-19T2055",
+              "timestamp_max_utc_minute_precision": "2024-04-19T2055",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-20|D",
+              "detection_count_all_confidence": 20,
+              "confidence_counts": {
+                "l": 11,
+                "n": 9
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-20T0740",
+              "timestamp_max_utc_minute_precision": "2024-04-20T0740",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-20|D",
+              "detection_count_all_confidence": 20,
+              "confidence_counts": {
+                "n": 17,
+                "l": 3
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-20T0806",
+              "timestamp_max_utc_minute_precision": "2024-04-20T0806",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N|2024-04-20|N",
+              "detection_count_all_confidence": 6,
+              "confidence_counts": {
+                "n": 6
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-20T2011",
+              "timestamp_max_utc_minute_precision": "2024-04-20T2011",
+              "source_files": [
+                "VIIRS_SNPP_SP_main_2024-04-19.csv"
+              ]
+            },
+            {
+              "group_id": "N20|2024-04-20|N",
+              "detection_count_all_confidence": 1,
+              "confidence_counts": {
+                "n": 1
+              },
+              "timestamp_min_utc_minute_precision": "2024-04-20T2036",
+              "timestamp_max_utc_minute_precision": "2024-04-20T2036",
+              "source_files": [
+                "VIIRS_NOAA20_SP_main_2024-04-19.csv"
+              ]
+            }
+          ]
+        },
+        "fetch_report": {
+          "path": "data/resq2/E2024-155286/fetch_report.json",
+          "sha256": "9708b8c9bd082f7756cbe0983e3355362b85ceceb5995bb1928eeaa9825303c5"
+        },
+        "input_checks": {
+          "path": "data/resq2/E2024-155286/input_checks.json",
+          "sha256": "011425b3302d6ae879bc7e12db5224612cc8750e69fb4f6fb9081f66eaa43b3f"
+        },
+        "mcd64a1": [
+          {
+            "file": "MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+            "bytes": 2309415,
+            "laads_listing_bytes": null,
+            "size_matches_laads": false,
+            "month": "2024-04",
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024092/MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+            "local_path": "data/resq2/E2024-155286/mcd64a1/MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+            "exists": true,
+            "actual_bytes": 2309415,
+            "sha256": "af9c161e9c6bf0554b8566c596c1ccd8d8ff0ea22264e6b6fe929db4d3bb9fbe"
+          }
+        ],
+        "mcd64a1_derived": {
+          "path": "data/resq2/E2024-155286/mcd64a1_burned_pixels_domain_plus_3km.csv",
+          "exists": false
+        },
+        "weather_csvs": [
+          {
+            "path": "data/resq2/E2024-155286/weather_era5land_native_wind.csv",
+            "schema": [
+              "time",
+              "u10_ms",
+              "v10_ms",
+              "wind_speed_ms",
+              "wind_from_deg"
+            ],
+            "rows": 120,
+            "first_time": "2024-04-11 00:00:00",
+            "last_time": "2024-04-15 23:00:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "u10_ms": 0,
+              "v10_ms": 0,
+              "wind_speed_ms": 0,
+              "wind_from_deg": 0
+            },
+            "sha256": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a"
+          },
+          {
+            "path": "data/resq2/E2024-155286/weather_era5land_temperature_humidity.csv",
+            "schema": [
+              "time",
+              "temperature_2m",
+              "relative_humidity_2m",
+              "dew_point_2m"
+            ],
+            "rows": 120,
+            "first_time": "2024-04-11T00:00",
+            "last_time": "2024-04-15T23:00",
+            "empty_values_by_field": {
+              "time": 0,
+              "temperature_2m": 0,
+              "relative_humidity_2m": 0,
+              "dew_point_2m": 0
+            },
+            "sha256": "8fde99bf780b1d366f079d075a79f203d3b4da3b2a0c2db5faef9dfee77c1a6f"
+          }
+        ],
+        "weather_netcdf": [
+          {
+            "path": "data/resq2/E2024-155286/weather_era5land_native_u10_v10_202404.nc",
+            "bytes": 43805,
+            "sha256": "3def026113d35c474a13734fe2661e5b7f2eb14b43844cf10d971999a91541fa",
+            "details": "ERA5-Land native u10/v10; fetch/input metadata records 120 hourly points and coarse 2x2 or 2x3 spatial grid; current Python lacks xarray for a fresh NetCDF decode."
+          }
+        ],
+        "rasters": [
+          {
+            "path": "data/resq2/E2024-155286/copernicus_dem_glo30_window.tif",
+            "bytes": 367392,
+            "sha256": "617edfc3fd1748f433d7ddbbd65d6d4b95bef76adedd8009b6997c70859b2fa6",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                324,
+                342
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E080_00_DEM/Copernicus_DSM_COG_10_N19_00_E080_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq2/E2024-155286/worldcover_2021_window.tif",
+            "bytes": 60179,
+            "sha256": "400a8cccc8fa972b56e6a40d9ac4b776b1deed64d7cac747a8d09b0310a09d2b",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1079,
+                1141
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": true
+            }
+          },
+          {
+            "path": "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif",
+            "bytes": 459941,
+            "sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "copernicus_dem_glo30_window.tif",
+              "shape": [
+                324,
+                342
+              ],
+              "res_deg": [
+                0.0002777777777777778,
+                0.0002777777777777778
+              ],
+              "cached": false,
+              "sources": [
+                "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E080_00_DEM/Copernicus_DSM_COG_10_N19_00_E080_00_DEM.tif"
+              ]
+            }
+          },
+          {
+            "path": "data/resq5/E2024-155286/worldcover_2021_domain_window.tif",
+            "bytes": 78085,
+            "sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+            "metadata_source": "fetch_report.json/input_checks.json",
+            "source_metadata": {
+              "file": "worldcover_2021_window.tif",
+              "shape": [
+                1079,
+                1141
+              ],
+              "res_deg": [
+                8.333333333333333e-05,
+                8.333333333333333e-05
+              ],
+              "cached": true
+            }
+          }
+        ],
+        "protocol_setup": {
+          "path": "data/resq5/protocol_setup.json",
+          "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+          "t0_utc": "2024-04-12 07:00:00",
+          "first_detection_utc": "2024-04-12 19:46:00",
+          "ignition_lat_lon": [
+            19.12243,
+            80.89992
+          ],
+          "domain": {
+            "crs": "EPSG:32644",
+            "west_m": 483555,
+            "north_m": 2119508,
+            "cells_per_side": 338,
+            "side_km": 10.14,
+            "cluster_bbox_km": [
+              3.0,
+              4.12
+            ],
+            "n_cells": 114244
+          },
+          "event_linked_nh_pass_count": 4
+        }
+      },
+      "local_event_linkage": {
+        "event_rows": 49,
+        "event_nh_rows": 41,
+        "overpasses": 10,
+        "event_first_utc": "2024-04-12 1946 UTC",
+        "event_last_date": "2024-04-17",
+        "input_check_scar_summary": {
+          "files": [
+            {
+              "file": "MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+              "pixel_size_m": [
+                463.313,
+                463.313
+              ],
+              "burned_pixels_in_tile": 11158
+            }
+          ],
+          "pixels_event_window": 0,
+          "verdict": "no burned pixels in the domain + 3 km in the fetched months"
+        }
+      },
+      "model_artifacts": {
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-155286",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-155286/manifest.json",
+            "sha256": "584e87c644cdd623c58be37cd05addfbe5418e100623af82baa99ddd8391e8a7"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "note": "NPZ hashes are recorded in the existing per-incident manifest; previous temporal audit verified the hashes. This feasibility assessment did not reload or rescore archives."
+      }
+    }
+  ],
+  "coverage_inventory": {
+    "searched_local_artifacts": [
+      "data/resq2/<incident>/viirs_detections.csv",
+      "data/resq2/<incident>/fetch_report.json",
+      "data/resq2/<incident>/input_checks.json",
+      "data/resq2/<incident>/mcd64a1_burned_pixels_domain_plus_3km.csv",
+      "data/resq2/<incident>/mcd64a1/*.hdf",
+      "data/resq5/<incident>/*.tif",
+      "results/resq6/dev_member_grids_horizon_aligned_20261015/<incident>/*"
+    ],
+    "verified_clear_sky_or_valid_observation_mask_found": false,
+    "verified_per_cell_satellite_observation_opportunity_found": false,
+    "interpretation": "VIIRS detections and source_file/platform/pass metadata do not establish that undetected cells were observable and clear. No absence-of-fire label can be assigned from a missing detection alone."
+  },
+  "pipeline_semantics": {
+    "incident_association": "scripts/resq3/check_inputs.py:event_detections filters type==0 and assigns space-time connected components; incident component is selected from first-date point nearest candidate ignition.",
+    "origin": "scripts/resq5/setup_incidents.py: first associated detection minus 12 h, floored to hour; protocol origin, not observed ignition.",
+    "timestamp": "acq_date + acq_time HHMM; source minute precision; pass median floored to minute; elapsed value saved rounded to 0.01 h.",
+    "target": "scripts/resq5/analyze.py: cumulative union of confidence n/h event-associated detections; nominal 375 m global-origin keys in EPSG:32644 mapped to 30 m model cell centers.",
+    "known_limitations": [
+      "scan/track fields are retained but current rasterizer uses nominal key blocks, not pixel footprint geometry",
+      "non-positive cells are zero in historical labels without observation coverage",
+      "no target-age criterion or interpolation"
+    ]
+  },
+  "model_artifacts": {
+    "root": "results/resq6/dev_member_grids_horizon_aligned_20261015/",
+    "horizons_hours": [
+      6,
+      12,
+      24,
+      48
+    ],
+    "expected_members_per_incident": 60,
+    "incidents": [
+      {
+        "incident_id": "E2024-131853",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-131853/manifest.json",
+            "sha256": "2dca98ccc24796e36942c330f7a354a63d9274dd14d2c659ccf73b8c765dc458"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "member_archive_sha256_count_recorded_in_manifest": 60,
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-131853"
+      },
+      {
+        "incident_id": "E2024-135332",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-135332/manifest.json",
+            "sha256": "e3d56741eb54542f6caad9911ef4f39a3c1a29347eabc2e8fea415f3d4780334"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "member_archive_sha256_count_recorded_in_manifest": 60,
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-135332"
+      },
+      {
+        "incident_id": "E2023-084925",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2023-084925/manifest.json",
+            "sha256": "0aa41c9c34c79372df320d5f8fa7f1b65850e48fba8b85789fba4847d12fa40a"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "member_archive_sha256_count_recorded_in_manifest": 60,
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2023-084925"
+      },
+      {
+        "incident_id": "E2024-155286",
+        "json_manifests": [
+          {
+            "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-155286/manifest.json",
+            "sha256": "584e87c644cdd623c58be37cd05addfbe5418e100623af82baa99ddd8391e8a7"
+          }
+        ],
+        "npz_count": 60,
+        "expected_npz_count": 60,
+        "member_archive_sha256_count_recorded_in_manifest": 60,
+        "path": "results/resq6/dev_member_grids_horizon_aligned_20261015/member_grids/E2024-155286"
+      }
+    ]
+  },
+  "limitations_and_missing_inputs": [
+    "Per-cell clear-sky, cloud, quality/valid-view opportunity masks for FIRMS observations",
+    "Incident-linked, sufficiently complete pre-origin fire-free observation record",
+    "Approved maximum target-age / missing-horizon policy",
+    "Time-resolved independent fire perimeter or newly burned-area labels for true spread",
+    "Verified MCD64A1 derived artifact and resolved listing-size provenance for E2024-155286"
+  ]
+}

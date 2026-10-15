@@ -34,7 +34,7 @@ WIND_CSV_COLUMNS = {
 }
 
 REPLAY_INCIDENTS: dict[str, dict] = {
-    "E2023-084925": {"state": "OD", "label": "Similipal, Odisha — Mar 2023"},
+    "E2023-084925": {"state": "OD", "label": "Odisha — Mar 2023"},
     "E2024-131853": {"state": "TS", "label": "Telangana — Feb 2024"},
     "E2024-135332": {"state": "MH", "label": "Maharashtra — Mar 2024"},
     "E2024-155286": {"state": "CG", "label": "Chhattisgarh — 2024"},
@@ -255,18 +255,36 @@ def _haversine_m(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.
 
 @lru_cache(maxsize=16)
 def nominal_ignition(incident_id: str) -> dict:
-    """The medoid of the incident's first-overpass VIIRS detections — the protocol's "nominal
-    (un-jittered) ignition point" (RESQ5_PROTOCOL.md §8(a)), same method as
-    scripts/resq2/build_incident_candidates.py's ignition-pixel selection, computed here from
-    the raw detection CSV rather than re-reading that script's cached output."""
-    df = _viirs_csv(incident_id).copy()
-    df["overpass"] = df["satellite"].astype(str) + "|" + df["acq_date"].astype(str) + "|" + df["daynight"].astype(str)
-    df = df.sort_values(["acq_date", "acq_time"])
-    first = df[df["overpass"] == df["overpass"].iloc[0]]
-    lat, lon = first["latitude"].to_numpy(), first["longitude"].to_numpy()
-    dist_sums = np.array([_haversine_m(lat, lon, lat[i], lon[i]).sum() for i in range(len(lat))])
-    i = int(np.argmin(dist_sums))
-    return {"lat": float(lat[i]), "lon": float(lon[i])}
+    """Return the exact prescribed start point used by the saved RESQ-5 simulation.
+
+    The first-overpass detection medoid is useful evidence for an incident candidate, but it
+    is not necessarily the coordinate Cell2Fire was initialized with. The protocol setup is
+    the source of truth for the simulated initial condition and for ignition-centered layers.
+    """
+    if incident_id not in REPLAY_INCIDENTS:
+        raise KeyError(incident_id)
+    setup_path = REPO_ROOT / "data" / "resq5" / "protocol_setup.json"
+    setup = json.loads(setup_path.read_text())
+    try:
+        lat, lon = setup[incident_id]["ignition_lat_lon"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"protocol setup has no prescribed ignition for {incident_id}") from exc
+    return {"lat": float(lat), "lon": float(lon)}
+
+
+@lru_cache(maxsize=16)
+def simulation_start_utc(incident_id: str) -> str:
+    """Return the saved protocol's UTC origin as an ISO-8601 string."""
+    if incident_id not in REPLAY_INCIDENTS:
+        raise KeyError(incident_id)
+    setup_path = REPO_ROOT / "data" / "resq5" / "protocol_setup.json"
+    setup = json.loads(setup_path.read_text())
+    try:
+        value = str(setup[incident_id]["t0_utc"]).strip()
+    except (KeyError, TypeError) as exc:
+        raise ValueError(f"protocol setup has no UTC origin for {incident_id}") from exc
+    normalized = value.replace(" ", "T", 1)
+    return normalized if normalized.endswith("Z") else f"{normalized}Z"
 
 
 def _grid_to_wgs84_geojson(grid: np.ndarray, incident_id: str, mask: np.ndarray | None = None) -> dict:

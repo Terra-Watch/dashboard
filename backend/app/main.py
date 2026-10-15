@@ -11,7 +11,7 @@ async def lifespan(_: FastAPI):
     init_db()
     yield
 
-app = FastAPI(title="RESQ Wildfire Operations API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="TerraWatch — Wildfire Monitoring & Incident Intelligence API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=API_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(auth.router)
 app.include_router(operations.router)

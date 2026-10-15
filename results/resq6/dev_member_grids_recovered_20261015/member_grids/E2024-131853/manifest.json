@@ -1,0 +1,1090 @@
+{
+  "incident_id": "E2024-131853",
+  "grid_shape": [
+    375,
+    375
+  ],
+  "members_saved": 60,
+  "members": [
+    {
+      "member": 0,
+      "file": "member_000.npz",
+      "sha256": "34a04813dc1cc4ae5f54fe57d27e25f51c4f99304302a46950ff6a56a832d958",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        187,
+        235
+      ]
+    },
+    {
+      "member": 1,
+      "file": "member_001.npz",
+      "sha256": "3525e16c920411d75c589b09bbe31d56db867be4fe60b14b39acd4deeef5cb48",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        187,
+        222
+      ]
+    },
+    {
+      "member": 2,
+      "file": "member_002.npz",
+      "sha256": "4ae9f3e040b1d7b42bf9bdb9d430347c24689e963ca7b05ac79f6ada8afe4807",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        182,
+        231
+      ]
+    },
+    {
+      "member": 3,
+      "file": "member_003.npz",
+      "sha256": "5fb5f864976415f60c6bd51f9a43b1b73cc62b44b86a2c63ca3cde322b77a74e",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        167,
+        230
+      ]
+    },
+    {
+      "member": 4,
+      "file": "member_004.npz",
+      "sha256": "2af6c8cc48c5cb703f8047f37f5208b25665fbb496f99ad435e31dea3c7ce244",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        192,
+        242
+      ]
+    },
+    {
+      "member": 5,
+      "file": "member_005.npz",
+      "sha256": "da4ee6db34588ecb52d07eca60080b44ec4155531124a581ffb2c8d635436132",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        176,
+        222
+      ]
+    },
+    {
+      "member": 6,
+      "file": "member_006.npz",
+      "sha256": "dbfece127a96013ef32bfdbe382210aaf946a2e853dc99ce1ad2ccfd0e87603f",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        189,
+        245
+      ]
+    },
+    {
+      "member": 7,
+      "file": "member_007.npz",
+      "sha256": "d60d3a19ec4970a335fd162c0aa615436c3e17e408f615edec3a20418b20289c",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        178,
+        225
+      ]
+    },
+    {
+      "member": 8,
+      "file": "member_008.npz",
+      "sha256": "fad5fb7fea9ad6fc6de72899b8998b51c314c84e66cde210be59f8e3a7e0e804",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        175,
+        238
+      ]
+    },
+    {
+      "member": 9,
+      "file": "member_009.npz",
+      "sha256": "4765ff3f2a7973370c9f6013f3d192be97625143adc012d2b01371c837b12fd8",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        187,
+        247
+      ]
+    },
+    {
+      "member": 10,
+      "file": "member_010.npz",
+      "sha256": "6390818815df9d00ce92e2625c266b884b0227760f93197d231a051241833abd",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        167,
+        233
+      ]
+    },
+    {
+      "member": 11,
+      "file": "member_011.npz",
+      "sha256": "2a64819ff2eafe504fcb8642f37d20899561234414fe367c5be9dabb34d5b5bb",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        170,
+        241
+      ]
+    },
+    {
+      "member": 12,
+      "file": "member_012.npz",
+      "sha256": "c32341c1941b6ecc4aba3db17b8bc6de407f975763c042a39fe0881682b609ff",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        184,
+        224
+      ]
+    },
+    {
+      "member": 13,
+      "file": "member_013.npz",
+      "sha256": "55c9180660b75744020fc71b32d181ba0012cfdd841a12f4e6f725018f104b83",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        176,
+        219
+      ]
+    },
+    {
+      "member": 14,
+      "file": "member_014.npz",
+      "sha256": "09bfae561591f393bd0e3f14ff8aafe7b1b6444536fd6a4b1222636770cb26a9",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        190,
+        230
+      ]
+    },
+    {
+      "member": 15,
+      "file": "member_015.npz",
+      "sha256": "9c0b2ea893ab69ab524c42133fc2358214cb179b8ec428efd6f8b4730ebe3a5d",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        187,
+        243
+      ]
+    },
+    {
+      "member": 16,
+      "file": "member_016.npz",
+      "sha256": "e1e66dfe4d80c4a90d621ecbec1f1104a86a2f4b1f217e3a5be7973494806842",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        194,
+        227
+      ]
+    },
+    {
+      "member": 17,
+      "file": "member_017.npz",
+      "sha256": "cd638e400717453071a995b4f6f46d9c8184d27a8c895e1ffc8a70d971020f78",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        182,
+        229
+      ]
+    },
+    {
+      "member": 18,
+      "file": "member_018.npz",
+      "sha256": "b7b11ea19507e833009ffb07b7fcd68e28f06fe099245b05d9d48faacdb7f2a0",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        175,
+        234
+      ]
+    },
+    {
+      "member": 19,
+      "file": "member_019.npz",
+      "sha256": "5080fd8eb3f9e51af05c051461733fc7f1c5df8a3bfbf0a604cf3a9bb86290cc",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        177,
+        250
+      ]
+    },
+    {
+      "member": 20,
+      "file": "member_020.npz",
+      "sha256": "083ee37a8a0d84b68eb029db47084374be63ad23e6db3e965b125c04cfbd41b6",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        179,
+        224
+      ]
+    },
+    {
+      "member": 21,
+      "file": "member_021.npz",
+      "sha256": "4688134d3fb98a31c1fc92c8436b20ed60d5c76209ac76798369bf2c6ae10ef0",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        172,
+        230
+      ]
+    },
+    {
+      "member": 22,
+      "file": "member_022.npz",
+      "sha256": "068fee598a23257796d12b305feb9b545becc84ba6857036cb065a7e77e15e3c",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        190,
+        245
+      ]
+    },
+    {
+      "member": 23,
+      "file": "member_023.npz",
+      "sha256": "7641d194786f90c7ba74af2c5c4f767f262f6f62c2988f1e96b08cc7e21291c8",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        177,
+        240
+      ]
+    },
+    {
+      "member": 24,
+      "file": "member_024.npz",
+      "sha256": "05f3bc38c7668d3d2c8ab30b6c36688228fd833a7d47b5317aac976ac0dccf61",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        176,
+        223
+      ]
+    },
+    {
+      "member": 25,
+      "file": "member_025.npz",
+      "sha256": "d6c0c2b97f1b0ef54bc956ffcefc404f02cf6e689ed125afdf96e4c0e8612036",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        192,
+        235
+      ]
+    },
+    {
+      "member": 26,
+      "file": "member_026.npz",
+      "sha256": "b2a1dd9df488308bd00ebd01a247cf2f62a66be30e7ccca9c1d8a1b6b489fccc",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        167,
+        244
+      ]
+    },
+    {
+      "member": 27,
+      "file": "member_027.npz",
+      "sha256": "4a87239d465688cc8a93073c052defb8291818f0648f28805ae083aa5b40ec32",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        171,
+        242
+      ]
+    },
+    {
+      "member": 28,
+      "file": "member_028.npz",
+      "sha256": "023ee6fbdd28008358ac158938722ae05585a52347fbf9818e5eb944d0b16f7f",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        184,
+        248
+      ]
+    },
+    {
+      "member": 29,
+      "file": "member_029.npz",
+      "sha256": "be47947cb98790fdbf25031c25d2c9ae3314e579c484206361bad4144754633e",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        184,
+        221
+      ]
+    },
+    {
+      "member": 30,
+      "file": "member_030.npz",
+      "sha256": "5c68353f79ee231991ec6b5678c15a6d80c55fe80fcfd143bf12eecdf592e882",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        170,
+        242
+      ]
+    },
+    {
+      "member": 31,
+      "file": "member_031.npz",
+      "sha256": "8966e7823b3ede7a928c0b0464af33d8ee2ac10d86bd25b6731976a2422746ee",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        184,
+        249
+      ]
+    },
+    {
+      "member": 32,
+      "file": "member_032.npz",
+      "sha256": "ae8b7d2f96d5d6905f01cceca85f50758e47c2a3ae2be537f079971c8c1d84e3",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        193,
+        233
+      ]
+    },
+    {
+      "member": 33,
+      "file": "member_033.npz",
+      "sha256": "2bd7f0283e46f30748deacab1591679b18c1e1c1f3d78b8dd786452bff4edde8",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        176,
+        221
+      ]
+    },
+    {
+      "member": 34,
+      "file": "member_034.npz",
+      "sha256": "4185ca96160aeb40c8521875e9210c03997d345bd31caf4114e2f876177825bf",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        163,
+        236
+      ]
+    },
+    {
+      "member": 35,
+      "file": "member_035.npz",
+      "sha256": "b884a0882a69cddc4ad8f3bb9fabecf62e566c036878442036c723e0f8047280",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        167,
+        230
+      ]
+    },
+    {
+      "member": 36,
+      "file": "member_036.npz",
+      "sha256": "712db650a0a4bf700251b2153963a95e7d578176b0d84a0d27a89cf3075dc8aa",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        166,
+        235
+      ]
+    },
+    {
+      "member": 37,
+      "file": "member_037.npz",
+      "sha256": "3d527ecddce9152e84457ecf4cfcff57f6fb1e7a8413e0fb240219f57c32a0f0",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        172,
+        237
+      ]
+    },
+    {
+      "member": 38,
+      "file": "member_038.npz",
+      "sha256": "90239f74fec084a86b5d011cdf7a80768b837b85503b59dd56a04924dfef5487",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        184,
+        219
+      ]
+    },
+    {
+      "member": 39,
+      "file": "member_039.npz",
+      "sha256": "354bfbb50900ef1f8106e594bb56a77d049f29dfdc6b1d10f15850cba6917b0e",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        180,
+        236
+      ]
+    },
+    {
+      "member": 40,
+      "file": "member_040.npz",
+      "sha256": "c2e19460d1fb314dc02f7967139ca5f6177a83daa046c4b1160a0cf869f6c52d",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        195,
+        238
+      ]
+    },
+    {
+      "member": 41,
+      "file": "member_041.npz",
+      "sha256": "276dbdeb3d60d5bf296549124c3ed0500c4eb2e0cb9cf4cb9e113f808950f2bf",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        191,
+        235
+      ]
+    },
+    {
+      "member": 42,
+      "file": "member_042.npz",
+      "sha256": "1e21f70d21c3642f3945587697342de230ecccb586a1e08efcd2f9a2bcef964a",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        172,
+        242
+      ]
+    },
+    {
+      "member": 43,
+      "file": "member_043.npz",
+      "sha256": "92579b9b3c2eecb6d4886198f13a9fbe0021a048ac2f7c33e3291bf5c2e8a7d7",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        179,
+        225
+      ]
+    },
+    {
+      "member": 44,
+      "file": "member_044.npz",
+      "sha256": "1361420943dcf0af1cdf8c5b2f6e945dec393b1668e79994e08b5bc1896c680a",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        191,
+        242
+      ]
+    },
+    {
+      "member": 45,
+      "file": "member_045.npz",
+      "sha256": "53aa72ef1c34ca751dd222c37ab704cfe7ee5ba02feb993069894bdfbeb0ad17",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        164,
+        235
+      ]
+    },
+    {
+      "member": 46,
+      "file": "member_046.npz",
+      "sha256": "e5846bd27b392c40fc5c98aed3ac048e76b3f86f00eb6a9f126c0b21a3a1240f",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        183,
+        236
+      ]
+    },
+    {
+      "member": 47,
+      "file": "member_047.npz",
+      "sha256": "be403cf27bbd31ada01308f46f4be1bcda602a1620d6fda1beb7221101ace4f6",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        182,
+        237
+      ]
+    },
+    {
+      "member": 48,
+      "file": "member_048.npz",
+      "sha256": "d50be0f3c00276b7c38542473ffa7bc79ea3afd9b4fdfc6dfda2b05f27171fff",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        169,
+        246
+      ]
+    },
+    {
+      "member": 49,
+      "file": "member_049.npz",
+      "sha256": "0562f28a569a72f8e5412225a2be6b10cab940a9e8c0b43f5dee841d62bd4908",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        186,
+        225
+      ]
+    },
+    {
+      "member": 50,
+      "file": "member_050.npz",
+      "sha256": "0843402cf5f99ec0d5cd378be0a0e0ecf52d5d00b9b3e8592ad29b6d0114ef9b",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        171,
+        233
+      ]
+    },
+    {
+      "member": 51,
+      "file": "member_051.npz",
+      "sha256": "bb9ab0b7bb0acd2f595f79742b95c38af93fa485b04a0b1bdbcb771998a89ee1",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        193,
+        240
+      ]
+    },
+    {
+      "member": 52,
+      "file": "member_052.npz",
+      "sha256": "85d8cc4681ec7fe4b5a7f096428a2ad5d37c89b69f35fabab89854d42f6da320",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        170,
+        242
+      ]
+    },
+    {
+      "member": 53,
+      "file": "member_053.npz",
+      "sha256": "fda7672f6fa632e89c9e518cce11f668cfc9497542a723310d026699427cfa48",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        185,
+        236
+      ]
+    },
+    {
+      "member": 54,
+      "file": "member_054.npz",
+      "sha256": "27993629233435a5bdedbab09593bb5211c1549a1c47de90b05e61b5168e234b",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        168,
+        246
+      ]
+    },
+    {
+      "member": 55,
+      "file": "member_055.npz",
+      "sha256": "21773ee5a8a18425c5f81e100977c6da2cf19021b6d31297e5f4a98d6951de69",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        177,
+        229
+      ]
+    },
+    {
+      "member": 56,
+      "file": "member_056.npz",
+      "sha256": "f9f527b85d76c246feba66b6cc87f921d4057a73f56ced9402da2262942c3a81",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        185,
+        223
+      ]
+    },
+    {
+      "member": 57,
+      "file": "member_057.npz",
+      "sha256": "0ca91a23741d0f6382388f8334f76e748b56b57ddac3d0dbedbc40c23573aa47",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        165,
+        242
+      ]
+    },
+    {
+      "member": 58,
+      "file": "member_058.npz",
+      "sha256": "927dc01f934d219d204fe31708338c3f54d654c4a3d1692c21d2e2a069b37403",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        166,
+        233
+      ]
+    },
+    {
+      "member": 59,
+      "file": "member_059.npz",
+      "sha256": "ba5fa750d5108f78c8bb7c5edf77df3800cf0c36a44c59f20493a8e9f25062cb",
+      "frame_hours": [
+        12,
+        13,
+        23,
+        24,
+        60,
+        71
+      ],
+      "last_frame": 72,
+      "ignition_row_col": [
+        192,
+        233
+      ]
+    }
+  ]
+}

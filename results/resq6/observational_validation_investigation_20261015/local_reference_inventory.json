@@ -1,0 +1,2614 @@
+{
+  "environment": {
+    "inspection_libraries": [
+      "numpy",
+      "rasterio",
+      "pyproj",
+      "pyhdf"
+    ],
+    "python": "backend/.venv/bin/python"
+  },
+  "incidents": [
+    {
+      "domain": {
+        "cells_per_side": 375,
+        "cluster_bbox_km": [
+          4.88,
+          5.25
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 140625,
+        "north_m": 2130375,
+        "side_km": 11.25,
+        "west_m": 240938
+      },
+      "incident_id": "E2024-131853",
+      "local_files": [
+        {
+          "bytes": 9357,
+          "columns": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "confidence_counts": {
+            "l": 18,
+            "n": 63
+          },
+          "date_range": [
+            "2024-02-16",
+            "2024-02-27"
+          ],
+          "kind": "FIRMS/VIIRS active-fire detections",
+          "path": "data/resq2/E2024-131853/viirs_detections.csv",
+          "rows": 81,
+          "satellites": [
+            "N",
+            "N20"
+          ],
+          "semantic_limit": "detection points only; absence does not establish observed-unburned",
+          "sha256": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb",
+          "types": [
+            "0"
+          ],
+          "valid_observation_or_clear_sky_fields": []
+        },
+        {
+          "arrays": {
+            "all_k0": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 325
+            },
+            "all_k1": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 325
+            },
+            "all_k2": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 494
+            },
+            "all_k3": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 638
+            },
+            "all_k4": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 1600
+            },
+            "all_k5": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 2225
+            },
+            "nh_k0": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 325
+            },
+            "nh_k1": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 325
+            },
+            "nh_k2": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 494
+            },
+            "nh_k3": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 638
+            },
+            "nh_k4": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 1444
+            },
+            "nh_k5": {
+              "dtype": "bool",
+              "shape": [
+                375,
+                375
+              ],
+              "true_cells": 1913
+            }
+          },
+          "bytes": 28142,
+          "has_unknown_or_coverage_state": false,
+          "independent_of_viirs_csv": false,
+          "kind": "VIIRS-derived model target masks",
+          "path": "results/resq5/E2024-131853/observed_footprints.npz",
+          "sha256": "8a2feeef671c761910e49c613edb839d01b505970287814f507c78ddd1ebba04"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 582
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1864576,
+          "domain_native_pixel_centers": 582,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20237/running/AMPM_C61_L26glu/264308149/MCD64A0.A2024032.h25v07.061.2024100025243.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 582,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 140625,
+          "resq_30m_domain_cell_centers_total": 140625,
+          "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 582
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1439093,
+          "domain_native_pixel_centers": 582,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20223/running/AMPM_C61_L26glu/265240886/MCD64A0.A2024061.h25v07.061.2024134020322.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 582,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 140625,
+          "resq_30m_domain_cell_centers_total": 140625,
+          "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+        },
+        {
+          "bounds": [
+            78.53066766929122,
+            19.144248699448372,
+            78.64866766929121,
+            19.25641536611504
+          ],
+          "bytes": 146292,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(78.53066766929122, 19.14427344496433, 78.6487056136886, 19.25641536611504)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-131853/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+          "shape": [
+            1346,
+            1416
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            78.53066766929122,
+            0.0,
+            -8.333333333333333e-05,
+            19.25641536611504
+          ]
+        },
+        {
+          "bounds": [
+            78.53066766929122,
+            19.144193143892817,
+            78.64872322484678,
+            19.25641536611504
+          ],
+          "bytes": 580598,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif",
+            "window_bounds": "(78.53066766929122, 19.14427344496433, 78.6487056136886, 19.25641536611504)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+          "shape": [
+            404,
+            425
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            78.53066766929122,
+            0.0,
+            -0.0002777777777777778,
+            19.25641536611504
+          ]
+        },
+        {
+          "bytes": 4462,
+          "kind": "local acquisition provenance",
+          "path": "data/resq2/E2024-131853/fetch_report.json",
+          "sha256": "2a33363ec5bc90861d3378e6564dd1b896ca7b4a6c0f19e8cbe4affc681daeb3"
+        }
+      ],
+      "mcd64a1": [
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 582
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1864576,
+          "domain_native_pixel_centers": 582,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20237/running/AMPM_C61_L26glu/264308149/MCD64A0.A2024032.h25v07.061.2024100025243.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 582,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 140625,
+          "resq_30m_domain_cell_centers_total": 140625,
+          "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 582
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1439093,
+          "domain_native_pixel_centers": 582,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20223/running/AMPM_C61_L26glu/265240886/MCD64A0.A2024061.h25v07.061.2024134020322.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-131853/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 582,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 140625,
+          "resq_30m_domain_cell_centers_total": 140625,
+          "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+        }
+      ],
+      "mcd64a1_fetch_metadata": {
+        "incident_id": "E2024-131853",
+        "mcd64a1": [
+          {
+            "bytes": 1864576,
+            "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "laads_listing_bytes": 1864576,
+            "month": "2024-02",
+            "size_matches_laads": true,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024032/MCD64A1.A2024032.h25v07.061.2024100025301.hdf"
+          },
+          {
+            "bytes": 1439093,
+            "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "laads_listing_bytes": 1439093,
+            "month": "2024-03",
+            "size_matches_laads": true,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024061/MCD64A1.A2024061.h25v07.061.2024134020338.hdf"
+          }
+        ]
+      },
+      "mcd64a1_fetch_report": {
+        "bytes": 4462,
+        "kind": "local acquisition provenance",
+        "path": "data/resq2/E2024-131853/fetch_report.json",
+        "sha256": "2a33363ec5bc90861d3378e6564dd1b896ca7b4a6c0f19e8cbe4affc681daeb3"
+      },
+      "mcd64a1_listing_checks": [
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "laads_listing_bytes": 1864576,
+          "month": "2024-02",
+          "sha256": null,
+          "size_matches_laads": true
+        },
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "laads_listing_bytes": 1439093,
+          "month": "2024-03",
+          "sha256": null,
+          "size_matches_laads": true
+        }
+      ],
+      "missing_local_candidates": [
+        "No candidate located in scoped local incident inputs/results: Copernicus daily burned-area v3.1",
+        "No candidate located in scoped local incident inputs/results: Sentinel-2 imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: Landsat imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: manual perimeter",
+        "No candidate located in scoped local incident inputs/results: per-cell cloud/clear-sky/valid-observation coverage raster"
+      ],
+      "observed_mask": {
+        "arrays": {
+          "all_k0": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 325
+          },
+          "all_k1": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 325
+          },
+          "all_k2": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 494
+          },
+          "all_k3": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 638
+          },
+          "all_k4": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 1600
+          },
+          "all_k5": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 2225
+          },
+          "nh_k0": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 325
+          },
+          "nh_k1": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 325
+          },
+          "nh_k2": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 494
+          },
+          "nh_k3": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 638
+          },
+          "nh_k4": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 1444
+          },
+          "nh_k5": {
+            "dtype": "bool",
+            "shape": [
+              375,
+              375
+            ],
+            "true_cells": 1913
+          }
+        },
+        "bytes": 28142,
+        "has_unknown_or_coverage_state": false,
+        "independent_of_viirs_csv": false,
+        "kind": "VIIRS-derived model target masks",
+        "path": "results/resq5/E2024-131853/observed_footprints.npz",
+        "sha256": "8a2feeef671c761910e49c613edb839d01b505970287814f507c78ddd1ebba04"
+      },
+      "rasters": [
+        {
+          "bounds": [
+            78.53066766929122,
+            19.144248699448372,
+            78.64866766929121,
+            19.25641536611504
+          ],
+          "bytes": 146292,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(78.53066766929122, 19.14427344496433, 78.6487056136886, 19.25641536611504)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-131853/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+          "shape": [
+            1346,
+            1416
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            78.53066766929122,
+            0.0,
+            -8.333333333333333e-05,
+            19.25641536611504
+          ]
+        },
+        {
+          "bounds": [
+            78.53066766929122,
+            19.144193143892817,
+            78.64872322484678,
+            19.25641536611504
+          ],
+          "bytes": 580598,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif",
+            "window_bounds": "(78.53066766929122, 19.14427344496433, 78.6487056136886, 19.25641536611504)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+          "shape": [
+            404,
+            425
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            78.53066766929122,
+            0.0,
+            -0.0002777777777777778,
+            19.25641536611504
+          ]
+        }
+      ],
+      "saved_simulation_artifacts": [],
+      "viirs": {
+        "bytes": 9357,
+        "columns": [
+          "latitude",
+          "longitude",
+          "bright_ti4",
+          "scan",
+          "track",
+          "acq_date",
+          "acq_time",
+          "satellite",
+          "instrument",
+          "confidence",
+          "version",
+          "bright_ti5",
+          "frp",
+          "daynight",
+          "type",
+          "source_file"
+        ],
+        "confidence_counts": {
+          "l": 18,
+          "n": 63
+        },
+        "date_range": [
+          "2024-02-16",
+          "2024-02-27"
+        ],
+        "kind": "FIRMS/VIIRS active-fire detections",
+        "path": "data/resq2/E2024-131853/viirs_detections.csv",
+        "rows": 81,
+        "satellites": [
+          "N",
+          "N20"
+        ],
+        "semantic_limit": "detection points only; absence does not establish observed-unburned",
+        "sha256": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb",
+        "types": [
+          "0"
+        ],
+        "valid_observation_or_clear_sky_fields": []
+      }
+    },
+    {
+      "domain": {
+        "cells_per_side": 338,
+        "cluster_bbox_km": [
+          4.12,
+          4.12
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 114244,
+        "north_m": 2214758,
+        "side_km": 10.14,
+        "west_m": 256492
+      },
+      "incident_id": "E2024-135332",
+      "local_files": [
+        {
+          "bytes": 11645,
+          "columns": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "confidence_counts": {
+            "h": 4,
+            "l": 15,
+            "n": 82
+          },
+          "date_range": [
+            "2024-03-05",
+            "2024-03-13"
+          ],
+          "kind": "FIRMS/VIIRS active-fire detections",
+          "path": "data/resq2/E2024-135332/viirs_detections.csv",
+          "rows": 101,
+          "satellites": [
+            "N",
+            "N20"
+          ],
+          "semantic_limit": "detection points only; absence does not establish observed-unburned",
+          "sha256": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d",
+          "types": [
+            "0"
+          ],
+          "valid_observation_or_clear_sky_fields": []
+        },
+        {
+          "arrays": {
+            "all_k0": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 325
+            },
+            "all_k1": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 481
+            },
+            "all_k2": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 806
+            },
+            "all_k3": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1287
+            },
+            "all_k4": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1456
+            },
+            "all_k5": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1600
+            },
+            "all_k6": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1744
+            },
+            "nh_k0": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 156
+            },
+            "nh_k1": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 312
+            },
+            "nh_k2": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 637
+            },
+            "nh_k3": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 962
+            },
+            "nh_k4": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1131
+            },
+            "nh_k5": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1275
+            },
+            "nh_k6": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1419
+            }
+          },
+          "bytes": 25286,
+          "has_unknown_or_coverage_state": false,
+          "independent_of_viirs_csv": false,
+          "kind": "VIIRS-derived model target masks",
+          "path": "results/resq5/E2024-135332/observed_footprints.npz",
+          "sha256": "518ae642965671abd6bbff4af72503ef16e0c5732987cb02e5b2ac9a755ea817"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 399
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1864576,
+          "domain_native_pixel_centers": 399,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20237/running/AMPM_C61_L26glu/264308149/MCD64A0.A2024032.h25v07.061.2024100025243.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 399,
+          "resq_30m_cell_center_tile_coverage_fraction": 0.8369192255173138,
+          "resq_30m_cell_centers_inside_hdf_tile": 95613,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [
+            1
+          ],
+          "burn_date_value_counts_in_domain": {
+            "0": 387,
+            "68": 10,
+            "69": 2
+          },
+          "burned_pixels_among_valid_land": 12,
+          "bytes": 1439093,
+          "domain_native_pixel_centers": 399,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20223/running/AMPM_C61_L26glu/265240886/MCD64A0.A2024061.h25v07.061.2024134020322.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 399,
+          "resq_30m_cell_center_tile_coverage_fraction": 0.8369192255173138,
+          "resq_30m_cell_centers_inside_hdf_tile": 95613,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+        },
+        {
+          "bounds": [
+            78.66756435297391,
+            19.918212435012393,
+            78.77539768630724,
+            20.02012910167906
+          ],
+          "bytes": 121472,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(78.66756435297391, 19.918173252048717, 78.77540034558935, 20.02012910167906)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-135332/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+          "shape": [
+            1223,
+            1294
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            78.66756435297391,
+            0.0,
+            -8.333333333333333e-05,
+            20.02012910167906
+          ]
+        },
+        {
+          "bounds": [
+            78.66756435297391,
+            19.918184657234615,
+            78.7753421307517,
+            20.02012910167906
+          ],
+          "bytes": 475990,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif; https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N20_00_E078_00_DEM/Copernicus_DSM_COG_10_N20_00_E078_00_DEM.tif",
+            "window_bounds": "(78.66756435297391, 19.918173252048717, 78.77540034558935, 20.02012910167906)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+          "shape": [
+            367,
+            388
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            78.66756435297391,
+            0.0,
+            -0.0002777777777777778,
+            20.02012910167906
+          ]
+        },
+        {
+          "bytes": 4615,
+          "kind": "local acquisition provenance",
+          "path": "data/resq2/E2024-135332/fetch_report.json",
+          "sha256": "f5be3be651ed3bc61b20e697e6ac0c767475623e4132dc474f8a55a51a66c4a8"
+        }
+      ],
+      "mcd64a1": [
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 399
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 1864576,
+          "domain_native_pixel_centers": 399,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20237/running/AMPM_C61_L26glu/264308149/MCD64A0.A2024032.h25v07.061.2024100025243.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 399,
+          "resq_30m_cell_center_tile_coverage_fraction": 0.8369192255173138,
+          "resq_30m_cell_centers_inside_hdf_tile": 95613,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "626fcaad13397729ba142ab46a6c4a37e3fc1e40ebd9aae340c19e77c6116ece"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [
+            1
+          ],
+          "burn_date_value_counts_in_domain": {
+            "0": 387,
+            "68": 10,
+            "69": 2
+          },
+          "burned_pixels_among_valid_land": 12,
+          "bytes": 1439093,
+          "domain_native_pixel_centers": 399,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20223/running/AMPM_C61_L26glu/265240886/MCD64A0.A2024061.h25v07.061.2024134020322.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-135332/mcd64a1/MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 399,
+          "resq_30m_cell_center_tile_coverage_fraction": 0.8369192255173138,
+          "resq_30m_cell_centers_inside_hdf_tile": 95613,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "db2d3bd71c47a1a1dd81d05f039bc358b3b5fd7052b7cf3890bbec9660f7296b"
+        }
+      ],
+      "mcd64a1_fetch_metadata": {
+        "incident_id": "E2024-135332",
+        "mcd64a1": [
+          {
+            "bytes": 1864576,
+            "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+            "laads_listing_bytes": 1864576,
+            "month": "2024-02",
+            "size_matches_laads": true,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024032/MCD64A1.A2024032.h25v07.061.2024100025301.hdf"
+          },
+          {
+            "bytes": 1439093,
+            "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+            "laads_listing_bytes": 1439093,
+            "month": "2024-03",
+            "size_matches_laads": true,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024061/MCD64A1.A2024061.h25v07.061.2024134020338.hdf"
+          }
+        ]
+      },
+      "mcd64a1_fetch_report": {
+        "bytes": 4615,
+        "kind": "local acquisition provenance",
+        "path": "data/resq2/E2024-135332/fetch_report.json",
+        "sha256": "f5be3be651ed3bc61b20e697e6ac0c767475623e4132dc474f8a55a51a66c4a8"
+      },
+      "mcd64a1_listing_checks": [
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2024032.h25v07.061.2024100025301.hdf",
+          "laads_listing_bytes": 1864576,
+          "month": "2024-02",
+          "sha256": null,
+          "size_matches_laads": true
+        },
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2024061.h25v07.061.2024134020338.hdf",
+          "laads_listing_bytes": 1439093,
+          "month": "2024-03",
+          "sha256": null,
+          "size_matches_laads": true
+        }
+      ],
+      "missing_local_candidates": [
+        "No candidate located in scoped local incident inputs/results: Copernicus daily burned-area v3.1",
+        "No candidate located in scoped local incident inputs/results: Sentinel-2 imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: Landsat imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: manual perimeter",
+        "No candidate located in scoped local incident inputs/results: per-cell cloud/clear-sky/valid-observation coverage raster"
+      ],
+      "observed_mask": {
+        "arrays": {
+          "all_k0": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 325
+          },
+          "all_k1": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 481
+          },
+          "all_k2": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 806
+          },
+          "all_k3": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1287
+          },
+          "all_k4": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1456
+          },
+          "all_k5": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1600
+          },
+          "all_k6": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1744
+          },
+          "nh_k0": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 156
+          },
+          "nh_k1": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 312
+          },
+          "nh_k2": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 637
+          },
+          "nh_k3": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 962
+          },
+          "nh_k4": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1131
+          },
+          "nh_k5": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1275
+          },
+          "nh_k6": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1419
+          }
+        },
+        "bytes": 25286,
+        "has_unknown_or_coverage_state": false,
+        "independent_of_viirs_csv": false,
+        "kind": "VIIRS-derived model target masks",
+        "path": "results/resq5/E2024-135332/observed_footprints.npz",
+        "sha256": "518ae642965671abd6bbff4af72503ef16e0c5732987cb02e5b2ac9a755ea817"
+      },
+      "rasters": [
+        {
+          "bounds": [
+            78.66756435297391,
+            19.918212435012393,
+            78.77539768630724,
+            20.02012910167906
+          ],
+          "bytes": 121472,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(78.66756435297391, 19.918173252048717, 78.77540034558935, 20.02012910167906)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-135332/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+          "shape": [
+            1223,
+            1294
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            78.66756435297391,
+            0.0,
+            -8.333333333333333e-05,
+            20.02012910167906
+          ]
+        },
+        {
+          "bounds": [
+            78.66756435297391,
+            19.918184657234615,
+            78.7753421307517,
+            20.02012910167906
+          ],
+          "bytes": 475990,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E078_00_DEM/Copernicus_DSM_COG_10_N19_00_E078_00_DEM.tif; https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N20_00_E078_00_DEM/Copernicus_DSM_COG_10_N20_00_E078_00_DEM.tif",
+            "window_bounds": "(78.66756435297391, 19.918173252048717, 78.77540034558935, 20.02012910167906)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+          "shape": [
+            367,
+            388
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            78.66756435297391,
+            0.0,
+            -0.0002777777777777778,
+            20.02012910167906
+          ]
+        }
+      ],
+      "saved_simulation_artifacts": [],
+      "viirs": {
+        "bytes": 11645,
+        "columns": [
+          "latitude",
+          "longitude",
+          "bright_ti4",
+          "scan",
+          "track",
+          "acq_date",
+          "acq_time",
+          "satellite",
+          "instrument",
+          "confidence",
+          "version",
+          "bright_ti5",
+          "frp",
+          "daynight",
+          "type",
+          "source_file"
+        ],
+        "confidence_counts": {
+          "h": 4,
+          "l": 15,
+          "n": 82
+        },
+        "date_range": [
+          "2024-03-05",
+          "2024-03-13"
+        ],
+        "kind": "FIRMS/VIIRS active-fire detections",
+        "path": "data/resq2/E2024-135332/viirs_detections.csv",
+        "rows": 101,
+        "satellites": [
+          "N",
+          "N20"
+        ],
+        "semantic_limit": "detection points only; absence does not establish observed-unburned",
+        "sha256": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d",
+        "types": [
+          "0"
+        ],
+        "valid_observation_or_clear_sky_fields": []
+      }
+    },
+    {
+      "domain": {
+        "cells_per_side": 388,
+        "cluster_bbox_km": [
+          5.62,
+          3.75
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 150544,
+        "north_m": 2145945,
+        "side_km": 11.64,
+        "west_m": 800618
+      },
+      "incident_id": "E2023-084925",
+      "local_files": [
+        {
+          "bytes": 11369,
+          "columns": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "confidence_counts": {
+            "h": 1,
+            "l": 6,
+            "n": 92
+          },
+          "date_range": [
+            "2023-03-07",
+            "2023-03-16"
+          ],
+          "kind": "FIRMS/VIIRS active-fire detections",
+          "path": "data/resq2/E2023-084925/viirs_detections.csv",
+          "rows": 99,
+          "satellites": [
+            "N",
+            "N20"
+          ],
+          "semantic_limit": "detection points only; absence does not establish observed-unburned",
+          "sha256": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f",
+          "types": [
+            "0"
+          ],
+          "valid_observation_or_clear_sky_fields": []
+        },
+        {
+          "arrays": {
+            "all_k0": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 144
+            },
+            "all_k1": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 756
+            },
+            "all_k2": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 1693
+            },
+            "all_k3": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2512
+            },
+            "all_k4": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2512
+            },
+            "all_k5": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2656
+            },
+            "all_k6": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 3919
+            },
+            "all_k7": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 3919
+            },
+            "nh_k0": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 144
+            },
+            "nh_k1": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 756
+            },
+            "nh_k2": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 1524
+            },
+            "nh_k3": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2343
+            },
+            "nh_k4": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2343
+            },
+            "nh_k5": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 2487
+            },
+            "nh_k6": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 3750
+            },
+            "nh_k7": {
+              "dtype": "bool",
+              "shape": [
+                388,
+                388
+              ],
+              "true_cells": 3750
+            }
+          },
+          "bytes": 29979,
+          "has_unknown_or_coverage_state": false,
+          "independent_of_viirs_csv": false,
+          "kind": "VIIRS-derived model target masks",
+          "path": "results/resq5/E2023-084925/observed_footprints.npz",
+          "sha256": "ebb5d741ee72e0e75bbfacc376fcadf5fc3b77e0cbd844dfa9d4df85adcd6545"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [
+            1,
+            2,
+            6
+          ],
+          "burn_date_value_counts_in_domain": {
+            "-2": 2,
+            "0": 620,
+            "70": 2,
+            "71": 1,
+            "76": 1
+          },
+          "burned_pixels_among_valid_land": 4,
+          "bytes": 2159249,
+          "domain_native_pixel_centers": 626,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20222/running/AMPM_C61_L26glu/253557265/MCD64A0.A2023060.h25v07.061.2023132021654.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2023-084925/mcd64a1/MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 624,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 150544,
+          "resq_30m_domain_cell_centers_total": 150544,
+          "sha256": "8eb481c4f108d92f41a5d4b3219a8f16c346f1ab127630e1436e3a82aabc842d"
+        },
+        {
+          "bounds": [
+            83.85528661518613,
+            19.273802541852604,
+            83.9774532818528,
+            19.389802541852603
+          ],
+          "bytes": 132093,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E081_Map.tif",
+            "window_bounds": "(83.85528661518613, 19.273795128466436, 83.97749242213546, 19.389802541852603)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2023-084925/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+          "shape": [
+            1392,
+            1466
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            83.85528661518613,
+            0.0,
+            -8.333333333333333e-05,
+            19.389802541852603
+          ]
+        },
+        {
+          "bounds": [
+            83.85528661518613,
+            19.273691430741493,
+            83.97750883740835,
+            19.389802541852603
+          ],
+          "bytes": 614197,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E083_00_DEM/Copernicus_DSM_COG_10_N19_00_E083_00_DEM.tif",
+            "window_bounds": "(83.85528661518613, 19.273795128466436, 83.97749242213546, 19.389802541852603)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+          "shape": [
+            418,
+            440
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            83.85528661518613,
+            0.0,
+            -0.0002777777777777778,
+            19.389802541852603
+          ]
+        },
+        {
+          "bytes": 4019,
+          "kind": "local acquisition provenance",
+          "path": "data/resq2/E2023-084925/fetch_report.json",
+          "sha256": "9e54593748ba717dc41e8b3a4ccb5fc55623ebdbf5ceae4d9f38ed35b3c22ba4"
+        }
+      ],
+      "mcd64a1": [
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [
+            1,
+            2,
+            6
+          ],
+          "burn_date_value_counts_in_domain": {
+            "-2": 2,
+            "0": 620,
+            "70": 2,
+            "71": 1,
+            "76": 1
+          },
+          "burned_pixels_among_valid_land": 4,
+          "bytes": 2159249,
+          "domain_native_pixel_centers": 626,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20222/running/AMPM_C61_L26glu/253557265/MCD64A0.A2023060.h25v07.061.2023132021654.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2023-084925/mcd64a1/MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 624,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 150544,
+          "resq_30m_domain_cell_centers_total": 150544,
+          "sha256": "8eb481c4f108d92f41a5d4b3219a8f16c346f1ab127630e1436e3a82aabc842d"
+        }
+      ],
+      "mcd64a1_fetch_metadata": {
+        "incident_id": "E2023-084925",
+        "mcd64a1": [
+          {
+            "bytes": 2159249,
+            "file": "MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+            "laads_listing_bytes": 2159249,
+            "month": "2023-03",
+            "size_matches_laads": true,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2023060/MCD64A1.A2023060.h25v07.061.2023132021740.hdf"
+          }
+        ]
+      },
+      "mcd64a1_fetch_report": {
+        "bytes": 4019,
+        "kind": "local acquisition provenance",
+        "path": "data/resq2/E2023-084925/fetch_report.json",
+        "sha256": "9e54593748ba717dc41e8b3a4ccb5fc55623ebdbf5ceae4d9f38ed35b3c22ba4"
+      },
+      "mcd64a1_listing_checks": [
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2023060.h25v07.061.2023132021740.hdf",
+          "laads_listing_bytes": 2159249,
+          "month": "2023-03",
+          "sha256": null,
+          "size_matches_laads": true
+        }
+      ],
+      "missing_local_candidates": [
+        "No candidate located in scoped local incident inputs/results: Copernicus daily burned-area v3.1",
+        "No candidate located in scoped local incident inputs/results: Sentinel-2 imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: Landsat imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: manual perimeter",
+        "No candidate located in scoped local incident inputs/results: per-cell cloud/clear-sky/valid-observation coverage raster"
+      ],
+      "observed_mask": {
+        "arrays": {
+          "all_k0": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 144
+          },
+          "all_k1": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 756
+          },
+          "all_k2": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 1693
+          },
+          "all_k3": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2512
+          },
+          "all_k4": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2512
+          },
+          "all_k5": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2656
+          },
+          "all_k6": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 3919
+          },
+          "all_k7": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 3919
+          },
+          "nh_k0": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 144
+          },
+          "nh_k1": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 756
+          },
+          "nh_k2": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 1524
+          },
+          "nh_k3": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2343
+          },
+          "nh_k4": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2343
+          },
+          "nh_k5": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 2487
+          },
+          "nh_k6": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 3750
+          },
+          "nh_k7": {
+            "dtype": "bool",
+            "shape": [
+              388,
+              388
+            ],
+            "true_cells": 3750
+          }
+        },
+        "bytes": 29979,
+        "has_unknown_or_coverage_state": false,
+        "independent_of_viirs_csv": false,
+        "kind": "VIIRS-derived model target masks",
+        "path": "results/resq5/E2023-084925/observed_footprints.npz",
+        "sha256": "ebb5d741ee72e0e75bbfacc376fcadf5fc3b77e0cbd844dfa9d4df85adcd6545"
+      },
+      "rasters": [
+        {
+          "bounds": [
+            83.85528661518613,
+            19.273802541852604,
+            83.9774532818528,
+            19.389802541852603
+          ],
+          "bytes": 132093,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E081_Map.tif",
+            "window_bounds": "(83.85528661518613, 19.273795128466436, 83.97749242213546, 19.389802541852603)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2023-084925/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+          "shape": [
+            1392,
+            1466
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            83.85528661518613,
+            0.0,
+            -8.333333333333333e-05,
+            19.389802541852603
+          ]
+        },
+        {
+          "bounds": [
+            83.85528661518613,
+            19.273691430741493,
+            83.97750883740835,
+            19.389802541852603
+          ],
+          "bytes": 614197,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E083_00_DEM/Copernicus_DSM_COG_10_N19_00_E083_00_DEM.tif",
+            "window_bounds": "(83.85528661518613, 19.273795128466436, 83.97749242213546, 19.389802541852603)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+          "shape": [
+            418,
+            440
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            83.85528661518613,
+            0.0,
+            -0.0002777777777777778,
+            19.389802541852603
+          ]
+        }
+      ],
+      "saved_simulation_artifacts": [],
+      "viirs": {
+        "bytes": 11369,
+        "columns": [
+          "latitude",
+          "longitude",
+          "bright_ti4",
+          "scan",
+          "track",
+          "acq_date",
+          "acq_time",
+          "satellite",
+          "instrument",
+          "confidence",
+          "version",
+          "bright_ti5",
+          "frp",
+          "daynight",
+          "type",
+          "source_file"
+        ],
+        "confidence_counts": {
+          "h": 1,
+          "l": 6,
+          "n": 92
+        },
+        "date_range": [
+          "2023-03-07",
+          "2023-03-16"
+        ],
+        "kind": "FIRMS/VIIRS active-fire detections",
+        "path": "data/resq2/E2023-084925/viirs_detections.csv",
+        "rows": 99,
+        "satellites": [
+          "N",
+          "N20"
+        ],
+        "semantic_limit": "detection points only; absence does not establish observed-unburned",
+        "sha256": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f",
+        "types": [
+          "0"
+        ],
+        "valid_observation_or_clear_sky_fields": []
+      }
+    },
+    {
+      "domain": {
+        "cells_per_side": 338,
+        "cluster_bbox_km": [
+          3.0,
+          4.12
+        ],
+        "crs": "EPSG:32644",
+        "n_cells": 114244,
+        "north_m": 2119508,
+        "side_km": 10.14,
+        "west_m": 483555
+      },
+      "incident_id": "E2024-155286",
+      "local_files": [
+        {
+          "bytes": 28032,
+          "columns": [
+            "latitude",
+            "longitude",
+            "bright_ti4",
+            "scan",
+            "track",
+            "acq_date",
+            "acq_time",
+            "satellite",
+            "instrument",
+            "confidence",
+            "version",
+            "bright_ti5",
+            "frp",
+            "daynight",
+            "type",
+            "source_file"
+          ],
+          "confidence_counts": {
+            "l": 51,
+            "n": 194
+          },
+          "date_range": [
+            "2024-04-12",
+            "2024-04-20"
+          ],
+          "kind": "FIRMS/VIIRS active-fire detections",
+          "path": "data/resq2/E2024-155286/viirs_detections.csv",
+          "rows": 245,
+          "satellites": [
+            "N",
+            "N20"
+          ],
+          "semantic_limit": "detection points only; absence does not establish observed-unburned",
+          "sha256": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92",
+          "types": [
+            "0"
+          ],
+          "valid_observation_or_clear_sky_fields": []
+        },
+        {
+          "arrays": {
+            "all_k0": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 482
+            },
+            "all_k1": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 938
+            },
+            "all_k2": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1876
+            },
+            "all_k3": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 2045
+            },
+            "nh_k0": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 482
+            },
+            "nh_k1": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 638
+            },
+            "nh_k2": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1576
+            },
+            "nh_k3": {
+              "dtype": "bool",
+              "shape": [
+                338,
+                338
+              ],
+              "true_cells": 1745
+            }
+          },
+          "bytes": 16266,
+          "has_unknown_or_coverage_state": false,
+          "independent_of_viirs_csv": false,
+          "kind": "VIIRS-derived model target masks",
+          "path": "results/resq5/E2024-155286/observed_footprints.npz",
+          "sha256": "01ef9ee32b9369846ba928e340c93e772c2a8c40c52d818ce47501cc41ceb494"
+        },
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 480
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 2309415,
+          "domain_native_pixel_centers": 480,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20234/running/AMPM_C61_L26glu/265907167/MCD64A0.A2024092.h25v07.061.2024162194103.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-155286/mcd64a1/MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 480,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 114244,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "af9c161e9c6bf0554b8566c596c1ccd8d8ff0ea22264e6b6fe929db4d3bb9fbe"
+        },
+        {
+          "bounds": [
+            80.83883482387816,
+            19.072587841267623,
+            80.94483482387815,
+            19.173337841267625
+          ],
+          "bytes": 78085,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(80.83883482387816, 19.07259732571888, 80.9448215619476, 19.173337841267625)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-155286/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+          "shape": [
+            1209,
+            1272
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            80.83883482387816,
+            0.0,
+            -8.333333333333333e-05,
+            19.173337841267625
+          ]
+        },
+        {
+          "bounds": [
+            80.83883482387816,
+            19.07250450793429,
+            80.94494593498926,
+            19.173337841267625
+          ],
+          "bytes": 459941,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E080_00_DEM/Copernicus_DSM_COG_10_N19_00_E080_00_DEM.tif",
+            "window_bounds": "(80.83883482387816, 19.07259732571888, 80.9448215619476, 19.173337841267625)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+          "shape": [
+            363,
+            382
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            80.83883482387816,
+            0.0,
+            -0.0002777777777777778,
+            19.173337841267625
+          ]
+        },
+        {
+          "bytes": 4009,
+          "kind": "local acquisition provenance",
+          "path": "data/resq2/E2024-155286/fetch_report.json",
+          "sha256": "9708b8c9bd082f7756cbe0983e3355362b85ceceb5995bb1928eeaa9825303c5"
+        }
+      ],
+      "mcd64a1": [
+        {
+          "burn_date_attributes": {
+            "_FillValue": -1,
+            "long_name": "ordinal day of burn",
+            "valid_range": [
+              0,
+              366
+            ],
+            "water": -2
+          },
+          "burn_date_uncertainty_days_for_burned_valid_land": [],
+          "burn_date_value_counts_in_domain": {
+            "0": 480
+          },
+          "burned_pixels_among_valid_land": 0,
+          "bytes": 2309415,
+          "domain_native_pixel_centers": 480,
+          "input_hdf_references_from_local_core_metadata": [
+            "/MODAPSops8/archive/f20234/running/AMPM_C61_L26glu/265907167/MCD64A0.A2024092.h25v07.061.2024162194103.hdf",
+            "/MODAPSops8/PGE/AMPM/coeff/PGE134/MOD_PR64A1/MCD12Q1.2013.051-UMD-clean-4km.hdf"
+          ],
+          "kind": "MCD64A1 HDF-EOS",
+          "native_crs": "MODIS sinusoidal sphere R=6371007.181 m",
+          "native_pixel_size_m": [
+            463.3127165279165,
+            463.31271652833334
+          ],
+          "native_shape": [
+            2400,
+            2400
+          ],
+          "path": "data/resq2/E2024-155286/mcd64a1/MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+          "product": "MCD64A1.061",
+          "qa_legend": "\n        bit 0  Land/Water mask: \n            0 -- water\n            1 -- land\n        bit 1  Valid data flag:\n            0 -- false\n            1 -- true\n        bit 2  Shortened mapping period:\n            0 -- false\n            1 -- true\n        bit 3  Relabeled during the contextual relabeling phase of the algorithm:\n            0 -- false\n            1 -- true\n        bit 4  Spare bit set to 0\n        bits 5-7  Special condition code reserved for unburned grid cells:\n            0 -- None or not applicable (i.e., burned, unmapped, or water grid cell\n            1 -- Valid observations spaced too sparsely in time\n            2 -- Too few training observations or insufficient spectral separability between burned and unburned classes\n            3 -- Apparent burn date at limits of time series\n            4 -- Apparent water contamination\n            5 -- Persistent hot spot\n            6 -- Reserved for future use\n            7 -- Reserved for future use\n",
+          "qa_valid_land_pixels": 480,
+          "resq_30m_cell_center_tile_coverage_fraction": 1.0,
+          "resq_30m_cell_centers_inside_hdf_tile": 114244,
+          "resq_30m_domain_cell_centers_total": 114244,
+          "sha256": "af9c161e9c6bf0554b8566c596c1ccd8d8ff0ea22264e6b6fe929db4d3bb9fbe"
+        }
+      ],
+      "mcd64a1_fetch_metadata": {
+        "incident_id": "E2024-155286",
+        "mcd64a1": [
+          {
+            "bytes": 2309415,
+            "file": "MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+            "laads_listing_bytes": null,
+            "month": "2024-04",
+            "size_matches_laads": false,
+            "source": "https://modiseuwest.blob.core.windows.net/modis-061/MCD64A1/25/07/2024092/MCD64A1.A2024092.h25v07.061.2024162194119.hdf"
+          }
+        ]
+      },
+      "mcd64a1_fetch_report": {
+        "bytes": 4009,
+        "kind": "local acquisition provenance",
+        "path": "data/resq2/E2024-155286/fetch_report.json",
+        "sha256": "9708b8c9bd082f7756cbe0983e3355362b85ceceb5995bb1928eeaa9825303c5"
+      },
+      "mcd64a1_listing_checks": [
+        {
+          "actual_bytes": null,
+          "file": "MCD64A1.A2024092.h25v07.061.2024162194119.hdf",
+          "laads_listing_bytes": null,
+          "month": "2024-04",
+          "sha256": null,
+          "size_matches_laads": false
+        }
+      ],
+      "missing_local_candidates": [
+        "No candidate located in scoped local incident inputs/results: Copernicus daily burned-area v3.1",
+        "No candidate located in scoped local incident inputs/results: Sentinel-2 imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: Landsat imagery or derived burn mask",
+        "No candidate located in scoped local incident inputs/results: manual perimeter",
+        "No candidate located in scoped local incident inputs/results: per-cell cloud/clear-sky/valid-observation coverage raster"
+      ],
+      "observed_mask": {
+        "arrays": {
+          "all_k0": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 482
+          },
+          "all_k1": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 938
+          },
+          "all_k2": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1876
+          },
+          "all_k3": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 2045
+          },
+          "nh_k0": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 482
+          },
+          "nh_k1": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 638
+          },
+          "nh_k2": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1576
+          },
+          "nh_k3": {
+            "dtype": "bool",
+            "shape": [
+              338,
+              338
+            ],
+            "true_cells": 1745
+          }
+        },
+        "bytes": 16266,
+        "has_unknown_or_coverage_state": false,
+        "independent_of_viirs_csv": false,
+        "kind": "VIIRS-derived model target masks",
+        "path": "results/resq5/E2024-155286/observed_footprints.npz",
+        "sha256": "01ef9ee32b9369846ba928e340c93e772c2a8c40c52d818ce47501cc41ceb494"
+      },
+      "rasters": [
+        {
+          "bounds": [
+            80.83883482387816,
+            19.072587841267623,
+            80.94483482387815,
+            19.173337841267625
+          ],
+          "bytes": 78085,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "ESA WorldCover 2021 v200 window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N18E078_Map.tif",
+            "window_bounds": "(80.83883482387816, 19.07259732571888, 80.9448215619476, 19.173337841267625)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": 0.0,
+          "path": "data/resq5/E2024-155286/worldcover_2021_domain_window.tif",
+          "resolution": [
+            8.333333333333333e-05,
+            8.333333333333333e-05
+          ],
+          "sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+          "shape": [
+            1209,
+            1272
+          ],
+          "transform": [
+            8.333333333333333e-05,
+            0.0,
+            80.83883482387816,
+            0.0,
+            -8.333333333333333e-05,
+            19.173337841267625
+          ]
+        },
+        {
+          "bounds": [
+            80.83883482387816,
+            19.07250450793429,
+            80.94494593498926,
+            19.173337841267625
+          ],
+          "bytes": 459941,
+          "crs": "EPSG:4326",
+          "dataset_tags": {
+            "AREA_OR_POINT": "Area",
+            "note": "Copernicus GLO-30 DSM window covering the RESQ-5 domain + 0.5 km",
+            "source": "https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N19_00_E080_00_DEM/Copernicus_DSM_COG_10_N19_00_E080_00_DEM.tif",
+            "window_bounds": "(80.83883482387816, 19.07259732571888, 80.9448215619476, 19.173337841267625)"
+          },
+          "kind": "simulation covariate, not observational reference",
+          "nodata": null,
+          "path": "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif",
+          "resolution": [
+            0.0002777777777777778,
+            0.0002777777777777778
+          ],
+          "sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+          "shape": [
+            363,
+            382
+          ],
+          "transform": [
+            0.0002777777777777778,
+            0.0,
+            80.83883482387816,
+            0.0,
+            -0.0002777777777777778,
+            19.173337841267625
+          ]
+        }
+      ],
+      "saved_simulation_artifacts": [],
+      "viirs": {
+        "bytes": 28032,
+        "columns": [
+          "latitude",
+          "longitude",
+          "bright_ti4",
+          "scan",
+          "track",
+          "acq_date",
+          "acq_time",
+          "satellite",
+          "instrument",
+          "confidence",
+          "version",
+          "bright_ti5",
+          "frp",
+          "daynight",
+          "type",
+          "source_file"
+        ],
+        "confidence_counts": {
+          "l": 51,
+          "n": 194
+        },
+        "date_range": [
+          "2024-04-12",
+          "2024-04-20"
+        ],
+        "kind": "FIRMS/VIIRS active-fire detections",
+        "path": "data/resq2/E2024-155286/viirs_detections.csv",
+        "rows": 245,
+        "satellites": [
+          "N",
+          "N20"
+        ],
+        "semantic_limit": "detection points only; absence does not establish observed-unburned",
+        "sha256": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92",
+        "types": [
+          "0"
+        ],
+        "valid_observation_or_clear_sky_fields": []
+      }
+    }
+  ],
+  "scope": {
+    "MCD_tile_coverage_rule": "fraction of 30 m cell centers falling inside local HDF-EOS sinusoidal tile bounds; descriptive extent diagnostic, not valid-observation coverage",
+    "development_incidents_only": [
+      "E2024-131853",
+      "E2024-135332",
+      "E2023-084925",
+      "E2024-155286"
+    ],
+    "heldout_accessed": false,
+    "network_or_downloads": false,
+    "simulation_run": false,
+    "spatial_domain_rule": "existing 30 m EPSG:32644 square from protocol_setup.json"
+  }
+}

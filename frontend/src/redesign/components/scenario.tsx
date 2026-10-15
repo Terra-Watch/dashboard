@@ -29,11 +29,11 @@ const PROB_BANDS = [
 
 export function ProbabilityBandLegend() {
   return (
-    <ul aria-label="Burn probability band legend" className="flex flex-wrap gap-3 text-xs text-ink-muted">
+    <ul aria-label="Share of saved spread examples showing fire in each area" className="flex flex-wrap gap-3 text-xs text-ink-muted">
       {PROB_BANDS.map((band) => (
         <li key={band.label} className="flex items-center gap-1.5">
           <span aria-hidden className={`inline-block h-3.5 w-3.5 rounded-sm ${band.color}`} />
-          <span>{band.pattern} {band.label} of ensemble members burning</span>
+          <span>{band.pattern} {band.label} of saved examples show fire here</span>
         </li>
       ))}
     </ul>
@@ -41,16 +41,16 @@ export function ProbabilityBandLegend() {
 }
 
 const WIND_SOURCES: { value: string; label: string }[] = [
-  { value: 'era5land_native', label: 'ERA5-Land (primary)' },
-  { value: 'era5_025', label: 'ERA5 0.25° (sensitivity)' },
-  { value: 'best_match', label: 'best_match (not a reanalysis, sensitivity)' },
+  { value: 'era5land_native', label: 'ERA5-Land historical weather record' },
+  { value: 'era5_025', label: 'ERA5 historical weather record, 0.25° grid' },
+  { value: 'best_match', label: 'Best-match weather record (comparison only)' },
 ];
 
 export function WindSourceSwitch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-semibold text-ink-muted">Wind source</label>
+      <label htmlFor={id} className="block text-xs font-semibold text-ink-muted">Saved weather record</label>
       <select
         id={id}
         value={value}
@@ -61,7 +61,7 @@ export function WindSourceSwitch({ value, onChange }: { value: string; onChange:
           <option key={source.value} value={source.value}>{source.label}</option>
         ))}
       </select>
-      <p className="mt-1 max-w-xs text-xs text-ink-muted">Wind source changes this result more than anything else tested. Compare it yourself.</p>
+      <p className="mt-1 max-w-xs text-xs text-ink-muted">This changes the saved example shown. These comparisons are not operational forecasts.</p>
     </div>
   );
 }
@@ -81,7 +81,7 @@ export function BaselineToggle({ visible, onChange }: { visible: boolean; onChan
 export function AssumptionsPanel({ fuel, weather, terrain }: { fuel: string; weather: string; terrain: string }) {
   return (
     <details className="rounded-rq border border-contour bg-sheet p-3">
-      <summary className="cursor-pointer text-sm font-semibold">Assumptions in this run</summary>
+        <summary className="cursor-pointer text-sm font-semibold">How this example was prepared</summary>
       <dl className="mt-2 space-y-2 text-sm text-ink-muted">
         <div><dt className="font-semibold text-ink">Fuel</dt><dd>{fuel}</dd></div>
         <div><dt className="font-semibold text-ink">Weather</dt><dd>{weather}</dd></div>
@@ -94,7 +94,7 @@ export function AssumptionsPanel({ fuel, weather, terrain }: { fuel: string; wea
 export function TimelineSlider({ k, maxK, onChange }: { k: number; maxK: number; onChange: (k: number) => void }) {
   return (
     <div>
-      <label htmlFor="timeline" className="block text-xs font-semibold text-ink-muted">Overpass (k = time since the first detection, not a fixed hour)</label>
+      <label htmlFor="timeline" className="block text-xs font-semibold text-ink-muted">Saved satellite observation (sequence, not a fixed forecast hour)</label>
       <input
         id="timeline"
         type="range"
@@ -102,12 +102,69 @@ export function TimelineSlider({ k, maxK, onChange }: { k: number; maxK: number;
         max={maxK}
         value={k}
         step={1}
-        aria-valuetext={`Overpass ${k} of ${maxK}`}
+        aria-valuetext={`Saved observation ${k + 1} of ${maxK + 1}`}
         onChange={(event) => onChange(Number(event.target.value))}
         className="mt-1 w-full accent-canopy"
       />
-      <p className="mt-1 text-xs text-ink-muted">Overpass {k} of {maxK}</p>
+      <p className="mt-1 text-xs text-ink-muted">Saved observation {k + 1} of {maxK + 1}</p>
     </div>
+  );
+}
+
+export function ScenarioTimeline({
+  k, count, timeUtc, hoursSinceT0, onChange, playing, onTogglePlay,
+  reducedMotion, disabled = false,
+}: {
+  k: number;
+  count: number;
+  timeUtc: string;
+  hoursSinceT0: number | null;
+  onChange: (k: number) => void;
+  playing: boolean;
+  onTogglePlay: () => void;
+  reducedMotion: boolean;
+  disabled?: boolean;
+}) {
+  const maxK = Math.max(count - 1, 0);
+  const timestamp = new Date(timeUtc);
+  const readableTime = Number.isNaN(timestamp.valueOf())
+    ? timeUtc
+    : `${timestamp.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC')}`;
+
+  return (
+    <section aria-label="Saved observation timeline" className="space-y-2 rounded-rq border border-contour bg-sheet p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold">Saved observation {k + 1} of {count}</p>
+        <time data-testid="scenario-frame-time" dateTime={timeUtc} className="text-xs text-ink-muted">{readableTime}</time>
+      </div>
+      <p className="text-xs text-ink-muted">
+        {hoursSinceT0 === null ? 'Elapsed time unavailable' : `${hoursSinceT0.toFixed(1)} hours after the example start`}
+      </p>
+      <input
+        aria-label="Saved observation"
+        type="range"
+        min={0}
+        max={maxK}
+        value={k}
+        step={1}
+        aria-valuetext={`Saved observation ${k + 1} of ${count}, ${readableTime}`}
+        disabled={disabled || count < 2}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-canopy"
+      />
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={disabled || k <= 0} onClick={() => onChange(k - 1)} className="rounded-rq border border-contour px-3 py-1.5 text-sm disabled:opacity-50">Previous</button>
+        <button type="button" disabled={disabled || k >= maxK} onClick={() => onChange(k + 1)} className="rounded-rq border border-contour px-3 py-1.5 text-sm disabled:opacity-50">Next</button>
+        <button
+          type="button"
+          disabled={disabled || reducedMotion || count < 2 || (!playing && k >= maxK)}
+          title={reducedMotion ? 'Playback is unavailable when reduced motion is preferred; use Previous and Next.' : undefined}
+          onClick={onTogglePlay}
+          className="rounded-rq border border-canopy px-3 py-1.5 text-sm disabled:opacity-50"
+        >{playing ? 'Pause' : 'Play'}</button>
+      </div>
+      {reducedMotion && <p className="text-xs text-ink-muted">Automatic playback is off because reduced motion is preferred. Use Previous and Next to step through saved observations.</p>}
+    </section>
   );
 }
 
@@ -117,7 +174,7 @@ export function BriefingExport({ onExport }: { onExport: () => void }) {
       onClick={onExport}
       className="rounded-rq border border-canopy bg-canopy px-4 py-2 text-sm font-semibold text-white hover:bg-canopy-deep"
     >
-      Export briefing (includes Uncalibrated-scenario label)
+      Print this briefing (includes an example notice)
     </button>
   );
 }

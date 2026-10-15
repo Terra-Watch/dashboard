@@ -13,6 +13,7 @@ backend/.venv — see tests/test_simulation_pipeline.py for the same convention)
 """
 import sys
 import unittest
+import json
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]
@@ -102,6 +103,14 @@ class GeoReferencingTests(unittest.TestCase):
             west, south, east, north = bounds
             self.assertTrue(west < ignition["lon"] < east, f"{incident_id}: ignition lon outside domain bounds")
             self.assertTrue(south < ignition["lat"] < north, f"{incident_id}: ignition lat outside domain bounds")
+
+    def test_scenario_ignition_marker_matches_prescribed_simulation_input(self):
+        setup_path = Path(__file__).resolve().parents[2] / "data" / "resq5" / "protocol_setup.json"
+        setup = json.loads(setup_path.read_text())
+        for incident_id in INCIDENTS:
+            lat, lon = setup[incident_id]["ignition_lat_lon"]
+            self.assertEqual(rd.nominal_ignition(incident_id), {"lat": lat, "lon": lon})
+            self.assertEqual(rd.simulation_start_utc(incident_id), setup[incident_id]["t0_utc"].replace(" ", "T") + "Z")
 
     def test_probability_grid_geojson_is_a_valid_feature_collection(self):
         geo = rd.probability_grid_geojson("E2023-084925", "era5land_native", 0)

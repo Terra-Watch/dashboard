@@ -1,0 +1,27 @@
+# Local observational-reference assessment — RESQ6 development cases
+
+Scope is limited to the four frozen development incidents. This is a local-file inspection, not a statement about public availability. Exact paths, sizes, hashes, CSV metadata, raster metadata, mask metadata, and MCD64A1 HDF-EOS/QA diagnostics are in `local_reference_inventory.json`.
+
+## Dataset decisions
+
+| Candidate | Local finding | Classification and allowed interpretation | Limits for spread validation |
+|---|---|---|---|
+| FIRMS VIIRS 375 m CSVs | Present for all four cases; UTC acquisition date/time at minute precision, confidence/platform/type and source-file fields. | **B — active-fire detection agreement only.** It records detections, not a complete burned perimeter. | No per-cell view/clear-sky mask. No detection cannot be treated as confidently unburned. It is the source of the current target, so it is not independent validation of the current VIIRS score. |
+| `results/resq5/<case>/observed_footprints.npz` | Present for all four; cumulative `nh_*` and `all_*` Boolean arrays on each model grid. | **Model target derivative**, not an independent reference; derived from the same VIIRS detections. | Arrays contain only Boolean states; no unknown/coverage category. Do not rescore as an independent perimeter. |
+| MCD64A1.061 monthly 500 m HDF | Six local monthly tiles: Feb/Mar 2024 for 131853 and 135332, Mar 2023 for 084925, Apr 2024 for 155286. HDF contains Burn Date, Burn Date Uncertainty, QA, First Day and Last Day. Its embedded input references identify MCD64A0 and MCD12Q1 inputs. | **A candidate independent burned-area product family**, distinct from the current VIIRS CSV/masks, but not ground truth and not proven statistically independent of all satellite evidence. Also **D for exact 6–48 h reconstruction**. | Monthly 463.313 m sinusoidal pixels, ordinal day estimates with uncertainty; cannot locate a burn within an exact forecast horizon without an approved temporal interpretation. Tile-center coverage of the 30 m domain is 100% except E2024-135332 at 83.69%. In-domain MCD burn cells are 0, 12, 4, and 0 respectively (the latter zeros are not proof of no fire); 084925 burns have 1/2/6-day uncertainty. E2024-155286 fetch metadata reports a null LAADS listing size / mismatch. QA distinguishes valid/land and special unburned codes, but is not a per-acquisition cloud/view mask. |
+| Copernicus Global Burnt Area daily v3.1 | No local candidate file found in the inspected development inputs/result inventory. | **E — absent locally, usability undecided.** | No local metadata to assess. Prior external research suggests daily/global coverage, but no download or API call was made and nominal cadence alone does not establish event/horizon suitability. |
+| Sentinel-2 or Landsat scenes/derived burn masks | No local candidate found in the scoped case data. | **E — absent locally.** | No local acquisition dates, cloud masks, coverage, or georeferencing to assess. |
+| Manual perimeter / independent incident mapping | No local candidate found in the scoped case data. | **E — absent locally.** | No independent delineation or timestamp. |
+| Observation opportunity / clear-sky / valid-cell masks | None found; VIIRS CSV and saved target masks lack these fields/states. | **D for complete-cell binary scoring; unknown-cell policy required.** | Existing non-detections are not justified negatives. MCD QA is product-pixel algorithm QA and does not fill the missing VIIRS acquisition-coverage mask. |
+| WorldCover 2021 and Copernicus DEM GLO-30 windows | Present for all four cases. | **C — static model covariates/context**, not observations. | They describe land cover/topography, not burn state, observation time, or fire perimeter. |
+| Corrected Cell2Fire member grids/manifests | Existing exact 6/12/24/48 development snapshots and per-case metadata are present. | **Model outputs**, not observational evidence. | No simulation was rerun. Historical result/provenance caveats remain as recorded in the temporal audit. |
+
+## Horizon suitability
+
+No local reference supports a defensible physical-spread comparison at any of 6, 12, 24, or 48 hours under an already approved protocol. VIIRS has no eligible n/h pass by 6 or 12 hours. Its existing 24/48 h targets remain stale in seven of eight cells (0.63 h to 35.23 h earlier than the horizon) and lack valid-negative coverage. MCD64A1 provides monthly ordinal burn dates with pixel uncertainty, not exact horizon snapshots. No burn-date window rule, maximum observation age, missing-horizon policy, or coarse-pixel mapping has been approved.
+
+The inventory's MCD HDF statistics are extent and QA descriptions only: pixel centers within the exact EPSG:32644 square, HDF sinusoidal tile coverage of 30 m model-cell centers, and burn-date/QA values. They are not simulation scores, not an event-attribution decision, and not a claim that the product's unburned pixels were continuously observed.
+
+## Licence and provenance
+
+Local MCD files carry product/version metadata and the acquisition reports include source URLs and listing-size checks; no local licence grant or redistribution terms were found in the inspected case manifests. Do not redistribute these source rasters until the applicable provider terms are checked. FIRMS provenance is recorded in local source fields/reports, but this inventory does not certify licence compliance. The local static covariate tags record product/source names; this report makes no new licence determination.

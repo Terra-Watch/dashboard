@@ -1,0 +1,60 @@
+{
+  "demo_kind": "offline_precomputed_forecast_and_conditional_spread",
+  "forecast": {
+    "artifact_identifier": "backend/models/barv3/bar3_replay_2024.npz",
+    "artifact_status": "archived_validation_replay",
+    "coverage_complete": false,
+    "date": "2024-03-10",
+    "geometry_path": "forecast.geojson",
+    "model": "Bar v3",
+    "probabilities_exposed": false,
+    "warning": "Archived ranked-cell replay, not a live or complete-coverage forecast."
+  },
+  "observation_semantics": "VIIRS active-fire detection masks are supporting observations, not complete physical perimeters; absence is not confirmed unburned.",
+  "provenance_path": "provenance.json",
+  "relationship": "Forecast and saved RESQ-5 simulations are separate artifacts. The forecast does not select ignition or drive Cell2Fire.",
+  "schema_version": 1,
+  "simulation_cases": [
+    {
+      "artifact_status": "precomputed",
+      "available_overpasses": 8,
+      "ensemble_members": 30,
+      "incident_id": "E2023-084925",
+      "label": "Similipal, Odisha \u2014 Mar 2023",
+      "scenario_path": "cases/E2023-084925.json",
+      "simulation_start_utc": "2023-03-10T07:00:00Z",
+      "state": "OD"
+    },
+    {
+      "artifact_status": "precomputed",
+      "available_overpasses": 6,
+      "ensemble_members": 30,
+      "incident_id": "E2024-131853",
+      "label": "Telangana \u2014 Feb 2024",
+      "scenario_path": "cases/E2024-131853.json",
+      "simulation_start_utc": "2024-02-16T08:00:00Z",
+      "state": "TS"
+    },
+    {
+      "artifact_status": "precomputed",
+      "available_overpasses": 7,
+      "ensemble_members": 30,
+      "incident_id": "E2024-135332",
+      "label": "Maharashtra \u2014 Mar 2024",
+      "scenario_path": "cases/E2024-135332.json",
+      "simulation_start_utc": "2024-03-04T19:00:00Z",
+      "state": "MH"
+    },
+    {
+      "artifact_status": "precomputed",
+      "available_overpasses": 4,
+      "ensemble_members": 30,
+      "incident_id": "E2024-155286",
+      "label": "Chhattisgarh \u2014 2024",
+      "scenario_path": "cases/E2024-155286.json",
+      "simulation_start_utc": "2024-04-12T07:00:00Z",
+      "state": "CG"
+    }
+  ],
+  "validation_status": "Not operationally validated. The current development acceptance gate remains unmet; these displayed VIIRS-derived targets are not physical fire perimeters."
+}

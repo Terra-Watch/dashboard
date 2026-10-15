@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RESQ6 · Simulated fire spread</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.45 system-ui, sans-serif; background: #111820; color: #e8edf2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 18px clamp(16px, 4vw, 42px); border-bottom: 1px solid #34414d; background: #17212b; }
+    h1 { margin: 0; font-size: 1.25rem; } header p { margin: 5px 0 0; color: #aebbc6; }
+    main { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 22px; max-width: 1400px; margin: auto; padding: 22px; }
+    aside, .view { background: #19232d; border: 1px solid #34414d; border-radius: 10px; padding: 18px; }
+    label { display: block; font-weight: 650; margin: 14px 0 5px; }
+    select, button, input[type=range] { width: 100%; }
+    select, button { color: inherit; background: #253442; border: 1px solid #4c6071; border-radius: 6px; padding: 9px; font: inherit; }
+    button { cursor: pointer; } button:hover { background: #334b5e; }
+    .time-buttons { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
+    .time-buttons button { padding: 7px 2px; } .time-buttons button[aria-pressed=true] { outline:2px solid #ffc857; }
+    .scenario-meta { color: #bac6cf; font-size: .91rem; overflow-wrap:anywhere; }
+    .scenario-meta p { margin: 8px 0; }
+    .notice { border-left: 4px solid #ffc857; background: #2b2b28; padding: 11px 13px; margin-top: 16px; }
+    .disclaimer { margin: 16px 0 0; color: #ffd987; font-weight: 650; }
+    .view-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .view-head h2 { margin:0; font-size:1.1rem; }
+    .status { color:#bdcbd5; min-height:1.5em; }
+    .canvas-wrap { width:100%; max-width:850px; margin:16px auto 8px; position:relative; background:#28323b; border:1px solid #697784; }
+    canvas { display:block; width:100%; height:auto; image-rendering: pixelated; }
+    .north-label { position:absolute; top:8px; left:8px; color:white; text-shadow:0 1px 2px black; font-size:12px; }
+    .south-label { position:absolute; right:8px; bottom:8px; color:white; text-shadow:0 1px 2px black; font-size:12px; }
+    .scale { position:absolute; bottom:12px; left:14px; padding:3px 5px; color:white; text-shadow:0 1px 2px black; font-size:12px; }
+    .scale-line { display:block; height:6px; border:1px solid white; border-top:0; margin-bottom:2px; }
+    .axes { display:flex; justify-content:space-between; max-width:850px; margin:0 auto; color:#acbac5; font-size:.84rem; }
+    .legend { display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; color:#c8d2db; }
+    .key { display:inline-block; width:15px; height:15px; vertical-align:-3px; margin-right:5px; border:1px solid #d5dce2; }
+    .burned { background:#ed693c; } .unburned { background:#425564; } .ignition { background:#ffdf50; border-radius:50%; }
+    .small { font-size:.88rem; color:#aebbc6; }
+    @media(max-width:800px) { main { grid-template-columns:1fr; padding:12px; } aside,.view { padding:14px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>RESQ6 · Conditional fire-spread simulation</h1>
+  <p>Archived Cell2Fire ensemble member footprints · development scenarios only</p>
+</header>
+<main>
+  <aside>
+    <label for="scenario">Scenario</label><select id="scenario" disabled></select>
+    <label for="member">Ensemble member</label><select id="member" disabled></select>
+    <label for="time">Elapsed simulation time: <span id="time-label">—</span></label>
+    <input id="time" type="range" min="0" max="3" step="1" value="0" disabled>
+    <div class="time-buttons" id="time-buttons"></div>
+    <button id="play" type="button" disabled style="margin-top:10px">▶ Play</button>
+    <section id="metadata" class="scenario-meta" aria-live="polite"></section>
+    <section class="notice"><strong>Reading this view</strong><br>One member is one simulated realization. Times are the archived exact frames; the hourly evolution between them is not stored or interpolated.</section>
+    <p class="disclaimer">Simulated fire spread under the selected scenario. The displayed footprint is a model output and is not a verified real-world fire perimeter.</p>
+  </aside>
+  <section class="view">
+    <div class="view-head"><h2 id="map-title">SIMULATED · —</h2><span class="status" id="status" role="status">Loading archived scenarios…</span></div>
+    <div class="canvas-wrap"><canvas id="map" aria-label="North-up simulated burn grid"></canvas><span class="north-label" id="north-label">Northing —</span><span class="south-label" id="south-label">Southing —</span><div class="scale" id="scale"><span class="scale-line"></span><span>1 km</span></div></div>
+    <div class="axes"><span id="west-label">Westing</span><span>Grid eastings · EPSG:32644</span><span id="east-label">Easting</span></div>
+    <div class="legend"><span><i class="key burned"></i>Burned by selected time (model)</span><span><i class="key unburned"></i>Not burned in saved frame</span><span><i class="key ignition"></i>This member’s ignition cell</span></div>
+    <p class="small">Grid row 0 is north; columns increase east. Cell size: 30 m. The saved Boolean grids contain only burned/unburned values—no unknown/no-data class is encoded.</p>
+  </section>
+</main>
+<script>
+(() => {
+  const HOURS=[6,12,24,48], scenario=document.querySelector('#scenario'), member=document.querySelector('#member');
+  const slider=document.querySelector('#time'), label=document.querySelector('#time-label'), status=document.querySelector('#status');
+  const canvas=document.querySelector('#map'), ctx=canvas.getContext('2d',{alpha:false}), buttons=document.querySelector('#time-buttons');
+  let catalog=null, timer=null, requestNo=0;
+  function setHour(index) { slider.value=String(index); label.textContent=`${HOURS[index]} h`; [...buttons.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index))); render(); }
+  function metadata(s, ignitionRow, ignitionCol) {
+    const [rows,cols]=s.grid_shape;
+    const ignitionE=s.west_m+(ignitionCol+.5)*s.cell_size_m, ignitionN=s.north_m-(ignitionRow+.5)*s.cell_size_m;
+    document.querySelector('#metadata').innerHTML=`<p><b>Scenario:</b> ${s.incident_id} · ${s.state}</p><p><b>Protocol origin (t₀):</b> ${s.t0_utc} UTC<br><b>Prescribed base ignition:</b> ${s.base_ignition_lat_lon.join(', ')} (lat, lon)<br><b>Selected member ignition:</b> row ${ignitionRow}, col ${ignitionCol} · UTM ${Math.round(ignitionE)}, ${Math.round(ignitionN)} m</p><p><b>Saved grid:</b> ${rows} × ${cols} cells · ${s.side_km} km square<br><b>Projection:</b> ${s.crs}<br><b>ROS threshold:</b> ${s.ros_threshold_used}</p><p><b>Members:</b> ${s.member_count}; this view selects one member’s actual grid.</p><p class="small">${s.weather_perturbation_note} The archived frames can be viewed, but exact replay of every member’s historical weather draws is not established.</p>`;
+    document.querySelector('#west-label').textContent=`W ${Math.round(s.west_m).toLocaleString()} m`;
+    document.querySelector('#east-label').textContent=`E ${Math.round(s.west_m+cols*s.cell_size_m).toLocaleString()} m`;
+    document.querySelector('#north-label').textContent=`N ${Math.round(s.north_m).toLocaleString()} m · row 0`;
+    document.querySelector('#south-label').textContent=`S ${Math.round(s.north_m-rows*s.cell_size_m).toLocaleString()} m`;
+    document.querySelector('#scale').style.width=`${Math.min(90,1000/(cols*s.cell_size_m)*100)}%`;
+  }
+  async function render() {
+    if (!catalog) return;
+    const thisRequest=++requestNo, id=scenario.value, m=Number(member.value), h=HOURS[Number(slider.value)], s=catalog.scenarios[id];
+    status.textContent='Loading saved frame…'; document.querySelector('#map-title').textContent=`SIMULATED · ${id} · member ${String(m).padStart(3,'0')} · ${h} h`;
+    try {
+      const response=await fetch(`/api/frame?scenario=${encodeURIComponent(id)}&member=${m}&hour=${h}`);
+      if (!response.ok) { const err=await response.json(); throw Error(err.error||`HTTP ${response.status}`); }
+      const rows=s.grid_shape[0], cols=s.grid_shape[1], bytes=new Uint8Array(await response.arrayBuffer());
+      if (thisRequest!==requestNo) return;
+      if(bytes.length!==rows*cols) throw Error('Saved grid has invalid dimensions.');
+      const pixels=ctx.createImageData(cols,rows);
+      for(let i=0;i<bytes.length;i++) { const j=i*4; if(bytes[i]) { pixels.data[j]=237;pixels.data[j+1]=105;pixels.data[j+2]=60; } else { pixels.data[j]=66;pixels.data[j+1]=85;pixels.data[j+2]=100; } pixels.data[j+3]=255; }
+      canvas.width=cols;canvas.height=rows;ctx.putImageData(pixels,0,0);
+      const r=Number(response.headers.get('X-Ignition-Row')), c=Number(response.headers.get('X-Ignition-Col'));
+      if(r<0||r>=rows||c<0||c>=cols) throw Error('Ignition coordinate is outside this grid.');
+      ctx.beginPath();ctx.arc(c+0.5,r+0.5,Math.max(3,Math.min(rows,cols)*.009),0,Math.PI*2);ctx.fillStyle='#ffdf50';ctx.fill();ctx.lineWidth=Math.max(1,Math.min(rows,cols)*.003);ctx.strokeStyle='#111820';ctx.stroke();
+      metadata(s,r,c); status.textContent=`${bytes.reduce((a,b)=>a+b,0).toLocaleString()} burned cells in saved frame · ${cols}×${rows}`;
+    } catch(error) { if(thisRequest===requestNo) status.textContent=`Could not display artifact: ${error.message}`; }
+  }
+  function fillMembers(s) { member.replaceChildren(); for(let i=0;i<s.member_count;i++){const o=document.createElement('option');o.value=i;o.textContent=`Member ${String(i).padStart(3,'0')}`;member.append(o);} }
+  scenario.addEventListener('change',()=>{fillMembers(catalog.scenarios[scenario.value]);render();});
+  member.addEventListener('change',render);slider.addEventListener('input',()=>setHour(Number(slider.value)));
+  for(let i=0;i<HOURS.length;i++){const b=document.createElement('button');b.type='button';b.textContent=`${HOURS[i]} h`;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>setHour(i));buttons.append(b);}
+  document.querySelector('#play').addEventListener('click',event=>{if(timer){clearInterval(timer);timer=null;event.currentTarget.textContent='▶ Play';return;}event.currentTarget.textContent='❚❚ Pause';timer=setInterval(()=>setHour((Number(slider.value)+1)%HOURS.length),1400);});
+  window.addEventListener('beforeunload',()=>timer&&clearInterval(timer));
+  fetch('/api/scenarios').then(r=>{if(!r.ok)throw Error(`HTTP ${r.status}`);return r.json();}).then(data=>{catalog=data;for(const id of Object.keys(data.scenarios)){const o=document.createElement('option');o.value=id;o.textContent=id;scenario.append(o);}scenario.disabled=member.disabled=slider.disabled=false;document.querySelector('#play').disabled=false;fillMembers(data.scenarios[scenario.value]);setHour(0);}).catch(e=>status.textContent=`Scenario metadata unavailable: ${e.message}`);
+})();
+</script>
+</body>
+</html>

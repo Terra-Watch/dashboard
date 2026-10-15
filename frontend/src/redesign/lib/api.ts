@@ -4,10 +4,9 @@ export async function rqFetch<T>(path: string, options: RequestInit = {}): Promi
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   const response = await fetch(`${API}${path}`, { ...options, headers });
-  if (!response.ok) {
-    const detail = await response.json().catch(() => null);
-    throw new Error(detail?.detail || `Request to ${path} failed (${response.status}).`);
-  }
+  if (!response.ok) throw new Error(response.status === 503
+    ? 'This action is currently unavailable. Please try again later.'
+    : 'We could not retrieve that information. Please try again.');
   return response.json() as Promise<T>;
 }
 

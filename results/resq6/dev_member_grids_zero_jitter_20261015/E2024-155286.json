@@ -1,0 +1,60 @@
+{
+  "incident_id": "E2024-155286",
+  "n_members_requested": 60,
+  "n_members_ok": 60,
+  "n_members_error": 0,
+  "errors_sample": [],
+  "wall_s_total": 59.9,
+  "wall_s_per_member_mean": 6.99,
+  "ros_threshold_used": 0.05,
+  "horizons": [
+    {
+      "horizon_h": 6,
+      "scorable": false
+    },
+    {
+      "horizon_h": 12,
+      "scorable": false
+    },
+    {
+      "horizon_h": 24,
+      "scorable": true,
+      "obs_cells": 482,
+      "engine": {
+        "ap": 0.272100507846186,
+        "brier": 0.003978618862551498
+      },
+      "baseline_a_proximity": {
+        "ap": 0.4186742418692945,
+        "brier": 0.014032285123729058
+      },
+      "baseline_b_wind_elongated": {
+        "ap": 0.37296543801981646,
+        "brier": 0.12181829754070037
+      },
+      "wind_mean_speed_ms": 1.5001659477630105,
+      "wind_to_bearing_deg": 312.0434922202638
+    },
+    {
+      "horizon_h": 48,
+      "scorable": true,
+      "obs_cells": 482,
+      "engine": {
+        "ap": 0.32174762233397813,
+        "brier": 0.007806439628242087
+      },
+      "baseline_a_proximity": {
+        "ap": 0.4186742418692945,
+        "brier": 0.014032285123729058
+      },
+      "baseline_b_wind_elongated": {
+        "ap": 0.3942787121073468,
+        "brier": 0.29195786884662756
+      },
+      "wind_mean_speed_ms": 1.403616595932882,
+      "wind_to_bearing_deg": 321.83379637492976
+    }
+  ],
+  "ignition_jitter_radius_m": 0.0,
+  "wind_perturbation_seed_rule": "incident jitter_seed + member index"
+}

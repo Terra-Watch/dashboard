@@ -1,25 +1,20 @@
 """Endpoints for the redesign-v2 screens (Watch, Incident scenario, Replay, Field).
 
-Kept separate from `operations.py`/`risk.py` only by file, not by app — this is the
-same FastAPI app (`main.py` includes this router alongside the existing ones), per
-the Gate 1 decision to extend the existing backend rather than stand up a new
-service. See docs/redesign/10_backend_contract.md.
-
-Everything here is explicitly sample/demo data: the 4 RESQ-5 replay incidents.
-Live FIRMS ingestion does not exist (docs/redesign/00_audit.md) so this is the
-only data Watch/Incident/Replay/Field can show; every response says so.
+Sample/demo data is explicitly labeled. Protected operations require authenticated redesign
+tokens, role checks, and state/division geographic scope enforcement with fail-closed audit logging.
 """
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from ..services import redesign_data, redesign_store
+from ..core.config import INGEST_LIVE
+from ..core.permissions import require_scope, user_scopes
+from ..core.security import current_redesign_user, require_csrf, require_roles
+from ..services import audit_log, redesign_data, redesign_store
 
 router = APIRouter(prefix="/api/redesign", tags=["redesign"])
 
@@ -34,13 +29,22 @@ WIND_SOURCES = {
 # ---------- Watch (detection triage) ----------
 
 @router.get("/detections")
-def list_detections() -> dict:
+def list_detections(
+    user: dict = Depends(require_roles("range_officer", "control_room_operator", "incident_commander")),
+) -> dict:
     detections = redesign_data.list_detections()
     status_by_id = redesign_store.latest_status_by_detection()
     for item in detections:
         status = status_by_id.get(item["id"])
         item["status"] = status["action"] if status else "new"
-    return {"sample_data": True, "note": "The 4 replay incidents' VIIRS detections, a fixed sample set, not a real-time feed.", "items": detections}
+    if user["role"] != "admin":
+        scopes = user_scopes(int(user["id"]))
+        detections = [item for item in detections if item["state"] in scopes]
+    return {
+        "sample_data": True,
+        "note": "The 4 replay incidents' VIIRS detections, a fixed sample set, not a real-time feed.",
+        "items": detections,
+    }
 
 
 class TriageActionRequest(BaseModel):
@@ -49,16 +53,58 @@ class TriageActionRequest(BaseModel):
     device_id: str
 
 
-@router.post("/detections/{detection_id}/actions")
-def act_on_detection(detection_id: str, body: TriageActionRequest) -> dict:
+def _live_authorization_not_ready() -> None:
+    """Fail closed until the unresolved RESQ9 authorization decisions land.
+    See docs/ingest/RESQ9_AUTH_DECISIONS_FOR_APPROVAL.md.
+    """
+    raise HTTPException(
+        status_code=503,
+        detail="Live triage authorization integration is not approved",
+    )
+
+
+def _detection_state(detection_id: str) -> str | None:
+    for item in redesign_data.list_detections():
+        if item["id"] == detection_id:
+            return item["state"]
+    return None
+
+
+@router.post("/detections/{detection_id}/actions", dependencies=[Depends(require_csrf)])
+def act_on_detection(
+    detection_id: str,
+    body: TriageActionRequest,
+    user: dict = Depends(require_roles("control_room_operator")),
+) -> dict:
+    if INGEST_LIVE:
+        _live_authorization_not_ready()
     if body.action not in ("verify", "dismiss", "escalate"):
         raise HTTPException(status_code=400, detail="action must be verify, dismiss or escalate")
-    row = redesign_store.record_triage_action(detection_id, body.action, body.role, body.device_id)
+    state = _detection_state(detection_id)
+    require_scope(user, state, entity_type="detection", entity_id=detection_id)
+
+    row = redesign_store.record_triage_action(detection_id, body.action, user["role"], body.device_id)
+
+    audit_log.write_audit_log(
+        action=body.action,
+        entity_type="detection",
+        entity_id=detection_id,
+        user_id=int(user["id"]),
+        device_id=body.device_id,
+        metadata={"client_role": body.role, "verified_role": user["role"], "state": state},
+    )
     return {"ok": True, "action": row}
 
 
 @router.get("/detections/{detection_id}/history")
-def detection_history(detection_id: str) -> dict:
+def detection_history(
+    detection_id: str,
+    user: dict = Depends(require_roles("range_officer", "control_room_operator", "incident_commander")),
+) -> dict:
+    if INGEST_LIVE:
+        _live_authorization_not_ready()
+    state = _detection_state(detection_id)
+    require_scope(user, state, entity_type="detection", entity_id=detection_id)
     return {"detection_id": detection_id, "history": redesign_store.list_triage_history(detection_id)}
 
 
@@ -82,9 +128,15 @@ def _downsampled_bands(incident_id: str, wind_source: str, overpass_k: int, stri
 
 
 @router.get("/incidents/{incident_id}/scenario")
-def incident_scenario(incident_id: str, wind_source: str = "era5land_native", overpass_k: int = 0) -> dict:
+def incident_scenario(
+    incident_id: str,
+    wind_source: str = "era5land_native",
+    overpass_k: int = 0,
+    user: dict = Depends(require_roles("control_room_operator", "incident_commander")),
+) -> dict:
     if incident_id not in redesign_data.REPLAY_INCIDENTS:
         raise HTTPException(status_code=404, detail="unknown incident")
+    require_scope(user, redesign_data.REPLAY_INCIDENTS[incident_id]["state"], entity_type="incident", entity_id=incident_id)
     if wind_source not in WIND_SOURCES:
         raise HTTPException(status_code=400, detail=f"wind_source must be one of {list(WIND_SOURCES)}")
     bands = _downsampled_bands(incident_id, wind_source, overpass_k)
@@ -99,6 +151,7 @@ def incident_scenario(incident_id: str, wind_source: str = "era5land_native", ov
         "wind_source_label": WIND_SOURCES[wind_source],
         "overpass_k": overpass_k,
         "overpass_count": n_overpasses,
+        "overpass_time_utc": time_utc,
         "probability_bands_grid": bands,
         "bounds": redesign_data.domain_bounds_wgs84(incident_id),
         "ignition": redesign_data.nominal_ignition(incident_id),
@@ -121,11 +174,15 @@ def incident_scenario(incident_id: str, wind_source: str = "era5land_native", ov
 # ---------- Replay / evidence ----------
 
 @router.get("/replay/{incident_id}")
-def replay(incident_id: str) -> dict:
+def replay(
+    incident_id: str,
+    user: dict = Depends(require_roles("control_room_operator", "incident_commander")),
+) -> dict:
     try:
         detail = redesign_data.replay_for(incident_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="unknown incident")
+    require_scope(user, redesign_data.REPLAY_INCIDENTS[incident_id]["state"], entity_type="incident", entity_id=incident_id)
     last_k = detail["headline_last_overpass"]["last_overpass_k"]
     primary_model = "era5land_native"
     detail["bounds"] = redesign_data.domain_bounds_wgs84(incident_id)
@@ -140,12 +197,21 @@ def replay(incident_id: str) -> dict:
 
 
 @router.get("/replay")
-def replay_index() -> dict:
+def replay_index(
+    user: dict = Depends(require_roles("control_room_operator", "incident_commander")),
+) -> dict:
     counts = redesign_data.cross_incident_win_counts()
+    scopes = None if user["role"] == "admin" else user_scopes(int(user["id"]))
     return {
         "incidents": [
-            {"incident_id": incident_id, **meta}
+            {
+                "incident_id": incident_id,
+                **meta,
+                "domain_bounds_wgs84": redesign_data.domain_bounds_wgs84(incident_id),
+                "simulation_start_utc": redesign_data.simulation_start_utc(incident_id),
+            }
             for incident_id, meta in redesign_data.REPLAY_INCIDENTS.items()
+            if scopes is None or meta["state"] in scopes
         ],
         "development_incidents": True,
         "cross_incident_win_counts": counts,
@@ -158,29 +224,61 @@ def replay_index() -> dict:
 class FieldReportRequest(BaseModel):
     idempotency_key: str
     task_id: str
+    incident_id: str | int | None = None
     note: str = ""
     photo_name: str | None = None
     device_id: str
     captured_at: str
 
 
-@router.post("/field/reports")
-def submit_field_report(body: FieldReportRequest) -> dict:
+@router.post("/field/reports", dependencies=[Depends(require_csrf)])
+def submit_field_report(
+    body: FieldReportRequest,
+    user: dict = Depends(require_roles("field_crew")),
+) -> dict:
+    if INGEST_LIVE:
+        _live_authorization_not_ready()
     if not body.idempotency_key:
         raise HTTPException(status_code=400, detail="idempotency_key is required")
+
+    task_map = {item["id"]: item for item in redesign_data.list_detections()}
+    task = task_map.get(body.task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Field task not found")
+    if body.incident_id:
+        if str(body.incident_id) != str(task["incident_id"]):
+            raise HTTPException(status_code=422, detail="Field report task does not match the specified incident")
+
     row, created = redesign_store.upsert_field_report(
         body.idempotency_key, body.task_id, body.note, body.photo_name, body.device_id, body.captured_at
     )
+
+    if created:
+        audit_log.write_audit_log(
+            action="field_report_submitted",
+            entity_type="field_report",
+            entity_id=body.idempotency_key,
+            user_id=int(user["id"]),
+            device_id=body.device_id,
+            metadata={"task_id": body.task_id, "incident_id": body.incident_id, "note_length": len(body.note)},
+        )
     return {"created": created, "report": row}
 
 
 @router.get("/field/reports")
-def list_field_reports() -> dict:
-    return {"items": redesign_store.list_field_reports()}
+def list_field_reports(
+    user: dict = Depends(require_roles("control_room_operator", "incident_commander")),
+) -> dict:
+    items = redesign_store.list_field_reports()
+    if user["role"] != "admin":
+        scopes = user_scopes(int(user["id"]))
+        state_by_task_id = {item["id"]: item["state"] for item in redesign_data.list_detections()}
+        items = [report for report in items if state_by_task_id.get(report["task_id"]) in scopes]
+    return {"items": items}
 
 
 @router.get("/field/tasks")
-def field_tasks() -> dict:
+def field_tasks(_: dict = Depends(require_roles("field_crew"))) -> dict:
     """Verification tasks derived from today's triage queue: one per un-dismissed detection."""
     detections = redesign_data.list_detections()
     status_by_id = redesign_store.latest_status_by_detection()

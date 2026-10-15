@@ -1,0 +1,133 @@
+{
+  "generated_data_files_sha256": {
+    "cases/E2023-084925.json": "45f58f80eed9c933238f162892891935da902b0d0afa5219e4e4fb6bc84a3999",
+    "cases/E2024-131853.json": "9e3a77479f3997f94e65375b133c3e5d36fe221ddd888129caba4b53e3c6c63c",
+    "cases/E2024-135332.json": "2f2f79e5ba19a4ab07397de57fa8c14f9cf7e1af62c5d552a05494f2c907eca8",
+    "cases/E2024-155286.json": "6b1738e2fb662b010b1e26cf34d051d44df35677dd9370213dc1d2119ef8707c",
+    "forecast.geojson": "4e3bc87458ff4d19601554540ad1a9145337c77f3287ed8ff8dfbb4d40909815"
+  },
+  "generation_method": "Local deterministic serialization of existing Bar v3 and RESQ-5 artifacts; no acquisition, prediction, scoring, or Cell2Fire run.",
+  "generator": "scripts/resq6/build_offline_demo.py",
+  "inputs": {
+    "E2023-084925:observation_metrics": {
+      "path": "results/resq5/E2023-084925/metrics_by_overpass.csv",
+      "sha256": "8b18b417495f1bf192d2d778daba355866b38b1e14e896fe7acab140d96d534c"
+    },
+    "E2023-084925:protocol_setup": {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0"
+    },
+    "E2023-084925:simulation_ensemble": {
+      "path": "results/resq5/E2023-084925/burn_count_era5land_native.npz",
+      "sha256": "c1e8c5e51e031972b9cd2c422da034cc66f1f1897ae0f929660c6490a2bd2209"
+    },
+    "E2023-084925:simulation_summary": {
+      "path": "results/resq5/E2023-084925/summary.json",
+      "sha256": "12b57e7c7808e075d1aef4d80346339a96db624ab9d210bb307fc2655325752d"
+    },
+    "E2023-084925:viirs_detections": {
+      "path": "data/resq2/E2023-084925/viirs_detections.csv",
+      "sha256": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f"
+    },
+    "E2023-084925:weather_input": {
+      "path": "data/resq2/E2023-084925/weather_era5land_native_wind.csv",
+      "sha256": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3"
+    },
+    "E2024-131853:observation_metrics": {
+      "path": "results/resq5/E2024-131853/metrics_by_overpass.csv",
+      "sha256": "094c906a23b387b39bd5ba56f47a72f0e8ab268dcacf22507dd5de5a477c6cfb"
+    },
+    "E2024-131853:protocol_setup": {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0"
+    },
+    "E2024-131853:simulation_ensemble": {
+      "path": "results/resq5/E2024-131853/burn_count_era5land_native.npz",
+      "sha256": "15af9b22173102f799922d4da89bf0c424bac86e5e8aaa48faa992ce1c91fba4"
+    },
+    "E2024-131853:simulation_summary": {
+      "path": "results/resq5/E2024-131853/summary.json",
+      "sha256": "92ad1c190839eca45528ea7b7a8cb9f9130a3bbec03b09b9dc31c98387d005c6"
+    },
+    "E2024-131853:viirs_detections": {
+      "path": "data/resq2/E2024-131853/viirs_detections.csv",
+      "sha256": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb"
+    },
+    "E2024-131853:weather_input": {
+      "path": "data/resq2/E2024-131853/weather_era5land_native_wind.csv",
+      "sha256": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1"
+    },
+    "E2024-135332:observation_metrics": {
+      "path": "results/resq5/E2024-135332/metrics_by_overpass.csv",
+      "sha256": "c3cec171a8dfdbff90c83f51302d95e0f0fe15b42b05bb7fa0f92b60d2823270"
+    },
+    "E2024-135332:protocol_setup": {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0"
+    },
+    "E2024-135332:simulation_ensemble": {
+      "path": "results/resq5/E2024-135332/burn_count_era5land_native.npz",
+      "sha256": "a7d84d5089726d92ea2464b95dd37b03fc7675f0ed14514e978a064a0a818aa4"
+    },
+    "E2024-135332:simulation_summary": {
+      "path": "results/resq5/E2024-135332/summary.json",
+      "sha256": "bb4e866d3d993d6937bcc610327e8c8cffefa0d7c86543df45c9d32f09a28d25"
+    },
+    "E2024-135332:viirs_detections": {
+      "path": "data/resq2/E2024-135332/viirs_detections.csv",
+      "sha256": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d"
+    },
+    "E2024-135332:weather_input": {
+      "path": "data/resq2/E2024-135332/weather_era5land_native_wind.csv",
+      "sha256": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461"
+    },
+    "E2024-155286:observation_metrics": {
+      "path": "results/resq5/E2024-155286/metrics_by_overpass.csv",
+      "sha256": "a07fb0176d05ad36c832fd54b70f202cdbf2cfcfdbd219fb8703562162b3f5ee"
+    },
+    "E2024-155286:protocol_setup": {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0"
+    },
+    "E2024-155286:simulation_ensemble": {
+      "path": "results/resq5/E2024-155286/burn_count_era5land_native.npz",
+      "sha256": "6517c23b8c670e236ef4162e652ee7f8b64f1b49cc24d3c71ec756c6020eb795"
+    },
+    "E2024-155286:simulation_summary": {
+      "path": "results/resq5/E2024-155286/summary.json",
+      "sha256": "8c2843b0fcc0c9fc5697bb7b92b6e05c6237e8a8c17081898baa27e8201d8222"
+    },
+    "E2024-155286:viirs_detections": {
+      "path": "data/resq2/E2024-155286/viirs_detections.csv",
+      "sha256": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92"
+    },
+    "E2024-155286:weather_input": {
+      "path": "data/resq2/E2024-155286/weather_era5land_native_wind.csv",
+      "sha256": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a"
+    },
+    "bundle_builder": {
+      "path": "scripts/resq6/build_offline_demo.py",
+      "sha256": "5cde7412e4793b8a8b062e0c74ae35e39e0d7fe71d3c021a02f14890c518ddce"
+    },
+    "forecast_adapter": {
+      "path": "backend/app/barv3.py",
+      "sha256": "3b663e500be86bf3184e773a733577ab42e2868a4b8c13338f0cc3481ae1260f"
+    },
+    "forecast_archive": {
+      "path": "backend/models/barv3/bar3_replay_2024.npz",
+      "sha256": "76458281350bd9e21ce04b490aadea48832e2235b32b16b59fa5d6a17c592d71"
+    },
+    "forecast_cell_centers": {
+      "path": "backend/models/barv3/cell_centers.csv",
+      "sha256": "734282172ff6ce9392f6368c6b27bfa6073154200fc3748d168e94ad31ec5c74"
+    },
+    "protocol_setup": {
+      "path": "data/resq5/protocol_setup.json",
+      "sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0"
+    },
+    "scenario_adapter": {
+      "path": "backend/app/services/redesign_data.py",
+      "sha256": "1e9fe654c35dded7cc46a0c41104f376d693d447c15909155ccbf6951b81af98"
+    }
+  }
+}

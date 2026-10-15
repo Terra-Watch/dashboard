@@ -1,0 +1,38 @@
+{
+ "real_final_frame_h48": {
+  "sim_cells": 1424,
+  "mcd_pixels_flagged": 10,
+  "observed_after_filter": 8,
+  "intersection": 7,
+  "iou": 0.6364
+ },
+ "ignition_cell_only": {
+  "sim_cells": 1,
+  "mcd_pixels_flagged": 1,
+  "observed_after_filter": 8,
+  "intersection": 1,
+  "iou": 0.125
+ },
+ "whole_domain_burned": {
+  "sim_cells": 1600,
+  "mcd_pixels_flagged": 11,
+  "observed_after_filter": 8,
+  "intersection": 8,
+  "iou": 0.7273
+ },
+ "8x8_block_in_NW_corner": {
+  "sim_cells": 64,
+  "mcd_pixels_flagged": 2,
+  "observed_after_filter": 5,
+  "intersection": 2,
+  "iou": 0.4
+ },
+ "cross_shape": {
+  "sim_cells": 79,
+  "mcd_pixels_flagged": 7,
+  "observed_after_filter": 7,
+  "intersection": 6,
+  "iou": 0.75
+ },
+ "observed_pixels_total_in_file_tile": 26028
+}

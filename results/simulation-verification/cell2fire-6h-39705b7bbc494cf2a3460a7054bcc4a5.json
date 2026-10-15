@@ -1,0 +1,210 @@
+{
+  "command": [
+    "/Users/kireeti/Desktop/Projects/RESQ/website/backend/.venv/bin/python",
+    "/Users/kireeti/Desktop/Projects/RESQ/website/backend/inference/run_demo_simulation.py",
+    "--latitude",
+    "21.867894",
+    "--longitude",
+    "86.500688",
+    "--duration-hours",
+    "6",
+    "--data-dir",
+    "/Users/kireeti/Desktop/Projects/RESQ/website/backend/runtime_data/simulation_demo",
+    "--work-dir",
+    "/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace",
+    "--binary",
+    "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/Cell2Fire/Cell2Fire",
+    "--lookup",
+    "/Users/kireeti/Desktop/Projects/wild-fire-simulation/cell2fire/tests/fixtures/synthetic_40x40/spain_lookup_table.csv",
+    "--timeout-seconds",
+    "120.0"
+  ],
+  "duration_seconds": 0.709,
+  "error": null,
+  "execution_kind": "actual_cell2fire_process_if_runner_reaches_binary",
+  "exit_code": 0,
+  "finished_at_utc": "2026-10-15T19:32:26.511489+00:00",
+  "input_provenance": [
+    {
+      "path": "/Users/kireeti/Desktop/Projects/RESQ/website/backend/runtime_data/simulation_demo/landcover/worldcover_similipal_demo.tif",
+      "sha256": "d06b58cedaa138410ac95c883f966ef3a6382ef616c8ca3d279fc2862eed081a"
+    },
+    {
+      "path": "/Users/kireeti/Desktop/Projects/RESQ/website/backend/runtime_data/simulation_demo/terrain/elevation_similipal_demo.tif",
+      "sha256": "367dea8ff3c6d6e575a0969820a3722659a5ffe9e8bf485ecdac0370e81f2e6a"
+    },
+    {
+      "path": "/Users/kireeti/Desktop/Projects/RESQ/website/backend/runtime_data/simulation_demo/weather/gfs00_2024_01.csv",
+      "sha256": "83cb9aa2fca24da0c372c94c6632c054ce09bd68a75b34168f2d85c3ec7e0bb9"
+    },
+    {
+      "path": "/Users/kireeti/Desktop/Projects/wild-fire-simulation/cell2fire/tests/fixtures/synthetic_40x40/spain_lookup_table.csv",
+      "sha256": "3824d90a21d6869dea4cfe9d173fe82be04bf64cf41c7ef51dcd6e3a110892f9"
+    },
+    {
+      "path": "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/Cell2Fire/Cell2Fire",
+      "sha256": "878d3f5aa3fc694dc68eb4b3b0ee5f69aff2d9683df8ecc06968d0920ab2fddd"
+    }
+  ],
+  "output_artifacts": [
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid0.csv",
+      "sha256": "3d0936d466cf6a04ed28bfe1cd2cfefe63cd829796734d1f8e5710dff484ef99",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid0.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-00.png",
+      "sha256": "e9d6f9b10424c0ebe3ceaa327293da2c855321f3bda2c47db42df4b16d7c7a63",
+      "size_bytes": 98,
+      "workspace_relative_path": "public/frame-00.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid1.csv",
+      "sha256": "69c8a563e46bf3936c3c24c01781c28fa00fe38fd6d70782bf5339ca78cde69c",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid1.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-01.png",
+      "sha256": "aebdb2982baaeef6cbf3f7a153c9525e180fb8dcacafbd67fa3ed3db17c76830",
+      "size_bytes": 102,
+      "workspace_relative_path": "public/frame-01.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid2.csv",
+      "sha256": "0f8160bf18d5366eea5c08c2064fc98dce63657c663545d291ffae31a935d60a",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid2.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-02.png",
+      "sha256": "753ae74714849bfa7709a1e13ddd9f70d30087a6004eadf2517151865b830c7c",
+      "size_bytes": 109,
+      "workspace_relative_path": "public/frame-02.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid3.csv",
+      "sha256": "c9aaeeb35193bbbec7d3c459f1e6e243d5c194702ae8b3fba7bd38dae9060009",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid3.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-03.png",
+      "sha256": "dcf07fe7ded6566fc054e0102c35b0084d1a1a8ed9cbe4828d19ac713014de7e",
+      "size_bytes": 125,
+      "workspace_relative_path": "public/frame-03.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid4.csv",
+      "sha256": "0f3818137043bf9f1c4862ee7e6fab3fa5a037f04bdcd927963e898185953bb6",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid4.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-04.png",
+      "sha256": "08c3bfc1cd70865de21acfda0b869a843a755c1a32d5048e25e781626499b59a",
+      "size_bytes": 127,
+      "workspace_relative_path": "public/frame-04.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid5.csv",
+      "sha256": "cbca64111aa3d95cc069200091f4610af54b781436edd51fff09078cdcf65d03",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid5.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-05.png",
+      "sha256": "72311acf7160486de527a6d2840f729c6db4d214fd0d1e62236bfb033c98b517",
+      "size_bytes": 128,
+      "workspace_relative_path": "public/frame-05.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Grids/Grids1/ForestGrid6.csv",
+      "sha256": "4930a30528a5f6f57a2e41a5880c1755c1a011c96d3107231e520b8a325d11c4",
+      "size_bytes": 3200,
+      "workspace_relative_path": "run/Grids/Grids1/ForestGrid6.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/frame-06.png",
+      "sha256": "2af83cb01b04124ab335fa69be6660ee6e6acbafea29acd2f84cff2413fc8843",
+      "size_bytes": 136,
+      "workspace_relative_path": "public/frame-06.png"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/public/manifest.json",
+      "sha256": "b2fe4284436a9a05cee2bc1e5f88031988544a2d10b9feef0af903c0f0d87544",
+      "size_bytes": 1663,
+      "workspace_relative_path": "public/manifest.json"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/Data.csv",
+      "sha256": "b3de3dd348c34c0b3f770bf19ca91186e75b17e61ca95a597d54c83052f5a557",
+      "size_bytes": 131739,
+      "workspace_relative_path": "scenario/Data.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/Ignitions.csv",
+      "sha256": "1d7bb6ca3089f3298c348a459c68e961211f4b4332659b3638d5ed10c255e1e2",
+      "size_bytes": 19,
+      "workspace_relative_path": "scenario/Ignitions.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/Weather.csv",
+      "sha256": "86d467ef51f2279b04742a91b5d682705906fbaf0d1a6d92a897cd77977b1ed9",
+      "size_bytes": 335,
+      "workspace_relative_path": "scenario/Weather.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/elevation.asc",
+      "sha256": "9fd82fc01f4670d51c4032d68194dbbb6277b1cf1ebc4db3bae3eb5b257de82d",
+      "size_bytes": 6505,
+      "workspace_relative_path": "scenario/elevation.asc"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/fuels.asc",
+      "sha256": "bbe25aafdc3c273ddd6c63aadd8fafb5b4d5fc487e62f6e1b1dc1727b378605a",
+      "size_bytes": 6505,
+      "workspace_relative_path": "scenario/fuels.asc"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/saz.asc",
+      "sha256": "c57c37629634761353f7f83f73c1d51db4618d22e9963d2646b1918aa46da436",
+      "size_bytes": 5567,
+      "workspace_relative_path": "scenario/saz.asc"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/slope.asc",
+      "sha256": "5d1e3acd9d31e4b4b37149c3ebdc113d6b0239e424db575cdc0b89f103cf4831",
+      "size_bytes": 4651,
+      "workspace_relative_path": "scenario/slope.asc"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/scenario/spain_lookup_table.csv",
+      "sha256": "f7ed78ba6eb1f6eb056736be8ed317e502a7733a8ce546b4da2734734d586da5",
+      "size_bytes": 968,
+      "workspace_relative_path": "scenario/spain_lookup_table.csv"
+    },
+    {
+      "path": "/private/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace/run/Messages/MessagesFile1.csv",
+      "sha256": "b6bd3a0e06d1c943b9c492cee3a9a70de7bf67ecbf96b0e080f3e063a7faf665",
+      "size_bytes": 1788,
+      "workspace_relative_path": "run/Messages/MessagesFile1.csv"
+    }
+  ],
+  "requested": {
+    "duration_hours": 6,
+    "latitude": 21.867894,
+    "longitude": 86.500688,
+    "timeout_seconds": 120.0
+  },
+  "run_id": "293e3edd4f0e425baf9b17268c4b0580",
+  "schema_version": 1,
+  "started_at_utc": "2026-10-15T19:32:25.802466+00:00",
+  "status": "execution_verified",
+  "stderr": "",
+  "stdout": "{\"frames\": 7, \"burned_cells\": [1, 2, 10, 23, 43, 70, 101], \"grid\": {\"worldcover_classes\": [10, 30], \"fuel_ids\": [101, 182], \"elevation_min_m\": 487.0, \"elevation_max_m\": 713.0}, \"weather\": {\"wind_speed_kmh_hour06\": 9.195516298718632, \"wind_direction_hour06\": 6.067710629076146, \"source_rows\": 36115, \"timeline_hours\": 6, \"profile\": \"fixed\", \"source_date\": \"2024-01-01\", \"source_row\": 0, \"extension\": \"repeated available GFS h06-h17 profile for development playback; not the weather of the ignition pixel or date\"}}\n",
+  "timed_out": false,
+  "workspace_cleaned": true,
+  "workspace_path": "/var/folders/8t/p_kcbwsj6bd20k8tyrsx54rw0000gn/T/resq-cell2fire-verify-w_joelks/workspace"
+}

@@ -19,16 +19,14 @@ export function TrustBadge({ level, children }: { level: TrustLevel; children: R
   );
 }
 
-/** SampleDataBadge — every redesign screen shows this until live FIRMS ingestion exists (it does
- *  not). Rendered text is "Demo data" (renamed per the user's amendment); the testid and prop
- *  name stay as-is so existing callers/tests don't need to change. */
+/** Identifies example information without exposing acquisition or implementation details. */
 export function SampleDataBadge({ note }: { note?: string }) {
   return (
     <span
       data-testid="sample-data-badge"
       role="note"
       className="inline-flex items-center gap-1.5 rounded-full border border-ink-muted px-2.5 py-1 text-xs font-semibold text-ink-muted"
-      title={note ?? 'Demo data from the 4 replay incidents, not a real-time feed.'}
+      title={note ?? 'Example information from past events, not a live feed.'}
     >
       Demo data
     </span>
@@ -40,10 +38,10 @@ export function Chip({ children }: { children: ReactNode }) {
 }
 
 /** StepIndicator — which of the three steps a screen belongs to. */
-const STEPS = ['Forecast', 'Detection', 'Verified incident', 'Scenario'] as const;
+const STEPS = ['Historical ranking', 'Reports to review', 'Possible spread', 'Field example'] as const;
 export function StepIndicator({ current }: { current: typeof STEPS[number] }) {
   return (
-    <ol aria-label="RESQ step" className="flex gap-2 border-b border-contour bg-sheet px-5 py-2.5 text-[13px] text-ink-muted">
+    <ol aria-label="Workflow steps" className="flex gap-2 border-b border-contour bg-sheet px-5 py-2.5 text-[13px] text-ink-muted">
       {STEPS.map((step) => (
         <li key={step} aria-current={step === current ? 'step' : undefined} className={step === current ? 'font-bold text-ink' : ''}>
           {step}
@@ -65,7 +63,7 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
 export function OfflineBanner({ lastSyncedAt }: { lastSyncedAt: string | null }) {
   return (
     <div role="status" className="bg-warn/10 border-b border-warn px-5 py-2 text-sm text-warn">
-      Offline. {lastSyncedAt ? `Showing data saved at ${lastSyncedAt}.` : 'No saved data yet.'} Changes will sync when you reconnect.
+      You are offline. {lastSyncedAt ? `Showing information saved at ${lastSyncedAt}.` : 'No saved information is available on this device.'} Changes will be sent when you reconnect.
     </div>
   );
 }

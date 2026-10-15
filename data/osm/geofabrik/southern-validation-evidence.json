@@ -1,0 +1,27 @@
+{
+  "region": "Southern Zone",
+  "source_url": "https://download.geofabrik.de/asia/india/southern-zone-latest.osm.pbf",
+  "status": "validated",
+  "file_path": "data/osm/geofabrik/southern-zone-latest.osm.pbf",
+  "verified_at": "2026-10-14T19:58:18Z",
+  "retrieval_timestamp": "2026-10-14T19:22:03.862321+00:00",
+  "expected_size_bytes": 558191437,
+  "actual_size_bytes": 558191437,
+  "published_md5": "cd4deedec8d7d607668849445d5fbbc5",
+  "calculated_md5": "cd4deedec8d7d607668849445d5fbbc5",
+  "calculated_sha256": "96e748cee47e5ec00beb9823b8260fc2f40dd3eecb18c5acd86e7163cc3880d5",
+  "pbf_validation": "passed",
+  "official_metadata": {
+    "content_length": 558191437,
+    "etag": "\"2145534d-65dc0d9817e1e\"",
+    "last_modified": "Tue, 13 Oct 2026 23:05:24 GMT",
+    "published_md5_url": "https://download.geofabrik.de/asia/india/southern-zone-latest.osm.pbf.md5"
+  },
+  "independent_validation": {
+    "size": true,
+    "published_md5": true,
+    "calculated_md5": true,
+    "sha256": true,
+    "pbf_readability": true
+  }
+}

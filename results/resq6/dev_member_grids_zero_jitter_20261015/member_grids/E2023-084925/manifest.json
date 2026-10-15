@@ -1,0 +1,1451 @@
+{
+  "incident_id": "E2023-084925",
+  "ignition_jitter_radius_m": 0.0,
+  "grid_shape": [
+    388,
+    388
+  ],
+  "members_saved": 60,
+  "members": [
+    {
+      "member": 0,
+      "file": "member_000.npz",
+      "sha256": "487bcea827e1b3e972d8dee4c184e646dc1c2dd449bc2dbddd96a359b8907e0e",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9361553066309694,
+      "wind_direction_offset_deg": 1.215519300410406
+    },
+    {
+      "member": 1,
+      "file": "member_001.npz",
+      "sha256": "6c8a7720ec1b46eff4bdd2354fa5779977bc48a506301cfd3d3b34c8f0093bcb",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7502015694977451,
+      "wind_direction_offset_deg": -25.682799872937842
+    },
+    {
+      "member": 2,
+      "file": "member_002.npz",
+      "sha256": "e3ca3e66d18cb01d357be48b50ed5964c1de649bac75654bcc2a85a9226ec2da",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8362396631137281,
+      "wind_direction_offset_deg": -2.4214249736642253
+    },
+    {
+      "member": 3,
+      "file": "member_003.npz",
+      "sha256": "fe77a6040a0cc934663d99a774e0b69f38799e95ac7afec3b83cbd63996617ca",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2173619372666247,
+      "wind_direction_offset_deg": -9.648045414953124
+    },
+    {
+      "member": 4,
+      "file": "member_004.npz",
+      "sha256": "dbe6514e884460b6f8fe3a77b8662e23d400745fb20c44fcdb7f457bfec333d5",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2498103757668422,
+      "wind_direction_offset_deg": -0.17166992414093526
+    },
+    {
+      "member": 5,
+      "file": "member_005.npz",
+      "sha256": "e4f11e42a7241003e61a7f6e967527f9e2b83810da806b889f2d74bdab839fbe",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.031193226912172,
+      "wind_direction_offset_deg": 10.00262723627207
+    },
+    {
+      "member": 6,
+      "file": "member_006.npz",
+      "sha256": "37d1a63aa35ac02853957133805d767b9f07ae27b822470841366f95d9b46586",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8462006873074218,
+      "wind_direction_offset_deg": 14.710736983280478
+    },
+    {
+      "member": 7,
+      "file": "member_007.npz",
+      "sha256": "a98615c214f52ebc3ab7bcc56edfe3e4a43ffaba1d9132a1b357d4bf3508d8cb",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9300245634629549,
+      "wind_direction_offset_deg": 1.740989598091628
+    },
+    {
+      "member": 8,
+      "file": "member_008.npz",
+      "sha256": "08513602a77e9c78558e0e599d1ec8287610ff147f615080313ed11e02b01950",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0244093930008007,
+      "wind_direction_offset_deg": 17.45357860853753
+    },
+    {
+      "member": 9,
+      "file": "member_009.npz",
+      "sha256": "b6237e0f85ae7b6e69cff16e46034f887decbf2126e2a94e7470b89821bcf87a",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2240661706682707,
+      "wind_direction_offset_deg": -9.85908106249223
+    },
+    {
+      "member": 10,
+      "file": "member_010.npz",
+      "sha256": "bba0a883a9276a002d8b9dfe37e9176325f88fe469b054f5f7e1f0f53a156d2e",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.16749050802536,
+      "wind_direction_offset_deg": -25.352481545451496
+    },
+    {
+      "member": 11,
+      "file": "member_011.npz",
+      "sha256": "875fdd2c7029e508fe7d6ccd6c1610f29e4f0efbd4b68c00858e853bc3659814",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0746069798860693,
+      "wind_direction_offset_deg": -3.496925417731133
+    },
+    {
+      "member": 12,
+      "file": "member_012.npz",
+      "sha256": "30bfbb8c2c03919072ab91d630e5304cef275832e879d075d558304ce3d055a6",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8849662452386631,
+      "wind_direction_offset_deg": 5.2386457463824065
+    },
+    {
+      "member": 13,
+      "file": "member_013.npz",
+      "sha256": "b5170d6af87da1935e287a8fc0880db86750e475043dabdba3734c7d0aaddbd2",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.1491005482651397,
+      "wind_direction_offset_deg": -13.44423183945076
+    },
+    {
+      "member": 14,
+      "file": "member_014.npz",
+      "sha256": "ec2fbf8abe891b67de2b613ea256b5d2418ea2a766c8d24d2705cbfbdeceaf85",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7207983380719206,
+      "wind_direction_offset_deg": 14.448327534961255
+    },
+    {
+      "member": 15,
+      "file": "member_015.npz",
+      "sha256": "ebc27dddb5c0f8cfa37dfdd1b308539a468dc55b6f4f3acf58d70bf8351305bb",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9224934927854397,
+      "wind_direction_offset_deg": -1.164741471250384
+    },
+    {
+      "member": 16,
+      "file": "member_016.npz",
+      "sha256": "43c4def61745ad14f6dfe260e3e2ade25cb6cb293f79866470cb0248396273e1",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2075977470723676,
+      "wind_direction_offset_deg": 22.006371940757166
+    },
+    {
+      "member": 17,
+      "file": "member_017.npz",
+      "sha256": "b0acce350670c6d732e2d17889e7fb8ef902407af849cd5616c52b02390d6752",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.024678360928457,
+      "wind_direction_offset_deg": -7.8253345326336605
+    },
+    {
+      "member": 18,
+      "file": "member_018.npz",
+      "sha256": "b78e5597de9d6e56a269f010cfb3b6347b3d1355da77bb4e27ebeecdff0dff1b",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9901199191387401,
+      "wind_direction_offset_deg": -5.748405300953038
+    },
+    {
+      "member": 19,
+      "file": "member_019.npz",
+      "sha256": "b4adb2213d8ac17e956c8ddfde77c397020052a257dbf1bdac76dc4dd5cfbdbe",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.048981194032719,
+      "wind_direction_offset_deg": -17.080158568499797
+    },
+    {
+      "member": 20,
+      "file": "member_020.npz",
+      "sha256": "635a7f985ec689d17a881ca010567e3a8bc361c509a0ffef231be6e379e006bb",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2537833721186846,
+      "wind_direction_offset_deg": 6.180072385928372
+    },
+    {
+      "member": 21,
+      "file": "member_021.npz",
+      "sha256": "d12fe9f38611d22d04d4cb49d932411b7273694ab16904fc82870c456c7ef6b8",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.1436741757247413,
+      "wind_direction_offset_deg": 9.49705125606479
+    },
+    {
+      "member": 22,
+      "file": "member_022.npz",
+      "sha256": "f55148916ba52b02758021ed983da0d90660c9e3d9e982eba6b364403e467739",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2250699661084248,
+      "wind_direction_offset_deg": -5.524332735076115
+    },
+    {
+      "member": 23,
+      "file": "member_023.npz",
+      "sha256": "0ca2e0fa5755150274bb48797f00eba041aa9930bdb6a9ad5a3f64999b074d63",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0923904677402667,
+      "wind_direction_offset_deg": 9.148728105558025
+    },
+    {
+      "member": 24,
+      "file": "member_024.npz",
+      "sha256": "733494e4d1ca74e9a573583a8f617c1155d5013d7c5e5b4ed22dd967e3129d7e",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9371232192449703,
+      "wind_direction_offset_deg": 22.407913130518914
+    },
+    {
+      "member": 25,
+      "file": "member_025.npz",
+      "sha256": "55a4c893d6bbacba26fd3f1ce9d0b32d257aa92addcbf37f51d02dc0a4d8ddd3",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.1829652377924267,
+      "wind_direction_offset_deg": 23.354308975040276
+    },
+    {
+      "member": 26,
+      "file": "member_026.npz",
+      "sha256": "c1c095389f73e498b3bfb9a8df1d7e8e37e8527c1f891957ea9342a5b502f5eb",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8838271001141146,
+      "wind_direction_offset_deg": 11.93808084633148
+    },
+    {
+      "member": 27,
+      "file": "member_027.npz",
+      "sha256": "0bc88003b317d7b4443e34999e0c0dd0e1ea4fb94b549e6eabb719bd50fd1fcf",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8722341696301824,
+      "wind_direction_offset_deg": -1.15258271854634
+    },
+    {
+      "member": 28,
+      "file": "member_028.npz",
+      "sha256": "57ebe8eff68947970e8bf587a458340550fbba6df33d564effae7bdf3ad0b8bd",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.918116634417472,
+      "wind_direction_offset_deg": -1.7269908334899715
+    },
+    {
+      "member": 29,
+      "file": "member_029.npz",
+      "sha256": "d41434045769704632ab286525230c2fdb245dcac04eb6ec5d23230aa9ecb0d5",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.1137678814503025,
+      "wind_direction_offset_deg": -16.95064728979857
+    },
+    {
+      "member": 30,
+      "file": "member_030.npz",
+      "sha256": "b10d4147c6da25cfca018ace29a82072df68e49b70c07a273ccfeb39b6aa7004",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8998838739932593,
+      "wind_direction_offset_deg": 10.358022090879796
+    },
+    {
+      "member": 31,
+      "file": "member_031.npz",
+      "sha256": "5f75958208340dc02e32b49fb0512d8d5bce3011ab2de2ad19529997bc1f29e6",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9414986437214956,
+      "wind_direction_offset_deg": 12.656907562548643
+    },
+    {
+      "member": 32,
+      "file": "member_032.npz",
+      "sha256": "767db1cd03da11f898d193ed09dce88d44ab29e9fb810abe363cff8b9accb16e",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0468068429306625,
+      "wind_direction_offset_deg": 12.393490326152358
+    },
+    {
+      "member": 33,
+      "file": "member_033.npz",
+      "sha256": "7a5239a50319e2f16e61b8e5706655f0680bf1270f29bc958a34ad534d9834cd",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0907466719239902,
+      "wind_direction_offset_deg": -5.8992114133936475
+    },
+    {
+      "member": 34,
+      "file": "member_034.npz",
+      "sha256": "b9bb873a3e10ec63d91ac4614045a45902494f3cfadd5feb9375759f8497f985",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2564596488807782,
+      "wind_direction_offset_deg": -6.467624720235319
+    },
+    {
+      "member": 35,
+      "file": "member_035.npz",
+      "sha256": "4cf29bb0776baba584812c495ff2fa0208b95903308639a3bee54e3812b3250a",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.267861035958876,
+      "wind_direction_offset_deg": 2.0135665117962445
+    },
+    {
+      "member": 36,
+      "file": "member_036.npz",
+      "sha256": "ee4b0872ebfc05f3895b5fadf46036ff6a4bed9f879af4c9d2ccbd628dcaa03d",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8843457062679659,
+      "wind_direction_offset_deg": 17.648538619926033
+    },
+    {
+      "member": 37,
+      "file": "member_037.npz",
+      "sha256": "2b2e52a08d6eff7b0dc0e942f5088fd07fa2e13740eb07f68c89220f12f65347",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7576206538403009,
+      "wind_direction_offset_deg": 5.495684560147367
+    },
+    {
+      "member": 38,
+      "file": "member_038.npz",
+      "sha256": "22e04f47d4f97c94ea099bbff3b8581d5a5ddb390b4916d751ca21e1c103e0e6",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7374356004069467,
+      "wind_direction_offset_deg": 31.93163426407656
+    },
+    {
+      "member": 39,
+      "file": "member_039.npz",
+      "sha256": "9eb976c0db5f7e1514eb79d688f2705b92d23ca2f2d1bc57117de6bc16aa00aa",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.845809059772715,
+      "wind_direction_offset_deg": 4.698584533755485
+    },
+    {
+      "member": 40,
+      "file": "member_040.npz",
+      "sha256": "e101e8071fbbd10a3d10952e8a831f475549138aa7005848e396843b914b1fe9",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0006112858533092,
+      "wind_direction_offset_deg": 13.792157209727618
+    },
+    {
+      "member": 41,
+      "file": "member_041.npz",
+      "sha256": "4d2193bc3e50d783be817b19b371e3f21c470b9e205a272a47330665e3ada146",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8964835726828813,
+      "wind_direction_offset_deg": -14.627748407740839
+    },
+    {
+      "member": 42,
+      "file": "member_042.npz",
+      "sha256": "4aab8e86e443166f26326a3a9cfb2c2b26aa7e3cd15af7729a5452e9fcc23c71",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8636629912627264,
+      "wind_direction_offset_deg": 8.428189305775351
+    },
+    {
+      "member": 43,
+      "file": "member_043.npz",
+      "sha256": "1c1c9f9e1bb52ef972e400067205e44f0d56813ff65e639f4d4f0e47322446d5",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7998323265522791,
+      "wind_direction_offset_deg": -0.5483533078191866
+    },
+    {
+      "member": 44,
+      "file": "member_044.npz",
+      "sha256": "969d45afb785993dfa0b9676ab74fb1c4fdd78912f3a88b43450969691bce50a",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7423075544525104,
+      "wind_direction_offset_deg": 9.777915549319175
+    },
+    {
+      "member": 45,
+      "file": "member_045.npz",
+      "sha256": "64cbe3f878b376b55743980a1c23f5ba5b0bf3a158437edb733773293e5783fd",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8233914032614793,
+      "wind_direction_offset_deg": 5.480729849880975
+    },
+    {
+      "member": 46,
+      "file": "member_046.npz",
+      "sha256": "85ad9b4aeecf0cebf6b26144264435afa85467a26d664d7ec9478bd3dac92f8c",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7593580793911301,
+      "wind_direction_offset_deg": -1.2696463983552486
+    },
+    {
+      "member": 47,
+      "file": "member_047.npz",
+      "sha256": "c0add82448a3c1f27745f38232ae2ae6fa4030ddae872d435219e2951e0a0460",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0332434039481333,
+      "wind_direction_offset_deg": 2.5336594406069097
+    },
+    {
+      "member": 48,
+      "file": "member_048.npz",
+      "sha256": "97d7cc13bd58808e286e836b902362f749beff4792bea0b03e69959d8f961017",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8409021095098825,
+      "wind_direction_offset_deg": 22.1657708837519
+    },
+    {
+      "member": 49,
+      "file": "member_049.npz",
+      "sha256": "b6885c02694595413a13afffba1034b8a87e629330338165afc1e00720ac2d92",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2709303321105503,
+      "wind_direction_offset_deg": -20.824808783832438
+    },
+    {
+      "member": 50,
+      "file": "member_050.npz",
+      "sha256": "576d18af6e97f46facfd3123e34172bd411ad40c99f682fcd57190173ea1a0e1",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.1143992652523995,
+      "wind_direction_offset_deg": 16.821168054363415
+    },
+    {
+      "member": 51,
+      "file": "member_051.npz",
+      "sha256": "a590bf8689a6b33f4f7a42c14fb0e3f042f3577e3f44264d5bbf8d74c828775c",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0339900109286597,
+      "wind_direction_offset_deg": -10.210841304194535
+    },
+    {
+      "member": 52,
+      "file": "member_052.npz",
+      "sha256": "1208ed5dce4fed3baf4148c8d38e87a67cf19747d7a4d3934788787cff100a7a",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8261747719572232,
+      "wind_direction_offset_deg": 22.09215267163415
+    },
+    {
+      "member": 53,
+      "file": "member_053.npz",
+      "sha256": "477dfe247609004c12a51ef90b741e99e019901748d3cceaa136d716cc4e9e27",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.8775068442265317,
+      "wind_direction_offset_deg": 25.803033150612166
+    },
+    {
+      "member": 54,
+      "file": "member_054.npz",
+      "sha256": "aa8247c754b2e33668286bde8546d08339531c42977588efa66005b5e4798c2d",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7009673578383123,
+      "wind_direction_offset_deg": -27.97213796134819
+    },
+    {
+      "member": 55,
+      "file": "member_055.npz",
+      "sha256": "a1a221f62ae950bc3003f9c6da282c645acdde804cbc62b3c3c33043c7819862",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.919205672866045,
+      "wind_direction_offset_deg": -2.503121564162966
+    },
+    {
+      "member": 56,
+      "file": "member_056.npz",
+      "sha256": "81f6abd081ef2684e752ac725704f0a1733172ae9f282910367d9e672e9257bf",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.2871712629082048,
+      "wind_direction_offset_deg": -0.3550760926434648
+    },
+    {
+      "member": 57,
+      "file": "member_057.npz",
+      "sha256": "069429b9ce26f5a42759b3a9b95494548126c3b21ca7be135a8512372da612f2",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.9197817471543726,
+      "wind_direction_offset_deg": 20.939012665883748
+    },
+    {
+      "member": 58,
+      "file": "member_058.npz",
+      "sha256": "2396499534afa49de5a117a149ac86662c37846026bcae8ee4f404a6c1a4ed31",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 0.7906641772297709,
+      "wind_direction_offset_deg": 16.725248159100143
+    },
+    {
+      "member": 59,
+      "file": "member_059.npz",
+      "sha256": "7934a2feb09f47cb52a3263c0b87028ece872a1632f69ad23ee398723b4d4b10",
+      "frame_hours": [
+        6,
+        12,
+        24,
+        48
+      ],
+      "source_frame_hours": {
+        "6": 6,
+        "12": 12,
+        "24": 24,
+        "48": 48
+      },
+      "last_frame": 62,
+      "ignition_row_col": [
+        212,
+        267
+      ],
+      "wind_speed_factor": 1.0831116528337692,
+      "wind_direction_offset_deg": -27.804678581576837
+    }
+  ]
+}

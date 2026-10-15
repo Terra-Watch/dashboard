@@ -1,17 +1,13 @@
-import { useRef, useState } from 'react';
-import Map, { MapRef, NavigationControl } from 'react-map-gl/maplibre';
-import { api } from '../../lib/api';
-import { SimulationCanvas } from '../../components/SimulationCanvas';
-import { DEFAULT_CENTER, DEFAULT_GRID, gridBounds, type GridSpec } from '../../lib/simulationGeometry';
-
-const mapStyle = { version: 8 as const, sources: { osm: { type: 'raster' as const, tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap contributors' } }, layers: [{ id: 'osm', type: 'raster' as const, source: 'osm' }] };
-type Result = { status: string; message: string; frame_count?: number; duration_hours?: number; grid_rows?: number; grid_columns?: number; cell_size_m?: number; burned_cells?: number[]; domain?: { center: { latitude: number; longitude: number } }; wind_profile?: { kind: string; source_date: string; note?: string } };
-
 export function SpreadPage() {
-  const mapRef = useRef<MapRef | null>(null);
-  const [running, setRunning] = useState(false); const [ready, setReady] = useState(false); const [hour, setHour] = useState(0); const [result, setResult] = useState<Result | null>(null); const [latitude, setLatitude] = useState('21.867894'); const [longitude, setLongitude] = useState('86.500688'); const [duration, setDuration] = useState('48');
-  const grid: GridSpec = result?.grid_rows ? { rows: result.grid_rows, columns: result.grid_columns ?? result.grid_rows, cellSizeM: result.cell_size_m ?? DEFAULT_GRID.cellSizeM } : DEFAULT_GRID;
-  const center = result?.domain?.center ?? DEFAULT_CENTER; const frameCount = result?.frame_count ?? 49; const lastHour = frameCount - 1;
-  async function run(event: React.FormEvent) { event.preventDefault(); setRunning(true); setResult(null); try { const next = await api<Result>('/api/spread/jobs', { method: 'POST', body: JSON.stringify({ latitude: Number(latitude), longitude: Number(longitude), duration_hours: Number(duration) }) }); setResult(next); } catch (reason) { setResult({ status: 'error', message: reason instanceof Error ? reason.message : 'Spread could not be started.' }); } finally { setRunning(false); } }
-  return <section className="shell-page"><span className="eyebrow">Development simulation</span><h1>Simulated spread from a verified detection.</h1><p className="muted">Spread is simulated only from a verified detection, never from a fire-occurrence risk cell. The demo below is a synthetic, uncalibrated example at a point in Similipal, not an observed event: fuel proxies are uncalibrated and the wind is a fixed profile (the first row of the January 2024 GFS file, one 12-hour daytime profile repeated). It is not an operational fire-spread forecast.</p><form className="form-grid" onSubmit={run}><label>Detection latitude<input required type="number" step="any" value={latitude} onChange={event => setLatitude(event.target.value)} /></label><label>Detection longitude<input required type="number" step="any" value={longitude} onChange={event => setLongitude(event.target.value)} /></label><label>Duration<select value={duration} onChange={event => setDuration(event.target.value)}><option value="12">12 hours</option><option value="24">24 hours</option><option value="48">48 hours</option></select></label><button type="submit" disabled={running}>{running ? 'Running demo…' : 'Run demo simulation'}</button></form>{result?.status === 'development_demo' && <><div className="simulation-map"><Map ref={mapRef} onLoad={() => setReady(true)} initialViewState={{ bounds: gridBounds(center, grid), fitBoundsOptions: { padding: 60 } }} mapStyle={mapStyle}><NavigationControl position="top-right" /><SimulationCanvas mapRef={mapRef} ready={ready} frame={0} origin={center} grid={grid} frameCount={frameCount} onStep={setHour} /></Map></div><div className="simulation-timeline"><strong>Simulation time: hour {hour} / {lastHour}</strong><progress value={hour} max={lastHour} /><span className="muted">{hour === lastHour ? `Final ${lastHour}-hour simulated footprint shown.` : 'Advancing one model step per hour.'}</span></div><div className="success-state">{result.message} {result.grid_rows}×{result.grid_columns} cells of {grid.cellSizeM} m (domain {grid.columns * grid.cellSizeM} m × {grid.rows * grid.cellSizeM} m); wind: fixed profile from {result.wind_profile?.source_date ?? '2024-01-01'}, not the weather of this event; final frame burned cells: {result.burned_cells?.[result.burned_cells.length - 1]}.</div><section className="empty"><strong>No observed comparison</strong><p>This is a synthetic, uncalibrated example at a point in Similipal. It is not an observed fire, so there is no burned-area reference to compare it with.</p></section></>}{result && result.status !== 'development_demo' && <div className="empty large">{result.message}</div>}</section>;
+  return <section className="shell-page">
+    <span className="eyebrow">Saved historical example</span>
+    <h1>Explore possible fire spread</h1>
+    <p className="muted">
+      This saved example illustrates one possible spread from a fixed starting
+      point. It is not an observed fire, current forecast, or operational
+      guidance. Creating a new example is unavailable because runs do not yet
+      have separate, protected storage.
+    </p>
+    <a className="primary-link" href="/demo">View the saved historical example</a>
+  </section>;
 }

@@ -1,0 +1,597 @@
+{
+  "frames": [
+    {
+      "burned_area_km2_min_median_max": [
+        0.0162,
+        0.0333,
+        0.0675
+      ],
+      "burned_cells_min_median_max": [
+        18,
+        37.0,
+        75
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 1018,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        375,
+        375
+      ],
+      "horizon_h": 6,
+      "incident_id": "E2024-131853",
+      "member_centroid_east_m_min_median_max": [
+        -70.3125,
+        -29.687499999999858,
+        0.0
+      ],
+      "member_centroid_north_m_min_median_max": [
+        15.0,
+        50.4409814323607,
+        83.49999999999994
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 1018,
+      "probability_weighted_area_km2": 0.03724500000000001,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0603,
+        0.1107,
+        0.2097
+      ],
+      "burned_cells_min_median_max": [
+        67,
+        123.0,
+        233
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 1485,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        375,
+        375
+      ],
+      "horizon_h": 12,
+      "incident_id": "E2024-131853",
+      "member_centroid_east_m_min_median_max": [
+        -110.32710280373834,
+        -59.085022522522195,
+        -24.166666666666288
+      ],
+      "member_centroid_north_m_min_median_max": [
+        2.686567164178939,
+        38.81921618204814,
+        85.46875000000028
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 1485,
+      "probability_weighted_area_km2": 0.119115,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.171,
+        0.29475,
+        0.5427
+      ],
+      "burned_cells_min_median_max": [
+        190,
+        327.5,
+        603
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 2223,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        375,
+        375
+      ],
+      "horizon_h": 24,
+      "incident_id": "E2024-131853",
+      "member_centroid_east_m_min_median_max": [
+        -128.40867992766732,
+        -67.50716440422337,
+        -21.10047846889927
+      ],
+      "member_centroid_north_m_min_median_max": [
+        3.7894736842108045,
+        50.18958365707576,
+        100.98591549295776
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 2223,
+      "probability_weighted_area_km2": 0.3212249999999999,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.6867,
+        1.1466,
+        2.1276
+      ],
+      "burned_cells_min_median_max": [
+        763,
+        1274.0,
+        2364
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 1041,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 5207,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        375,
+        375
+      ],
+      "horizon_h": 48,
+      "incident_id": "E2024-131853",
+      "member_centroid_east_m_min_median_max": [
+        -207.96610169491515,
+        -57.64390443823032,
+        16.636217087587113
+      ],
+      "member_centroid_north_m_min_median_max": [
+        70.41939711664497,
+        165.28615794143732,
+        294.88578680203034
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 5207,
+      "probability_weighted_area_km2": 1.300965,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.027,
+        0.05265,
+        0.4833
+      ],
+      "burned_cells_min_median_max": [
+        30,
+        58.5,
+        537
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 1579,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 6,
+      "incident_id": "E2024-135332",
+      "member_centroid_east_m_min_median_max": [
+        -33.84615384615415,
+        0.0,
+        169.32203389830477
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -234.4354838709677,
+        -76.0499999999999,
+        122.51396648044732
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 1579,
+      "probability_weighted_area_km2": 0.074805,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0783,
+        0.18495,
+        0.9882
+      ],
+      "burned_cells_min_median_max": [
+        87,
+        205.5,
+        1098
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 2879,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 12,
+      "incident_id": "E2024-135332",
+      "member_centroid_east_m_min_median_max": [
+        -95.1685393258424,
+        -25.067923853785317,
+        402.35119047619065
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -322.4444444444444,
+        -132.17721834496544,
+        159.9778270509981
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 2879,
+      "probability_weighted_area_km2": 0.233385,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.1944,
+        0.53775,
+        2.9079
+      ],
+      "burned_cells_min_median_max": [
+        216,
+        597.5,
+        3231
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 204,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 5791,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 24,
+      "incident_id": "E2024-135332",
+      "member_centroid_east_m_min_median_max": [
+        -176.8149210903873,
+        -41.69564860862543,
+        870.5199628597961
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -723.9259530791787,
+        -160.6504551006229,
+        183.01810865191158
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 5791,
+      "probability_weighted_area_km2": 0.6586200000000001,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        1.5138,
+        4.5972,
+        10.7577
+      ],
+      "burned_cells_min_median_max": [
+        1682,
+        5108.0,
+        11953
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 4694,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 17412,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 48,
+      "incident_id": "E2024-135332",
+      "member_centroid_east_m_min_median_max": [
+        -169.53032104637316,
+        481.75441944848603,
+        1254.2926461976074
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -1086.9587492270994,
+        -466.7857693698504,
+        123.39142722562428
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 3,
+      "probability_support_cells_p_gt_0": 17467,
+      "probability_weighted_area_km2": 4.779584999999998,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0054,
+        0.0063,
+        0.3285
+      ],
+      "burned_cells_min_median_max": [
+        6,
+        7.0,
+        365
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 737,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        388,
+        388
+      ],
+      "horizon_h": 6,
+      "incident_id": "E2023-084925",
+      "member_centroid_east_m_min_median_max": [
+        -41.99999999999932,
+        -8.571428571428328,
+        111.50442477876084
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -74.19087136929477,
+        0.0,
+        47.8125
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 737,
+      "probability_weighted_area_km2": 0.031349999999999996,
+      "unique_member_masks": 58
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0162,
+        0.0234,
+        0.7155
+      ],
+      "burned_cells_min_median_max": [
+        18,
+        26.0,
+        795
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 1346,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        388,
+        388
+      ],
+      "horizon_h": 12,
+      "incident_id": "E2023-084925",
+      "member_centroid_east_m_min_median_max": [
+        -73.10526315789502,
+        -14.018181818181858,
+        138.1578947368422
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -194.8314606741573,
+        5.14705882352942,
+        91.6981132075469
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 1346,
+      "probability_weighted_area_km2": 0.08745,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0621,
+        0.0963,
+        1.4004
+      ],
+      "burned_cells_min_median_max": [
+        69,
+        107.0,
+        1556
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 2383,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        388,
+        388
+      ],
+      "horizon_h": 24,
+      "incident_id": "E2023-084925",
+      "member_centroid_east_m_min_median_max": [
+        -146.9058295964129,
+        -21.76923076923117,
+        231.55884645362448
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -350.98832684824885,
+        13.328971962616976,
+        50.51282051282044
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 2383,
+      "probability_weighted_area_km2": 0.266775,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.4347,
+        1.0953,
+        4.608
+      ],
+      "burned_cells_min_median_max": [
+        483,
+        1217.0,
+        5120
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 847,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 6816,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        388,
+        388
+      ],
+      "horizon_h": 48,
+      "incident_id": "E2023-084925",
+      "member_centroid_east_m_min_median_max": [
+        -356.3330598851522,
+        -63.063611491107565,
+        348.19297503173857
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -534.551914725622,
+        -0.1742243549144007,
+        118.94957983193251
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 6816,
+      "probability_weighted_area_km2": 1.5519749999999997,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.009,
+        0.01665,
+        0.0333
+      ],
+      "burned_cells_min_median_max": [
+        10,
+        18.5,
+        37
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 694,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 6,
+      "incident_id": "E2024-155286",
+      "member_centroid_east_m_min_median_max": [
+        -51.176470588235645,
+        -26.470588235293917,
+        -11.25
+      ],
+      "member_centroid_north_m_min_median_max": [
+        0.0,
+        18.461538461538396,
+        41.00000000000023
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 694,
+      "probability_weighted_area_km2": 0.018885,
+      "unique_member_masks": 59
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.0468,
+        0.08955,
+        0.1611
+      ],
+      "burned_cells_min_median_max": [
+        52,
+        99.5,
+        179
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 0,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 1326,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 12,
+      "incident_id": "E2024-155286",
+      "member_centroid_east_m_min_median_max": [
+        -123.46820809248555,
+        -71.08957219251309,
+        -27.966101694915153
+      ],
+      "member_centroid_north_m_min_median_max": [
+        -10.000000000000284,
+        33.335724533715876,
+        81.13207547169822
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 1326,
+      "probability_weighted_area_km2": 0.096105,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.189,
+        0.33705,
+        0.5994
+      ],
+      "burned_cells_min_median_max": [
+        210,
+        374.5,
+        666
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 103,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 2346,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 24,
+      "incident_id": "E2024-155286",
+      "member_centroid_east_m_min_median_max": [
+        -191.71516079632482,
+        -89.76364878232644,
+        -27.62114537444944
+      ],
+      "member_centroid_north_m_min_median_max": [
+        14.428571428571217,
+        86.62039611584063,
+        161.48829431438088
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 2346,
+      "probability_weighted_area_km2": 0.36688500000000007,
+      "unique_member_masks": 60
+    },
+    {
+      "burned_area_km2_min_median_max": [
+        0.6876,
+        1.20015,
+        2.133
+      ],
+      "burned_cells_min_median_max": [
+        764,
+        1333.5,
+        2370
+      ],
+      "cell_size_m": 30.0,
+      "cells_probability_at_least_0_5": 1189,
+      "cells_with_member_disagreement_0_lt_p_lt_1": 4915,
+      "descriptive_only_not_observed_burn_area": true,
+      "frame_shape": [
+        338,
+        338
+      ],
+      "horizon_h": 48,
+      "incident_id": "E2024-155286",
+      "member_centroid_east_m_min_median_max": [
+        -260.25162689804745,
+        -111.11984214898925,
+        -18.18955042527307
+      ],
+      "member_centroid_north_m_min_median_max": [
+        47.94502617801072,
+        154.8447427409178,
+        269.3690987124464
+      ],
+      "members": 60,
+      "members_touching_domain_edge": 0,
+      "probability_support_cells_p_gt_0": 4949,
+      "probability_weighted_area_km2": 1.31445,
+      "unique_member_masks": 60
+    }
+  ],
+  "grid_interpretation": "north-up EPSG:32644; 30m square cells; row increases south, column increases east; centroid coordinates relative to member ignition cell"
+}

@@ -1,0 +1,304 @@
+{
+  "purpose": "synthetic end-to-end Cell2Fire cardinal wind direction validation",
+  "held_out_or_incident_data_used": false,
+  "configuration": {
+    "grid": {
+      "rows": 301,
+      "columns": 301,
+      "cell_size_m": 30,
+      "asc_row_0": "north"
+    },
+    "ignition_row_col_zero_based": [
+      150,
+      150
+    ],
+    "fuel_code": 182,
+    "elevation_m": 500,
+    "slope_degrees": 0,
+    "hours": 24,
+    "wind_speed_ms": 8.0,
+    "weather_ws_kmh": 28.8,
+    "simulator_seed": 42,
+    "repeats_per_direction": 2,
+    "simulator_flags": [
+      "--sim S",
+      "--Fire-Period-Length 1.0",
+      "--weather rows",
+      "--nweathers 1",
+      "--scenario 1",
+      "--seed 42"
+    ]
+  },
+  "binary": "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/Cell2Fire/Cell2Fire",
+  "binary_sha256": "878d3f5aa3fc694dc68eb4b3b0ee5f69aff2d9683df8ecc06968d0920ab2fddd",
+  "lookup_sha256": "3824d90a21d6869dea4cfe9d173fe82be04bf64cf41c7ef51dcd6e3a110892f9",
+  "results": [
+    {
+      "direction": "north",
+      "repeat": 1,
+      "input_wind_from_deg": 180,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 0,
+      "expected_downwind": "north",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.504,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": -22.242118537200504,
+        "centroid_col_offset_cells": 0.0,
+        "centroid_north_m": 667.2635561160151,
+        "centroid_east_m": 0.0,
+        "extent_north_m": 1860,
+        "extent_south_m": 60,
+        "extent_east_m": 330,
+        "extent_west_m": 330,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "north/repeat_1_h24.npz",
+      "burn_grid_sha256": "3ec66a1e7779a77022a2315df3901f26fda3823a44d39a7ca852a39a7dd15bbb",
+      "burn_grid_content_sha256": "d2a2fcab91988230b7e1d547cb65f795d4155d26999a437df99e18fd56742665",
+      "weather_csv": "north/repeat_1_Weather.csv",
+      "weather_csv_sha256": "139f9a3c2709e6e168ae08131606e9249b1650b1b48d8abe3cfb958bed65c01b",
+      "stdout_log": "north/repeat_1_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "north",
+      "repeat": 2,
+      "input_wind_from_deg": 180,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 0,
+      "expected_downwind": "north",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.502,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": -22.242118537200504,
+        "centroid_col_offset_cells": 0.0,
+        "centroid_north_m": 667.2635561160151,
+        "centroid_east_m": 0.0,
+        "extent_north_m": 1860,
+        "extent_south_m": 60,
+        "extent_east_m": 330,
+        "extent_west_m": 330,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "north/repeat_2_h24.npz",
+      "burn_grid_sha256": "3ec66a1e7779a77022a2315df3901f26fda3823a44d39a7ca852a39a7dd15bbb",
+      "burn_grid_content_sha256": "d2a2fcab91988230b7e1d547cb65f795d4155d26999a437df99e18fd56742665",
+      "weather_csv": "north/repeat_2_Weather.csv",
+      "weather_csv_sha256": "139f9a3c2709e6e168ae08131606e9249b1650b1b48d8abe3cfb958bed65c01b",
+      "stdout_log": "north/repeat_2_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "east",
+      "repeat": 1,
+      "input_wind_from_deg": 270,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 90,
+      "expected_downwind": "east",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.505,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 0.0,
+        "centroid_col_offset_cells": 22.242118537200504,
+        "centroid_north_m": -0.0,
+        "centroid_east_m": 667.2635561160151,
+        "extent_north_m": 330,
+        "extent_south_m": 330,
+        "extent_east_m": 1860,
+        "extent_west_m": 60,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "east/repeat_1_h24.npz",
+      "burn_grid_sha256": "d488920ef705bbf5dff3c9e8dd535da821a8abaceb95899d5577259648467ead",
+      "burn_grid_content_sha256": "59b7a1bca980f7253a704d8f769777f8b247066a07b05262a968801311200298",
+      "weather_csv": "east/repeat_1_Weather.csv",
+      "weather_csv_sha256": "2ae1e0d01b1a43ecdf7ae19bd983dfc8895852718773a5a6651b614e3832d4ac",
+      "stdout_log": "east/repeat_1_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "east",
+      "repeat": 2,
+      "input_wind_from_deg": 270,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 90,
+      "expected_downwind": "east",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.504,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 0.0,
+        "centroid_col_offset_cells": 22.242118537200504,
+        "centroid_north_m": -0.0,
+        "centroid_east_m": 667.2635561160151,
+        "extent_north_m": 330,
+        "extent_south_m": 330,
+        "extent_east_m": 1860,
+        "extent_west_m": 60,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "east/repeat_2_h24.npz",
+      "burn_grid_sha256": "d488920ef705bbf5dff3c9e8dd535da821a8abaceb95899d5577259648467ead",
+      "burn_grid_content_sha256": "59b7a1bca980f7253a704d8f769777f8b247066a07b05262a968801311200298",
+      "weather_csv": "east/repeat_2_Weather.csv",
+      "weather_csv_sha256": "2ae1e0d01b1a43ecdf7ae19bd983dfc8895852718773a5a6651b614e3832d4ac",
+      "stdout_log": "east/repeat_2_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "south",
+      "repeat": 1,
+      "input_wind_from_deg": 0,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 180,
+      "expected_downwind": "south",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.512,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 22.242118537200504,
+        "centroid_col_offset_cells": 0.0,
+        "centroid_north_m": -667.2635561160151,
+        "centroid_east_m": 0.0,
+        "extent_north_m": 60,
+        "extent_south_m": 1860,
+        "extent_east_m": 330,
+        "extent_west_m": 330,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "south/repeat_1_h24.npz",
+      "burn_grid_sha256": "dcf6b257d92c7d7bbda4bed331cac78337e090cf3463bdf23cc9b7e69e4a40d8",
+      "burn_grid_content_sha256": "be97a54649d87899dd46970a319139103a492772425b10f15664bcfb203408c7",
+      "weather_csv": "south/repeat_1_Weather.csv",
+      "weather_csv_sha256": "f81e2f38816ea4ecab743d6e8f6b9ad19f8677e6dd0e90c73adbef9a409df754",
+      "stdout_log": "south/repeat_1_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "south",
+      "repeat": 2,
+      "input_wind_from_deg": 0,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 180,
+      "expected_downwind": "south",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.503,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 22.242118537200504,
+        "centroid_col_offset_cells": 0.0,
+        "centroid_north_m": -667.2635561160151,
+        "centroid_east_m": 0.0,
+        "extent_north_m": 60,
+        "extent_south_m": 1860,
+        "extent_east_m": 330,
+        "extent_west_m": 330,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "south/repeat_2_h24.npz",
+      "burn_grid_sha256": "dcf6b257d92c7d7bbda4bed331cac78337e090cf3463bdf23cc9b7e69e4a40d8",
+      "burn_grid_content_sha256": "be97a54649d87899dd46970a319139103a492772425b10f15664bcfb203408c7",
+      "weather_csv": "south/repeat_2_Weather.csv",
+      "weather_csv_sha256": "f81e2f38816ea4ecab743d6e8f6b9ad19f8677e6dd0e90c73adbef9a409df754",
+      "stdout_log": "south/repeat_2_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "west",
+      "repeat": 1,
+      "input_wind_from_deg": 90,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 270,
+      "expected_downwind": "west",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.504,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 0.0,
+        "centroid_col_offset_cells": -22.242118537200504,
+        "centroid_north_m": -0.0,
+        "centroid_east_m": -667.2635561160151,
+        "extent_north_m": 330,
+        "extent_south_m": 330,
+        "extent_east_m": 60,
+        "extent_west_m": 1860,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "west/repeat_1_h24.npz",
+      "burn_grid_sha256": "0a0d4db8a90c54f4a35ba8cc8d1b8482096d7bf03f8f548c4cd5c1dce72a76f7",
+      "burn_grid_content_sha256": "5b84baf3c2b279df21f2ccee926390dc36706fd3c1ba4446add030938123518b",
+      "weather_csv": "west/repeat_1_Weather.csv",
+      "weather_csv_sha256": "e16cf23b1cfc8b96c968959c2c79f1c14b2fcfd4823efbdbe9abe6ff799f2ced",
+      "stdout_log": "west/repeat_1_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    },
+    {
+      "direction": "west",
+      "repeat": 2,
+      "input_wind_from_deg": 90,
+      "expected_cell2fire_waz_to_deg_after_reader_plus_180": 270,
+      "expected_downwind": "west",
+      "simulator_return_code": 0,
+      "wall_seconds": 0.503,
+      "grid_shape": [
+        301,
+        301
+      ],
+      "grid_metrics": {
+        "burned_cells": 793,
+        "centroid_row_offset_cells": 0.0,
+        "centroid_col_offset_cells": -22.242118537200504,
+        "centroid_north_m": -0.0,
+        "centroid_east_m": -667.2635561160151,
+        "extent_north_m": 330,
+        "extent_south_m": 330,
+        "extent_east_m": 60,
+        "extent_west_m": 1860,
+        "touches_grid_edge": false
+      },
+      "burn_grid_npz": "west/repeat_2_h24.npz",
+      "burn_grid_sha256": "0a0d4db8a90c54f4a35ba8cc8d1b8482096d7bf03f8f548c4cd5c1dce72a76f7",
+      "burn_grid_content_sha256": "5b84baf3c2b279df21f2ccee926390dc36706fd3c1ba4446add030938123518b",
+      "weather_csv": "west/repeat_2_Weather.csv",
+      "weather_csv_sha256": "e16cf23b1cfc8b96c968959c2c79f1c14b2fcfd4823efbdbe9abe6ff799f2ced",
+      "stdout_log": "west/repeat_2_stdout.txt",
+      "signed_downwind_centroid_m": 667.2635561160151
+    }
+  ],
+  "directional_checks": {
+    "all_centroids_in_expected_half_plane": true,
+    "north_south_opposites": true,
+    "east_west_opposites": true,
+    "repeat_grid_hashes_match_per_direction": {
+      "north": true,
+      "east": true,
+      "south": true,
+      "west": true
+    }
+  }
+}

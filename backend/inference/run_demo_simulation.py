@@ -27,9 +27,11 @@ import argparse
 import csv
 import json
 import math
+import os
 import shutil
 import struct
 import subprocess
+import time
 import zlib
 from pathlib import Path
 
@@ -158,24 +160,92 @@ def _copy_outputs() -> list[int]:
     return burned
 
 
+def _configure_work_dir(work_dir: Path) -> None:
+    """Redirect all generated scenario/run/public files into a fresh workspace."""
+    global SCENARIO, OUTPUT, PUBLIC
+    resolved = work_dir.expanduser().resolve()
+    repository = ROOT.parents[1].resolve()
+    if resolved == repository or repository in resolved.parents or resolved in repository.parents:
+        raise ValueError("--work-dir must be outside the repository")
+    for protected in (DATA.resolve(), SCENARIO.resolve(), OUTPUT.resolve(), PUBLIC.resolve()):
+        if resolved == protected or resolved in protected.parents or protected in resolved.parents:
+            raise ValueError("--work-dir must not overlap input data or the default public artifact directory")
+    if resolved.exists():
+        if not resolved.is_dir() or next(resolved.iterdir(), None) is not None:
+            raise ValueError("--work-dir must be a new or empty directory")
+    else:
+        resolved.mkdir(parents=True, exist_ok=False)
+    SCENARIO = resolved / "scenario"
+    OUTPUT = resolved / "run"
+    PUBLIC = resolved / "public"
+
+
 def main(argv: list[str] | None = None) -> None:
+    global DATA, BINARY, LOOKUP
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--latitude", type=float, default=ORIGIN_LATITUDE)
     parser.add_argument("--longitude", type=float, default=ORIGIN_LONGITUDE)
     parser.add_argument("--duration-hours", type=int, default=MAX_DURATION_HOURS)
+    parser.add_argument("--data-dir", type=Path, default=DATA, help="input data root; defaults to the checked-in demo inputs")
+    parser.add_argument("--work-dir", type=Path, help="fresh isolated root for scenario, simulator output, and generated public frames")
+    parser.add_argument("--binary", type=Path, default=BINARY, help="Cell2Fire executable")
+    parser.add_argument("--lookup", type=Path, default=LOOKUP, help="Cell2Fire fuel lookup CSV")
+    parser.add_argument("--timeout-seconds", type=float, default=120.0)
     args = parser.parse_args(argv)
     try:
         duration_hours = validate_duration(args.duration_hours)
         ignition_row, ignition_col = locate_ignition(args.latitude, args.longitude)
     except RequestOutsideDomain as exc:
         raise SystemExit(f"Invalid simulation request: {exc}")
+    DATA = args.data_dir.expanduser().resolve()
+    BINARY = args.binary.expanduser().resolve()
+    LOOKUP = args.lookup.expanduser().resolve()
+    if not math.isfinite(args.timeout_seconds) or args.timeout_seconds <= 0 or args.timeout_seconds > 600:
+        raise SystemExit("--timeout-seconds must be greater than 0 and at most 600")
+    if args.work_dir is not None:
+        _configure_work_dir(args.work_dir)
+    required_inputs = (
+        DATA / "landcover/worldcover_similipal_demo.tif",
+        DATA / "terrain/elevation_similipal_demo.tif",
+        DATA / "weather/gfs00_2024_01.csv",
+        LOOKUP,
+    )
+    missing = [str(path) for path in required_inputs if not path.is_file()]
+    if missing:
+        raise SystemExit("Required simulation inputs are missing: " + ", ".join(missing))
+    if not BINARY.is_file() or not os.access(BINARY, os.X_OK):
+        raise SystemExit(f"Cell2Fire binary is missing or not executable: {BINARY}")
     SCENARIO.mkdir(parents=True, exist_ok=True); OUTPUT.mkdir(parents=True, exist_ok=True); PUBLIC.mkdir(parents=True, exist_ok=True)
-    if not BINARY.exists(): raise RuntimeError(f"Cell2Fire binary not found: {BINARY}")
     grid_meta = _build_grid(); _write_lookup(); weather_meta = _weather_rows(duration_hours, ignition_row, ignition_col)
     if (OUTPUT / "Grids").exists(): shutil.rmtree(OUTPUT / "Grids")
     if (OUTPUT / "Messages").exists(): shutil.rmtree(OUTPUT / "Messages")
     command = [str(BINARY), "--input-instance-folder", str(SCENARIO) + "/", "--output-folder", str(OUTPUT) + "/", "--sim", "S", "--ignitions", "--nsims", "1", "--grids", "--final-grid", "--Fire-Period-Length", "1.0", "--weather", "rows", "--nweathers", "1", "--output-messages", "--scenario", "1", "--seed", "42"]
-    completed = subprocess.run(command, capture_output=True, text=True, timeout=120)
+    simulator_started = time.monotonic()
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=args.timeout_seconds)
+    except subprocess.TimeoutExpired as exc:
+        def decode_capture(value):
+            if isinstance(value, bytes):
+                return value.decode("utf-8", errors="replace")
+            return value or ""
+        print(json.dumps({"cell2fire_execution": {
+            "command": command,
+            "exit_code": None,
+            "duration_seconds": round(time.monotonic() - simulator_started, 3),
+            "timed_out": True,
+            "stdout": decode_capture(exc.stdout),
+            "stderr": decode_capture(exc.stderr),
+        }}), flush=True)
+        raise
+    simulator_duration = round(time.monotonic() - simulator_started, 3)
+    print(json.dumps({"cell2fire_execution": {
+        "command": command,
+        "exit_code": completed.returncode,
+        "duration_seconds": simulator_duration,
+        "timed_out": False,
+        "stdout": completed.stdout,
+        "stderr": completed.stderr,
+    }}), flush=True)
     if completed.returncode:
         raise RuntimeError((completed.stdout + "\n" + completed.stderr)[-5000:])
     burned = _copy_outputs()
@@ -185,7 +255,13 @@ def main(argv: list[str] | None = None) -> None:
         "domain": {"center": {"latitude": ORIGIN_LATITUDE, "longitude": ORIGIN_LONGITUDE}, "bounds": domain_bounds(), "rows": ROWS, "columns": COLS, "cell_size_m": CELL_SIZE_M},
         "ignition": {"latitude": args.latitude, "longitude": args.longitude, "row": ignition_row, "column": ignition_col, "ncell": ignition_ncell(ignition_row, ignition_col)},
         "duration_hours": duration_hours,
-        "grid": {"rows": ROWS, "columns": COLS, "cell_size_m": CELL_SIZE_M},
+        "grid": {
+            "rows": ROWS,
+            "columns": COLS,
+            "cell_size_m": CELL_SIZE_M,
+            "row_order": "north_to_south",
+            "column_order": "west_to_east",
+        },
         "frame_count": len(burned),
         "burned_cells": burned,
         "inputs": {"grid": grid_meta, "weather": weather_meta, "fuel_mapping": PROXY_STATUS},

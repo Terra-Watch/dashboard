@@ -1,0 +1,113 @@
+{
+  "scope": {
+    "development_incidents_only": ["E2024-131853", "E2024-135332", "E2023-084925", "E2024-155286"],
+    "heldout_accessed": false,
+    "simulations_run": false,
+    "official_benchmark_changed": false,
+    "classification_legend": [
+      "confirmed implementation defect",
+      "confirmed evaluation-protocol limitation",
+      "observed descriptive discrepancy",
+      "plausible but unverified hypothesis",
+      "blocked by unavailable observations or metadata"
+    ]
+  },
+  "findings": [
+    {
+      "hypothesis": "temporal mismatch alone explains low AP",
+      "classification": "plausible but unverified hypothesis",
+      "evidence": [
+        "Seven of eight selected 24h/48h observations precede the nominal model horizon by 10.28 to 35.23 hours; the remaining gap is 0.63 hours.",
+        "All eight AP calls are losses/tie versus the frozen baseline, including the 0.63-hour-gap E2024-131853 24h cell (AP delta -0.070).",
+        "No approved maximum-age threshold exists; timestamp mismatch is established, its causal contribution is not isolated."
+      ],
+      "cannot_conclude": "The near-aligned loss and other mismatches show temporal lag cannot be asserted as the sole explanation; they do not prove lag has no effect."
+    },
+    {
+      "hypothesis": "target semantics mismatch matters independently of temporal lag",
+      "classification": "confirmed evaluation-protocol limitation",
+      "evidence": [
+        "Labels are cumulative VIIRS nominal/high active-fire detection cells, not a complete burned-perimeter mask.",
+        "VIIRS CSVs have no per-cell clear-sky/valid-view coverage mask; Boolean target arrays encode every other cell as false.",
+        "The observation mask is mapped from nominal 375m keys onto a 30m simulation grid; this is a coarse detection-cell assignment, not a measured 30m perimeter.",
+        "Direct descriptive centroid/support discrepancies are present in the per-incident diagnostics, but are not interpretable as physical perimeter error."
+      ],
+      "consequence": "Official AP/Brier are reproducible against the stated historical target but do not validate physical burned-area spread or trustworthy fire absence."
+    },
+    {
+      "hypothesis": "DMM onset error is being scored as Cell2Fire spread error",
+      "classification": "confirmed evaluation-protocol limitation",
+      "evidence": [
+        "Each simulation starts from a prescribed coordinate in protocol_setup.json with per-member jitter; no DMM prediction output is passed to run_dev.",
+        "No DMM-to-Cell2Fire bridge or DMM predicted onset record is in these saved artifacts.",
+        "The simulation is conditional on its prescribed ignition. Ignition-to-target mismatch therefore affects interpretation/initial-condition alignment, but is not an observed DMM model error."
+      ],
+      "observed_discrepancy": "The prescribed ignition cell is absent from both selected E2024-135332 positive masks and present in the other six scored masks."
+    },
+    {
+      "hypothesis": "saved simulated footprints are small, grow over time, and vary across members",
+      "classification": "observed descriptive discrepancy",
+      "evidence": [
+        "All 60-member archives have exact 6/12/24/48 frames and pass manifest SHA-256 checks.",
+        "Per-frame member burned-cell distributions, physical area conversions (900m2/cell), centroid offsets, boundary contact, mask diversity, cellwise member disagreement, and adjacent-frame IoU/new/lost counts are in footprint_descriptives.json.",
+        "No burned cells are lost between consecutive saved frames in any member; three E2024-135332 members touch the domain edge at 48h; the remaining members do not touch an edge.",
+        "Every 24h/48h score comparison has descriptive spatial support/centroid values in per_incident_diagnostics.json."
+      ],
+      "causality": "These properties correlate with observed score patterns but do not establish why a score is low."
+    },
+    {
+      "hypothesis": "wind convention or grid orientation is wrong",
+      "classification": "blocked by unavailable observations or metadata",
+      "evidence": [
+        "The existing verified synthetic cardinal-wind artifact reports all four expected downwind half-planes, north-up row orientation, and deterministic repeats.",
+        "The completed wind test is reused; it was not rerun."
+      ],
+      "limitation": "The synthetic convention-specific reversal hypothesis is ruled out by that test; whether historical real-case wind/terrain/fuel explains error is blocked by input/member provenance and observational evidence."
+    },
+    {
+      "hypothesis": "ignition indexing, horizon selection, or seeded jitter defects affected prior results",
+      "classification": "confirmed implementation defect",
+      "evidence": [
+        "Prior reproducibility audit documents a jitter-index selection mismatch and a prior horizon-frame substitution; current archived run metadata records exact source frames 6/12/24/48.",
+        "All 240 current member archives pass SHA-256 and exact-frame checks in this analysis."
+      ],
+      "remaining_risk": "Archived manifests omit ignition_jitter_radius_m and per-member wind perturbation parameters; current run_dev.py and rescore_fair.py hashes differ from the hashes recorded in recovery_provenance.json. Exact historical source/member-input replay remains incomplete."
+    },
+    {
+      "hypothesis": "fuel, terrain, weather-window or ROS input defect is the established cause",
+      "classification": "blocked by unavailable observations or metadata",
+      "evidence": [
+        "Source code/audits document the WorldCover-to-fuel crosswalk, DEM-derived slope, cached ERA5-Land hourly wind and ROS threshold.",
+        "The current cardinal direction test validates convention, not incident-specific input accuracy.",
+        "The exact historical run source hashes and member-specific weather perturbations do not fully match/reappear in current archived provenance."
+      ],
+      "cannot_conclude": "No specific fuel/terrain/weather defect was confirmed or ruled out by saved probability grids alone."
+    },
+    {
+      "hypothesis": "physical spread accuracy can be inferred from local observations",
+      "classification": "blocked by unavailable observations or metadata",
+      "evidence": [
+        "Local MCD64A1 is monthly/coarse and has burn-date uncertainty up to six days among in-domain positive pixels; E2024-135332 tile extent is incomplete.",
+        "VIIRS is active-fire detection data and has no valid-observation coverage mask.",
+        "No local time-resolved independent perimeter was found in the scoped inventory."
+      ],
+      "needed": "Independent time-stamped perimeter/progression observations, quality/coverage masks, and owner-approved timing/spatial/unknown-cell protocol."
+    },
+    {
+      "hypothesis": "current fair-rescore command reproduces archived benchmark end-to-end",
+      "classification": "confirmed implementation defect",
+      "evidence": [
+        "One invocation of rescore_fair.py --member-grid-dir ... was blocked before scoring because the archived per-member manifest lacks ignition_jitter_radius_m, which the current CLI requires.",
+        "Direct calls to the same module's score and blurred_baseline helpers recomputed all six AP/Brier values for each of eight cells from saved members, current selected VIIRS masks, and local cached wind; every value matched the hash-recorded official reproduction within 1e-12.",
+        "Recomputed calls remain 0 wins, 1 tie, 7 losses."
+      ],
+      "policy": "No source code was changed to bypass the guard; the mismatch is recorded for a separate artifact-contract repair."
+    }
+  ],
+  "ruled_out_or_not_supported": [
+    "No direct evidence that the synthetic cardinal wind direction or north-up raster orientation is reversed.",
+    "No inference that non-detected VIIRS cells were observed-unburned.",
+    "No evidence that DMM predictions were inputs to these conditional simulations.",
+    "No verified basis to call local MCD64A1 an exact 24h/48h perimeter reference."
+  ]
+}

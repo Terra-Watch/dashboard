@@ -1,0 +1,9 @@
+grid_value,export_value,descriptive_name,fuel_type, r, g, b, h, s, l
+101,101,The primary carrier of fire in GR1 is sparse grass though small amounts of fine dead fuel may be present,GR1,209,255,115,57,255,185
+145,145,The primary carrier of fire in SH5 is woody shrubs and shrub litter,SH5,230,230,0,42,255,115
+182,182,The primary carrier of fire in TL2 is broadleaf (hardwood) litter,TL2,99,0,0,0,255,50
+91,91,Fuel model NB1 consists of land covered by urban and suburban development,Non-fuel,130,130,130,170,0,130
+92,92,Land covered by permanent snow or ice is included in NB2,Non-fuel,115,223,255,138,255,185
+93,93,Fuel model NB3 is agricultural land maintained in a nonburnable condition,Non-fuel,0,0,0,170,0,0
+98,98,Land covered by open bodies of water such as lakes rivers and oceans comprises NB8,Non-fuel,166,166,166,170,0,166
+99,99,Land devoid of enough fuel to support wildland fire spread is covered by fuel model NB9,Non-fuel,204,204,204,170,0,204

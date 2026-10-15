@@ -1,0 +1,50 @@
+version: v0.0.0
+
+------ Command line values ------
+InFolder: /Users/kireeti/Desktop/Projects/RESQ/website/docs/sim_diagnosis/synthetic/s1_TL2_nowind/scenario/ 
+OutFolder: /Users/kireeti/Desktop/Projects/RESQ/website/docs/sim_diagnosis/synthetic/s1_TL2_nowind/run/ 
+WeatherOpt: rows 
+OutMessages: true 
+Ignitions: true 
+OutputGrids: true 
+FinalGrid: true 
+TotalSims: 1 
+Simulator: S 
+FirePeriodLength: 1.0 
+scenario: 1 
+seed: 42 
+
+------ Reading input data ------
+
+Using .asc
+No cur.asc file, filling with NaN
+No cbd.asc file, filling with NaN
+No cbh.asc file, filling with NaN
+No ccf.asc file, filling with NaN
+No probabilityMap.asc file, filling with NaN
+No fmc.asc file, filling with NaN
+No hm.asc file, filling with NaN
+Generated data file
+
+------------------Forest Data ----------------------
+
+/Users/kireeti/Desktop/Projects/RESQ/website/docs/sim_diagnosis/synthetic/s1_TL2_nowind/scenario/fuels.asc
+Forest DataFrame from instance /Users/kireeti/Desktop/Projects/RESQ/website/docs/sim_diagnosis/synthetic/s1_TL2_nowind/scenario/Data.csv
+Number of cells: 1600
+
+-------Running simulations-------
+Serial version execution
+
+Simulation 1 Start:
+	weather file: /Users/kireeti/Desktop/Projects/RESQ/website/docs/sim_diagnosis/synthetic/s1_TL2_nowind/scenario/Weather.csv
+	ignition cell: 821
+	max time periods: 2880
+
+Simulation 1 Results:
+	Cell Status            Count     Percent
+	----------------------------------------
+	Available               1599      99.94%
+	Burnt                      1       0.06%
+	Non-Burnable               0       0.00%
+	Firebreak                  0       0.00%
+	Total                   1600     100.00%

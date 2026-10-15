@@ -12,3 +12,8 @@ backend/models/
 frontend/test-results/
 frontend/vite.config.js
 frontend/vite.config.d.ts
+
+# RESQ7 raw Geofabrik OSM extracts (large reproducible source artifacts).
+data/osm/geofabrik/*.osm.pbf
+data/osm/geofabrik/*.osm.pbf.part
+data/osm/geofabrik/*.osm.pbf.part.aria2

@@ -1,0 +1,233 @@
+{
+  "created_utc": "2026-10-14T22:04:49.901895+00:00",
+  "worktree": "RESQ6 development worktree only",
+  "heldout_data_accessed": false,
+  "cell2fire_rerun": false,
+  "labels_modified": false,
+  "historical_artifacts_modified": false,
+  "python": "3.10.13",
+  "packages": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.5.2",
+    "pyproj": "3.7.1",
+    "rasterio": "1.4.4",
+    "scipy": "1.15.3"
+  },
+  "source_run_provenance": {
+    "created_at_utc": "2026-10-14T21:17:10.964852+00:00",
+    "purpose": "RESQ6 Step 2a development-only horizon-aligned member-grid evaluation",
+    "protocol": "docs/simulation/PROTOCOL.md; development set only",
+    "git_head": "4650cc599d4476bdc29cedcc1d05b7ab3cf28334",
+    "python": "3.10.13",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit_learn": "1.7.2",
+    "cell2fire_binary": "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/Cell2Fire/Cell2Fire",
+    "input_sha256": {
+      "scripts/resq6/run_dev.py": "2e64d6eb09531bec3471c016ba2410e2ce1d1e24cdfcf6b80caebaf480c54cfd",
+      "docs/simulation/PROTOCOL.md": "98f5d19330812e18be7ef449c70e415b12233389b6956b2ae57129e341cc60e3",
+      "data/resq5/protocol_setup.json": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+      "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/Cell2Fire/Cell2Fire": "878d3f5aa3fc694dc68eb4b3b0ee5f69aff2d9683df8ecc06968d0920ab2fddd",
+      "/Users/kireeti/Desktop/Projects/wild-fire-simulation/external/Cell2Fire/test/model/sb-asc/spain_lookup_table.csv": "3824d90a21d6869dea4cfe9d173fe82be04bf64cf41c7ef51dcd6e3a110892f9",
+      "backend/inference/engine/fuel.py": "39d348c96b7bd93f5b26146ceeb04a162eca86fb70d5b3c05a4704ab41f28ba6",
+      "backend/inference/engine/weather.py": "6131ff307729ce7c46160b8e7c258ee3a37bee25959186cc02da425afbe79811",
+      "backend/inference/engine/baseline.py": "40f61438957573b69102e786d93fb559e5a4cab58f796c597c835e67afa270d8",
+      "backend/inference/engine/smoulder.py": "5598816a5100782ac46e395ccf5c628a1770c9ffcf72aa3284d0b688465af931",
+      "scripts/resq5/analyze.py": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "scripts/resq6/rescore_fair.py": "1548fe98dd186d68e291700ecc71e48d98c89721875af8e12d2273eaed359b3f",
+      "docs/simulation/DECISION_RULE.md": "512556cdab356a180826bbd408b1a6cc00a1092b988a7ab8f04bb47ead508955",
+      "data/resq5/E2024-131853/worldcover_2021_domain_window.tif": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+      "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+      "data/resq2/E2024-131853/weather_era5land_native_wind.csv": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1",
+      "data/resq5/E2024-135332/worldcover_2021_domain_window.tif": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+      "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+      "data/resq2/E2024-135332/weather_era5land_native_wind.csv": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461",
+      "data/resq5/E2023-084925/worldcover_2021_domain_window.tif": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+      "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+      "data/resq2/E2023-084925/weather_era5land_native_wind.csv": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3",
+      "data/resq5/E2024-155286/worldcover_2021_domain_window.tif": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+      "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+      "data/resq2/E2024-155286/weather_era5land_native_wind.csv": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a"
+    },
+    "member_count": 60,
+    "incident_ids": [
+      "E2024-131853",
+      "E2024-135332",
+      "E2023-084925",
+      "E2024-155286"
+    ]
+  },
+  "current_source_hashes": {
+    "E2024-131853/member_manifest.json": "2dca98ccc24796e36942c330f7a354a63d9274dd14d2c659ccf73b8c765dc458",
+    "data/resq2/E2024-131853/viirs_detections.csv": "6e98313d4d26b2ed061bab8382d1bf43186a8614309e9d75dfdd961226f703bb",
+    "data/resq2/E2024-131853/weather_era5land_native_wind.csv": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1",
+    "data/resq5/E2024-131853/worldcover_2021_domain_window.tif": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+    "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+    "E2024-135332/member_manifest.json": "e3d56741eb54542f6caad9911ef4f39a3c1a29347eabc2e8fea415f3d4780334",
+    "data/resq2/E2024-135332/viirs_detections.csv": "c7e8f6fdf6c0b975642868b2d25bda8eeddfbef2beb19e0599db2c8a7d13f96d",
+    "data/resq2/E2024-135332/weather_era5land_native_wind.csv": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461",
+    "data/resq5/E2024-135332/worldcover_2021_domain_window.tif": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+    "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+    "E2023-084925/member_manifest.json": "0aa41c9c34c79372df320d5f8fa7f1b65850e48fba8b85789fba4847d12fa40a",
+    "data/resq2/E2023-084925/viirs_detections.csv": "dccd38990e489d1008b73149075d0ee9ca979dc96020040319a168b3f0da996f",
+    "data/resq2/E2023-084925/weather_era5land_native_wind.csv": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3",
+    "data/resq5/E2023-084925/worldcover_2021_domain_window.tif": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+    "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+    "E2024-155286/member_manifest.json": "584e87c644cdd623c58be37cd05addfbe5418e100623af82baa99ddd8391e8a7",
+    "data/resq2/E2024-155286/viirs_detections.csv": "79cf664af7d8a4b19142146799f65e552199c815b9076ed0333a5dca13714d92",
+    "data/resq2/E2024-155286/weather_era5land_native_wind.csv": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a",
+    "data/resq5/E2024-155286/worldcover_2021_domain_window.tif": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+    "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+    "docs/simulation/PROTOCOL.md": "98f5d19330812e18be7ef449c70e415b12233389b6956b2ae57129e341cc60e3",
+    "docs/simulation/DECISION_RULE.md": "512556cdab356a180826bbd408b1a6cc00a1092b988a7ab8f04bb47ead508955",
+    "data/resq5/protocol_setup.json": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+    "results/resq2_incident_candidates.csv": "b2d877112fddf8f9883a99f1d528d8d52abaac474f2812f5eb76aff5061a367f",
+    "scripts/resq3/check_inputs.py": "3d8892f9dd0085211a92f22a7d5133e5d112b676d0df4957826ef0ac64680fe1",
+    "scripts/resq5/analyze.py": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+    "scripts/resq5/setup_incidents.py": "9ff3cff0071a8d16aeb2ac43e90195d16dad4dcbed7c6947f6de880c867c0b5d",
+    "scripts/resq6/run_dev.py": "a309e9a2967ca6f7a329db9128c451f32392020d619775b5470d8ff755706154",
+    "scripts/resq6/rescore_fair.py": "30225ecb9032d53c7394dc9b12d1bca83f0b56ff0a0149879264e1db776f270c",
+    "results/resq6/dev_member_grids_horizon_aligned_20261015/fair_rescore.json": "3861be1e2cc61f17f70f9dcf26c694386654187a92ef0857a331584919f4ec8d",
+    "results/resq6/dev_member_grids_horizon_aligned_20261015/recovery_provenance.json": "225fbd28859509c98bc33288d2e897893306d1108862a2b98b80aa8532592a88"
+  },
+  "archived_hash_comparison": {
+    "scripts/resq6/run_dev.py": {
+      "archived_sha256": "2e64d6eb09531bec3471c016ba2410e2ce1d1e24cdfcf6b80caebaf480c54cfd",
+      "current_sha256": "a309e9a2967ca6f7a329db9128c451f32392020d619775b5470d8ff755706154",
+      "matches": false
+    },
+    "docs/simulation/PROTOCOL.md": {
+      "archived_sha256": "98f5d19330812e18be7ef449c70e415b12233389b6956b2ae57129e341cc60e3",
+      "current_sha256": "98f5d19330812e18be7ef449c70e415b12233389b6956b2ae57129e341cc60e3",
+      "matches": true
+    },
+    "data/resq5/protocol_setup.json": {
+      "archived_sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+      "current_sha256": "15fe4effbe59daa53b7d49252690359d5aac445ca95c473730906762efd0a6f0",
+      "matches": true
+    },
+    "scripts/resq5/analyze.py": {
+      "archived_sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "current_sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "matches": true
+    },
+    "scripts/resq6/rescore_fair.py": {
+      "archived_sha256": "1548fe98dd186d68e291700ecc71e48d98c89721875af8e12d2273eaed359b3f",
+      "current_sha256": "30225ecb9032d53c7394dc9b12d1bca83f0b56ff0a0149879264e1db776f270c",
+      "matches": false
+    },
+    "docs/simulation/DECISION_RULE.md": {
+      "archived_sha256": "512556cdab356a180826bbd408b1a6cc00a1092b988a7ab8f04bb47ead508955",
+      "current_sha256": "512556cdab356a180826bbd408b1a6cc00a1092b988a7ab8f04bb47ead508955",
+      "matches": true
+    },
+    "data/resq5/E2024-131853/worldcover_2021_domain_window.tif": {
+      "archived_sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+      "current_sha256": "230ddc692aadbe79b812c979e45c051b7a18948c82d8861a5c0d60dbfa9df3be",
+      "matches": true
+    },
+    "data/resq5/E2024-131853/copernicus_dem_glo30_domain_window.tif": {
+      "archived_sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+      "current_sha256": "3d9339d1f84a8f3a6ee9903c602411942534edbe81ef022f4a115cf052aa1f3d",
+      "matches": true
+    },
+    "data/resq2/E2024-131853/weather_era5land_native_wind.csv": {
+      "archived_sha256": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1",
+      "current_sha256": "c56a6db7461fd4ac370b84dce9713d1e5ae45afeeba1ce857496ed86bc3761d1",
+      "matches": true
+    },
+    "data/resq5/E2024-135332/worldcover_2021_domain_window.tif": {
+      "archived_sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+      "current_sha256": "aae412bc19f1f4a5f04909bb0e615e0837d39648e6bef7abd73c0f48ffc582c4",
+      "matches": true
+    },
+    "data/resq5/E2024-135332/copernicus_dem_glo30_domain_window.tif": {
+      "archived_sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+      "current_sha256": "e636dc68d7a5d97e30cc981f71be3582500b9ab67cb2211bff13ee1fec73908c",
+      "matches": true
+    },
+    "data/resq2/E2024-135332/weather_era5land_native_wind.csv": {
+      "archived_sha256": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461",
+      "current_sha256": "664900770c118a1773ca738c8adfcfbeb81a7c72e9701d8f98019ccf56bed461",
+      "matches": true
+    },
+    "data/resq5/E2023-084925/worldcover_2021_domain_window.tif": {
+      "archived_sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+      "current_sha256": "9e44f030df09a586310789fc420697d59d3182458f1b5b59f856e50e0599f190",
+      "matches": true
+    },
+    "data/resq5/E2023-084925/copernicus_dem_glo30_domain_window.tif": {
+      "archived_sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+      "current_sha256": "b78c13a883c4467128346d78f42b2c157f7d11c68a16f08d9f25660401b43e85",
+      "matches": true
+    },
+    "data/resq2/E2023-084925/weather_era5land_native_wind.csv": {
+      "archived_sha256": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3",
+      "current_sha256": "c6c8231f479bc3a8cc74b596e75b2d010fc37d0c659788cf36c3d77509d5bea3",
+      "matches": true
+    },
+    "data/resq5/E2024-155286/worldcover_2021_domain_window.tif": {
+      "archived_sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+      "current_sha256": "952d41cc5849f189da75eb0b034e1fb84b70fc4a2fb812328ca47d0d46ba1b42",
+      "matches": true
+    },
+    "data/resq5/E2024-155286/copernicus_dem_glo30_domain_window.tif": {
+      "archived_sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+      "current_sha256": "74de19f1b1f8d54b9396ae8695fcbe19d8633e34c506ccd9f8a6d243ee305bcc",
+      "matches": true
+    },
+    "data/resq2/E2024-155286/weather_era5land_native_wind.csv": {
+      "archived_sha256": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a",
+      "current_sha256": "65e976a05c878ace5e8ffb21328c257ec6c64da317b115b1d5880ffe020b877a",
+      "matches": true
+    }
+  },
+  "member_archive_verification": {
+    "expected_per_incident": 60,
+    "verified_per_incident": {
+      "E2024-131853": 60,
+      "E2024-135332": 60,
+      "E2023-084925": 60,
+      "E2024-155286": 60
+    },
+    "manifest_member_sha256_checked": true,
+    "exact_frames_6_12_24_48_checked": true
+  },
+  "official_scores_reproduced": true,
+  "official_score_reproduction_sha256": "523e388fb06a56d776932a889add1af49f35624add0beaeed5023989dcaca5f6",
+  "timing_table_sha256": "c39e99ea0371c724a898211426ccba521bcb8cea1650e3f753b362f81f0592f6",
+  "important_limit": "Historical recovery provenance hashes for run_dev.py and rescore_fair.py do not match current dirty worktree source; exact source-version replay cannot be asserted. Saved scores and member archives are reverified against current scoring path.",
+  "historical_source_hash_audit": {
+    "scripts/resq6/run_dev.py": {
+      "recorded_run_sha256": "2e64d6eb09531bec3471c016ba2410e2ce1d1e24cdfcf6b80caebaf480c54cfd",
+      "recorded_git_head_sha256": "b38ed7cb53148407c28f8968371d3f9c3786d9ae1ae66e7e5d8b7bb3bfb67607",
+      "current_worktree_sha256": "a309e9a2967ca6f7a329db9128c451f32392020d619775b5470d8ff755706154",
+      "recorded_matches_git_head": false,
+      "recorded_matches_current": false,
+      "archived_source_bytes_available": false
+    },
+    "scripts/resq6/rescore_fair.py": {
+      "recorded_run_sha256": "1548fe98dd186d68e291700ecc71e48d98c89721875af8e12d2273eaed359b3f",
+      "recorded_git_head_sha256": "e2eab8202ba7661fced897b01fd615a703d6f16f882d71ba6b82f40c04fe2713",
+      "current_worktree_sha256": "30225ecb9032d53c7394dc9b12d1bca83f0b56ff0a0149879264e1db776f270c",
+      "recorded_matches_git_head": false,
+      "recorded_matches_current": false,
+      "archived_source_bytes_available": false
+    },
+    "scripts/resq5/analyze.py": {
+      "recorded_run_sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "recorded_git_head_sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "current_worktree_sha256": "211723a9858fad10dfba8872893ca0e9c4b8383875ced53c9a75c23a4f152076",
+      "recorded_matches_git_head": true,
+      "recorded_matches_current": true,
+      "archived_source_bytes_available": true
+    }
+  },
+  "score_cli_attempt": {
+    "command": "python scripts/resq6/rescore_fair.py --member-grid-dir results/resq6/dev_member_grids_horizon_aligned_20261015 --output results/resq6/temporal_alignment_audit_20261015/official_score_reproduction.json",
+    "result": "stopped before scoring: saved per-incident member manifest lacks ignition_jitter_radius_m required by current modified CLI",
+    "interpretation": "no radius inferred from incomplete metadata; score reproduction instead loaded and verified member archives and used current scorer helper functions directly"
+  },
+  "source_version_limit": "Recorded run hashes for run_dev.py and rescore_fair.py match neither the recorded git_head source nor current dirty worktree source. The hashed source bytes are not archived, so exact historical source replay is unavailable; scores were independently reproduced from saved member grids and current scoring code."
+}
