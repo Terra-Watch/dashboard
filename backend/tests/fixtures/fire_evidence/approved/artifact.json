@@ -13,7 +13,12 @@
       ],
       "scope": "consumer integration tests only"
     },
-    "status": "NOT_APPROVED"
+    "signature": {
+      "algorithm": "Ed25519",
+      "key_id": "terrawatch-test-only",
+      "value": "t6z2kqE0w24m98+82cqVXGjpuiutoFAryxs7rFmr+RbpSZX1P5o6MUN/tHxiJhr5QXpu6jvpzOftHb/xfQOyDw=="
+    },
+    "status": "APPROVED"
   },
   "architecture": {
     "backbone": "ViT-B-16-quickgelu",
@@ -44,7 +49,7 @@
     "pretrained_init": "none (toy fixture)",
     "vision_width": 8
   },
-  "artifact_status": "NOT_APPROVED",
+  "artifact_status": "APPROVED",
   "authenticity": {
     "reason": "fixture: no authenticity head",
     "status": "EXCLUDED_BY_POLICY"

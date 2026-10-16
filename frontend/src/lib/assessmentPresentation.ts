@@ -15,10 +15,11 @@ export type AssessmentLike = {
     ood_flag?: boolean;
     error_code?: string | null;
     artifact_status?: string | null;
+    raw_logits?: { flames_visible?: number | null; smoke_visible?: number | null } | null;
   } | null;
 };
 
-export type AssessmentTone = 'unavailable' | 'pending' | 'advisory';
+export type AssessmentTone = 'unavailable' | 'pending' | 'advisory' | 'experimental';
 
 export type AssessmentPresentation = {
   tone: AssessmentTone;
@@ -28,8 +29,11 @@ export type AssessmentPresentation = {
   showLabel: boolean;
   authenticityText: string | null;
   advisoryNote: string;
+  /** Raw, uncalibrated development output; present only for tone 'experimental'. Never a finding. */
+  experimentalOutput: string | null;
 };
 
+export const EXPERIMENTAL_NOTICE = 'EXPERIMENTAL / NOT FOR OPERATIONAL USE';
 export const ADVISORY_NOTE = 'Automated assessment is advisory. A person decides.';
 
 const REASONS: Record<string, string> = {
@@ -50,6 +54,15 @@ const REASONS: Record<string, string> = {
   MODEL_BUSY: 'The assessment service was busy and the check was skipped.',
   MODEL_INFERENCE_FAILED: 'The assessment failed.',
   MODEL_RESULT_INVALID: 'The assessment result was rejected as invalid.',
+  MODEL_EXPERIMENTAL_NOT_PERMITTED: 'The experimental development path is not permitted in this environment.',
+  MODEL_EXPERIMENTAL_CONFLICT: 'The experimental path and production inference were both enabled; neither ran.',
+  MODEL_EXPERIMENTAL_NOT_CONFIGURED: 'The experimental development path is not configured.',
+  MODEL_EXPERIMENTAL_NOT_FOUND: 'The experimental checkpoint was not found.',
+  MODEL_EXPERIMENTAL_PROVENANCE_INVALID: 'The experimental checkpoint has no valid provenance record.',
+  MODEL_EXPERIMENTAL_INTEGRITY_FAILED: 'The experimental checkpoint failed its integrity check.',
+  MODEL_EXPERIMENTAL_INCOMPATIBLE: 'The experimental checkpoint does not match the model architecture.',
+  MODEL_EXPERIMENTAL_LOAD_FAILED: 'The experimental model could not be loaded.',
+  MODEL_EXPERIMENTAL_INFERENCE_FAILED: 'The experimental assessment failed.',
 };
 
 export function describeReason(code?: string | null): string | null {
@@ -65,13 +78,25 @@ const unavailable = (reasonCode: string | null | undefined): AssessmentPresentat
   showLabel: false,
   authenticityText: null,
   advisoryNote: ADVISORY_NOTE,
+  experimentalOutput: null,
 });
 
 export function presentAssessment(image: AssessmentLike): AssessmentPresentation {
   const status = image.assessment_status ?? null;
+  // Decided on the row's own status only: an experimental row is never promoted by an artifact_status or label inside its JSON.
+  if (status === 'EXPERIMENTAL') {
+    const l = image.assessment?.raw_logits;
+    const fmt = (v?: number | null) => (typeof v === 'number' && Number.isFinite(v) ? v.toFixed(2) : 'n/a');
+    return {
+      tone: 'experimental', headline: EXPERIMENTAL_NOTICE,
+      detail: 'Development-only output from an unapproved research checkpoint. It is not a fire or no-fire finding, is not calibrated, and does not change the incident. A person decides.',
+      reason: null, showLabel: false, authenticityText: null, advisoryNote: ADVISORY_NOTE,
+      experimentalOutput: l ? `Raw logits (uncalibrated, not probabilities): flames ${fmt(l.flames_visible)}, smoke ${fmt(l.smoke_visible)}` : null,
+    };
+  }
   if (status === 'UNAVAILABLE') return unavailable(image.assessment?.error_code);
   if (status === 'PENDING' || status === 'RUNNING' || status === null) {
-    return { tone: 'pending', headline: 'Assessment pending', detail: null, reason: null, showLabel: false, authenticityText: null, advisoryNote: ADVISORY_NOTE };
+    return { tone: 'pending', headline: 'Assessment pending', detail: null, reason: null, showLabel: false, authenticityText: null, advisoryNote: ADVISORY_NOTE, experimentalOutput: null };
   }
   if (status !== 'COMPLETED') return unavailable(image.assessment?.error_code);
   // COMPLETED is trusted only when the stored result says it came from an approved artifact.
@@ -84,7 +109,7 @@ export function presentAssessment(image: AssessmentLike): AssessmentPresentation
   return {
     tone: 'advisory', headline, detail: null, reason: null, showLabel: label !== null,
     authenticityText: image.authenticity_status ? image.authenticity_status.replace(/_/g, ' ').toLowerCase() : null,
-    advisoryNote: ADVISORY_NOTE,
+    advisoryNote: ADVISORY_NOTE, experimentalOutput: null,
   };
 }
 
@@ -92,6 +117,7 @@ export function presentAssessment(image: AssessmentLike): AssessmentPresentation
 export function listStatusText(status?: string | null): string {
   if (!status) return 'None reported';
   if (status === 'COMPLETED') return 'Automated assessment complete (advisory)';
+  if (status === 'EXPERIMENTAL') return 'Experimental output, not for operational use';
   if (status === 'PENDING' || status === 'RUNNING') return 'Assessment pending';
   return 'Assessment unavailable';
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, incidentImageUrl } from '../../lib/api';
+import { listStatusText, presentAssessment } from '../../lib/assessmentPresentation';
 
 type Incident = {
   id: number;
@@ -30,12 +31,7 @@ type IncidentImage = {
 };
 
 function assessmentLabel(image: IncidentImage): string {
-  if (image.assessment_status === 'UNAVAILABLE') return 'Assessment unavailable';
-  if (image.assessment_status === 'PENDING' || image.assessment_status === 'RUNNING') return 'Assessment pending';
-  if (image.assessment?.ood_flag) return 'Uncertain · out of distribution';
-  if (image.assessment?.derived_label === 'UNCERTAIN') return 'Uncertain';
-  if (image.assessment_status === 'COMPLETED') return `Completed${image.assessment?.derived_label ? ` · ${image.assessment.derived_label.replace(/_/g, ' ')}` : ''}`;
-  return image.assessment_status || 'Assessment pending';
+  return presentAssessment(image).headline;
 }
 
 // Must match backend PERMITTED_INCIDENT_TRANSITIONS
@@ -162,7 +158,7 @@ export function IncidentsListPage() {
                 </span>
                 {incident.image_assessment_status && (
                   <span className="muted" style={{ fontSize: 12 }}>
-                    Image Evidence Assessment: {incident.image_assessment_status === 'COMPLETED' ? 'Completed' : incident.image_assessment_status === 'UNAVAILABLE' ? 'Unavailable' : 'Pending'}
+                    Image Evidence Assessment: {listStatusText(incident.image_assessment_status)}
                     {incident.authenticity_status ? ` · ${incident.authenticity_status.replace(/_/g, ' ').toLowerCase()}` : ''}
                   </span>
                 )}
@@ -208,8 +204,10 @@ export function IncidentsListPage() {
             <article className="evidence-card" key={image.id}>
               {imageUrls[image.id] && <img src={imageUrls[image.id]} alt={`Submitted evidence: ${image.original_filename}`} />}
               <strong>{image.original_filename}</strong>
-              <span className="muted">Automated: {assessmentLabel(image)}{image.authenticity_status ? ` · ${image.authenticity_status.replace(/_/g, ' ').toLowerCase()}` : ''}</span>
-              {image.assessment?.error_code && <span className="muted">Reason: {image.assessment.error_code}</span>}
+              <span className="muted" data-testid="image-assessment">Automated: {assessmentLabel(image)}{presentAssessment(image).authenticityText ? ` · ${presentAssessment(image).authenticityText}` : ''}</span>
+              {presentAssessment(image).experimentalOutput && <span className="muted" data-testid="experimental-output">{presentAssessment(image).experimentalOutput}</span>}
+              {presentAssessment(image).detail && <span className="muted">{presentAssessment(image).detail}</span>}
+              {presentAssessment(image).reason && <span className="muted">Reason: {presentAssessment(image).reason}{image.assessment?.error_code ? ` (${image.assessment.error_code})` : ''}</span>}
               <span className="muted">Human review: {image.human_review_status}{image.human_reviewed_by ? ` · reviewer ${image.human_reviewed_by}` : ''}</span>
               {image.human_review_note && <span className="muted">Note: {image.human_review_note}</span>}
               <label className="muted" htmlFor={`review-note-${image.id}`}>Review note</label>

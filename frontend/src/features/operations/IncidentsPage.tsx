@@ -44,7 +44,9 @@ export function IncidentsPage() {
           const result = await uploadIncidentImage<{ image: { assessment_status: string; authenticity_status?: string | null } }>(created.id, image);
           setAssessmentMessage(result.image.assessment_status === 'COMPLETED'
             ? `Image Evidence Assessment completed${result.image.authenticity_status ? `: ${result.image.authenticity_status.replace(/_/g, ' ').toLowerCase()}.` : '.'} This result is advisory and needs human review.`
-            : 'Image uploaded, but automated assessment is unavailable in this environment. The report remains available for human review.');
+            : result.image.assessment_status === 'EXPERIMENTAL'
+              ? 'Image uploaded. An EXPERIMENTAL / NOT FOR OPERATIONAL USE development output was recorded for staff only; it is not an assessment. The report remains available for human review.'
+              : 'Image uploaded, but automated assessment is unavailable in this environment. The report remains available for human review.');
         } catch (reason) {
           setAssessmentMessage(reason instanceof Error ? `Report saved, but the image could not be assessed: ${reason.message}` : 'Report saved, but the image could not be assessed.');
         }

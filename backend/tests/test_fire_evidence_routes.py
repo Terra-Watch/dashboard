@@ -45,7 +45,7 @@ def database():
 @pytest.fixture(autouse=True)
 def isolated(monkeypatch, tmp_path):
     for name in ("FIRE_EVIDENCE_REPO", "FIRE_EVIDENCE_ARTIFACT_DIR", "FIRE_EVIDENCE_MODEL_VERSION", "FIRE_EVIDENCE_INFERENCE_ENABLED",
-                 "FIRE_EVIDENCE_TIMEOUT_S", "FIRE_EVIDENCE_MAX_PENDING"):
+                 "FIRE_EVIDENCE_TIMEOUT_S", "FIRE_EVIDENCE_MAX_PENDING", "FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(operations, "IMAGE_ROOT", tmp_path / "images")
     ia.reset_for_tests()
@@ -172,7 +172,9 @@ def test_incomplete_bundle_is_recorded_as_incomplete(monkeypatch, tmp_path):
 
 def test_an_unexpected_adapter_failure_is_contained_and_never_blocks_the_report(monkeypatch, approved_bundle):
     configure(monkeypatch, approved_bundle, repo=BACKEND.parent)
-    monkeypatch.setattr(ia, "_load_service", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    # Real inference runs in a fresh subprocess, so parent-process monkeypatches
+    # do not cross the isolation boundary. Inject the failure at that boundary.
+    monkeypatch.setattr(ia, "_process_request", lambda *args: (_ for _ in ()).throw(RuntimeError("boom")))
     client, headers, client_uid = actor("citizen"); rid = citizen_report(client_uid)
     r = client.post(f"/api/citizen/reports/{rid}/evidence", headers=headers, files=files(jpeg_bytes()))
     assert r.status_code == 201 and image_row(rid)["assessment_error"] == ia.INFERENCE_FAILED

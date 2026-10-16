@@ -68,3 +68,45 @@ test('list status text is never reassuring for anything but a completed assessme
   assert.equal(listStatusText(null), 'None reported');
   assert.match(listStatusText('COMPLETED'), /advisory/);
 });
+
+const experimental = (assessment: object = {}) => ({
+  assessment_status: 'EXPERIMENTAL', authenticity_status: null,
+  assessment: { raw_logits: { flames_visible: 1.8647, smoke_visible: -2.1549 }, artifact_status: 'EXPERIMENTAL_UNAPPROVED', ...assessment },
+});
+
+test('an experimental result is labelled NOT FOR OPERATIONAL USE, shows raw logits, and is never a finding', () => {
+  const p = presentAssessment(experimental());
+  assert.equal(p.tone, 'experimental');
+  assert.equal(p.headline, 'EXPERIMENTAL / NOT FOR OPERATIONAL USE');
+  assert.equal(p.showLabel, false);
+  assert.equal(p.authenticityText, null);
+  assert.match(p.experimentalOutput ?? '', /uncalibrated, not probabilities/);
+  assert.match(p.experimentalOutput ?? '', /flames 1\.86, smoke -2\.15/);
+  assert.match(p.detail ?? '', /not a fire or no-fire finding/);
+  assert.match(p.advisoryNote, /advisory/);
+});
+
+test('an experimental row is never promoted to approved by its own JSON (forged artifact_status or label)', () => {
+  const p = presentAssessment(experimental({ artifact_status: 'APPROVED', derived_label: 'ACTIVE_FIRE', ood_flag: false }));
+  assert.equal(p.tone, 'experimental');
+  assert.equal(p.showLabel, false);
+  assert.ok(!/active fire/i.test(p.headline + (p.detail ?? '') + (p.experimentalOutput ?? '')));
+});
+
+test('non-finite or missing experimental logits render n/a, never NaN or a number invented by the UI', () => {
+  assert.match(presentAssessment(experimental({ raw_logits: { flames_visible: Number.NaN, smoke_visible: null } })).experimentalOutput ?? '', /flames n\/a, smoke n\/a/);
+  assert.equal(presentAssessment(experimental({ raw_logits: null })).experimentalOutput, null);
+});
+
+test('only an experimental row ever carries experimental output; list text names it explicitly', () => {
+  for (const img of [completed(), { assessment_status: 'UNAVAILABLE', assessment: { raw_logits: { flames_visible: 9, smoke_visible: 9 } } }, { assessment_status: 'PENDING' }]) {
+    assert.equal(presentAssessment(img).experimentalOutput, null);
+  }
+  assert.match(listStatusText('EXPERIMENTAL'), /not for operational use/);
+  assert.ok(!/complete/i.test(listStatusText('EXPERIMENTAL')));
+});
+
+test('experimental error codes have plain-language reasons', () => {
+  const r = presentAssessment({ assessment_status: 'UNAVAILABLE', assessment: { error_code: 'MODEL_EXPERIMENTAL_INTEGRITY_FAILED' } }).reason ?? '';
+  assert.match(r, /integrity/);
+});

@@ -1,0 +1,48 @@
+TerraWatch Repository Status
+============================
+
+Captured: 2025-01-17
+Workflow: wf_6d96055215a6323a
+Task: Initial repository state verification for complete application audit
+
+Branch: main
+HEAD: b151a5932cccce2bc5a064f399c7d543c23e1e3e
+
+Recent Commits:
+---------------
+b151a59 (HEAD -> main, origin/main, origin/HEAD) docs: document TerraWatch development and evidence setup
+785598c feat: integrate fail-closed fire evidence assessment
+2281e0a feat: complete citizen ranger and control room workflows
+e12951f feat: add TerraWatch branding and community experience
+48789ee .
+
+Modified Files:
+---------------
+ M backend/.env.example
+ M backend/app/services/image_assessment.py
+ M backend/tests/fixtures/fire_evidence/approved/artifact.json
+ M backend/tests/test_fire_evidence_adapter.py
+ M backend/tests/test_fire_evidence_routes.py
+ M docs/fire_evidence_integration.md
+ M frontend/src/features/operations/IncidentsListPage.tsx
+ M frontend/src/features/operations/IncidentsPage.tsx
+ M frontend/src/lib/assessmentPresentation.ts
+ M frontend/src/redesign/pages/ControlRoomApp.tsx
+ M frontend/unit/assessmentPresentation.unit.ts
+
+Untracked Files:
+----------------
+?? INTEGRATION_STATUS.md
+?? backend/test_assessment.py
+?? backend/test_citizen_upload.py
+?? backend/test_manual_upload.py
+?? backend/tests/__init__.py
+?? backend/tests/fixtures/fire_evidence/test-public-key.b64
+?? backend/tests/test_fire_evidence_experimental.py
+?? backend/tests/test_fire_evidence_experimental_routes.py
+?? docs/fire_evidence_experimental_inference.md
+?? frontend/tests/experimental-assessment.spec.ts
+?? verify_integration.sh
+
+Status: Clean working tree preserved
+Notes: All existing user changes preserved. No destructive operations performed.

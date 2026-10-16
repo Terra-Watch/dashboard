@@ -49,7 +49,7 @@ def jpeg_bytes() -> bytes:
 @pytest.fixture(autouse=True)
 def clean_adapter(monkeypatch):
     for name in ("FIRE_EVIDENCE_REPO", "FIRE_EVIDENCE_ARTIFACT_DIR", "FIRE_EVIDENCE_MODEL_VERSION", "FIRE_EVIDENCE_INFERENCE_ENABLED",
-                 "FIRE_EVIDENCE_TIMEOUT_S", "FIRE_EVIDENCE_MAX_PENDING"):
+                 "FIRE_EVIDENCE_TIMEOUT_S", "FIRE_EVIDENCE_MAX_PENDING", "FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY"):
         monkeypatch.delenv(name, raising=False)
     ia.reset_for_tests()
     yield
@@ -67,6 +67,8 @@ def configure(monkeypatch, artifact_dir, *, enabled=True, repo=None, version=FIX
     monkeypatch.setenv("FIRE_EVIDENCE_REPO", str(repo if repo is not None else (ASSESSOR_REPO or "/nonexistent-assessor")))
     monkeypatch.setenv("FIRE_EVIDENCE_ARTIFACT_DIR", str(artifact_dir))
     monkeypatch.setenv("FIRE_EVIDENCE_MODEL_VERSION", version)
+    monkeypatch.setenv("FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY", (FIXTURES / "test-public-key.b64").read_text().strip())
+    monkeypatch.setenv("FIRE_EVIDENCE_TRUSTED_KEY_ID", "terrawatch-test-only")
     if enabled:
         monkeypatch.setenv("FIRE_EVIDENCE_INFERENCE_ENABLED", "true")
     else:

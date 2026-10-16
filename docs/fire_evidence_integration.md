@@ -64,3 +64,7 @@ result from an APPROVED artifact, and always labels it advisory.
 ## Not provided
 The 345 MB research bundle is intentionally absent; do not copy it here. No calibration, OOD thresholds, approval, or
 phone-photo evaluation exist, so the artifact remains INCOMPLETE and inference stays off.
+
+## Development-only experimental path
+See `docs/fire_evidence_experimental_inference.md`. It is a separate, default-off, development-only path; none of the production rules above are relaxed by it.
+Approved artifacts additionally require an Ed25519 signature over the canonical artifact metadata, including approval identity, timestamp, scope, evidence references, key id, schema, and checkpoint binding. The trusted public key and key id are supplied independently through `FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY` and `FIRE_EVIDENCE_TRUSTED_KEY_ID`; private signing keys must remain outside the repository and artifact bucket. Missing or invalid signatures remain `UNAVAILABLE`.
