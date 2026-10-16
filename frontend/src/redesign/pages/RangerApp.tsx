@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Brand } from '../../components/Brand';
-import { getStoredUser, rqFetch } from '../lib/api';
+import { getStoredUser, rqFetch, syncOfflineQueue } from '../lib/api';
 import { listStatusText } from '../../lib/assessmentPresentation';
 import { readQueue } from '../lib/fieldQueue';
 import type { QueuedFieldReport } from '../lib/types';
@@ -22,6 +22,15 @@ function RangerShell({ path, go, children }: { path: string; go: Navigate; child
     window.addEventListener('online', on); window.addEventListener('offline', off);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
+  
+  // Sync offline queue on mount and when coming back online
+  useEffect(() => {
+    const sync = () => void syncOfflineQueue();
+    sync(); // Sync on mount
+    window.addEventListener('online', sync);
+    return () => window.removeEventListener('online', sync);
+  }, []);
+  
   return <QueryClientProvider client={rangerQueryClient}><div data-rq-app data-ranger-app className="min-h-screen bg-paper text-ink">
     <header className="sticky top-0 z-20 border-b border-contour bg-sheet/95 px-4 py-3 backdrop-blur sm:px-8"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><a href="/ranger" aria-label="TerraWatch Ranger home" onClick={event => { event.preventDefault(); go('/ranger'); }}><Brand dark /></a><div className="flex items-center gap-3 text-xs"><span role="status" className={online ? 'text-canopy' : 'font-semibold text-danger'}><span aria-hidden="true">●</span> {online ? 'Online' : 'Offline'}</span><span className="hidden text-ink-muted sm:inline">{user?.name ?? 'Ranger'}</span><a href="/" onClick={event => { event.preventDefault(); go('/'); }} className="text-ink-muted underline">Exit</a></div></div></header>
     <main className="mx-auto max-w-6xl px-4 pb-24 pt-7 sm:px-8 md:pb-12">{children}</main>

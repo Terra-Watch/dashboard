@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Brand } from '../../components/Brand';
-import { rqFetch } from '../lib/api';
+import { rqFetch, syncOfflineQueue } from '../lib/api';
 import { listStatusText } from '../../lib/assessmentPresentation';
 import { MapShell } from '../components/map';
 import { Marker } from 'react-map-gl/maplibre';
@@ -32,6 +32,14 @@ function CitizenShell({ path, go, children }: { path: CitizenPath; go: Navigate;
     void pollAlerts();
     const interval = setInterval(() => { void pollAlerts(); }, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Sync offline queue on mount and when coming back online
+  useEffect(() => {
+    const sync = () => void syncOfflineQueue();
+    sync(); // Sync on mount
+    window.addEventListener('online', sync);
+    return () => window.removeEventListener('online', sync);
   }, []);
 
   return (
