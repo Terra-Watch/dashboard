@@ -10,7 +10,7 @@ import json
 import re
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import text
 
 from ..contracts.schemas import CitizenReportRequest, IncidentImageReviewRequest
@@ -98,6 +98,33 @@ def get_report(report_id: int, user: dict = Depends(citizen_user)) -> dict:
     report = _safe_report(dict(row))
     report['evidence'] = [dict(image) for image in images]
     return {'report': report}
+
+
+@router.get('/reports/{report_id}/evidence/{image_id}')
+def get_report_evidence(report_id: int, image_id: int, user: dict = Depends(citizen_user)) -> Response:
+    """Retrieve evidence image for a citizen-owned report."""
+    with engine.connect() as db:
+        report = db.execute(text('SELECT id,reporter_id FROM resq_incidents WHERE id=:id'), {'id': report_id}).mappings().first()
+        if not report or report['reporter_id'] != user['id']:
+            raise HTTPException(status_code=404, detail='Report not found')
+        image = db.execute(
+            text('SELECT storage_key,content_type,original_filename,sha256 FROM resq_incident_images WHERE id=:image_id AND incident_id=:incident_id'),
+            {'image_id': image_id, 'incident_id': report_id}
+        ).mappings().first()
+    if not image:
+        raise HTTPException(status_code=404, detail='Evidence image not found')
+    path = _stored_image_path(image['storage_key'])
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail='Stored image is unavailable')
+    _assert_stored_image_integrity(path, image['sha256'])
+    return Response(
+        content=path.read_bytes(),
+        media_type=image['content_type'],
+        headers={
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options': 'nosniff',
+        }
+    )
 
 
 @router.post('/reports/{report_id}/evidence', status_code=201, dependencies=[Depends(require_csrf)])

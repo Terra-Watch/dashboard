@@ -18,6 +18,22 @@ function CitizenShell({ path, go, children }: { path: CitizenPath; go: Navigate;
     ['/citizen/reports', 'My Reports', '▤'],
     ['/community', 'Community', '◉'],
   ];
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const pollAlerts = async () => {
+      try {
+        const alerts = await rqFetch<Array<{ id: number; read: boolean }>>('/api/alerts');
+        setUnreadCount(alerts.filter(alert => !alert.read).length);
+      } catch {
+        // Silently fail alert polling
+      }
+    };
+    void pollAlerts();
+    const interval = setInterval(() => { void pollAlerts(); }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div data-rq-app data-citizen-app className="min-h-screen bg-paper text-ink">
       <header className="sticky top-0 z-20 border-b border-contour bg-sheet/95 px-4 py-3 backdrop-blur sm:px-8">
@@ -26,6 +42,10 @@ function CitizenShell({ path, go, children }: { path: CitizenPath; go: Navigate;
           <nav aria-label="Citizen navigation" className="hidden items-center gap-5 text-sm font-semibold md:flex">
             {links.map(([href, label]) => <a key={href} href={href} onClick={event => { event.preventDefault(); go(href); }} className={path === href ? 'border-b-2 border-canopy pb-1 text-canopy' : 'text-ink-muted hover:text-ink'}>{label}</a>)}
             <a href="/citizen/safety" onClick={event => { event.preventDefault(); go('/citizen/safety'); }} className={path === '/citizen/safety' ? 'border-b-2 border-canopy pb-1 text-canopy' : 'text-ink-muted hover:text-ink'}>Stay safe</a>
+            <a href="/citizen/notifications" onClick={event => { event.preventDefault(); go('/citizen/notifications'); }} className={`relative ${path === '/citizen/notifications' ? 'border-b-2 border-canopy pb-1 text-canopy' : 'text-ink-muted hover:text-ink'}`}>
+              Notifications
+              {unreadCount > 0 && <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{unreadCount}</span>}
+            </a>
           </nav>
           <a href="/" onClick={event => { event.preventDefault(); go('/'); }} className="text-xs font-semibold text-ink-muted underline hover:text-ink">TerraWatch home</a>
         </div>
@@ -155,14 +175,89 @@ export function CitizenReportsPage({ go }: { go: Navigate }) {
 }
 
 export function CitizenReportDetailPage({ id, go }: { id: number; go: Navigate }) {
-  const [report, setReport] = useState<{ id: number; status: string; state: string; latitude: number; longitude: number; observed_at: string; created_at: string; evidence: Array<{ id: number; original_filename: string; assessment_status: string }> } | null>(null);
+  const [report, setReport] = useState<{ id: number; status: string; state: string; latitude: number; longitude: number; observed_at: string; created_at: string; evidence: Array<{ id: number; original_filename: string; size_bytes: number; assessment_status: string }> } | null>(null);
   const [error, setError] = useState('');
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  
   useEffect(() => { void rqFetch<{ report: typeof report }>(`/api/citizen/reports/${id}`).then(result => setReport(result.report)).catch(reason => setError(reason instanceof Error ? reason.message : 'Report details are unavailable.')); }, [id]);
-  return <CitizenShell path={`/citizen/reports/${id}`} go={go}><button type="button" onClick={() => go('/citizen/reports')} className="text-sm font-semibold text-canopy underline">← Back to reports</button><h1 className="mt-5 font-serif text-4xl">Report {id}</h1>{error && <p role="alert" className="mt-5 rounded-rq border border-warn/50 bg-paper p-5 text-sm text-ink-muted">{error}</p>}{!report && !error && <p role="status" className="mt-5 rounded-rq border border-contour bg-sheet p-5 text-sm text-ink-muted">Loading report…</p>}{report && <section className="mt-6 max-w-2xl rounded-rq border border-contour bg-sheet p-5"><p className="text-sm text-ink-muted">Status: <strong className="text-ink">{report.status}</strong></p><dl className="mt-5 space-y-3 text-sm"><div><dt className="font-semibold text-ink-muted">Location</dt><dd>{report.latitude}, {report.longitude} · {report.state}</dd></div><div><dt className="font-semibold text-ink-muted">Observed</dt><dd>{new Date(report.observed_at).toLocaleString()}</dd></div><div><dt className="font-semibold text-ink-muted">Submitted</dt><dd>{new Date(report.created_at).toLocaleString()}</dd></div></dl><h2 className="mt-6 font-serif text-xl">Evidence</h2>{!report.evidence.length && <p className="mt-2 text-sm text-ink-muted">No evidence attached.</p>}{report.evidence.map(item => <p key={item.id} className="mt-2 text-sm text-ink-muted">{item.original_filename} · {listStatusText(item.assessment_status)}</p>)}</section>}</CitizenShell>;
+  
+  const handleImageError = (imageId: number) => {
+    setImageErrors(prev => ({ ...prev, [imageId]: true }));
+  };
+
+  const getAssessmentBadgeClass = (status: string) => {
+    if (status === 'COMPLETED') return 'bg-canopy/10 text-canopy border-canopy/30';
+    if (status === 'UNAVAILABLE') return 'bg-slate-100 text-slate-600 border-slate-300';
+    return 'bg-amber-50 text-amber-700 border-amber-300';
+  };
+
+  return <CitizenShell path={`/citizen/reports/${id}`} go={go}><button type="button" onClick={() => go('/citizen/reports')} className="text-sm font-semibold text-canopy underline">← Back to reports</button><h1 className="mt-5 font-serif text-4xl">Report {id}</h1>{error && <p role="alert" className="mt-5 rounded-rq border border-warn/50 bg-paper p-5 text-sm text-ink-muted">{error}</p>}{!report && !error && <p role="status" className="mt-5 rounded-rq border border-contour bg-sheet p-5 text-sm text-ink-muted">Loading report…</p>}{report && <section className="mt-6 max-w-2xl rounded-rq border border-contour bg-sheet p-5"><p className="text-sm text-ink-muted">Status: <strong className="text-ink">{report.status}</strong></p><dl className="mt-5 space-y-3 text-sm"><div><dt className="font-semibold text-ink-muted">Location</dt><dd>{report.latitude}, {report.longitude} · {report.state}</dd></div><div><dt className="font-semibold text-ink-muted">Observed</dt><dd>{new Date(report.observed_at).toLocaleString()}</dd></div><div><dt className="font-semibold text-ink-muted">Submitted</dt><dd>{new Date(report.created_at).toLocaleString()}</dd></div></dl><h2 className="mt-6 font-serif text-xl">Evidence</h2>{!report.evidence.length && <p className="mt-2 text-sm text-ink-muted">No evidence attached.</p>}{report.evidence.length > 0 && <div className="mt-4 space-y-4">{report.evidence.map(item => <div key={item.id} className="rounded border border-contour bg-paper p-3"><div className="flex gap-3">{!imageErrors[item.id] ? <img src={`/api/citizen/reports/${report.id}/evidence/${item.id}`} alt={item.original_filename} loading="lazy" onError={() => handleImageError(item.id)} className="h-32 w-32 rounded object-cover" /> : <div className="flex h-32 w-32 items-center justify-center rounded bg-slate-100 text-xs text-slate-500">Image unavailable</div>}<div className="min-w-0 flex-1"><p className="truncate font-semibold text-sm">{item.original_filename}</p><p className="mt-1 text-xs text-ink-muted">{Math.round(item.size_bytes / 1024)} KB</p><span className={`mt-2 inline-block rounded border px-2 py-1 text-xs font-semibold ${getAssessmentBadgeClass(item.assessment_status)}`}>{listStatusText(item.assessment_status)}</span></div></div></div>)}</div>}</section>}</CitizenShell>;
 }
 
 export function CitizenSafetyPage({ go }: { go: Navigate }) {
   return <CitizenShell path="/citizen/safety" go={go}><p className="text-xs font-bold uppercase tracking-wider text-canopy">Preparedness</p><h1 className="mt-2 max-w-3xl font-serif text-4xl">Stay safe before, during, and after a fire.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">Follow local emergency services and civil-protection authorities for current instructions. TerraWatch does not issue evacuation orders or determine that an area is safe.</p><div className="mt-7 grid gap-5 md:grid-cols-3"><StateCard title="Prepare"><ul className="list-disc space-y-2 pl-5"><li>Keep emergency contacts and medicines ready.</li><li>Know more than one route away from your home.</li><li>Keep important documents accessible.</li></ul></StateCard><StateCard title="If you see smoke"><ul className="list-disc space-y-2 pl-5"><li>Move away from immediate danger and call local emergency services.</li><li>Do not approach a fire or enter smoke.</li><li>Share a report only when it is safe to do so.</li></ul></StateCard><StateCard title="Follow official advice"><ul className="list-disc space-y-2 pl-5"><li>Monitor official local alerts.</li><li>Follow evacuation instructions promptly.</li><li>Do not treat a model prediction as an official warning.</li></ul></StateCard></div></CitizenShell>;
+}
+
+export function CitizenNotificationsPage({ go }: { go: Navigate }) {
+  const [alerts, setAlerts] = useState<Array<{ id: number; kind: string; message: string; created_at: string; read: boolean }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadAlerts = async () => {
+    try {
+      const result = await rqFetch<Array<{ id: number; kind: string; message: string; created_at: string; read: boolean }>>('/api/alerts');
+      setAlerts(result);
+      setError('');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadAlerts(); }, []);
+
+  const markRead = async (alertId: number) => {
+    try {
+      await rqFetch(`/api/alerts/${alertId}/read`, { method: 'PATCH' });
+      setAlerts(prev => prev.map(alert => alert.id === alertId ? { ...alert, read: true } : alert));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to mark notification as read');
+    }
+  };
+
+  const getKindLabel = (kind: string) => {
+    if (kind === 'incident_status_changed') return 'Status Update';
+    if (kind === 'verification_submitted') return 'Verification';
+    if (kind === 'citizen_report_received') return 'Report Received';
+    return kind.replace(/_/g, ' ');
+  };
+
+  return <CitizenShell path="/citizen/notifications" go={go}>
+    <p className="text-xs font-bold uppercase tracking-wider text-canopy">Notifications</p>
+    <h1 className="mt-2 font-serif text-4xl">Notifications</h1>
+    <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">Status updates and activity related to your reports.</p>
+    <div className="mt-6 max-w-3xl">
+      {loading && <p role="status" className="rounded-rq border border-contour bg-sheet p-5 text-sm text-ink-muted">Loading notifications…</p>}
+      {error && <p role="alert" className="rounded-rq border border-warn/50 bg-paper p-5 text-sm text-ink-muted">{error}</p>}
+      {!loading && !error && !alerts.length && <StateCard title="No notifications" tone="notice"><p>You have no notifications at this time.</p></StateCard>}
+      {alerts.length > 0 && <div className="space-y-3">
+        {alerts.map(alert => <article key={alert.id} className={`rounded-rq border p-5 ${alert.read ? 'border-contour bg-sheet opacity-60' : 'border-canopy/30 bg-sheet'}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-canopy/10 px-2 py-1 text-xs font-semibold text-canopy">{getKindLabel(alert.kind)}</span>
+                {!alert.read && <span className="rounded bg-danger px-2 py-1 text-xs font-semibold text-white">New</span>}
+              </div>
+              <p className="mt-3 text-sm leading-6">{alert.message}</p>
+              <p className="mt-2 text-xs text-ink-muted">{new Date(alert.created_at).toLocaleString()}</p>
+            </div>
+            {!alert.read && <button type="button" onClick={() => void markRead(alert.id)} className="rounded border border-canopy px-3 py-1.5 text-xs font-semibold text-canopy hover:bg-canopy hover:text-white">Mark read</button>}
+          </div>
+        </article>)}
+      </div>}
+    </div>
+  </CitizenShell>;
 }
 
 function CitizenUnavailablePage({ go, title }: { go: Navigate; title: string }) {
@@ -177,6 +272,7 @@ export function CitizenRouter({ path, go }: { path: string; go: Navigate }) {
   const reportMatch = path.match(/^\/citizen\/reports\/(\d+)$/);
   if (reportMatch) return <CitizenReportDetailPage id={Number(reportMatch[1])} go={go} />;
   if (path === '/citizen/safety') return <CitizenSafetyPage go={go} />;
+  if (path === '/citizen/notifications') return <CitizenNotificationsPage go={go} />;
   if (path === '/citizen/profile') return <CitizenUnavailablePage go={go} title="Profile unavailable" />;
   return <CitizenUnavailablePage go={go} title="Citizen page unavailable" />;
 }
