@@ -16,7 +16,7 @@ from ..contracts.schemas import (
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_write
 from ..services import alert_service, audit_log
-from ..services.image_assessment import assess_image
+from ..services.image_assessment import assess_image_async, persistence_fields
 from ..services.simulation_service import validate_simulation
 
 logger = logging.getLogger(__name__)
@@ -297,7 +297,7 @@ async def upload_incident_image(
             path.write_bytes(data)
         else:
             _assert_stored_image_integrity(path, digest)
-        assessment = assess_image(data, key)
+        assessment = await assess_image_async(data, key)
         with engine.begin() as db:
             row = db.execute(text('''INSERT INTO resq_incident_images
             (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,assessed_at)
@@ -309,9 +309,7 @@ async def upload_incident_image(
             RETURNING *'''), {
                 'incident_id': incident_id, 'storage_key': key, 'filename': safe_name,
                 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest,
-                'status': assessment.get('assessment_status', 'UNAVAILABLE'), 'version': assessment.get('model_version'),
-                'auth': (assessment.get('authenticity') or {}).get('status'),
-                'assessment': json.dumps(assessment), 'error': assessment.get('error_code'),
+                **persistence_fields(assessment),
             }).mappings().one()
     except Exception as exc:
         try:
@@ -341,7 +339,7 @@ def review_incident_image(
             raise HTTPException(status_code=404, detail='Incident not found')
         require_scope(user, incident.get('state'), entity_type='incident', entity_id=str(incident_id))
         previous = db.execute(text('SELECT human_review_status FROM resq_incident_images WHERE id=:image_id AND incident_id=:incident_id'), {'image_id': image_id, 'incident_id': incident_id}).scalar()
-        row = db.execute(text('''UPDATE resq_incident_images SET human_review_status=:status, human_review_note=:note,
+        row = db.execute(text('''UPDATE resq_incident_images SET human_review_status=CAST(:status AS TEXT), human_review_note=:note,
             human_reviewed_by=CASE WHEN :status='NOT_REVIEWED' THEN NULL ELSE :reviewer END,
             human_reviewed_at=CASE WHEN :status='NOT_REVIEWED' THEN NULL ELSE now() END
             WHERE id=:image_id AND incident_id=:incident_id RETURNING *'''), {'status': status, 'note': payload.note, 'reviewer': user['id'], 'image_id': image_id, 'incident_id': incident_id}).mappings().first()
@@ -458,7 +456,7 @@ def list_alerts(
 ) -> list[dict[str, object]]:
     query = "SELECT id,kind,message,state,severity,status,entity_type,entity_id,read,created_at FROM resq_alerts"
     params: dict[str, object] = {"uid": user["id"]}
-    clauses = ["(user_id=:uid OR user_id IS NULL)"]
+    clauses: list[str] = []
     if status:
         clauses.append("status=:status")
         params["status"] = status
@@ -471,10 +469,13 @@ def list_alerts(
     if user.get("role") != "admin":
         scopes = user_scopes(int(user["id"]))
         if not scopes:
-            return []
-        clauses.append("state = ANY(:scopes)")
-        params["scopes"] = list(scopes)
-    query += f" WHERE {' AND '.join(clauses)} ORDER BY created_at DESC"
+            clauses.append("user_id=:uid")
+        else:
+            clauses.append("(user_id=:uid OR (user_id IS NULL AND state = ANY(:scopes)))")
+            params["scopes"] = list(scopes)
+    if clauses:
+        query += f" WHERE {' AND '.join(clauses)}"
+    query += " ORDER BY created_at DESC"
     with engine.connect() as db:
         return [dict(row) for row in db.execute(text(query), params).mappings().all()]
 

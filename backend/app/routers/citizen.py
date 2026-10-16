@@ -20,7 +20,7 @@ from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
 from ..services import audit_log
 from ..services.alert_service import generate_alert
-from ..services.image_assessment import assess_image
+from ..services.image_assessment import assess_image_async, persistence_fields
 
 router = APIRouter(prefix="/api/citizen", tags=["citizen"])
 
@@ -133,18 +133,18 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
             path.write_bytes(data)
         else:
             _assert_stored_image_integrity(path, digest)
-        assessment = assess_image(data, key)
+        assessment = await assess_image_async(data, key)
         with engine.begin() as db:
             row = db.execute(text('''INSERT INTO resq_incident_images
                 (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,assessed_at)
                 VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,now())
                 ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status,
+                model_version=EXCLUDED.model_version, authenticity_status=EXCLUDED.authenticity_status,
                 assessment=EXCLUDED.assessment, assessment_error=EXCLUDED.assessment_error
                 RETURNING id,original_filename,size_bytes,assessment_status,created_at'''), {
                 'incident_id': report_id, 'storage_key': key, 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120],
                 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest,
-                'status': assessment.get('assessment_status', 'UNAVAILABLE'), 'version': assessment.get('model_version'),
-                'auth': (assessment.get('authenticity') or {}).get('status'), 'assessment': json.dumps(assessment), 'error': assessment.get('error_code'),
+                **persistence_fields(assessment),
             }).mappings().one()
             audit_log.write_audit_log(action='citizen_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': report_id}, connection=db)
     except Exception as exc:

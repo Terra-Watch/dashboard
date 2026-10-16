@@ -13,7 +13,7 @@ from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
-from ..services.image_assessment import assess_image
+from ..services.image_assessment import assess_image_async, persistence_fields
 from .operations import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _image_row, _stored_image_path
 
 router = APIRouter(prefix='/api', tags=['workflow'])
@@ -216,13 +216,15 @@ async def upload_ranger_evidence(assignment_id: int, image: UploadFile = File(..
         path.parent.mkdir(parents=True, exist_ok=True)
         if not existed: path.write_bytes(data)
         else: _assert_stored_image_integrity(path, digest)
-        assessment = assess_image(data, f'{assignment["incident_id"]}/{digest}.{extension}')
+        assessment = await assess_image_async(data, f'{assignment["incident_id"]}/{digest}.{extension}')
         with engine.begin() as db:
             row = db.execute(text('''INSERT INTO resq_incident_images
                 (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,uploaded_by,assessed_at)
                 VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,:uploaded_by,now())
-                ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status
-                RETURNING id,original_filename,content_type,size_bytes,sha256,assessment_status,created_at'''), {'incident_id': assignment['incident_id'], 'storage_key': f'{assignment["incident_id"]}/{digest}.{extension}', 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120], 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, 'status': assessment.get('assessment_status', 'UNAVAILABLE'), 'version': assessment.get('model_version'), 'auth': (assessment.get('authenticity') or {}).get('status'), 'assessment': json.dumps(assessment), 'error': assessment.get('error_code'), 'uploaded_by': user['id']}).mappings().one()
+                ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status,
+                model_version=EXCLUDED.model_version, authenticity_status=EXCLUDED.authenticity_status,
+                assessment=EXCLUDED.assessment, assessment_error=EXCLUDED.assessment_error
+                RETURNING id,original_filename,content_type,size_bytes,sha256,assessment_status,created_at'''), {'incident_id': assignment['incident_id'], 'storage_key': f'{assignment["incident_id"]}/{digest}.{extension}', 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120], 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, **persistence_fields(assessment), 'uploaded_by': user['id']}).mappings().one()
             audit_log.write_audit_log(action='ranger_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': assignment['incident_id'], 'assignment_id': assignment_id}, connection=db)
     except Exception as exc:
         if not existed and path.is_file(): path.unlink(missing_ok=True)

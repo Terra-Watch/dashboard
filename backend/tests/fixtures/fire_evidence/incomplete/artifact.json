@@ -1,0 +1,129 @@
+{
+  "approval": {
+    "binding_sha256": "9d37d185fcc5ca03e08f89c027502aed2a0ef9eb63a7e354575a6384a9d19339",
+    "reasons": [
+      "calibration status is NOT_PROVIDED (needs one of ['PROVIDED'])",
+      "ood status is NOT_PROVIDED (needs one of ['DISABLED_BY_POLICY', 'PROVIDED'])",
+      "authenticity status is NOT_PROVIDED (needs one of ['EXCLUDED_BY_POLICY', 'PROVIDED'])"
+    ],
+    "record": null,
+    "status": "NOT_APPROVED"
+  },
+  "architecture": {
+    "backbone": "ViT-B-16-quickgelu",
+    "block_feature_tap": {
+      "block_1_indexed": 1,
+      "dim": 8
+    },
+    "embed_dim": 6,
+    "head": {
+      "init": "toy",
+      "inputs": 6,
+      "outputs": 2
+    },
+    "image_size": 8,
+    "layers": 2,
+    "lora": {
+      "alpha": 16.0,
+      "blocks_zero_indexed": [
+        1
+      ],
+      "rank": 2,
+      "targets": [
+        "q",
+        "v"
+      ]
+    },
+    "patch_size": 4,
+    "pretrained_init": "none (toy fixture)",
+    "vision_width": 8
+  },
+  "artifact_status": "INCOMPLETE",
+  "authenticity": {
+    "reason": "authenticity representation and label policy are model-owner decisions; the checkpoint has no authenticity head",
+    "status": "NOT_PROVIDED"
+  },
+  "calibration": {
+    "reason": "no approved calibration policy or independent calibration export is available",
+    "status": "NOT_PROVIDED"
+  },
+  "checkpoint": {
+    "file": "weights.pt",
+    "format": "torch zip: {'model': state_dict}",
+    "sha256": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+  },
+  "files": {
+    "arrays.npz": "14e5da8ffb71c58547d10bbbea0cf13efaa00d27f480bc492954d0dc84f708cf",
+    "weights.pt": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+  },
+  "has_auth_head": false,
+  "limitations": [
+    "Advisory triage only: does not confirm a wildfire, a location or a time; every report still goes to a human.",
+    "Fire/smoke visual-presence classifier only. It is not an authenticity or provenance detector.",
+    "Trained on D-Fire (web/public images); no evaluation on citizen phone photos exists.",
+    "Smoke generalises poorly to a new source (held-out fixed-camera ROC-AUC about 0.71 for the seed-0 checkpoint).",
+    "Any false-negative bound is invalid under source shift (measured FNR 29% flames / 52% smoke on the held-out source)."
+  ],
+  "metadata": {
+    "built_by": "fire_assessor.build_artifact prepare",
+    "note": "INCOMPLETE bundle: weights + contract only"
+  },
+  "model_version": "fire-assessor-fixture-0",
+  "ood": {
+    "enabled": false,
+    "kind": null,
+    "reason": "LoRA-feature OOD bank not generated and no independent OOD evaluation approved",
+    "status": "NOT_PROVIDED"
+  },
+  "outputs": {
+    "embedding": {
+      "dim": 512,
+      "l2_normalised": true
+    },
+    "label_mapping": {
+      "0": "flames_visible",
+      "1": "smoke_visible"
+    },
+    "names": [
+      "flames_visible",
+      "smoke_visible"
+    ],
+    "semantics": "two independent (multi-label) RAW logits; probability = sigmoid(logit / temperature); NOT calibrated until a calibration is provided"
+  },
+  "preprocessing": {
+    "center_crop": 224,
+    "color": "RGB",
+    "interpolation": "bicubic",
+    "mean": [
+      0.48145466,
+      0.4578275,
+      0.40821073
+    ],
+    "resize": 224,
+    "resize_mode": "shortest",
+    "source": "open_clip pretrained cfg for ViT-B-16-quickgelu / openai",
+    "std": [
+      0.26862954,
+      0.26130258,
+      0.27577711
+    ]
+  },
+  "provenance": {
+    "checkpoint": {
+      "sha256": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+    },
+    "initialization": {
+      "note": "toy zeros"
+    },
+    "source": {
+      "note": "TEST FIXTURE"
+    },
+    "training_manifest": {
+      "note": "none"
+    }
+  },
+  "schema_version": "fire-assessor-artifact/1",
+  "temperatures": null,
+  "thresholds": null,
+  "uncertainty_margin": null
+}

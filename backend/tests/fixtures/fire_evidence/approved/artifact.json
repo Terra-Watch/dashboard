@@ -1,0 +1,199 @@
+{
+  "approval": {
+    "binding_sha256": "3dde4c1228cbb45dc218b5d63e2f365bc01745b3cb8bfa016c72012837437438",
+    "reasons": [
+      "no human approval record"
+    ],
+    "record": {
+      "approved_at": "2026-01-01T00:00:00Z",
+      "approver": "TEST FIXTURE (not a real approval)",
+      "artifact_binding_sha256": "c326ec2cf2d83aee63802b167f18589c8fb9a390698534848d221c16ee73e600",
+      "evidence": [
+        "fixture"
+      ],
+      "scope": "consumer integration tests only"
+    },
+    "status": "NOT_APPROVED"
+  },
+  "architecture": {
+    "backbone": "ViT-B-16-quickgelu",
+    "block_feature_tap": {
+      "block_1_indexed": 1,
+      "dim": 8
+    },
+    "embed_dim": 6,
+    "head": {
+      "init": "toy",
+      "inputs": 6,
+      "outputs": 2
+    },
+    "image_size": 8,
+    "layers": 2,
+    "lora": {
+      "alpha": 16.0,
+      "blocks_zero_indexed": [
+        1
+      ],
+      "rank": 2,
+      "targets": [
+        "q",
+        "v"
+      ]
+    },
+    "patch_size": 4,
+    "pretrained_init": "none (toy fixture)",
+    "vision_width": 8
+  },
+  "artifact_status": "NOT_APPROVED",
+  "authenticity": {
+    "reason": "fixture: no authenticity head",
+    "status": "EXCLUDED_BY_POLICY"
+  },
+  "calibration": {
+    "guarantee": "holds only if deployment data is exchangeable with the calibration partition; invalid under source shift",
+    "method": "per-head temperature scaling (NLL, golden-section) + Learn-then-Test fixed-sequence binomial threshold on the cal partition",
+    "policy": {
+      "alpha": 0.1,
+      "decided_at": "2026-01-01",
+      "decided_by": "TEST FIXTURE (not a real decision)",
+      "delta": 0.1,
+      "margin": 0.05,
+      "reference": "fixture"
+    },
+    "results": {
+      "flames": {
+        "brier_after": 0.04304402151771544,
+        "brier_before": 0.07588167830464033,
+        "ece_after": 0.03125023044410984,
+        "ece_before": 0.1629943258109372,
+        "risk_control": {
+          "alpha": 0.1,
+          "delta": 0.1,
+          "empirical_fnr": 0.06493506493506493,
+          "feasible": true,
+          "n_missed": 10,
+          "n_pos": 154,
+          "note": "Guarantee holds only under exchangeability of deployment and calibration data.",
+          "precision": 0.9290322580645162,
+          "review_fraction": 0.3875,
+          "threshold": 0.439314482545857
+        },
+        "temperature": 0.24841821532216254
+      },
+      "smoke": {
+        "brier_after": 0.05102596867194194,
+        "brier_before": 0.07383939935362732,
+        "ece_after": 0.032780399751479665,
+        "ece_before": 0.1382964770858518,
+        "risk_control": {
+          "alpha": 0.1,
+          "delta": 0.1,
+          "empirical_fnr": 0.06470588235294118,
+          "feasible": true,
+          "n_missed": 11,
+          "n_pos": 170,
+          "note": "Guarantee holds only under exchangeability of deployment and calibration data.",
+          "precision": 0.888268156424581,
+          "review_fraction": 0.4475,
+          "threshold": 0.39583782668900175
+        },
+        "temperature": 0.34322663864621994
+      }
+    },
+    "source": {
+      "export_sha256": "0daf95295fb1fa55a63670d8b5ec593aa1bb5d90b76856c7150c93319e8008e9",
+      "identity_status": "PATH_PRESERVED",
+      "n_rows": 400,
+      "partition": "cal",
+      "train_export_sha256": "3c0ad42635afd6865b911901ddf23a393aa637db4433ee3a83f1787bccdcf92f"
+    },
+    "status": "PROVIDED"
+  },
+  "checkpoint": {
+    "file": "weights.pt",
+    "format": "torch zip: {'model': state_dict}",
+    "sha256": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+  },
+  "files": {
+    "arrays.npz": "14e5da8ffb71c58547d10bbbea0cf13efaa00d27f480bc492954d0dc84f708cf",
+    "weights.pt": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+  },
+  "has_auth_head": false,
+  "limitations": [
+    "TEST FIXTURE: toy zero weights, not a model, not approved by anyone.",
+    "Advisory triage only: does not confirm a wildfire, a location or a time; every report still goes to a human.",
+    "Fire/smoke visual-presence classifier only. It is not an authenticity or provenance detector.",
+    "Trained on D-Fire (web/public images); no evaluation on citizen phone photos exists.",
+    "Smoke generalises poorly to a new source (held-out fixed-camera ROC-AUC about 0.71 for the seed-0 checkpoint).",
+    "Any false-negative bound is invalid under source shift (measured FNR 29% flames / 52% smoke on the held-out source)."
+  ],
+  "metadata": {
+    "built_by": "fire_assessor.build_artifact prepare",
+    "calibrated_by": "fire_assessor.build_artifact calibrate",
+    "note": "INCOMPLETE bundle: weights + contract only"
+  },
+  "model_version": "fire-assessor-fixture-0",
+  "ood": {
+    "enabled": false,
+    "kind": null,
+    "reason": "fixture: no OOD set",
+    "status": "DISABLED_BY_POLICY"
+  },
+  "outputs": {
+    "embedding": {
+      "dim": 512,
+      "l2_normalised": true
+    },
+    "label_mapping": {
+      "0": "flames_visible",
+      "1": "smoke_visible"
+    },
+    "names": [
+      "flames_visible",
+      "smoke_visible"
+    ],
+    "semantics": "two independent (multi-label) RAW logits; probability = sigmoid(logit / temperature); NOT calibrated until a calibration is provided"
+  },
+  "preprocessing": {
+    "center_crop": 224,
+    "color": "RGB",
+    "interpolation": "bicubic",
+    "mean": [
+      0.48145466,
+      0.4578275,
+      0.40821073
+    ],
+    "resize": 224,
+    "resize_mode": "shortest",
+    "source": "open_clip pretrained cfg for ViT-B-16-quickgelu / openai",
+    "std": [
+      0.26862954,
+      0.26130258,
+      0.27577711
+    ]
+  },
+  "provenance": {
+    "checkpoint": {
+      "sha256": "d420f2237eb691dc2a07e0139f1b8c3f3bb03e5ac4239ad58b60733b1ff16837"
+    },
+    "initialization": {
+      "note": "toy zeros"
+    },
+    "source": {
+      "note": "TEST FIXTURE"
+    },
+    "training_manifest": {
+      "note": "none"
+    }
+  },
+  "schema_version": "fire-assessor-artifact/1",
+  "temperatures": {
+    "flames": 0.24841821532216254,
+    "smoke": 0.34322663864621994
+  },
+  "thresholds": {
+    "flames": 0.439314482545857,
+    "smoke": 0.39583782668900175
+  },
+  "uncertainty_margin": 0.05
+}
