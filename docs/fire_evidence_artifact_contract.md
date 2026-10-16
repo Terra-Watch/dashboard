@@ -135,3 +135,6 @@ PYTHONPATH=src python -m fire_assessor.build_artifact \
 These commands are preparation instructions only. No feature extraction or
 artifact generation has been executed in this phase, and the TerraWatch
 backend remains fail-closed until an approved artifact is configured.
+
+
+See `docs/fire_evidence_integration.md` for the adapter's enforcement of this contract, error codes, and the default-off `FIRE_EVIDENCE_INFERENCE_ENABLED` flag.

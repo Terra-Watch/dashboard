@@ -9,9 +9,9 @@ the unsupported workflow is operational.
 - Staff authentication uses server-assigned roles and state scopes.
 - Ranger routes are restricted to `field_crew` and use persisted
   `/api/ranger/assignments` and `/api/ranger/assignments/{id}/verification`
-  records. Binary field evidence remains unavailable; the legacy sample-data
-  field routes are preserved for compatibility but are not used by the new
-  Ranger application.
+  records. Binary field evidence is now handled by the assignment-scoped
+  private upload endpoint; the legacy sample-data field routes are preserved
+  for compatibility but are not used by the new Ranger application.
 - Shared incidents are persisted in `resq_incidents` and can be listed,
   scoped, inspected, and audited through `/api/incidents`.
 - Incident creation is idempotent by `client_key`, starts at `reported`, and
@@ -38,10 +38,8 @@ the unsupported workflow is operational.
 
 The repository does not yet contain:
 
-- Team dispatch, reassignment, acceptance, or due-time APIs. The current
-  assignment contract supports one active Ranger assignment per incident.
-- Ranger-owned assignment history beyond persisted verification events.
-- Binary evidence upload from `field_crew`.
+- Team dispatch and capacity scheduling; the current assignment contract
+  supports one active Ranger assignment per incident.
 - Email, push, or SMS notification delivery; current notifications are
   in-app alert rows only.
 
@@ -54,6 +52,12 @@ Citizen reports reuse the canonical incident table with authenticated
 `reporter_id` ownership; evidence uses the existing private image table and
 hash-addressed storage. Ranger verification is persisted against a server
 created assignment and cannot be submitted for another Ranger's assignment.
+Ranger evidence uses `/api/ranger/assignments/{id}/evidence`; assignment
+ownership, decoded image validation, SHA-256 deduplication, private storage,
+and audit logging are enforced. Assignment acceptance, decline, in-progress
+transition, reassignment, priority, and due time are persisted. Successful
+workflow events create deduplicated in-app notifications; no external
+delivery is claimed.
 
 ## Current route and permission mapping
 

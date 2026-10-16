@@ -21,7 +21,7 @@ docker compose up -d
 Terminal 1:
 
 ```bash
-cd website/backend
+cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 DATABASE_URL=postgresql+psycopg://resq:resq@localhost:55432/resq uvicorn app.main:app --reload --port 8000
@@ -36,6 +36,23 @@ npm run dev
 ```
 
 Open http://localhost:5173. Development accounts use password `resq-demo`: `admin@resq.local`, `officer@resq.local`, and `viewer@resq.local`.
+
+To create the dedicated local accounts for the three TerraWatch experiences,
+run this only against the loopback PostgreSQL database:
+
+```bash
+cd website/backend
+.venv/bin/python scripts/seed_dev_accounts.py --confirm-local
+cat .dev-credentials
+```
+
+The command generates new passwords on each run, updates only
+`citizen.dev@terrawatch.local`, `ranger.dev@terrawatch.local`, and
+`controlroom.dev@terrawatch.local`, and stores the result in the ignored,
+mode-600 `backend/.dev-credentials` file. The backend roles are `citizen`,
+`field_crew`, and `control_room_operator` respectively. Use `/citizen/login`
+for Citizen and `/staff/login` for Ranger or Control Room; the server selects
+the permitted workspace after authentication.
 
 To enable the available Bar v3 archive, export a versioned model bundle outside
 the research repository, set `RESQ_MODEL_BUNDLE_DIR` in `.env`, and restart the

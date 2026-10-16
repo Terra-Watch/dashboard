@@ -5,6 +5,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+backend/.dev-credentials
 backend/runtime_data/
 backend/models/
 *.tsbuildinfo
