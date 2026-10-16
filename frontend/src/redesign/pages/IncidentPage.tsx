@@ -67,7 +67,34 @@ export function IncidentPage({ incidentId }: { incidentId: string }) {
 
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ['scenario', currentIncidentId, windSource, overpassK],
-    queryFn: () => rqFetch<ScenarioResponse>(`/api/redesign/incidents/${currentIncidentId}/scenario?wind_source=${windSource}&overpass_k=${overpassK}`),
+    queryFn: async (): Promise<ScenarioResponse> => {
+      try {
+        return await rqFetch<ScenarioResponse>(`/api/redesign/incidents/${currentIncidentId}/scenario?wind_source=${windSource}&overpass_k=${overpassK}`);
+      } catch (err) {
+        const caseUrl = `${import.meta.env.BASE_URL ?? '/'}demo/resq6-offline-terrawatch-20261015/cases/${currentIncidentId}.json`.replace(/\/+/g, '/');
+        const resp = await fetch(caseUrl);
+        if (!resp.ok) throw err;
+        const rawCase = await resp.json();
+        const frame = rawCase.frames?.[overpassK] ?? rawCase.frames?.[0];
+        return {
+          incident_id: currentIncidentId,
+          sample_data: true,
+          uncalibrated: true,
+          wind_source: windSource,
+          overpass_k: overpassK,
+          overpass_count: rawCase.frames?.length ?? 0,
+          overpass_time_utc: frame?.time_utc ?? rawCase.simulation_start_utc ?? '',
+          hours_since_t0: frame?.hours_since_t0 ?? null,
+          probability_bands_grid: rawCase.probability_bands_grid ?? [],
+          bounds: rawCase.bounds ?? [83.8, 19.2, 84.0, 19.4],
+          ignition: rawCase.ignition ?? { lat: 19.324, lon: 83.935 },
+          probability_bands_geojson: frame?.probability_bands_geojson ?? { type: 'FeatureCollection', features: [] },
+          baselines_geojson: rawCase.baselines_geojson,
+          wind_arrow: frame?.wind_arrow ?? { lat: 19.324, lon: 83.935, direction_deg: 0, speed_ms: 0, source_time_utc: '' },
+          assumptions: rawCase.assumptions ?? { fuel: 'Default', weather: 'Historical', terrain: 'Copernicus DEM' },
+        };
+      }
+    },
   });
 
   const frameMatchesSelection = data?.incident_id === currentIncidentId
@@ -136,6 +163,18 @@ export function IncidentPage({ incidentId }: { incidentId: string }) {
             </select>
           </label>
           <span className="text-xs text-ink-muted">Case ID: <span className="font-semibold text-ink">{currentIncidentId}</span></span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-rq border border-canopy/40 bg-sheet p-3">
+          <div className="text-xs text-ink-muted">
+            <strong className="text-ink">Live Simulation Runner:</strong> Execute custom Rothermel spread modelling in the Simulation Lab.
+          </div>
+          <a
+            href="/redesign/simulation"
+            className="inline-flex items-center gap-1.5 rounded-rq border border-canopy bg-canopy px-3 py-1.5 text-xs font-semibold text-white hover:bg-canopy-deep"
+          >
+            Run Rothermel Simulation →
+          </a>
         </div>
 
         {(isLoading || (isFetching && data && !frameMatchesSelection)) && <p role="status" className="mt-6 text-sm text-ink-muted">Loading the selected saved observation…</p>}

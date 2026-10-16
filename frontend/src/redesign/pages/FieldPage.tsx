@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { rqFetch } from '../lib/api';
-import { enqueueReport, readQueue } from '../lib/fieldQueue';
+import { deviceId, getStoredUser, rqFetch } from '../lib/api';
+import { clearInMemoryQueue, enqueueReport, readQueue, updateReportState } from '../lib/fieldQueue';
 import { SampleDataBadge, StepIndicator, OfflineBanner } from '../components/primitives';
-import { PhotoCapture, SyncQueue } from '../components/field';
+import { PhotoCapture } from '../components/field';
 import { MapShell, DetectionsLayer } from '../components/map';
 import type { QueuedFieldReport } from '../lib/types';
 
@@ -16,6 +16,40 @@ interface FieldTask {
   lon: number;
 }
 
+// The queue itself is an older shared local-storage list. Keep its records
+// partitioned for display using the authenticated actor ID; this is only a
+// local privacy boundary, never authorization evidence for an API request.
+function currentQueueOwner(): string {
+  const userId = getStoredUser()?.id;
+  return typeof userId === 'number' && Number.isSafeInteger(userId) && userId > 0
+    ? `user-${userId}`
+    : 'anonymous';
+}
+
+function ownerIndexKey(owner: string): string {
+  return `rq_field_queue_owner_ids_v1:${owner}`;
+}
+
+function readOwnedQueue(owner: string): QueuedFieldReport[] {
+  try {
+    const ids = JSON.parse(localStorage.getItem(ownerIndexKey(owner)) || '[]');
+    if (!Array.isArray(ids)) return [];
+    const ownedIds = new Set(ids.filter((id): id is string => typeof id === 'string'));
+    return readQueue().filter((item) => ownedIds.has(item.idempotency_key));
+  } catch {
+    return [];
+  }
+}
+
+function rememberQueueItem(owner: string, report: QueuedFieldReport): void {
+  const key = ownerIndexKey(owner);
+  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  const ids = Array.isArray(existing)
+    ? existing.filter((id): id is string => typeof id === 'string')
+    : [];
+  localStorage.setItem(key, JSON.stringify([...new Set([...ids, report.idempotency_key])]));
+}
+
 // Visible states this component must explicitly handle:
 // 1. Loading   — query in flight
 // 2. Success   — tasks returned with active items
@@ -26,19 +60,37 @@ interface FieldTask {
 
 export function FieldPage() {
   const [online, setOnline] = useState(navigator.onLine);
-  const [queue, setQueue] = useState<QueuedFieldReport[]>(() => readQueue());
+  const [hasSession, setHasSession] = useState(() => Boolean(localStorage.getItem('resq_token')));
+  const [queueOwner, setQueueOwner] = useState(currentQueueOwner);
+  const [queue, setQueue] = useState<QueuedFieldReport[]>(() => readOwnedQueue(currentQueueOwner()));
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sendErrors, setSendErrors] = useState<Record<string, string>>({});
+  const [confirmedThisSession, setConfirmedThisSession] = useState<Set<string>>(() => new Set());
+  const sendingIds = useRef(new Set<string>());
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string | null>>({});
   const [saveStatus, setSaveStatus] = useState<{ taskId: string; message: string } | null>(null);
   const [saveError, setSaveError] = useState<{ taskId: string; message: string } | null>(null);
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, error, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['field-tasks'],
     queryFn: () => rqFetch<{ items: FieldTask[] }>('/api/redesign/field/tasks'),
     retry: 1,
     refetchOnWindowFocus: false,
   });
+  const taskErrorMessage = error instanceof Error ? error.message : '';
+  const signInRequired = taskErrorMessage === 'Sign in is required to access this information.';
+  const permissionDenied = taskErrorMessage === 'Your account is not authorized to access this information.';
+  const serviceUnavailable = taskErrorMessage === 'This action is currently unavailable. Please try again later.';
+
+  useEffect(() => () => clearInMemoryQueue(), []);
+
+  useEffect(() => {
+    if (!signInRequired) return;
+    clearInMemoryQueue();
+    setQueue(readOwnedQueue(queueOwner));
+  }, [queueOwner, signInRequired]);
 
   useEffect(() => {
     const onOnline = () => setOnline(true);
@@ -52,15 +104,38 @@ export function FieldPage() {
   }, []);
 
   useEffect(() => {
+    const refreshAccountQueue = () => {
+      const owner = currentQueueOwner();
+      setQueueOwner(owner);
+      setQueue(readOwnedQueue(owner));
+      setHasSession(Boolean(localStorage.getItem('resq_token')));
+    };
+    window.addEventListener('storage', refreshAccountQueue);
+    return () => window.removeEventListener('storage', refreshAccountQueue);
+  }, []);
+
+  useEffect(() => {
     if (selectedTaskId == null) return;
     const el = document.getElementById(`field-task-${selectedTaskId}`);
     el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [selectedTaskId]);
 
   function submit(taskId: string) {
+    let report: QueuedFieldReport;
     try {
-      enqueueReport(taskId, notes[taskId] ?? '', photos[taskId] ?? null);
-      setQueue(readQueue());
+      report = enqueueReport(taskId, notes[taskId] ?? '', photos[taskId] ?? null);
+    } catch (err) {
+      setSaveStatus(null);
+      setSaveError({
+        taskId,
+        message: err instanceof Error ? err.message : 'Draft could not be saved to local storage.',
+      });
+      return;
+    }
+
+    try {
+      rememberQueueItem(queueOwner, report);
+      setQueue(readOwnedQueue(queueOwner));
       setNotes((prev) => ({ ...prev, [taskId]: '' }));
       setPhotos((prev) => ({ ...prev, [taskId]: null }));
       setSaveError(null);
@@ -71,10 +146,89 @@ export function FieldPage() {
       });
     } catch (err) {
       setSaveStatus(null);
-      setSaveError({
-        taskId,
-        message: err instanceof Error ? err.message : 'Draft could not be saved to local storage.',
+      setSaveError({ taskId, message: 'The draft content was stored locally, but its account link could not be saved. It has not been sent and will not appear in this account’s queue. Copy your note before leaving this page.' });
+    }
+  }
+
+  async function submitQueuedReport(item: QueuedFieldReport) {
+    if (!online || !hasSession || sendingIds.current.has(item.idempotency_key)) return;
+    if (currentQueueOwner() !== queueOwner) {
+      const owner = currentQueueOwner();
+      setQueueOwner(owner);
+      setQueue(readOwnedQueue(owner));
+      return;
+    }
+    const task = data?.items.find((candidate) => candidate.task_id === item.task_id);
+    if (!task) {
+      setSendErrors((previous) => ({ ...previous, [item.idempotency_key]: 'This task is no longer available from the task service. The draft remains on this device and was not sent.' }));
+      return;
+    }
+
+    sendingIds.current.add(item.idempotency_key);
+    setSendingId(item.idempotency_key);
+    setSendErrors((previous) => {
+      const next = { ...previous };
+      delete next[item.idempotency_key];
+      return next;
+    });
+    const attempts = item.attempts + 1;
+    try {
+      updateReportState(item.idempotency_key, 'syncing', attempts);
+      setQueue(readOwnedQueue(queueOwner));
+    } catch {
+      sendingIds.current.delete(item.idempotency_key);
+      setSendingId(null);
+      setSendErrors((previous) => ({ ...previous, [item.idempotency_key]: 'Could not update the local queue, so this draft was not submitted.' }));
+      return;
+    }
+
+    try {
+      const result = await rqFetch<{
+        created: boolean;
+        report: { idempotency_key: string };
+      }>('/api/redesign/field/reports', {
+        method: 'POST',
+        body: JSON.stringify({
+          idempotency_key: item.idempotency_key,
+          task_id: item.task_id,
+          incident_id: task.incident_id,
+          note: item.note,
+          photo_name: item.photo_name,
+          device_id: deviceId(),
+          captured_at: item.captured_at,
+        }),
       });
+
+      if (typeof result.created !== 'boolean' || result.report?.idempotency_key !== item.idempotency_key) {
+        throw new Error('The server response did not confirm this draft.');
+      }
+
+      // A valid response for this idempotency key confirms receipt (created may
+      // be false on a safe retry of an already accepted report).
+      setConfirmedThisSession((previous) => new Set(previous).add(item.idempotency_key));
+      try {
+        updateReportState(item.idempotency_key, 'synced', attempts);
+        setQueue(readOwnedQueue(queueOwner));
+      } catch {
+        setQueue((previous) => previous.map((queued) => queued.idempotency_key === item.idempotency_key
+          ? { ...queued, state: 'synced', attempts }
+          : queued));
+        setSendErrors((previous) => ({ ...previous, [item.idempotency_key]: 'Server confirmed receipt, but this device could not persist the confirmation status.' }));
+      }
+    } catch (error) {
+      try {
+        updateReportState(item.idempotency_key, 'failed', attempts);
+        setQueue(readOwnedQueue(queueOwner));
+      } catch {
+        // Keep the existing queue entry; the network result remains unconfirmed.
+      }
+      setSendErrors((previous) => ({
+        ...previous,
+        [item.idempotency_key]: `${error instanceof Error ? error.message : 'Submission failed.'} No confirmation was received; the draft remains on this device and can be retried with the same idempotency key.`,
+      }));
+    } finally {
+      sendingIds.current.delete(item.idempotency_key);
+      setSendingId(null);
     }
   }
 
@@ -135,12 +289,25 @@ export function FieldPage() {
             data-testid="field-error"
             className="mt-6 rounded-rq border border-dashed border-contour bg-paper p-4 text-sm"
           >
-            <p className="font-semibold text-ink">Example tasks could not be loaded.</p>
-            <p className="mt-1 text-ink-muted">
-              {online
-                ? 'The server did not respond. Check your connection and try again.'
-                : 'You appear to be offline. Tasks will appear once you reconnect.'}
+            <p className="font-semibold text-ink">
+              {signInRequired ? 'Sign-in required' : permissionDenied ? 'Permission denied' : 'Example tasks could not be loaded.'}
             </p>
+            <p className="mt-1 text-ink-muted">
+              {signInRequired
+                ? 'Sign in with an account authorized for field tasks, then return here.'
+                : permissionDenied
+                  ? 'Your account is not permitted to view field tasks. Contact an administrator if you believe this is incorrect.'
+                  : serviceUnavailable
+                    ? 'The field-task service is temporarily unavailable. Please try again later.'
+                    : !online || error instanceof TypeError
+                      ? 'The field-task service could not be reached. Check your connection and try again.'
+                      : taskErrorMessage || 'The task request failed. Please retry.'}
+            </p>
+            {signInRequired && (
+              <a href="/staff/login" className="mt-3 inline-block font-semibold text-canopy underline">
+                Go to sign in
+              </a>
+            )}
             {online && (
               <button
                 type="button"
@@ -159,7 +326,7 @@ export function FieldPage() {
           <>
             {activeTasks.length > 0 && (
               <div className="mt-5">
-                <MapShell label="Example field tasks" center={[81.5, 20.3]} zoom={5.4} aspect="wide">
+                <MapShell label="Example field tasks" center={[81.5, 20.3]} zoom={5.4} aspect="wide" offline>
                   <DetectionsLayer
                     detections={activeTasks.map((t) => ({
                       id: t.task_id,
@@ -216,7 +383,7 @@ export function FieldPage() {
                   aria-describedby={`note-hint-${task.task_id}`}
                 />
                 <p id={`note-hint-${task.task_id}`} className="mt-0.5 text-xs text-ink-muted">
-                  Draft only — saved on this device, not uploaded.
+                  Unsaved note — choose “Save draft on this device” to keep it in this session. Nothing is sent yet.
                 </p>
                 <div className="mt-2">
                   <PhotoCapture
@@ -260,11 +427,44 @@ export function FieldPage() {
         <section className="mt-8" aria-label="Local drafts" data-testid="field-drafts-section">
           <h2 className="font-serif text-lg">Local drafts ({queue.length})</h2>
           <p className="text-xs text-ink-muted mt-0.5">
-            Drafts are stored on this device only. They are not confirmed as received by any server.
+            Queue metadata is stored on this device; note and photo-reference content stays in memory
+            until this page is closed. A local queue entry is not server-confirmed.
           </p>
-          <div className="mt-2">
-            <SyncQueue items={queue} />
-          </div>
+          {!queue.length ? (
+            <p className="mt-2 text-sm text-ink-muted">No drafts saved for this account on this device.</p>
+          ) : (
+            <ul aria-live="polite" className="mt-2 space-y-2">
+              {queue.map((item) => {
+                const confirmed = item.state === 'synced' || confirmedThisSession.has(item.idempotency_key);
+                const stateLabel = confirmed
+                  ? 'Server confirmed receipt'
+                  : item.state === 'syncing'
+                    ? 'Sending · awaiting server confirmation'
+                    : item.state === 'failed'
+                      ? 'Send failed · retained on this device'
+                      : 'Local draft · not uploaded';
+                return (
+                  <li key={item.idempotency_key} className="rounded-rq border border-contour bg-sheet px-3 py-2 text-sm">
+                    <time dateTime={item.captured_at}>{new Date(item.captured_at).toLocaleString()}</time>
+                    <span className="ml-2 font-semibold text-ink-muted">· {stateLabel}</span>
+                    {!confirmed && (
+                      <button
+                        type="button"
+                        disabled={!online || !hasSession || sendingId !== null || !data?.items.some((task) => task.task_id === item.task_id)}
+                        onClick={() => void submitQueuedReport(item)}
+                        className="mt-2 block min-h-[44px] rounded-rq border border-canopy bg-canopy px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {sendingId === item.idempotency_key ? 'Submitting…' : !online ? 'Connect to submit' : !hasSession ? 'Sign in to submit' : 'Submit this saved report'}
+                      </button>
+                    )}
+                    {sendErrors[item.idempotency_key] && (
+                      <p role="alert" className="mt-2 text-xs text-danger">{sendErrors[item.idempotency_key]}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       </div>
     </div>

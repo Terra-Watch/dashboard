@@ -1,7 +1,5 @@
+@import 'tailwindcss';
 @import './tokens.css';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 [data-rq-app] {
   font-family: '"Noto Sans"', Arial, sans-serif;
@@ -14,4 +12,57 @@
 [data-rq-app] h2,
 [data-rq-app] h3 {
   font-family: '"Noto Serif"', Georgia, serif;
+}
+
+/* Keep wide page content from forcing the operational shell beyond the viewport. */
+[data-rq-app] main,
+[data-rq-app] main > * {
+  min-width: 0;
+}
+
+/* Give keyboard users a consistent indicator without changing pointer styling. */
+[data-rq-app] :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--rq-canopy);
+  outline-offset: 2px;
+}
+
+/* The legacy shell defines `nav` as a grid. Redesign navigation uses the
+   flex layout declared by its components instead. */
+[data-rq-app] nav {
+  display: flex;
+}
+
+/* The legacy shell has a global `nav a` rule. Keep redesign navigation on its
+   own tokens so operational links remain readable on the light shell. */
+[data-rq-app] header nav > a {
+  color: var(--rq-ink-muted);
+}
+
+[data-rq-app] header nav > a:hover {
+  color: var(--rq-ink);
+  background: transparent;
+}
+
+@media (max-width: 40rem) {
+  /* Keep primary navigation in one predictable row; allow touch/trackpad scrolling. */
+  [data-rq-app] > header > nav {
+    max-width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    padding-block: 0.25rem;
+    scroll-padding-inline: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-rq-app] > header > nav > a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  /* Prevent mobile browsers from zooming the page when a form control receives focus. */
+  [data-rq-app] :where(input, select, textarea) {
+    font-size: max(1rem, 16px);
+  }
 }

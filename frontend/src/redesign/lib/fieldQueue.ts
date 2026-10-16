@@ -2,16 +2,33 @@ import type { QueuedFieldReport, SyncState } from './types';
 
 const KEY = 'rq_field_queue';
 
+let memoryQueue: QueuedFieldReport[] | null = null;
+
+export function clearInMemoryQueue(): void {
+  memoryQueue = null;
+}
+
+function metadataOnly(items: QueuedFieldReport[]): QueuedFieldReport[] {
+  return items.map((item) => ({ ...item, note: '', photo_name: null }));
+}
+
 export function readQueue(): QueuedFieldReport[] {
+  if (memoryQueue) return memoryQueue;
   try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]') as QueuedFieldReport[];
+    const stored = JSON.parse(localStorage.getItem(KEY) || '[]') as QueuedFieldReport[];
+    memoryQueue = metadataOnly(Array.isArray(stored) ? stored : []);
+    // Migrate older queue entries that may have persisted note/photo content.
+    localStorage.setItem(KEY, JSON.stringify(memoryQueue));
+    return memoryQueue;
   } catch {
-    return [];
+    memoryQueue = [];
+    return memoryQueue;
   }
 }
 
 function writeQueue(items: QueuedFieldReport[]) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+  memoryQueue = items;
+  localStorage.setItem(KEY, JSON.stringify(metadataOnly(items)));
 }
 
 export function enqueueReport(taskId: string, note: string, photoName: string | null): QueuedFieldReport {
@@ -24,7 +41,10 @@ export function enqueueReport(taskId: string, note: string, photoName: string | 
     state: 'pending',
     attempts: 0,
   };
-  writeQueue([...readQueue(), report]);
+  // Keep report content in memory for this session only. localStorage receives
+  // queue metadata, never notes or photo references.
+  memoryQueue = [...readQueue(), report];
+  writeQueue(memoryQueue);
   return report;
 }
 

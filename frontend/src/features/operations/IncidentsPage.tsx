@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from '../../lib/api';
+import { api, uploadIncidentImage } from '../../lib/api';
 import { authenticatedActorId, queueIncident } from '../../lib/offlineQueue';
 
 const STATES = ['OD', 'CG', 'TS', 'MP', 'MH', 'JH'] as const;
@@ -23,6 +23,9 @@ export function IncidentsPage() {
   const [size, setSize] = useState<string>('small');
   const [state, setState] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [assessmentMessage, setAssessmentMessage] = useState('');
 
   async function save() {
     if (saving || reported) return;
@@ -34,8 +37,18 @@ export function IncidentsPage() {
     setSaving(true);
     const payload = { client_key: crypto.randomUUID(), source, size, notes, state };
     try {
-      await api('/api/incidents', { method: 'POST', body: JSON.stringify(payload) });
+      const created = await api<{ id: number }>('/api/incidents', { method: 'POST', body: JSON.stringify(payload) });
       setReported(true);
+      if (image) {
+        try {
+          const result = await uploadIncidentImage<{ image: { assessment_status: string; authenticity_status?: string | null } }>(created.id, image);
+          setAssessmentMessage(result.image.assessment_status === 'COMPLETED'
+            ? `Image Evidence Assessment completed${result.image.authenticity_status ? `: ${result.image.authenticity_status.replace(/_/g, ' ').toLowerCase()}.` : '.'} This result is advisory and needs human review.`
+            : 'Image uploaded, but automated assessment is unavailable in this environment. The report remains available for human review.');
+        } catch (reason) {
+          setAssessmentMessage(reason instanceof Error ? `Report saved, but the image could not be assessed: ${reason.message}` : 'Report saved, but the image could not be assessed.');
+        }
+      }
     } catch (reason) {
       if (reason instanceof TypeError) {
         // Fetch network failures are queued; HTTP failures and response parsing
@@ -93,7 +106,22 @@ export function IncidentsPage() {
             placeholder="Access notes or field observations"
           />
         </label>
+        <label className="wide">
+          Evidence image (optional)
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={event => {
+              const next = event.target.files?.[0] ?? null;
+              setImage(next);
+              setImagePreview(next ? URL.createObjectURL(next) : null);
+            }}
+            aria-describedby="evidence-help"
+          />
+          <span id="evidence-help" className="muted" style={{ fontSize: 12 }}>JPEG, PNG, or WebP up to 10 MB. The assessment is advisory and never decides the incident status.</span>
+        </label>
       </div>
+      {imagePreview && <div className="image-preview"><img src={imagePreview} alt="Preview of selected evidence" style={{ maxWidth: 280, maxHeight: 180, objectFit: 'contain' }} /></div>}
       {missingState && !reported && (
         <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
           Select a state or division before submitting online.
@@ -105,6 +133,7 @@ export function IncidentsPage() {
       {error && <p className="error" role="alert">{error}</p>}
       {/* Online success — server accepted */}
       {reported && <div className="success-state" role="status">Incident accepted by the server as reported.</div>}
+      {assessmentMessage && <div className="success-state" role="status">{assessmentMessage}</div>}
       {/* Offline success — queued locally, button stays enabled for another report */}
       {!reported && queuedLocally > 0 && (
         <div className="success-state" role="status">

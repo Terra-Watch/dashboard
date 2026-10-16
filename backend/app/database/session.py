@@ -10,8 +10,23 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 
 def init_db() -> None:
+    has_postgis = False
+    with engine.connect() as probe:
+        try:
+            available = probe.execute(
+                text("SELECT default_version IS NOT NULL FROM pg_available_extensions WHERE name='postgis'")
+            ).scalar()
+            if available:
+                probe.execute(text('CREATE EXTENSION IF NOT EXISTS postgis'))
+                probe.commit()
+                has_postgis = True
+        except Exception:
+            pass
+
+    geom_col = "geometry(Polygon,4326)" if has_postgis else "TEXT"
+    centroid_col = "geometry(Point,4326)" if has_postgis else "TEXT"
+
     with engine.begin() as db:
-        db.execute(text('CREATE EXTENSION IF NOT EXISTS postgis'))
         statements = [
             """CREATE TABLE IF NOT EXISTS resq_users (
                 id SERIAL PRIMARY KEY,
@@ -107,8 +122,33 @@ def init_db() -> None:
                 notes TEXT NOT NULL DEFAULT '',
                 status TEXT NOT NULL DEFAULT 'reported',
                 state VARCHAR(2),
+                latitude DOUBLE PRECISION,
+                longitude DOUBLE PRECISION,
+                observed_at TIMESTAMPTZ,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_incident_images (
+                id BIGSERIAL PRIMARY KEY,
+                incident_id INTEGER NOT NULL REFERENCES resq_incidents(id) ON DELETE CASCADE,
+                storage_key TEXT NOT NULL UNIQUE,
+                original_filename TEXT NOT NULL,
+                content_type VARCHAR(100) NOT NULL,
+                size_bytes BIGINT NOT NULL,
+                sha256 VARCHAR(64) NOT NULL,
+                assessment_status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+                model_version VARCHAR(120),
+                authenticity_status VARCHAR(40),
+                assessment JSONB,
+                assessment_error TEXT,
+                human_review_status VARCHAR(30) NOT NULL DEFAULT 'NOT_REVIEWED',
+                human_review_note TEXT,
+                human_reviewed_by INTEGER REFERENCES resq_users(id) ON DELETE SET NULL,
+                uploaded_by INTEGER REFERENCES resq_users(id) ON DELETE SET NULL,
+                human_reviewed_at TIMESTAMPTZ,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                assessed_at TIMESTAMPTZ,
+                UNIQUE (incident_id, sha256)
             )""",
             """CREATE TABLE IF NOT EXISTS resq_field_reports (
                 idempotency_key VARCHAR(120) PRIMARY KEY,
@@ -121,6 +161,28 @@ def init_db() -> None:
                 state VARCHAR(2),
                 captured_at TIMESTAMPTZ NOT NULL,
                 received_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_incident_assignments (
+                id BIGSERIAL PRIMARY KEY,
+                incident_id INTEGER NOT NULL REFERENCES resq_incidents(id) ON DELETE CASCADE,
+                ranger_id INTEGER NOT NULL REFERENCES resq_users(id),
+                status VARCHAR(20) NOT NULL DEFAULT 'assigned',
+                priority VARCHAR(10) NOT NULL DEFAULT 'normal',
+                due_at TIMESTAMPTZ,
+                created_by INTEGER NOT NULL REFERENCES resq_users(id),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                cancelled_at TIMESTAMPTZ,
+                UNIQUE (incident_id, ranger_id, status)
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_field_verifications (
+                id BIGSERIAL PRIMARY KEY,
+                assignment_id BIGINT NOT NULL REFERENCES resq_incident_assignments(id) ON DELETE CASCADE,
+                ranger_id INTEGER NOT NULL REFERENCES resq_users(id),
+                outcome VARCHAR(20) NOT NULL,
+                notes TEXT NOT NULL DEFAULT '',
+                observed_at TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )""",
             """CREATE TABLE IF NOT EXISTS resq_alert_rules (
                 id SERIAL PRIMARY KEY,
@@ -168,13 +230,13 @@ def init_db() -> None:
                 bridged_days JSONB NOT NULL DEFAULT '[]'::jsonb,
                 UNIQUE (forecast_date, mode, model_version)
             )""",
-            """CREATE TABLE IF NOT EXISTS cells (
+            f"""CREATE TABLE IF NOT EXISTS cells (
                 id BIGINT PRIMARY KEY,
                 grid_version VARCHAR(120) NOT NULL,
                 state VARCHAR(3) NOT NULL,
                 place_name TEXT,
-                geom geometry(Polygon,4326),
-                centroid geometry(Point,4326)
+                geom {geom_col},
+                centroid {centroid_col}
             )""",
             """CREATE TABLE IF NOT EXISTS cell_scores (
                 run_id BIGINT NOT NULL REFERENCES forecast_runs(id) ON DELETE CASCADE,
@@ -194,7 +256,7 @@ def init_db() -> None:
         db.execute(text("ALTER TABLE resq_users DROP CONSTRAINT IF EXISTS resq_users_role_check"))
         db.execute(text(
             "ALTER TABLE resq_users ADD CONSTRAINT resq_users_role_check CHECK (role IN "
-            "('admin','officer','viewer','range_officer','control_room_operator','field_crew','incident_commander'))"
+            "('admin','officer','viewer','citizen','range_officer','control_room_operator','field_crew','incident_commander'))"
         ))
         db.execute(text("ALTER TABLE resq_users ADD COLUMN IF NOT EXISTS password_algo VARCHAR(10) NOT NULL DEFAULT 'bcrypt'"))
         db.execute(text("ALTER TABLE resq_users ADD COLUMN IF NOT EXISTS home_state VARCHAR(2)"))
@@ -202,7 +264,18 @@ def init_db() -> None:
         db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS client_key VARCHAR(120)'))
         db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS state VARCHAR(2)'))
         db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now()'))
+        db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION'))
+        db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION'))
+        db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS observed_at TIMESTAMPTZ'))
         db.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS resq_incidents_client_key ON resq_incidents (client_key) WHERE client_key IS NOT NULL'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_incident_images_incident_idx ON resq_incident_images (incident_id, created_at DESC)'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_incident_assignments_ranger_idx ON resq_incident_assignments (ranger_id, status)'))
+        db.execute(text("ALTER TABLE resq_incident_assignments ADD COLUMN IF NOT EXISTS priority VARCHAR(10) NOT NULL DEFAULT 'normal'"))
+        db.execute(text('ALTER TABLE resq_incident_assignments ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_field_verifications_assignment_idx ON resq_field_verifications (assignment_id, created_at DESC)'))
+        db.execute(text('ALTER TABLE resq_incident_images ADD COLUMN IF NOT EXISTS human_reviewed_by INTEGER REFERENCES resq_users(id) ON DELETE SET NULL'))
+        db.execute(text('ALTER TABLE resq_incident_images ADD COLUMN IF NOT EXISTS human_reviewed_at TIMESTAMPTZ'))
+        db.execute(text('ALTER TABLE resq_incident_images ADD COLUMN IF NOT EXISTS uploaded_by INTEGER REFERENCES resq_users(id) ON DELETE SET NULL'))
 
         db.execute(text('ALTER TABLE resq_alerts ADD COLUMN IF NOT EXISTS state VARCHAR(2)'))
         db.execute(text("ALTER TABLE resq_alerts ADD COLUMN IF NOT EXISTS severity VARCHAR(20) NOT NULL DEFAULT 'warning'"))
@@ -220,7 +293,8 @@ def init_db() -> None:
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_audit_log_entity_idx ON resq_audit_log (entity_type, entity_id, occurred_at DESC)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_alerts_state_status_idx ON resq_alerts (state, status)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_alerts_dedup_idx ON resq_alerts (entity_type, entity_id, kind, status, created_at DESC)'))
-        db.execute(text('CREATE INDEX IF NOT EXISTS cells_geom_gist ON cells USING GIST (geom)'))
+        if has_postgis:
+            db.execute(text('CREATE INDEX IF NOT EXISTS cells_geom_gist ON cells USING GIST (geom)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS cell_scores_run_band ON cell_scores (run_id, band)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS cell_scores_run_rank ON cell_scores (run_id, rank)'))
 
@@ -255,3 +329,27 @@ def init_db() -> None:
                     text("INSERT INTO resq_user_scopes (user_id, state) VALUES (:uid, :state) ON CONFLICT DO NOTHING"),
                     {'uid': trainee_id, 'state': state},
                 )
+
+        # Seed role accounts for testing and workflow evaluation
+        role_accounts = [
+            ('operator@resq.local', 'Control Room Operator', 'control_room_operator', 'OD'),
+            ('field@resq.local', 'Field Verification Crew', 'field_crew', 'OD'),
+            ('commander@resq.local', 'Incident Commander', 'incident_commander', 'OD'),
+        ]
+        demo_pass_hash = hash_password_argon2('resq-demo')
+        for r_email, r_name, r_role, r_home in role_accounts:
+            if not db.execute(text("SELECT 1 FROM resq_users WHERE email=:email"), {'email': r_email}).first():
+                db.execute(
+                    text(
+                        "INSERT INTO resq_users (email,name,password_hash,role,password_algo,home_state) "
+                        "VALUES (:email,:name,:hash,:role,'argon2',:home)"
+                    ),
+                    {'email': r_email, 'name': r_name, 'hash': demo_pass_hash, 'role': r_role, 'home': r_home},
+                )
+            u_id = db.execute(text("SELECT id FROM resq_users WHERE email=:email"), {'email': r_email}).scalar()
+            if u_id:
+                for state in ('OD', 'CG', 'TS', 'MP', 'MH', 'JH'):
+                    db.execute(
+                        text("INSERT INTO resq_user_scopes (user_id, state) VALUES (:uid, :state) ON CONFLICT DO NOTHING"),
+                        {'uid': u_id, 'state': state},
+                    )

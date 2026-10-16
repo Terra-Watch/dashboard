@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ..contracts.schemas import (
     AccessRequest, AdminPasswordResetRequest, InviteAcceptRequest, InviteCreateRequest,
-    LoginRequest, PasswordResetCompleteRequest, PasswordResetRequest, RedesignLoginRequest,
+    CitizenRegistrationRequest, LoginRequest, PasswordResetCompleteRequest, PasswordResetRequest, RedesignLoginRequest,
 )
 from ..core.security import (
     CSRF_COOKIE, REFRESH_TOKEN_DAYS, RESQ_ROLES, current_redesign_user, hash_password_argon2,
@@ -23,6 +23,7 @@ MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_WINDOW_MINUTES = 15
 GENERIC_LOGIN_ERROR = "Invalid email or password."
 GENERIC_LOCKOUT_ERROR = "Too many attempts. Try again in a few minutes."
+EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
 
 # ---------- legacy (/app/*) login ----------
@@ -84,7 +85,7 @@ def _record_attempt(db, email: str, ip: str, success: bool) -> None:
     )
 
 
-def _issue_session(response: Response, user_id: int, role: str, device_id: str | None) -> str:
+def _issue_session(response: Response, user_id: int, role: str, device_id: str | None, *, secure: bool = True) -> str:
     access_token = make_access_token(user_id, role)
     raw_refresh = new_raw_token()
     with engine.begin() as db:
@@ -96,8 +97,8 @@ def _issue_session(response: Response, user_id: int, role: str, device_id: str |
             {'user_id': user_id, 'token_hash': hash_token(raw_refresh), 'device_id': device_id, 'days': REFRESH_TOKEN_DAYS},
         )
     csrf_token = make_csrf_token()
-    response.set_cookie('resq_refresh', raw_refresh, httponly=True, secure=True, samesite='strict', max_age=REFRESH_TOKEN_DAYS * 86400, path='/api/auth')
-    response.set_cookie(CSRF_COOKIE, csrf_token, httponly=False, secure=True, samesite='strict', max_age=REFRESH_TOKEN_DAYS * 86400)
+    response.set_cookie('resq_refresh', raw_refresh, httponly=True, secure=secure, samesite='strict', max_age=REFRESH_TOKEN_DAYS * 86400, path='/api/auth')
+    response.set_cookie(CSRF_COOKIE, csrf_token, httponly=False, secure=secure, samesite='strict', max_age=REFRESH_TOKEN_DAYS * 86400)
     return access_token
 
 
@@ -122,13 +123,54 @@ def redesign_login(payload: RedesignLoginRequest, request: Request, response: Re
         write_audit_log(action='login_failed', entity_type='session', entity_id=email, metadata={'ip': ip})
         raise HTTPException(status_code=401, detail=GENERIC_LOGIN_ERROR)
 
-    access_token = _issue_session(response, user['id'], user['role'], request.headers.get('x-device-id'))
+    access_token = _issue_session(response, user['id'], user['role'], request.headers.get('x-device-id'), secure=request.url.scheme == 'https')
     write_audit_log(action='login_success', entity_type='session', entity_id=str(user['id']), user_id=user['id'], metadata={'ip': ip})
     return {
         'access_token': access_token,
         'token_type': 'bearer',
         'user': {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role'], 'home_state': user.get('home_state')},
     }
+
+
+@router.post("/citizen/register", status_code=201)
+def citizen_register(payload: CitizenRegistrationRequest, request: Request, response: Response) -> dict[str, object]:
+    import re
+    email = payload.email.strip().lower()
+    if not re.match(EMAIL_PATTERN, email):
+        raise HTTPException(status_code=422, detail='Enter a valid email address')
+    with engine.begin() as db:
+        try:
+            user_id = db.execute(
+                text("INSERT INTO resq_users (email,name,password_hash,password_algo,role) VALUES (:email,:name,:hash,'argon2','citizen') RETURNING id"),
+                {'email': email, 'name': payload.name.strip(), 'hash': hash_password_argon2(payload.password)},
+            ).scalar()
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail='An account for this email already exists') from exc
+    access_token = _issue_session(response, user_id, 'citizen', request.headers.get('x-device-id'), secure=request.url.scheme == 'https')
+    write_audit_log(action='citizen_registration', entity_type='session', entity_id=str(user_id), user_id=user_id)
+    return {'access_token': access_token, 'token_type': 'bearer', 'user': {'id': user_id, 'email': email, 'name': payload.name.strip(), 'role': 'citizen'}}
+
+
+@router.post("/citizen/login")
+def citizen_login(payload: RedesignLoginRequest, request: Request, response: Response) -> dict[str, object]:
+    email = payload.email.strip().lower()
+    ip = _client_ip(request)
+    with engine.begin() as db:
+        locked_out = _recent_failed_attempts(db, email, ip) >= MAX_FAILED_ATTEMPTS
+        user = None if locked_out else db.execute(
+            text("SELECT id,email,name,password_hash,password_algo,role FROM resq_users WHERE email=:email AND role='citizen'"),
+            {'email': email},
+        ).mappings().first()
+        valid = bool(user) and verify_password(payload.password, user['password_hash'], user.get('password_algo', 'bcrypt'))
+        if not locked_out:
+            _record_attempt(db, email, ip, valid)
+    if locked_out:
+        raise HTTPException(status_code=429, detail=GENERIC_LOCKOUT_ERROR)
+    if not valid:
+        raise HTTPException(status_code=401, detail=GENERIC_LOGIN_ERROR)
+    access_token = _issue_session(response, user['id'], 'citizen', request.headers.get('x-device-id'), secure=request.url.scheme == 'https')
+    write_audit_log(action='citizen_login_success', entity_type='session', entity_id=str(user['id']), user_id=user['id'], metadata={'ip': ip})
+    return {'access_token': access_token, 'token_type': 'bearer', 'user': {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': 'citizen'}}
 
 
 @router.post("/refresh")
@@ -160,7 +202,7 @@ def refresh(request: Request, response: Response) -> dict[str, object]:
     if expired:
         raise HTTPException(status_code=401, detail='Session expired')
 
-    access_token = _issue_session(response, user['id'], user['role'], request.headers.get('x-device-id'))
+    access_token = _issue_session(response, user['id'], user['role'], request.headers.get('x-device-id'), secure=request.url.scheme == 'https')
     write_audit_log(action='token_refresh', entity_type='session', entity_id=str(user['id']), user_id=user['id'])
     return {'access_token': access_token, 'token_type': 'bearer'}
 

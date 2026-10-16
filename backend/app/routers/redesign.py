@@ -245,6 +245,7 @@ def submit_field_report(
     task = task_map.get(body.task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Field task not found")
+    require_scope(user, task.get("state"), entity_type="detection", entity_id=body.task_id)
     if body.incident_id:
         if str(body.incident_id) != str(task["incident_id"]):
             raise HTTPException(status_code=422, detail="Field report task does not match the specified incident")
@@ -278,7 +279,7 @@ def list_field_reports(
 
 
 @router.get("/field/tasks")
-def field_tasks(_: dict = Depends(require_roles("field_crew"))) -> dict:
+def field_tasks(user: dict = Depends(require_roles("field_crew"))) -> dict:
     """Verification tasks derived from today's triage queue: one per un-dismissed detection."""
     detections = redesign_data.list_detections()
     status_by_id = redesign_store.latest_status_by_detection()
@@ -295,5 +296,47 @@ def field_tasks(_: dict = Depends(require_roles("field_crew"))) -> dict:
             "lat": item["lat"],
             "lon": item["lon"],
             "status": action,
+            "state": item.get("state"),
         })
+    if user.get("role") != "admin":
+        scopes = user_scopes(int(user["id"]))
+        tasks = [task for task in tasks if task.get("state") in scopes]
+    for task in tasks:
+        task.pop("state", None)
     return {"sample_data": True, "items": tasks}
+
+
+# ---------- Interactive Cell2Fire / Rothermel Simulation Runner ----------
+
+class SimulationRunRequest(BaseModel):
+    latitude: float
+    longitude: float
+    duration_hours: int = 12
+
+
+@router.get("/simulation/domain")
+def simulation_domain_endpoint(
+    _: dict = Depends(require_roles("range_officer", "control_room_operator", "incident_commander")),
+) -> dict:
+    """Return verified domain boundary, grid specifications, and assumptions for scenario configuration."""
+    from ..services.simulation_service import get_simulation_domain_info
+    return get_simulation_domain_info()
+
+
+@router.post("/simulation/run")
+def simulation_run_endpoint(
+    payload: SimulationRunRequest,
+    user: dict = Depends(require_roles("range_officer", "control_room_operator", "incident_commander")),
+    _: None = Depends(require_csrf),
+) -> dict:
+    """Keep interactive execution closed until the disabled spread-job policy is approved."""
+    from inference.simulation_domain import RequestOutsideDomain
+    from ..services.simulation_service import validate_spread_request
+    try:
+        validate_spread_request(payload.latitude, payload.longitude, payload.duration_hours)
+    except RequestOutsideDomain as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    raise HTTPException(
+        status_code=503,
+        detail="Interactive simulation is unavailable until execution storage and access controls are approved. Use the saved example instead.",
+    )

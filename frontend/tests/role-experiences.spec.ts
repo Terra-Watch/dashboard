@@ -7,18 +7,24 @@ async function signInAs(page: import('@playwright/test').Page, role: string) {
   }, role);
 }
 
-test('citizen, Control Room, and Range Officer entry points use only implemented public/staff routes', async ({ page }) => {
+test('public landing exposes separate community, citizen, and staff entry points', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Citizen', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Control Room', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Range Officer' })).toBeVisible();
-  await expect(page.getByText(/Client-side role selection is not a security boundary/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'CITIZEN / COMMUNITY', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'RANGER / FIELD OFFICER', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'CONTROL ROOM', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue as Citizen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ranger Login' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Control Room Login' })).toBeVisible();
 
-  const entries = page.getByRole('region', { name: 'Role-specific entry experiences' });
-  await expect(entries.getByRole('button', { name: 'Open public archive' })).toBeVisible();
-  await expect(entries.getByRole('button', { name: 'Review reports' })).toBeVisible();
-  await expect(entries.getByRole('button', { name: 'Open field notes' })).toBeVisible();
-  await expect(entries).toContainText(/Live emergency monitoring, public alerts, and dispatch are not provided/i);
+  await page.getByRole('button', { name: 'Continue as Citizen' }).click();
+  await expect(page).toHaveURL(/\/citizen\/login$/);
+  await expect(page.getByRole('heading', { name: 'Sign in to Citizen' })).toBeVisible();
+  await page.goto('/community');
+  await expect(page).toHaveURL(/\/community$/);
+  await expect(page.getByRole('heading', { name: /Public information for preparedness/i })).toBeVisible();
+  await page.getByRole('link', { name: 'Staff sign in' }).click();
+  await expect(page).toHaveURL(/\/staff\/login$/);
+  await expect(page.getByRole('heading', { name: 'Sign in to TerraWatch' })).toBeVisible();
 });
 
 test('public archive stays separate from the authenticated staff workspace', async ({ page }) => {
@@ -29,10 +35,10 @@ test('public archive stays separate from the authenticated staff workspace', asy
   await page.route('**/api/**', route => route.abort());
 
   await page.goto('/demo');
-  await expect(page.getByRole('navigation', { name: 'Public example navigation' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Public navigation' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Historical fire-risk ranking' })).toBeVisible();
   await expect(page.getByTestId('sample-data-badge')).toHaveAttribute('title', 'Saved historical information. Nothing on this page is live.');
-  await expect(page.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute('href', '/login');
+  await expect(page.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute('href', '/staff/login');
 
   await page.goto('/app/map');
   await expect(page.getByRole('heading', { name: 'Sign in to TerraWatch' })).toBeVisible();

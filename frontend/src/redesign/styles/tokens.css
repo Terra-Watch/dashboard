@@ -27,9 +27,37 @@
   --rq-trust-forecast: #1f5b4a;
   --rq-trust-detection: #1f6fb2;
   --rq-trust-verified: #143d32;
-  --rq-trust-scenario: #b26a00;
+  --rq-trust-scenario: var(--rq-warn);
+
+  /* Runtime aliases consumed by the generated Tailwind 4 utilities. */
+  --color-canopy: var(--rq-canopy);
+  --color-canopy-deep: var(--rq-canopy-deep);
+  --color-ink: var(--rq-ink);
+  --color-ink-muted: var(--rq-ink-muted);
+  --color-paper: var(--rq-paper);
+  --color-sheet: var(--rq-sheet);
+  --color-contour: var(--rq-contour);
+  --color-info: var(--rq-info);
+  --color-warn: var(--rq-warn);
+  --color-danger: var(--rq-danger);
 
   color-scheme: light;
+}
+
+/* Tailwind 4 generates utilities from @theme tokens. These aliases preserve
+   the existing TerraWatch class names used by the redesign components. */
+@theme {
+  --color-canopy: var(--rq-canopy);
+  --color-canopy-deep: var(--rq-canopy-deep);
+  --color-ink: var(--rq-ink);
+  --color-ink-muted: var(--rq-ink-muted);
+  --color-paper: var(--rq-paper);
+  --color-sheet: var(--rq-sheet);
+  --color-contour: var(--rq-contour);
+  --color-info: var(--rq-info);
+  --color-warn: var(--rq-warn);
+  --color-danger: var(--rq-danger);
+  --radius-rq: 0.75rem;
 }
 
 [data-rq-app][data-rq-theme='dark'] {

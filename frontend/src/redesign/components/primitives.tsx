@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import type { TrustLevel } from '../lib/types';
 
 /** TrustBadge — docs/redesign/08_design_system.md. Non-dismissible on scenario/replay screens (09_trust_rules.md). */
@@ -78,11 +78,53 @@ export function Toast({ message, onClose }: { message: string; onClose: () => vo
 }
 
 export function Dialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const getFocusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )).filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+
+    (getFocusable()[0] ?? dialog).focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+      } else if (event.shiftKey && (document.activeElement === focusable[0] || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        focusable[focusable.length - 1].focus();
+      } else if (!event.shiftKey && (document.activeElement === focusable[focusable.length - 1] || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        focusable[0].focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, [onClose]);
+
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+    <div role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={dialogRef} className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
       <div className="max-w-md rounded-rq bg-sheet p-5 shadow-xl">
         <div className="flex items-center justify-between">
-          <h2 className="font-serif text-lg">{title}</h2>
+          <h2 id={titleId} className="font-serif text-lg">{title}</h2>
           <button onClick={onClose} aria-label="Close" className="text-ink-muted">×</button>
         </div>
         <div className="mt-3">{children}</div>

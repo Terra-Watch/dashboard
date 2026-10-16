@@ -16,6 +16,43 @@ class RedesignLoginRequest(BaseModel):
     password: str
 
 
+class CitizenRegistrationRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=255)
+    name: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class CitizenReportRequest(BaseModel):
+    client_key: str = Field(min_length=1, max_length=120)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    state: str = Field(min_length=2, max_length=2)
+    description: str = Field(default='', max_length=5000)
+    observed_at: str = Field(min_length=1, max_length=80)
+
+
+class IncidentAssignmentRequest(BaseModel):
+    ranger_id: int = Field(gt=0)
+    priority: str = Field(default='normal', pattern='^(low|normal|high|urgent)$')
+    due_at: str | None = Field(default=None, max_length=80)
+
+
+class AssignmentDecisionRequest(BaseModel):
+    decision: str = Field(pattern='^(accepted|declined|in_progress)$')
+
+
+class AssignmentReassignmentRequest(BaseModel):
+    ranger_id: int = Field(gt=0)
+    priority: str = Field(default='normal', pattern='^(low|normal|high|urgent)$')
+    due_at: str | None = Field(default=None, max_length=80)
+
+
+class VerificationRequest(BaseModel):
+    outcome: str
+    notes: str = Field(default='', max_length=5000)
+    observed_at: str = Field(min_length=1, max_length=80)
+
+
 class InviteCreateRequest(BaseModel):
     email: str
     role: str
@@ -61,6 +98,11 @@ class IncidentRequest(BaseModel):
 class IncidentStatusUpdate(BaseModel):
     status: str
     notes: str | None = None
+
+
+class IncidentImageReviewRequest(BaseModel):
+    status: str
+    note: str | None = Field(default=None, max_length=2000)
 
 
 class FieldReportCreateRequest(BaseModel):

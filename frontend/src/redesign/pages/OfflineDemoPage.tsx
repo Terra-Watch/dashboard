@@ -158,10 +158,6 @@ export function OfflineDemoPage() {
     <div data-rq-app>
       <StepIndicator current="Possible spread" />
       <main className="mx-auto max-w-6xl px-5 py-6">
-        <nav aria-label="Public example navigation" className="mb-5 flex flex-wrap gap-4 text-sm">
-          <a className="underline" href="/">TerraWatch home</a>
-          <a className="underline" href="/login">Staff sign in</a>
-        </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Historical example</p>

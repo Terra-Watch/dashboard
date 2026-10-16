@@ -1,10 +1,16 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Map, { Source, Layer, Marker, NavigationControl, ScaleControl, AttributionControl } from 'react-map-gl/maplibre';
 import type { StyleSpecification, DataDrivenPropertyValueSpecification } from '@maplibre/maplibre-gl-style-spec';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+// MapLibre 6 no longer exposes a default export and its worker is not
+// discovered reliably by Vite from the package's module URL. Bundle the
+// official worker explicitly so maps can reach the idle state in production
+// and in installed/offline-capable builds.
+maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 /** Real georeferenced basemap: MapLibre GL + a Protomaps PMTiles extract (OSM-derived data,
  *  ODbL), self-hosted at /tiles/resq-basemap.pmtiles — never tile.openstreetmap.org (per Gate 1
@@ -71,6 +77,7 @@ interface MapShellProps {
   offline?: boolean;
   /** Enables selection from the historical risk-cell layer when supplied. */
   onRiskCellSelect?: (cellId: number | null) => void;
+  onMapClick?: (longitude: number, latitude: number) => void;
   /** Height class; defaults to a square aspect so the map reads consistently across screens. */
   aspect?: 'square' | 'wide';
 }
@@ -81,13 +88,20 @@ const INDIA_CENTER: [number, number] = [80.4, 20.3];
  *  actual pannable/zoomable MapLibre view over the self-hosted PMTiles basemap; layer data
  *  (risk cells, detections, probability bands, baselines, wind arrows) is passed as children
  *  (Source/Layer/Marker). */
-export function MapShell({ label, children, center, zoom, bounds, aspect = 'square', offline = false, onRiskCellSelect }: MapShellProps) {
+export function MapShell({ label, children, center, zoom, bounds, aspect = 'square', offline = false, onRiskCellSelect, onMapClick }: MapShellProps) {
   const style = useBasemapStyle(offline);
-  const [idle, setIdle] = useState(false);
 
   const safeBounds = isValidBounds(bounds) ? bounds : undefined;
   const safeCenter = isValidCenter(center) ? center : INDIA_CENTER;
   const safeZoom = typeof zoom === 'number' && Number.isFinite(zoom) ? zoom : (center ? 10 : 4.6);
+  const mapKey = safeBounds ? safeBounds.join(',') : `${safeCenter.join(',')}-${safeZoom}`;
+  const [mapState, setMapState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const styleLoaded = useRef(false);
+
+  useEffect(() => {
+    styleLoaded.current = false;
+    setMapState('loading');
+  }, [mapKey]);
 
   const initialViewState = safeBounds
     ? { bounds: safeBounds, fitBoundsOptions: { padding: 24 } }
@@ -98,15 +112,22 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
       role="group"
       aria-label={label}
       data-testid="map-shell"
-      // 'idle' fires once MapLibre has finished loading and rendering every source (including
-      // the pmtiles basemap's range-request fetches) — tests wait on this instead of racing the
-      // screenshot against async tile loading, which otherwise captures a blank basemap under
-      // the real vector overlays (canvas + attribution present, no tiles painted yet).
-      data-map-idle={idle}
+      data-map-state={mapState}
+      data-map-idle={mapState === 'ready'}
       className={`relative w-full overflow-hidden rounded-rq border border-contour bg-paper ${aspect === 'square' ? 'aspect-square' : 'aspect-[16/9]'}`}
     >
+      <div
+        role={mapState === 'error' ? 'alert' : 'status'}
+        aria-live={mapState === 'error' ? 'assertive' : 'polite'}
+        className="pointer-events-none absolute left-2 top-2 z-10 rounded bg-sheet/95 px-2 py-1 text-xs text-ink shadow"
+        data-testid="map-render-status"
+      >
+        {mapState === 'loading' && 'Loading map…'}
+        {mapState === 'ready' && 'Map rendered and idle.'}
+        {mapState === 'error' && 'Map tiles or style could not be rendered. Check your connection and try again.'}
+      </div>
       <Map
-        key={safeBounds ? safeBounds.join(',') : `${safeCenter.join(',')}-${safeZoom}`}
+        key={mapKey}
         initialViewState={initialViewState}
         mapStyle={style}
         style={{ width: '100%', height: '100%' }}
@@ -115,6 +136,7 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
         aria-label={label}
         interactiveLayerIds={onRiskCellSelect ? ['risk-cells-fill', 'risk-cells-points'] : undefined}
         onClick={(event) => {
+          if (onMapClick) onMapClick(event.lngLat.lng, event.lngLat.lat);
           if (!onRiskCellSelect) return;
           const features = (event.features ?? []) as Array<{ layer: { id: string }; properties?: Record<string, unknown> }>;
           const feature = features.find((item) => item.layer.id === 'risk-cells-fill' || item.layer.id === 'risk-cells-points');
@@ -122,7 +144,20 @@ export function MapShell({ label, children, center, zoom, bounds, aspect = 'squa
           const cellId = typeof rawId === 'number' ? rawId : typeof rawId === 'string' && rawId.trim() ? Number(rawId) : NaN;
           onRiskCellSelect(Number.isSafeInteger(cellId) ? cellId : null);
         }}
-        onIdle={() => setIdle(true)}
+        onLoad={() => {
+          styleLoaded.current = true;
+        }}
+        onError={(event) => {
+          const ev = event as unknown as { sourceId?: string; error?: { message?: string } };
+          const sourceId = ev.sourceId;
+          const msg = String(ev.error?.message || '').toLowerCase();
+          if (sourceId === BASEMAP_SOURCE_ID || msg.includes('pmtiles') || msg.includes('resq-basemap')) {
+            setMapState('error');
+          }
+        }}
+        onIdle={() => {
+          setMapState((current) => current === 'error' ? current : 'ready');
+        }}
       >
         <AttributionControl compact position="bottom-right" />
         <ScaleControl maxWidth={120} unit="metric" position="bottom-left" />
@@ -434,11 +469,11 @@ export function OperationalMapLegend() {
       <ul className="mt-2 space-y-1.5">
         <li className="flex items-center gap-2">
           <span aria-hidden className="inline-block h-3 w-3 rounded-full border-2 border-[#6b2fa0]" />
-          <span><strong className="text-ink">Satellite detection (VIIRS):</strong> Radiometric observation point from satellite overpass; not an exact physical fire perimeter. Absence of detection does not indicate an area is unburned.</span>
+          <span><strong className="text-ink">Satellite detection:</strong> Radiometric observation point from satellite overpass; not an exact physical fire perimeter. Absence of detection does not indicate an area is unburned.</span>
         </li>
         <li className="flex items-center gap-2">
           <span aria-hidden className="inline-block h-3 w-3 border-2 border-ink" />
-          <span><strong className="text-ink">Observed footprint (VIIRS):</strong> Cumulative observed detection boundary (375 m pixel envelope); unobserved areas may still have burned.</span>
+          <span><strong className="text-ink">Observed footprint:</strong> Cumulative observed detection boundary (375 m pixel envelope); unobserved areas may still have burned.</span>
         </li>
         <li className="flex items-center gap-2">
           <span aria-hidden className="inline-block h-3 w-3 rounded-sm bg-risk-high" />

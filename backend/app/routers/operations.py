@@ -1,20 +1,68 @@
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query
+import hashlib
+import hmac
+import os
+import re
+from io import BytesIO
+from pathlib import Path
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 from ..database.session import engine
 from ..contracts.schemas import (
     AlertRuleRequest, IncidentRequest, IncidentStatusUpdate,
-    OperationalAlertCreateRequest, PlanRequest, SettingsUpdate, SpreadRequest,
+    IncidentImageReviewRequest, OperationalAlertCreateRequest, PlanRequest, SettingsUpdate, SpreadRequest,
 )
 from ..core.permissions import require_scope, user_scopes
-from ..core.security import current_user, require_write
+from ..core.security import current_redesign_user, current_risk_user, current_user, require_write
 from ..services import alert_service, audit_log
+from ..services.image_assessment import assess_image
 from ..services.simulation_service import validate_simulation
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["operations"])
+
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+IMAGE_ROOT = Path(os.getenv("RESQ_IMAGE_STORAGE_DIR", str(Path(__file__).resolve().parents[2] / "runtime_data" / "incident_images")))
+
+
+def _stored_image_path(storage_key: str) -> Path:
+    """Resolve a database storage key without permitting filesystem escape."""
+    root = IMAGE_ROOT.resolve()
+    candidate = (root / storage_key).resolve()
+    if candidate == root or root not in candidate.parents:
+        raise HTTPException(status_code=404, detail='Stored image is unavailable')
+    return candidate
+
+
+def _assert_stored_image_integrity(path: Path, expected_sha256: str) -> None:
+    """Fail closed if a private image was altered outside the persistence path."""
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if not hmac.compare_digest(digest, expected_sha256):
+        logger.error('Stored incident image failed integrity check: %s', path.name)
+        raise HTTPException(status_code=404, detail='Stored image is unavailable')
+
+
+def _image_row(row: dict) -> dict:
+    return {
+        "id": row["id"],
+        "incident_id": row["incident_id"],
+        "original_filename": row["original_filename"],
+        "content_type": row["content_type"],
+        "size_bytes": row["size_bytes"],
+        "assessment_status": row["assessment_status"],
+        "model_version": row.get("model_version"),
+        "authenticity_status": row.get("authenticity_status"),
+        "assessment": row.get("assessment") or {},
+        "human_review_status": row["human_review_status"],
+        "human_review_note": row.get("human_review_note"),
+        "human_reviewed_by": row.get("human_reviewed_by"),
+        "human_reviewed_at": row.get("human_reviewed_at"),
+        "created_at": row["created_at"],
+        "assessed_at": row.get("assessed_at"),
+    }
 
 
 @router.get('/admin/overview')
@@ -80,12 +128,22 @@ PERMITTED_INCIDENT_TRANSITIONS: dict[str, set[str]] = {
 }
 
 
+def _require_incident_operator(user: dict[str, object]) -> dict[str, object]:
+    """Allow only server-assigned operational roles to change incident state."""
+    if user.get('role') not in {'admin', 'officer', 'control_room_operator', 'incident_commander'}:
+        raise HTTPException(status_code=403, detail='Incident operator role required')
+    return user
+
+
 @router.get("/incidents")
 def list_incidents(
     state: str | None = None,
-    user: dict[str, object] = Depends(current_user),
+    user: dict[str, object] = Depends(current_risk_user),
 ) -> list[dict[str, object]]:
-    query = "SELECT id,source,size,notes,status,state,created_at,updated_at FROM resq_incidents"
+    query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.state,i.created_at,i.updated_at,
+        (SELECT assessment_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS image_assessment_status,
+        (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status
+        FROM resq_incidents i"""
     params: dict[str, object] = {}
     clauses = []
     if state:
@@ -161,32 +219,156 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
     return row
 
 
+@router.get('/incidents/{incident_id}/images/{image_id}')
+def get_incident_image(incident_id: int, image_id: int, user: dict[str, object] = Depends(current_risk_user)) -> Response:
+    with engine.connect() as db:
+        incident = db.execute(text('SELECT id,state FROM resq_incidents WHERE id=:id'), {'id': incident_id}).mappings().first()
+        row = db.execute(text('SELECT storage_key,content_type,sha256 FROM resq_incident_images WHERE id=:image_id AND incident_id=:incident_id'), {'image_id': image_id, 'incident_id': incident_id}).mappings().first()
+    if not incident or not row:
+        raise HTTPException(status_code=404, detail='Image not found')
+    if user.get('role') not in {'admin', 'officer', 'range_officer', 'control_room_operator', 'incident_commander'}:
+        raise HTTPException(status_code=403, detail='Your role cannot view incident evidence')
+    require_scope(user, incident.get('state'), entity_type='incident', entity_id=str(incident_id))
+    path = _stored_image_path(row['storage_key'])
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail='Stored image is unavailable')
+    _assert_stored_image_integrity(path, row['sha256'])
+    return Response(content=path.read_bytes(), media_type=row['content_type'], headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
+
+
 @router.get('/incidents/{incident_id}')
-def get_incident(incident_id: int, user: dict[str, object] = Depends(current_user)) -> dict[str, object]:
+def get_incident(incident_id: int, user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
     with engine.connect() as db:
         row = db.execute(
-            text('SELECT id,source,size,notes,status,state,created_at,updated_at FROM resq_incidents WHERE id=:id'),
+            text('SELECT id,source,size,notes,status,state,latitude,longitude,observed_at,created_at,updated_at FROM resq_incidents WHERE id=:id'),
             {'id': incident_id},
         ).mappings().first()
     if not row:
         raise HTTPException(status_code=404, detail='Incident not found')
     require_scope(user, row.get("state"), entity_type="incident", entity_id=str(incident_id))
-    return dict(row)
+    result = dict(row)
+    with engine.connect() as db:
+        images = db.execute(text("SELECT * FROM resq_incident_images WHERE incident_id=:id ORDER BY created_at DESC"), {"id": incident_id}).mappings().all()
+    result["images"] = [_image_row(dict(image)) for image in images]
+    return result
+
+
+@router.post('/incidents/{incident_id}/images', status_code=201)
+async def upload_incident_image(
+    incident_id: int,
+    image: UploadFile = File(...),
+    user: dict[str, object] = Depends(current_risk_user),
+) -> dict[str, object]:
+    """Store a private incident image and assess it when a verified artifact is configured."""
+    if user.get('role') not in {'admin', 'officer', 'range_officer', 'control_room_operator', 'incident_commander'}:
+        raise HTTPException(status_code=403, detail='Your role cannot upload incident evidence')
+    if image.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=415, detail='Upload a JPEG, PNG, or WebP image')
+    with engine.connect() as db:
+        incident = db.execute(text('SELECT id,state FROM resq_incidents WHERE id=:id'), {'id': incident_id}).mappings().first()
+    if not incident:
+        raise HTTPException(status_code=404, detail='Incident not found')
+    require_scope(user, incident.get('state'), entity_type='incident', entity_id=str(incident_id))
+    data = await image.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail='Image must be 10 MB or smaller')
+    if not data:
+        raise HTTPException(status_code=422, detail='Image is empty')
+    try:
+        from PIL import Image
+        with Image.open(BytesIO(data)) as decoded:
+            decoded.verify()
+        with Image.open(BytesIO(data)) as decoded:
+            detected_format = (decoded.format or '').upper()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail='The uploaded file is not a readable image') from exc
+    detected_type = {'JPEG': 'image/jpeg', 'PNG': 'image/png', 'WEBP': 'image/webp'}.get(detected_format)
+    if detected_type is None or detected_type != image.content_type:
+        raise HTTPException(status_code=415, detail='The declared image type does not match the decoded image')
+    digest = hashlib.sha256(data).hexdigest()
+    safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120]
+    extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}[detected_type]
+    key = f'{incident_id}/{digest}.{extension}'
+    path = _stored_image_path(key)
+    path_preexisting = path.is_file()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path_preexisting:
+            path.write_bytes(data)
+        else:
+            _assert_stored_image_integrity(path, digest)
+        assessment = assess_image(data, key)
+        with engine.begin() as db:
+            row = db.execute(text('''INSERT INTO resq_incident_images
+            (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,assessed_at)
+            VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,now())
+            ON CONFLICT (incident_id, sha256) DO UPDATE SET assessment_status=EXCLUDED.assessment_status, model_version=EXCLUDED.model_version,
+              storage_key=EXCLUDED.storage_key, original_filename=EXCLUDED.original_filename, content_type=EXCLUDED.content_type,
+              size_bytes=EXCLUDED.size_bytes, authenticity_status=EXCLUDED.authenticity_status, assessment=EXCLUDED.assessment,
+              assessment_error=EXCLUDED.assessment_error, assessed_at=now()
+            RETURNING *'''), {
+                'incident_id': incident_id, 'storage_key': key, 'filename': safe_name,
+                'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest,
+                'status': assessment.get('assessment_status', 'UNAVAILABLE'), 'version': assessment.get('model_version'),
+                'auth': (assessment.get('authenticity') or {}).get('status'),
+                'assessment': json.dumps(assessment), 'error': assessment.get('error_code'),
+            }).mappings().one()
+    except Exception as exc:
+        try:
+            if not path_preexisting and path.is_file():
+                path.unlink()
+        except OSError:
+            logger.exception('Failed to clean up incident image after persistence failure')
+        raise HTTPException(status_code=503, detail='Image could not be stored or assessed') from exc
+    return {'image': _image_row(dict(row)), 'message': 'Image uploaded. Automated assessment is advisory and separate from human verification.'}
+
+
+@router.patch('/incidents/{incident_id}/images/{image_id}/review')
+def review_incident_image(
+    incident_id: int,
+    image_id: int,
+    payload: IncidentImageReviewRequest,
+    user: dict[str, object] = Depends(current_risk_user),
+) -> dict[str, object]:
+    if user.get('role') not in {'admin', 'officer', 'control_room_operator', 'incident_commander', 'range_officer'}:
+        raise HTTPException(status_code=403, detail='Authorized staff review is required')
+    status = payload.status
+    if status not in {'NOT_REVIEWED', 'REVIEWED', 'VERIFIED_AUTHENTIC', 'POTENTIALLY_SYNTHETIC'}:
+        raise HTTPException(status_code=422, detail='Unknown human review status')
+    with engine.begin() as db:
+        incident = db.execute(text('SELECT id,state FROM resq_incidents WHERE id=:id'), {'id': incident_id}).mappings().first()
+        if not incident:
+            raise HTTPException(status_code=404, detail='Incident not found')
+        require_scope(user, incident.get('state'), entity_type='incident', entity_id=str(incident_id))
+        previous = db.execute(text('SELECT human_review_status FROM resq_incident_images WHERE id=:image_id AND incident_id=:incident_id'), {'image_id': image_id, 'incident_id': incident_id}).scalar()
+        row = db.execute(text('''UPDATE resq_incident_images SET human_review_status=:status, human_review_note=:note,
+            human_reviewed_by=CASE WHEN :status='NOT_REVIEWED' THEN NULL ELSE :reviewer END,
+            human_reviewed_at=CASE WHEN :status='NOT_REVIEWED' THEN NULL ELSE now() END
+            WHERE id=:image_id AND incident_id=:incident_id RETURNING *'''), {'status': status, 'note': payload.note, 'reviewer': user['id'], 'image_id': image_id, 'incident_id': incident_id}).mappings().first()
+        if not row:
+            raise HTTPException(status_code=404, detail='Image not found')
+        audit_log.write_audit_log(
+            action='incident_image_human_review', entity_type='incident_image', entity_id=str(image_id),
+            user_id=int(user['id']), previous_state=previous,
+            metadata={'incident_id': incident_id, 'new_status': status, 'note': payload.note}, connection=db,
+        )
+    return {'image': _image_row(dict(row)), 'message': 'Human review recorded separately from automated assessment.'}
 
 
 @router.patch('/incidents/{incident_id}/status')
 def update_incident_status(
     incident_id: int,
     payload: IncidentStatusUpdate,
-    user: dict[str, object] = Depends(require_write),
+    user: dict[str, object] = Depends(current_risk_user),
 ) -> dict[str, object]:
+    _require_incident_operator(user)
     allowed = {'reported', 'verified', 'responding', 'contained', 'closed'}
     if payload.status not in allowed:
         raise HTTPException(status_code=422, detail='Unknown incident status')
 
     with engine.begin() as db:
         existing = db.execute(
-            text('SELECT id,source,size,notes,status,state,source FROM resq_incidents WHERE id=:id'),
+            text('SELECT id,reporter_id,source,size,notes,status,state,source FROM resq_incidents WHERE id=:id'),
             {'id': incident_id},
         ).mappings().first()
         if not existing:
@@ -217,6 +399,13 @@ def update_incident_status(
         )
 
     result_dict = dict(row)
+    if existing.get('reporter_id'):
+        alert_service.generate_alert(
+            kind='incident_status_changed',
+            message=f'Your report #{incident_id} status changed to {payload.status}.',
+            state=existing.get('state'), severity='info', entity_type='incident', entity_id=str(incident_id),
+            user_id=int(existing['reporter_id']),
+        )
     if payload.status in ('verified', 'responding'):
         try:
             alert_service.evaluate_rules_for_incident(incident_id, existing.get("state"), existing.get("size", "unknown"), existing.get("source"))
@@ -229,7 +418,7 @@ def update_incident_status(
 @router.get('/incidents/{incident_id}/history')
 def get_incident_history(
     incident_id: int,
-    user: dict[str, object] = Depends(current_user),
+    user: dict[str, object] = Depends(current_risk_user),
 ) -> dict[str, object]:
     """Retrieve full chronological audit trail of state transitions and actions for an incident."""
     with engine.connect() as db:
@@ -431,5 +620,5 @@ def get_spread_validation(month: str = '2024-01', _: dict[str, object] = Depends
 
 
 @router.get("/notifications")
-def list_notifications(user: dict[str, object] = Depends(current_user)) -> list[dict[str, object]]:
+def list_notifications(user: dict[str, object] = Depends(current_redesign_user)) -> list[dict[str, object]]:
     return list_alerts(user=user)

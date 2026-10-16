@@ -12,5 +12,5 @@ const states: Record<string, [string, string]> = {
 
 export function SystemPage({ path, go }: { path: string; go: Navigate }) {
   const [title, copy] = states[path] ?? states['/404'];
-  return <main className="auth-page"><section className="login-card" aria-labelledby="system-title"><Brand dark /><p className="eyebrow">System status</p><h1 id="system-title">{title}</h1><p className="muted">{copy}</p><button onClick={() => go(path === '/session-expired' ? '/login' : '/')}>{path === '/session-expired' ? 'Return to sign in' : 'Go to TerraWatch home'}</button><footer>Advisory forecast. Confirm with field observations.</footer></section></main>;
+  return <main className="auth-page"><section className="login-card" aria-labelledby="system-title"><Brand dark /><p className="eyebrow">System status</p><h1 id="system-title">{title}</h1><p className="muted">{copy}</p><button onClick={() => go(path === '/session-expired' ? '/staff/login' : '/')}>{path === '/session-expired' ? 'Return to sign in' : 'Go to TerraWatch home'}</button><footer>Advisory forecast. Confirm with field observations.</footer></section></main>;
 }

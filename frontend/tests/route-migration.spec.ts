@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test('public root resolves to the redesigned landing experience', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Role-specific entry experiences' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'CITIZEN / COMMUNITY', exact: true })).toBeVisible();
 });
 
 test('public archive route survives direct navigation and refresh', async ({ page }) => {
@@ -20,13 +20,11 @@ test('public archive route survives direct navigation and refresh', async ({ pag
 test('redesign landing route survives direct navigation and refresh', async ({ page }) => {
   await page.goto('/redesign');
   await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('navigation', { name: 'Saved example navigation' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 
   await page.reload();
   await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('navigation', { name: 'Saved example navigation' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 });
 
 test('historical redesign demo alias resolves to the canonical public archive', async ({ page }) => {
@@ -42,8 +40,7 @@ test('historical redesign demo alias resolves to the canonical public archive', 
 test('removed styleguide alias returns to redesign home without changing route families', async ({ page }) => {
   await page.goto('/redesign/styleguide');
   await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('navigation', { name: 'Saved example navigation' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 
   await page.goto('/redesigned');
   await expect(page).toHaveURL(/\/redesigned$/);

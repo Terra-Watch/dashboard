@@ -3,11 +3,11 @@ import { test, expect } from '@playwright/test';
 test('TerraWatch identity is present in the public home, login, PWA metadata, and icon', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle('TerraWatch | Wildfire Monitoring & Incident Intelligence');
-  await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
-  await expect(page.getByText(/None shows current fire activity/i)).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Community' })).toBeVisible();
 
-  await page.goto('/login');
+  await page.goto('/staff/login');
   await expect(page.getByRole('heading', { name: 'Sign in to TerraWatch' })).toBeVisible();
   await expect(page.getByLabel('Email')).toHaveValue('');
   await expect(page.getByLabel('Password')).toHaveValue('');
@@ -28,7 +28,7 @@ test('former redesign demo URL redirects to the single canonical archive demo', 
 test('removed styleguide route returns to the user-facing example home', async ({ page }) => {
   await page.goto('/redesign/styleguide');
   await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 });
 
 test('historical ranking page labels its date and does not imply a current forecast', async ({ page }) => {
@@ -73,7 +73,7 @@ test('saved example renders historical ranking and event snapshots without netwo
 });
 
 test('primary public and example screens do not expose developer-facing terminology', async ({ page }) => {
-  const screens = ['/', '/login', '/demo', '/redesign', '/redesign/today', '/redesign/watch', '/redesign/incident/E2023-084925', '/redesign/field'];
+  const screens = ['/', '/staff/login', '/community', '/citizen', '/community/archive', '/redesign/today', '/redesign/watch', '/redesign/incident/E2023-084925'];
   const prohibited = /\b(?:API|backend|frontend|payload|schema|database|pipeline|artifact|deployment|repository|Cell2Fire|ERA5-Land|Sentinel-2|VIIRS|PMTiles|GeoJSON|HTTP\s*503|RESQ[0-9]|Bar\s+v3)\b|\bk\s*=|\b(rank|ranked) cells\b/i;
   for (const path of screens) {
     await page.goto(path);

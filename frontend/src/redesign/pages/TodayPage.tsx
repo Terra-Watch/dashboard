@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API } from '../../app/config';
+import { rqFetch } from '../lib/api';
 import { SampleDataBadge, StepIndicator, EmptyState } from '../components/primitives';
 import { RiskLegend } from '../components/scenario';
 import { MapShell, LayerPanel, RiskCellsLayer, type LayerDef } from '../components/map';
@@ -14,12 +14,23 @@ interface RiskFeature {
   properties: { cell_id: number; state: string; rank_percentile: number; band: string };
 }
 
+const ARCHIVE_FORECAST = `${import.meta.env.BASE_URL ?? '/'}demo/resq6-offline-terrawatch-20261015/forecast.geojson`.replace(/\/+/g, '/');
+
 async function fetchRisk(target: string, highOnly: boolean) {
   const params = new URLSearchParams({ target });
   if (highOnly) params.set('risk_band', 'high');
-  const response = await fetch(`${API}/api/risk/geojson?${params.toString()}`);
-  if (!response.ok) throw new Error('Risk data could not load.');
-  return response.json() as Promise<{ type: string; features: RiskFeature[] }>;
+  try {
+    return await rqFetch<{ type: string; features: RiskFeature[] }>(`/api/risk/geojson?${params.toString()}`);
+  } catch (err) {
+    const resp = await fetch(ARCHIVE_FORECAST);
+    if (!resp.ok) throw err;
+    const raw = (await resp.json()) as { type: string; features: RiskFeature[] };
+    if (!highOnly) return raw;
+    return {
+      ...raw,
+      features: raw.features.filter((f) => f.properties.band === 'High' || f.properties.band === 'Very high'),
+    };
+  }
 }
 
 const TODAY_LAYERS: LayerDef[] = [

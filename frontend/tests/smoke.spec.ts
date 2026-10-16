@@ -4,10 +4,10 @@ import AxeBuilder from '@axe-core/playwright';
 test('redesigned public landing opens and links to the saved archive', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('TerraWatch', { exact: true }).first()).toBeVisible();
-  await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Explore the saved example' }).click();
-  await expect(page).toHaveURL(/\/demo(?:\?.*)?$/);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
+  await page.getByRole('link', { name: 'Community' }).click();
+  await expect(page).toHaveURL(/\/community$/);
 });
 
 test('redesign route matching does not capture similarly named paths', async ({ page }) => {
@@ -16,7 +16,7 @@ test('redesign route matching does not capture similarly named paths', async ({ 
   await expect(page.getByRole('heading', { name: 'This page does not exist.' })).toBeVisible();
 
   await page.goto('/redesign');
-  await expect(page.getByRole('navigation', { name: 'Saved example navigation' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 });
 
 test('public landing has no serious accessibility violations', async ({ page }) => {
@@ -26,7 +26,7 @@ test('public landing has no serious accessibility violations', async ({ page }) 
 });
 
 test('sign-in support links are keyboard reachable', async ({ page }) => {
-  await page.goto('/login');
+  await page.goto('/staff/login');
   await expect(page.getByRole('heading', { name: 'Sign in to TerraWatch' })).toBeVisible();
   await page.getByRole('button', { name: 'Forgot password' }).focus();
   await page.keyboard.press('Enter');
@@ -35,11 +35,11 @@ test('sign-in support links are keyboard reachable', async ({ page }) => {
 
 test('successful sign-in leaves the login screen', async ({ page }) => {
   await page.route('**/api/auth/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ access_token: 'test-token', user: { name: 'Forest control', role: 'admin', email: 'admin@resq.local' } }) }));
-  await page.goto('/login');
+  await page.goto('/staff/login');
   await page.getByLabel('Email').fill('admin@resq.local');
   await page.getByLabel('Password').fill('test-password');
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page).toHaveURL(/\/app\/map(?:\?.*)?$/);
+  await expect(page).toHaveURL(/\/app\/admin(?:\?.*)?$/);
 });
 
 test('spread page is a saved example and never submits a new run', async ({ page }) => {

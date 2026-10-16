@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { rqFetch } from '../lib/api';
+import { getStoredUser, rqFetch } from '../lib/api';
 import { SampleDataBadge, StepIndicator } from '../components/primitives';
 import { QueueList } from '../components/watch';
 import { MapShell, DetectionsLayer } from '../components/map';
@@ -14,6 +14,7 @@ interface DetectionsResponse {
 
 export function WatchPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const user = getStoredUser();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['watch-detections'],
     queryFn: () => rqFetch<DetectionsResponse>('/api/redesign/detections'),
@@ -46,7 +47,7 @@ export function WatchPage() {
             </MapShell>
             <p className="mt-2 text-xs text-ink-muted flex items-center gap-1.5">
               <span className="inline-block h-2.5 w-2.5 rounded-full border border-[#6b2fa0]" aria-hidden />
-              <span>Markers indicate VIIRS satellite detection points, not confirmed physical fire perimeters.</span>
+              <span>Markers indicate thermal satellite detection points, not confirmed physical fire perimeters.</span>
             </p>
           </div>
         )}
@@ -68,14 +69,22 @@ export function WatchPage() {
                 Clear
               </button>
             </div>
-            {selectedDetection.incident_id && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {selectedDetection.incident_id && (
+                <a
+                  href={`/redesign/incident/${selectedDetection.incident_id}`}
+                  className="inline-flex items-center gap-1.5 rounded-rq border border-canopy bg-canopy px-3 py-1.5 text-xs font-semibold text-white hover:bg-canopy-deep"
+                >
+                  Inspect possible spread scenario for {selectedDetection.incident_id} →
+                </a>
+              )}
               <a
-                href={`/redesign/incident/${selectedDetection.incident_id}`}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-rq border border-canopy bg-canopy px-3 py-1.5 text-xs font-semibold text-white hover:bg-canopy-deep"
+                href="/redesign/simulation"
+                className="inline-flex items-center gap-1.5 rounded-rq border border-contour bg-paper px-3 py-1.5 text-xs font-semibold text-ink hover:border-canopy"
               >
-                Inspect possible spread scenario for {selectedDetection.incident_id} →
+                Launch Simulation Lab →
               </a>
-            )}
+            </div>
           </div>
         )}
 

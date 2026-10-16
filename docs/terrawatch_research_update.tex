@@ -1,0 +1,79 @@
+% Source created because the repository contains no TerraWatch Beamer/LaTeX source.
+% It is intentionally a standalone, evidence-bounded update deck; the existing
+% final.pdf at the repository root is a different RESQ flood-communications deck.
+\documentclass[aspectratio=169,10pt]{beamer}
+\usetheme{default}
+\usecolortheme{dove}
+\definecolor{canopy}{HTML}{0F766E}
+\definecolor{ink}{HTML}{18312D}
+\setbeamercolor{structure}{fg=canopy}
+\setbeamercolor{normal text}{fg=ink}
+\setbeamertemplate{navigation symbols}{}
+\title{TerraWatch: Evidence-Aware Wildfire Workflows}
+\subtitle{Research and dashboard integration update}
+\author{TerraWatch project}
+\date{October 2026}
+
+\begin{document}
+\begin{frame}\titlepage\end{frame}
+
+\begin{frame}{Fire Image Authenticity Assessment}
+  \begin{itemize}
+    \item Existing assessor: CLIP ViT-B/16 QuickGELU with rank-8 LoRA; the shipped authenticity adapter uses block-8 CLS features. The reported source-shift results primarily support a final-layer variant, so they must not be read as deployment performance for the shipped head.
+    \item Authenticity outputs: no concerns found, potentially synthetic, potentially edited, reused, inconsistent, or inconclusive.
+    \item Real data: D-Fire originals. Synthetic training generators: SD 1.5 and SDXL; PixArt-alpha and Kolors held out.
+    \item Evaluation normalization: longest side 512 px, JPEG quality 90; a validation/calibration threshold was tuned to 5\% real-image flags. This is not a production false-positive guarantee.
+  \end{itemize}
+  \vfill
+  \scriptsize Advisory only: the experiment is narrow and does not establish detection of newer or closed generators, current incidents, location, or capture time.
+\end{frame}
+
+\begin{frame}{Image Evidence Assessment in TerraWatch}
+  \centering
+  \Large Authorized incident report
+  \quad$\rightarrow$\quad Image upload
+  \quad$\rightarrow$\quad Existing authenticity model
+  \quad$\rightarrow$\quad Assessment result
+
+  \vspace{1em}
+  \Large$\downarrow$
+
+  \vspace{1em}
+  \Large Control Room / Range Officer review
+  \quad$\rightarrow$\quad Human verification
+
+  \vfill
+  \small Automated assessment is stored separately from the incident status and never auto-rejects a report. The current field-note screen stores photo references locally; binary field-photo upload is not yet connected to that redesign flow.
+\end{frame}
+
+\begin{frame}{TerraWatch Dashboard: Role-Based User Experiences}
+  \begin{columns}[T]
+    \column{.25\textwidth}\textbf{COMMUNITY}\\[.4em]Public awareness, permitted community information, and responsible reporting.
+    \column{.25\textwidth}\textbf{CITIZEN}\\[.4em]Public guidance and responsible reporting; no distinct citizen-account workflow is currently demonstrated.
+    \column{.25\textwidth}\textbf{CONTROL ROOM}\\[.4em]Review incoming reports, inspect evidence, and coordinate authorized workflows.
+    \column{.25\textwidth}\textbf{RANGE OFFICER}\\[.4em]Inspect authorized evidence and perform scoped review; the redesign field-note route is intended for field crew.
+  \end{columns}
+  \vfill
+  \small Current repository status: staff incident reporting and field-note workflows exist; public/community reporting and binary field-photo persistence remain bounded by the existing authorization model.
+\end{frame}
+
+\begin{frame}{Integrated TerraWatch Architecture}
+  \begin{description}
+    \item[Ignition forecasting] Multimodal environmental data $\rightarrow$ TerraWatch Model $\rightarrow$ ranked ignition risk.
+    \item[Fire-spread simulation] Ignition scenarios $\rightarrow$ Cell2Fire/Rothermel $\rightarrow$ saved spread examples.
+    \item[Image authenticity] Report image $\rightarrow$ existing evidence assessor $\rightarrow$ advisory assessment.
+  \end{description}
+  \vfill
+  \small These are separate processing paths. No evidence was found that the image assessor improves TWM or the spread simulator.
+\end{frame}
+
+\begin{frame}{Validation and Limitations}
+  \begin{itemize}
+    \item Synthetic-generator experiment: seen-generator and held-out-generator AUC are reported as 1.000 for clean inputs for both block-8 and final-layer features; these are clustered validation results over D-Fire originals and four stated diffusion families, not citizen-phone or current-incident evaluation.
+    \item Real-source controls: final-layer real images flagged as synthetic were 1.6\% on FIgLib and 0.0\% on AoF; block-8 was less stable on FIgLib (59.2\%).
+    \item Degradation matters: real-image flags rise under blur and half-resolution recompression; the 5\% threshold is only a calibration target.
+    \item The fire/smoke head is not an authenticity verdict and can be fooled by generated fire images and burn scars.
+    \item GCS contains research checkpoints and evaluation arrays, but no verified deployable Fire Evidence Assessor artifact is configured for TerraWatch. Run logs also leave OpenAI pretrained-weight provenance unresolved; runtime inference therefore remains unavailable until an approved artifact is configured.
+  \end{itemize}
+\end{frame}
+\end{document}

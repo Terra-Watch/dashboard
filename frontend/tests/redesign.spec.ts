@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 const SCREENS: { path: string; name: string; hasMap: boolean }[] = [
-  { path: '/redesign', name: 'landing', hasMap: false },
+  { path: '/', name: 'landing', hasMap: false },
   { path: '/redesign/today', name: 'today', hasMap: true },
   { path: '/redesign/watch', name: 'watch', hasMap: true },
   { path: '/redesign/incident/E2023-084925', name: 'incident', hasMap: true },
@@ -70,15 +70,25 @@ async function stubSampleReadApis(page: Page) {
   });
 }
 
+async function authenticateFieldWorkspace(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('resq_token', 'playwright-field-token');
+    localStorage.setItem('resq_user', JSON.stringify({ id: 7, email: 'field@example.test', name: 'Field tester', role: 'field_crew' }));
+  });
+}
+
 for (const screen of SCREENS) {
   test.describe(screen.name, () => {
-    test.beforeEach(async ({ page }) => stubSampleReadApis(page));
+    test.beforeEach(async ({ page }) => {
+      if (screen.path === '/redesign/field') await authenticateFieldWorkspace(page);
+      await stubSampleReadApis(page);
+    });
 
     test(`${screen.name}: sample-data disclaimer and axe clean`, async ({ page }) => {
       await page.goto(screen.path);
       await page.waitForSelector('[data-rq-app]');
       await page.waitForTimeout(700); // let the landing page's one-time fade-in settle before scanning contrast
-      await expect(page.getByTestId('sample-data-badge').first()).toBeVisible();
+      if (screen.path !== '/') await expect(page.getByTestId('sample-data-badge').first()).toBeVisible();
 
       const text = await textOf(page);
       expect(text.toLowerCase()).toContain('not live monitoring');
@@ -183,13 +193,14 @@ test('incident: Uncalibrated-scenario badge is always present, not dismissible',
 test('retired styleguide URL redirects to the public redesign landing page', async ({ page }) => {
   await page.goto('/redesign/styleguide');
   await expect(page).toHaveURL(/\/redesign$/);
-  await expect(page.getByRole('heading', { name: 'Explore past fire information.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
 });
 
 test('field: notes remain local and triage actions are not offered', async ({ page }) => {
   await stubSampleReadApis(page);
+  await authenticateFieldWorkspace(page);
   await page.goto('/redesign/field');
-  await expect(page.getByText(/Notes remain on this device as drafts; they are not uploaded/i)).toBeVisible();
+  await expect(page.getByText(/Queue metadata is stored on this device; note and photo-reference content stays in memory/i)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save draft on this device' })).toBeVisible();
   await page.goto('/redesign/watch');
   await expect(page.getByRole('button', { name: 'Verify' })).toHaveCount(0);
@@ -197,23 +208,11 @@ test('field: notes remain local and triage actions are not offered', async ({ pa
 
 test('redesign landing offers clearly differentiated entry experiences for Citizen, Control Room, and Range Officer', async ({ page }) => {
   await page.goto('/redesign');
-  await expect(page.getByRole('heading', { name: 'Role-specific entry experiences' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Citizen', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Control Room', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Range Officer', exact: true })).toBeVisible();
-  await expect(page.getByText(/Client-side role selection is not a security boundary/i)).toBeVisible();
-
-  // Citizen primary actions
-  await expect(page.getByRole('button', { name: 'View historical ranking' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Open public archive' })).toBeVisible();
-
-  // Control Room primary actions
-  await expect(page.getByRole('button', { name: 'Review reports' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Spread model' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Role-specific entry experiences' }).getByRole('link', { name: 'Staff sign in' })).toBeVisible();
-
-  // Range Officer primary actions
-  await expect(page.getByRole('button', { name: 'Open field notes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Know what is public/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'CITIZEN / COMMUNITY', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'RANGER / FIELD OFFICER', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'CONTROL ROOM', exact: true })).toBeVisible();
+  await expect(page.getByText(/Public information and restricted operations are separate/i)).toBeVisible();
 });
 
 test('field: mobile and tablet viewports preserve accessibility, draft controls, and no horizontal overflow', async ({ page }) => {
@@ -225,6 +224,7 @@ test('field: mobile and tablet viewports preserve accessibility, draft controls,
   for (const vp of viewports) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await stubSampleReadApis(page);
+    await authenticateFieldWorkspace(page);
     await page.goto('/redesign/field');
 
     // Assert no unintended horizontal overflow
@@ -254,6 +254,7 @@ test('field: mobile and tablet viewports preserve accessibility, draft controls,
 
 test('field: per-task note state does not overwrite another task', async ({ page }) => {
   await stubSampleReadApis(page);
+  await authenticateFieldWorkspace(page);
   await page.route('**/api/redesign/field/tasks', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({
@@ -287,6 +288,7 @@ test('field: per-task note state does not overwrite another task', async ({ page
 
 test('field: explicit UI states for loading, error, empty, and offline banner', async ({ page }) => {
   await stubSampleReadApis(page);
+  await authenticateFieldWorkspace(page);
   let failing = true;
   await page.route('**/api/redesign/field/tasks', (route) => {
     if (failing) return route.abort();
@@ -341,6 +343,7 @@ test('watch: selecting detection on map or list highlights details and links to 
 
 test('field: photo evidence assessment accurately reflects unavailable service and human review fallback', async ({ page }) => {
   await stubSampleReadApis(page);
+  await authenticateFieldWorkspace(page);
   await page.goto('/redesign/field');
 
   // Input file
