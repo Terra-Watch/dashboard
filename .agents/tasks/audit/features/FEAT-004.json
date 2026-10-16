@@ -1,0 +1,46 @@
+{
+  "id": "FEAT-004",
+  "type": "chore",
+  "description": "P2 MEDIUM PRIORITY: Address consistency and polish issues. Consolidate duplicate STATUS_LABELS constants, reduce community chat polling frequency, remove 'saved examples' banner from operational routes, add audit logging to legacy login endpoint, and optionally redirect duplicate legacy incident route to redesign control room. These changes reduce maintenance burden and improve UX consistency without changing core functionality.",
+  "status": "pending",
+  "steps": [
+    "1. CONSOLIDATE STATUS LABELS: Read frontend/src/features/operations/IncidentsListPage.tsx line 55 and frontend/src/redesign/pages/ControlRoomApp.tsx line 20. Both define identical STATUS_LABELS constant mapping incident status to display labels.",
+    "2. Extract STATUS_LABELS to shared constants file: Create frontend/src/lib/constants.ts or add to frontend/src/app/types.ts if types file already has constants section.",
+    "3. Export STATUS_LABELS from shared file: export const STATUS_LABELS = { reported: 'Reported', verified: 'Verified', responding: 'Responding', contained: 'Contained', closed: 'Closed' };",
+    "4. Update imports: In IncidentsListPage.tsx and ControlRoomApp.tsx, replace local constant with import from shared file. Verify no other files duplicate this constant (grep for STATUS_LABELS).",
+    "5. REDUCE CHAT POLLING: Read frontend/src/redesign/pages/PublicPortal.tsx line 104. Chat polling interval is 5000ms (5 seconds). Change to 15000ms (15 seconds) to reduce server load. Document that WebSocket/SSE is P3 future enhancement.",
+    "6. REMOVE BANNER FROM OPERATIONAL ROUTES: Read frontend/src/redesign/RedesignRoot.tsx line 57. Banner 'Saved examples only' displayed on all redesign routes. Add conditional logic: Only show banner on demo/historical routes (/redesign, /redesign/today, /demo, /community/archive). Do NOT show on operational routes (/citizen, /ranger, /control-room).",
+    "7. Pattern: Check current path (const path = window.location.pathname or use router context). If path.startsWith('/citizen') || path.startsWith('/ranger') || path.startsWith('/control-room'), do not render banner.",
+    "8. ADD LEGACY LOGIN AUDIT LOG: Read backend/app/routers/auth.py POST /api/auth/login endpoint (lines 30-39). Read redesign login endpoint (lines 70-150) as pattern for login attempt recording and audit log writing.",
+    "9. Add login attempt recording: After email/password validation, before token generation, call rate limit check (similar to redesign login line ~110). Record attempt in resq_login_attempts table.",
+    "10. Add audit log write on success: After successful login, call audit_log.write_audit_log(action='login_success', user_id=user['id'], device_id=None, metadata={'email': email}) pattern from redesign login.",
+    "11. Add audit log write on failure: In except block (invalid credentials), call audit_log.write_audit_log(action='login_failed', user_id=None, metadata={'email': email, 'reason': 'invalid_credentials'}).",
+    "12. OPTIONAL - REDIRECT LEGACY INCIDENTS: If stakeholder decision approves legacy deprecation (see remediation plan Decision 3), add redirect in frontend/src/app/App.tsx. When route is /app/incidents or /app/incidents/{id}, redirect to /control-room/incidents or /control-room/incidents/{id}. Display toast 'This page has moved to the new Control Room interface.' Keep legacy code for 1-2 sprints, then remove."
+  ],
+  "acceptance_criteria": [
+    "STATUS_LABELS constant defined in exactly one location (shared constants file)",
+    "Both legacy and redesign incident lists use shared constant (labels identical)",
+    "Community chat polls every 15 seconds instead of 5 seconds (no user-visible latency impact)",
+    "Operational routes (/citizen, /ranger, /control-room) display NO 'saved examples' banner",
+    "Demo routes (/redesign, /demo, /community/archive) still display banner (clear user expectation)",
+    "Legacy login endpoint writes to resq_login_attempts table on every attempt",
+    "Legacy login endpoint writes login_success to resq_audit_log on successful auth",
+    "Legacy login endpoint writes login_failed to resq_audit_log on auth failure",
+    "If legacy redirect implemented: /app/incidents redirects to /control-room/incidents with toast message"
+  ],
+  "verification": [
+    "STATUS LABELS: Grep codebase for STATUS_LABELS (grep -r 'STATUS_LABELS' frontend/src/). Verify only one definition in shared file, two imports.",
+    "Navigate to /app/incidents (legacy) and /control-room/incidents (redesign), verify status labels identical for same incident.",
+    "CHAT POLLING: Open /community, open DevTools Network tab, filter for /api/community/chat requests. Verify interval is ~15 seconds between polls (not 5 seconds).",
+    "Send chat message, verify it appears within 15 seconds without manual refresh (polling still works).",
+    "BANNER: Navigate to /citizen, /ranger, /control-room in sequence. Verify NO banner displayed on any operational route.",
+    "Navigate to /redesign, /demo, /community/archive. Verify 'Saved examples' banner displayed on these routes.",
+    "LEGACY LOGIN AUDIT: Use legacy login endpoint (POST /api/auth/login with email/password). Query resq_login_attempts table, verify row inserted with email, timestamp, success=true.",
+    "Query resq_audit_log table, verify action='login_success', user_id populated, occurred_at timestamp.",
+    "Test failed login: Submit invalid credentials, verify resq_login_attempts has success=false, resq_audit_log has action='login_failed'.",
+    "LEGACY REDIRECT (if implemented): Navigate to /app/incidents, verify automatic redirect to /control-room/incidents. Verify toast message displayed.",
+    "Build verification: cd frontend && npm run compile, verify no TypeScript errors. cd backend && python -m pytest (if test suite exists)."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

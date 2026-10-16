@@ -1,0 +1,12 @@
+{
+  "task_id": "task-terrawatch-remediation",
+  "task_description": "TerraWatch application audit remediation: Fix P0 Citizen→Community integration gap, implement P1 missing features (evidence retrieval, notifications, offline queue), and address P2 consistency issues",
+  "status": "pending",
+  "feature_order": [
+    "FEAT-001",
+    "FEAT-002",
+    "FEAT-003",
+    "FEAT-004"
+  ],
+  "blocked_reason": null
+}

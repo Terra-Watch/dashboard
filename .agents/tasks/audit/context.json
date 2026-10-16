@@ -1,0 +1,32 @@
+{
+  "project_type": "Full-stack web application: FastAPI backend + React/TypeScript frontend (Vite bundler)",
+  "language": "TypeScript (frontend), Python 3.11+ (backend)",
+  "build_system": "Frontend: Vite with HMR, npm workspaces. Backend: FastAPI with uvicorn. No monorepo orchestration tool.",
+  "test_framework": "Not discovered in audit. Recommendation: pytest for backend, vitest or playwright for frontend.",
+  "build_command": "Frontend: cd frontend && npm run compile. Backend: cd backend && python -m app.main (or uvicorn)",
+  "test_command": "Not established. Recommended: npm run test (frontend), pytest (backend) when test suite added.",
+  "verification_instructions": "Manual verification per remediation plan Section 6. Each fix has specific testing checklist. Integration testing covers complete citizen workflow, ranger workflow, control room workflow. Build frontend (npm run compile), start backend (uvicorn app.main:app --reload), test in browser.",
+  "snapshot_or_generated_files": "Frontend build output at frontend/dist/. Backend generates runtime_data/incident_images/{incident_id}/{sha256}.{ext} for uploaded images. These are NOT checked into git. No snapshot tests discovered.",
+  "environment_constraints": "Backend requires PostgreSQL at DATABASE_URL (default: postgresql+psycopg://resq:resq@localhost:55432/resq). Frontend expects backend at localhost:8000 (API_BASE configurable). FIRE_EVIDENCE_REPO and FIRE_EVIDENCE_ARTIFACT_DIR must be preserved (AI assessment subsystem). Never modify git history, never run destructive operations, never weaken security/authorization.",
+  "contribution_requirements": "Per original instructions: Do not modify AI Fire Evidence Assessor (model, inference, security). Do not weaken authorization or security. Do not overwrite user changes. Do not commit/push (remediation workflow will handle). Preserve all 26 database tables, foreign keys, and audit logging. Follow existing code patterns: raw SQL in backend (no ORM migration unless FEAT specifies), React functional components in frontend, CSRF + Bearer auth on all mutating endpoints.",
+  "key_patterns": "Frontend: Two API clients exist (lib/api.ts legacy, redesign/lib/api.ts modern). Redesign uses rqFetch() with token expiry handling. Legacy uses api() with ApiError class. Assessment display uses presentAssessment() helper from lib/assessmentPresentation.ts. Backend: All queries use text() raw SQL. Auth via current_redesign_user() or citizen_user() dependencies. Authorization via require_roles(), require_scope(). CSRF via require_csrf dependency. Audit logging via audit_log.write_audit_log(). Alert generation via alert_service.generate_alert(). Image storage via IMAGE_ROOT path. Assessment via assess_image_async().",
+  "relevant_files": [
+    "frontend/src/redesign/pages/CitizenApp.tsx (Citizen routing and all citizen pages)",
+    "frontend/src/redesign/pages/PublicPortal.tsx (Community page)",
+    "frontend/src/redesign/lib/api.ts (Redesign API client)",
+    "frontend/src/lib/api.ts (Legacy API client)",
+    "frontend/src/lib/offlineQueue.ts (Offline queue for legacy)",
+    "frontend/src/lib/assessmentPresentation.ts (Assessment display helper)",
+    "backend/app/routers/citizen.py (Citizen endpoints)",
+    "backend/app/routers/community.py (Community endpoints)",
+    "backend/app/routers/operations.py (Incident endpoints)",
+    "backend/app/routers/auth.py (Authentication)",
+    "backend/app/services/alert_service.py (Alert generation)",
+    "backend/app/services/audit_log.py (Audit logging)",
+    "backend/app/services/image_assessment.py (AI assessment - DO NOT MODIFY)",
+    "backend/app/database/session.py (Database schema DDL)",
+    "backend/app/core/security.py (Auth/CSRF)",
+    "backend/app/core/permissions.py (Authorization/scopes)"
+  ],
+  "directory_structure": "frontend/src/{app/ (legacy workspace), redesign/pages/ (modern portals), lib/ (shared utilities), components/ (shared UI)}. backend/app/{routers/ (8 routers), services/ (7 services), core/ (security, permissions), database/ (session, schema), contracts/ (Pydantic schemas)}. Database: PostgreSQL with 26 tables created via init_db() in session.py. Images stored at backend/runtime_data/incident_images/. Model artifacts at backend/models/barv3/. Fire Evidence Assessor repo external (FIRE_EVIDENCE_REPO env var)."
+}
