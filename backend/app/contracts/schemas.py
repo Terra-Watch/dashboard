@@ -31,6 +31,22 @@ class CitizenReportRequest(BaseModel):
     observed_at: str = Field(min_length=1, max_length=80)
 
 
+class CommunityPostRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class CommunityCommentRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class CommunityMessageRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class CommunityReportRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class IncidentAssignmentRequest(BaseModel):
     ranger_id: int = Field(gt=0)
     priority: str = Field(default='normal', pattern='^(low|normal|high|urgent)$')

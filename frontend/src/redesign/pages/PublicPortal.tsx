@@ -1,7 +1,10 @@
 import { Brand } from '../../components/Brand';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { OfflineDemoPage } from './OfflineDemoPage';
 import { PwaInstallPrompt } from '../../components/PwaInstallPrompt';
+import { API } from '../../app/config';
+import { getCsrfToken } from '../lib/sessionAuth';
+import { safeCitizenReturnTo } from '../lib/citizenAuth';
 
 type Navigate = (path: string) => void;
 
@@ -57,11 +60,55 @@ export function PublicLandingPage({ go }: { go: Navigate }) {
 }
 
 export function PublicArchivePage({ go }: { go: Navigate }) {
-  return <PublicLayout go={go} current="/community/archive"><OfflineDemoPage /></PublicLayout>;
+  return <PublicLayout go={go} current="/community/archive"><ArchivedCommunityPosts /><OfflineDemoPage /></PublicLayout>;
+}
+
+function ArchivedCommunityPosts() {
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  useEffect(() => { void fetch(`${API}/api/community/posts?archived=true`).then(response => response.ok ? response.json() : Promise.reject()).then(data => setPosts(data.items)).catch(() => setPosts([])); }, []);
+  if (!posts.length) return null;
+  return <section className="mx-auto max-w-6xl px-5 pt-8 sm:px-8" aria-labelledby="archived-community-heading"><div className="rounded-rq border border-contour bg-sheet p-5"><p className="text-xs font-bold uppercase tracking-wider text-canopy">Archived community posts</p><h2 id="archived-community-heading" className="mt-1 font-serif text-2xl">Past discussion, clearly separated</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{posts.map(post => <article key={post.id} className="rounded-rq border border-contour p-4"><p className="whitespace-pre-wrap text-sm leading-6">{post.content}</p><p className="mt-3 text-xs text-ink-muted">{post.author?.name || 'TerraWatch member'} · Historical community item</p></article>)}</div></div></section>;
 }
 
 export function CommunityPage({ go }: { go: Navigate }) {
-  return <PublicLayout go={go} current="/community"><section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16"><p className="text-xs font-bold uppercase tracking-wider text-canopy">Community</p><h1 className="mt-3 max-w-3xl font-serif text-4xl sm:text-5xl">Public information for preparedness and context.</h1><p className="mt-5 max-w-2xl text-base leading-7 text-ink-muted">Use this space to understand fire-risk information, find preparedness guidance, and review clearly labelled historical demonstrations. It does not expose operational records or private evidence.</p><div className="mt-9 grid gap-4 md:grid-cols-3"><EntryCard title="Preparedness" eyebrow="Before a fire" copy="Keep local contact details, evacuation information, and household plans current. Follow official local authority guidance." action="Read preparedness guidance" onClick={() => go('/help')} /><EntryCard title="Public information" eyebrow="Understand the map" copy="Learn how TerraWatch presents risk information and why a ranking is not a confirmed fire." action="How the information works" onClick={() => go('/about-forecast')} /><EntryCard title="Historical archive" eyebrow="Past examples" copy="Explore saved demonstrations separately from any current public information." action="Explore the archive" onClick={() => go('/community/archive')} /></div></section></PublicLayout>;
+  return <PublicLayout go={go} current="/community"><CommunityDiscussion go={go} /></PublicLayout>;
+}
+
+type CommunityPost = { id: number; content: string; created_at: string; archived: boolean; comments_count: number; author: { name?: string } };
+type ChatMessage = { id: number; content: string; created_at: string; author: { name?: string } };
+
+function CommunityDiscussion({ go }: { go: Navigate }) {
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [chat, setChat] = useState<ChatMessage[]>([]);
+  const [postText, setPostText] = useState('');
+  const [chatText, setChatText] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const authenticated = Boolean(localStorage.getItem('resq_token'));
+  const request = async (path: string, options: RequestInit = {}) => {
+    const headers = new Headers(options.headers);
+    if (options.body) headers.set('Content-Type', 'application/json');
+    const token = localStorage.getItem('resq_token');
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    const csrf = getCsrfToken();
+    if (csrf && options.method && options.method !== 'GET') headers.set('x-resq-csrf', csrf);
+    const response = await fetch(`${API}${path}`, { ...options, headers, credentials: 'include' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || 'Community information is unavailable.');
+    return data;
+  };
+  const load = async (quiet = false) => {
+    try {
+      const [postData, chatData] = await Promise.all([request('/api/community/posts'), authenticated ? request('/api/community/chat') : Promise.resolve({ items: [] })]);
+      setPosts(postData.items); setChat(chatData.items); setError('');
+    } catch (reason) { if (!quiet) setError(reason instanceof Error ? reason.message : 'Community information is unavailable.'); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { void load(); const timer = authenticated ? window.setInterval(() => void load(true), 5000) : undefined; return () => { if (timer) window.clearInterval(timer); }; }, [authenticated]);
+  async function submitPost(event: FormEvent) { event.preventDefault(); try { await request('/api/community/posts', { method: 'POST', body: JSON.stringify({ content: postText }) }); setPostText(''); await load(true); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Post was not published.'); } }
+  async function submitChat(event: FormEvent) { event.preventDefault(); try { await request('/api/community/chat', { method: 'POST', body: JSON.stringify({ content: chatText }) }); setChatText(''); await load(true); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Message was not sent.'); } }
+  const login = () => go(`/citizen/login?returnTo=${encodeURIComponent(safeCitizenReturnTo('/community'))}`);
+  return <section className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-wider text-canopy">Community</p><h1 className="mt-3 font-serif text-4xl sm:text-5xl">Public information, local context, and respectful discussion.</h1><p className="mt-5 text-base leading-7 text-ink-muted">Posts and chat are community discussion only. They never create a fire report, notify responders, or expose private evidence. Use <button className="underline" onClick={() => go('/citizen')}>Citizen reporting</button> for a suspected fire.</p></div>{error && <p role="alert" className="mt-5 rounded-rq border border-warn/50 bg-paper p-3 text-sm">{error}</p>}<div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]"><section className="rounded-rq border border-contour bg-sheet p-5" aria-labelledby="community-feed-heading"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-canopy">Community feed</p><h2 id="community-feed-heading" className="mt-1 font-serif text-2xl">Shared updates</h2></div>{!authenticated && <button onClick={login} className="rounded-rq border border-canopy px-3 py-2 text-sm font-semibold text-canopy">Sign in to post</button>}</div>{authenticated && <form onSubmit={event => void submitPost(event)} className="mt-5"><label htmlFor="community-post" className="sr-only">Write a community post</label><textarea id="community-post" value={postText} onChange={event => setPostText(event.target.value)} maxLength={2000} required placeholder="Share preparedness information or local context…" className="min-h-24 w-full rounded-rq border border-contour bg-paper p-3 text-sm"/><div className="mt-2 flex justify-end"><button className="rounded-rq bg-canopy px-4 py-2 text-sm font-semibold text-white" type="submit">Publish community post</button></div></form>}{loading ? <p role="status" className="mt-6 text-sm text-ink-muted">Loading community posts…</p> : posts.length ? <div className="mt-6 grid gap-3">{posts.map(post => <article key={post.id} className="rounded-rq border border-contour p-4"><p className="whitespace-pre-wrap text-sm leading-6">{post.content}</p><p className="mt-3 text-xs text-ink-muted">{post.author?.name || 'TerraWatch member'} · {new Date(post.created_at).toLocaleString()}</p></article>)}</div> : <p className="mt-6 rounded-rq border border-dashed border-contour p-5 text-sm text-ink-muted">No community posts yet. This feed is empty until an authenticated member publishes one.</p>}</section><section className="rounded-rq border border-contour bg-canopy p-5 text-white" aria-labelledby="community-chat-heading"><p className="text-xs font-bold uppercase tracking-wider text-white/75">Member chat · polling every 5 seconds</p><h2 id="community-chat-heading" className="mt-1 font-serif text-2xl">Talk with the community</h2><p className="mt-2 text-sm leading-6 text-white/80">Chat is persisted and bounded to recent history. It is not an emergency channel.</p>{authenticated ? <form onSubmit={event => void submitChat(event)} className="mt-5"><label htmlFor="community-chat" className="sr-only">Chat message</label><input id="community-chat" value={chatText} onChange={event => setChatText(event.target.value)} maxLength={1000} required placeholder="Write a message…" className="w-full rounded-rq border-0 bg-white/95 px-3 py-3 text-sm text-ink"/><button className="mt-2 rounded-rq bg-white px-4 py-2 text-sm font-semibold text-canopy" type="submit">Send message</button></form> : <button onClick={login} className="mt-5 rounded-rq bg-white px-4 py-2 text-sm font-semibold text-canopy">Sign in to join chat</button>}<div className="mt-5 max-h-64 space-y-3 overflow-y-auto" aria-live="polite">{authenticated && chat.length ? chat.map(item => <p key={item.id} className="border-t border-white/20 pt-2 text-sm"><strong>{item.author?.name || 'Member'}</strong><br/>{item.content}</p>) : <p className="text-sm text-white/75">Sign in to view member chat history.</p>}</div></section></div><p className="mt-6 text-xs text-ink-muted">Moderation: use the report control on a post when available; abusive or unsafe content may be removed. For immediate danger, contact local emergency services.</p></section>;
 }
 
 export function CitizenPage({ go }: { go: Navigate }) {

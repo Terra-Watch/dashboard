@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from .core.config import API_ORIGINS
 from .database.session import engine, init_db
-from .routers import auth, citizen, operations, redesign, risk, workflow
+from .routers import auth, citizen, community, operations, redesign, risk, workflow
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -15,6 +15,7 @@ app = FastAPI(title="TerraWatch — Wildfire Monitoring & Incident Intelligence 
 app.add_middleware(CORSMiddleware, allow_origins=API_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.include_router(auth.router)
 app.include_router(citizen.router)
+app.include_router(community.router)
 app.include_router(workflow.router)
 app.include_router(operations.router)
 app.include_router(risk.router)

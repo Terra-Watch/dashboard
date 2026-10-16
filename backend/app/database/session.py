@@ -210,6 +210,36 @@ def init_db() -> None:
                 read BOOLEAN NOT NULL DEFAULT false,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now()
             )""",
+            """CREATE TABLE IF NOT EXISTS resq_community_posts (
+                id BIGSERIAL PRIMARY KEY,
+                author_id INTEGER NOT NULL REFERENCES resq_users(id) ON DELETE CASCADE,
+                content TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 2000),
+                archived BOOLEAN NOT NULL DEFAULT false,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_community_comments (
+                id BIGSERIAL PRIMARY KEY,
+                post_id BIGINT NOT NULL REFERENCES resq_community_posts(id) ON DELETE CASCADE,
+                author_id INTEGER NOT NULL REFERENCES resq_users(id) ON DELETE CASCADE,
+                content TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 1000),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_community_messages (
+                id BIGSERIAL PRIMARY KEY,
+                author_id INTEGER NOT NULL REFERENCES resq_users(id) ON DELETE CASCADE,
+                content TEXT NOT NULL CHECK (char_length(content) BETWEEN 1 AND 1000),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )""",
+            """CREATE TABLE IF NOT EXISTS resq_community_reports (
+                id BIGSERIAL PRIMARY KEY,
+                reporter_id INTEGER NOT NULL REFERENCES resq_users(id) ON DELETE CASCADE,
+                post_id BIGINT REFERENCES resq_community_posts(id) ON DELETE CASCADE,
+                comment_id BIGINT REFERENCES resq_community_comments(id) ON DELETE CASCADE,
+                reason TEXT NOT NULL CHECK (char_length(reason) BETWEEN 1 AND 500),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                CHECK ((post_id IS NOT NULL) <> (comment_id IS NOT NULL))
+            )""",
             """CREATE TABLE IF NOT EXISTS resq_user_settings (
                 user_id INTEGER PRIMARY KEY REFERENCES resq_users(id) ON DELETE CASCADE,
                 locale TEXT NOT NULL DEFAULT 'English',
@@ -293,6 +323,9 @@ def init_db() -> None:
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_audit_log_entity_idx ON resq_audit_log (entity_type, entity_id, occurred_at DESC)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_alerts_state_status_idx ON resq_alerts (state, status)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS resq_alerts_dedup_idx ON resq_alerts (entity_type, entity_id, kind, status, created_at DESC)'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_community_posts_feed_idx ON resq_community_posts (archived, created_at DESC)'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_community_comments_post_idx ON resq_community_comments (post_id, created_at ASC)'))
+        db.execute(text('CREATE INDEX IF NOT EXISTS resq_community_messages_feed_idx ON resq_community_messages (created_at DESC)'))
         if has_postgis:
             db.execute(text('CREATE INDEX IF NOT EXISTS cells_geom_gist ON cells USING GIST (geom)'))
         db.execute(text('CREATE INDEX IF NOT EXISTS cell_scores_run_band ON cell_scores (run_id, band)'))
