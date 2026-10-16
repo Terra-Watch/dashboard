@@ -5,6 +5,7 @@ from sqlalchemy import text
 from .core.config import API_ORIGINS
 from .database.session import engine, init_db
 from .routers import auth, citizen, community, operations, redesign, risk, workflow
+from .routers_ext import routers as extension_routers
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -20,6 +21,8 @@ app.include_router(workflow.router)
 app.include_router(operations.router)
 app.include_router(risk.router)
 app.include_router(redesign.router)
+for extension_router in extension_routers():
+    app.include_router(extension_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:

@@ -51,7 +51,8 @@ class SigningKeyConfigurationTests(unittest.TestCase):
         from app.core import security
         from fastapi.security import HTTPAuthorizationCredentials
 
-        with mock.patch.object(security, "RESQ_SECRET_KEY", "test-only-signing-secret-with-over-32-bytes"):
+        with mock.patch.object(security, "RESQ_SECRET_KEY", "test-only-signing-secret-with-over-32-bytes"), \
+                mock.patch.object(security, "_confirm_active", side_effect=lambda identity: identity):
             token = security.make_token(7, "officer")
             user = security.current_user(
                 HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)

@@ -5,14 +5,16 @@ import hashlib
 import json
 import re
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import text
 
+from ..contracts.field import FieldObservationRequest
 from ..contracts.schemas import AssignmentDecisionRequest, AssignmentReassignmentRequest, IncidentAssignmentRequest, VerificationRequest
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
+from ..services.recipients import incident_staff_recipients
 from ..services.image_assessment import assess_image_async, persistence_fields
 from .operations import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _image_row, _stored_image_path
 
@@ -50,6 +52,26 @@ def eligible_rangers(user: dict = Depends(_control_user)) -> dict:
     scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']))
     items = [dict(row) for row in rows if scopes is None or row['home_state'] in scopes or row['home_state'] is None]
     return {'items': items}
+
+
+@router.get('/control-room/assignments')
+def all_active_assignments(user: dict = Depends(_control_user)) -> dict:
+    """Every open assignment in the caller's scope, with the officer and incident, for the Field screen."""
+    params: dict = {}
+    scope_clause = ''
+    if user.get('role') != 'admin':
+        scopes = user_scopes(int(user['id']))
+        if not scopes:
+            return {'items': []}
+        scope_clause = 'AND i.state = ANY(:scopes)'
+        params['scopes'] = list(scopes)
+    with engine.connect() as db:
+        rows = db.execute(text(f'''SELECT a.id,a.incident_id,a.ranger_id,a.status,a.priority,a.due_at,a.created_at,a.updated_at,
+                u.name AS ranger_name,i.state,i.status AS incident_status,i.latitude,i.longitude,
+                (SELECT count(*) FROM resq_field_verifications v WHERE v.assignment_id=a.id) AS observations
+            FROM resq_incident_assignments a JOIN resq_users u ON u.id=a.ranger_id JOIN resq_incidents i ON i.id=a.incident_id
+            WHERE a.status IN ('assigned','accepted','in_progress') {scope_clause} ORDER BY a.created_at ASC LIMIT 500'''), params).mappings().all()
+    return {'items': [dict(row) for row in rows]}
 
 
 @router.get('/control-room/incidents/{incident_id}/assignments')
@@ -149,33 +171,67 @@ def decide_assignment(assignment_id: int, payload: AssignmentDecisionRequest, us
             raise HTTPException(status_code=409, detail='Assignment cannot make that transition')
         new_status = 'cancelled' if payload.decision == 'declined' else payload.decision
         updated = db.execute(text("UPDATE resq_incident_assignments SET status=CAST(:status_value AS varchar(20)),updated_at=now(),cancelled_at=CASE WHEN CAST(:cancelled_value AS varchar(20))='cancelled' THEN now() ELSE cancelled_at END WHERE id=:id RETURNING id,incident_id,ranger_id,status,priority,due_at,updated_at"), {'id': assignment_id, 'status_value': new_status, 'cancelled_value': new_status}).mappings().one()
-        audit_log.write_audit_log(action=f'assignment_{payload.decision}', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id']}, connection=db)
-    with engine.connect() as db:
-        recipients = db.execute(text("SELECT id FROM resq_users WHERE role IN ('admin','control_room_operator','incident_commander')")).scalars().all()
+        audit_log.write_audit_log(action=f'assignment_{payload.decision}', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id'], 'reason': (payload.reason or '').strip() or None}, connection=db)
+    recipients = incident_staff_recipients(row['state'])
     _notify_users(user_ids=[int(item) for item in recipients], kind=f'assignment_{payload.decision}', message=f'Ranger updated assignment for incident #{row["incident_id"]}: {payload.decision}.', state=row['state'], entity_type='incident_assignment', entity_id=str(assignment_id))
     return {'assignment': dict(updated)}
 
 
 @router.post('/ranger/assignments/{assignment_id}/verification', status_code=201, dependencies=[Depends(require_csrf)])
-def submit_verification(assignment_id: int, payload: VerificationRequest, user: dict = Depends(require_roles('field_crew'))) -> dict:
+def submit_verification(assignment_id: int, payload: FieldObservationRequest, response: Response, user: dict = Depends(require_roles('field_crew'))) -> dict:
     if payload.outcome not in {'confirmed', 'not_confirmed', 'inconclusive'}:
         raise HTTPException(status_code=422, detail='Unsupported verification outcome')
     observed_at = _parse_timestamp(payload.observed_at)
     with engine.begin() as db:
-        assignment = db.execute(text("SELECT id,incident_id,ranger_id,status FROM resq_incident_assignments WHERE id=:id AND ranger_id=:ranger_id FOR UPDATE"), {'id': assignment_id, 'ranger_id': user['id']}).mappings().first()
+        assignment = db.execute(text("SELECT a.id,a.incident_id,a.ranger_id,a.status,i.state FROM resq_incident_assignments a JOIN resq_incidents i ON i.id=a.incident_id WHERE a.id=:id AND a.ranger_id=:ranger_id FOR UPDATE OF a"), {'id': assignment_id, 'ranger_id': user['id']}).mappings().first()
         if not assignment:
             raise HTTPException(status_code=404, detail='Assignment not found')
-        if assignment['status'] not in {'assigned', 'accepted', 'in_progress'}:
+        if assignment['status'] == 'assigned':
+            raise HTTPException(status_code=409, detail='Accept the assignment before recording an observation')
+        if assignment['status'] not in {'accepted', 'in_progress'}:
             raise HTTPException(status_code=409, detail='Assignment is no longer accepting verification')
-        row = db.execute(text('''INSERT INTO resq_field_verifications (assignment_id,ranger_id,outcome,notes,observed_at)
-            VALUES (:assignment_id,:ranger_id,:outcome,:notes,:observed_at)
-            RETURNING id,assignment_id,outcome,notes,observed_at,created_at'''), {'assignment_id': assignment_id, 'ranger_id': user['id'], 'outcome': payload.outcome, 'notes': payload.notes.strip(), 'observed_at': observed_at}).mappings().one()
-        db.execute(text("UPDATE resq_incident_assignments SET status='completed',updated_at=now() WHERE id=:id"), {'id': assignment_id})
+        if payload.idempotency_key:
+            earlier = db.execute(text('SELECT id,assignment_id,outcome,notes,observed_at,created_at FROM resq_field_verifications WHERE assignment_id=:a AND idempotency_key=:k'), {'a': assignment_id, 'k': payload.idempotency_key}).mappings().first()
+            if earlier:
+                response.status_code = 200
+                return {'verification': dict(earlier), 'message': 'Verification was already saved.'}
+        row = db.execute(text('''INSERT INTO resq_field_verifications (assignment_id,ranger_id,outcome,notes,observed_at,idempotency_key)
+            VALUES (:assignment_id,:ranger_id,:outcome,:notes,:observed_at,:key)
+            RETURNING id,assignment_id,outcome,notes,observed_at,created_at'''), {'assignment_id': assignment_id, 'ranger_id': user['id'], 'outcome': payload.outcome, 'notes': payload.notes.strip(), 'observed_at': observed_at, 'key': payload.idempotency_key}).mappings().one()
+        db.execute(text("UPDATE resq_incident_assignments SET status='in_progress',updated_at=now() WHERE id=:id"), {'id': assignment_id})
         audit_log.write_audit_log(action='ranger_verification_submitted', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': assignment['incident_id'], 'outcome': payload.outcome}, connection=db)
-    with engine.connect() as db:
-        recipients = db.execute(text("SELECT id FROM resq_users WHERE role IN ('admin','control_room_operator','incident_commander')")).scalars().all()
+    recipients = incident_staff_recipients(assignment['state'])
     _notify_users(user_ids=[int(item) for item in recipients], kind='verification_submitted', message=f'Field verification submitted for incident #{assignment["incident_id"]}.', state=None, entity_type='incident_assignment', entity_id=str(assignment_id))
     return {'verification': dict(row), 'message': 'Verification persisted for Control Room review.'}
+
+
+@router.get('/ranger/assignments/{assignment_id}/verifications')
+def list_own_verifications(assignment_id: int, user: dict = Depends(require_roles('field_crew'))) -> dict:
+    with engine.connect() as db:
+        owned = db.execute(text('SELECT 1 FROM resq_incident_assignments WHERE id=:id AND ranger_id=:r'), {'id': assignment_id, 'r': user['id']}).scalar()
+        if not owned:
+            raise HTTPException(status_code=404, detail='Assignment not found')
+        rows = db.execute(text('SELECT id,outcome,notes,observed_at,created_at FROM resq_field_verifications WHERE assignment_id=:id ORDER BY observed_at DESC, id DESC'), {'id': assignment_id}).mappings().all()
+    return {'items': [dict(row) for row in rows]}
+
+
+@router.post('/ranger/assignments/{assignment_id}/complete', status_code=200, dependencies=[Depends(require_csrf)])
+def complete_assignment(assignment_id: int, user: dict = Depends(require_roles('field_crew'))) -> dict:
+    with engine.begin() as db:
+        row = db.execute(text('''SELECT a.id,a.incident_id,a.status,i.state FROM resq_incident_assignments a
+            JOIN resq_incidents i ON i.id=a.incident_id WHERE a.id=:id AND a.ranger_id=:ranger_id FOR UPDATE OF a'''), {'id': assignment_id, 'ranger_id': user['id']}).mappings().first()
+        if not row:
+            raise HTTPException(status_code=404, detail='Assignment not found')
+        if row['status'] not in {'accepted', 'in_progress'}:
+            raise HTTPException(status_code=409, detail='Only an accepted assignment can be completed')
+        observations = db.execute(text('SELECT count(*) FROM resq_field_verifications WHERE assignment_id=:id'), {'id': assignment_id}).scalar()
+        if not observations:
+            raise HTTPException(status_code=409, detail='Record at least one observation before completing the assignment')
+        updated = db.execute(text("UPDATE resq_incident_assignments SET status='completed',completed_at=now(),updated_at=now() WHERE id=:id RETURNING id,incident_id,ranger_id,status,completed_at,updated_at"), {'id': assignment_id}).mappings().one()
+        audit_log.write_audit_log(action='assignment_completed', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id'], 'observations': int(observations)}, connection=db)
+    recipients = incident_staff_recipients(row['state'])
+    _notify_users(user_ids=[int(item) for item in recipients], kind='assignment_completed', message=f'Ranger completed the field assignment for incident #{row["incident_id"]}.', state=row['state'], entity_type='incident_assignment', entity_id=str(assignment_id))
+    return {'assignment': dict(updated)}
 
 
 @router.get('/ranger/assignments/{assignment_id}/evidence')

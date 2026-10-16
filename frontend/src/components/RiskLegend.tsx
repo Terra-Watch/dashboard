@@ -1,1 +1,0 @@
-export function RiskLegend(){return <div className="legend" aria-label="Fire-risk ranking bands"><span><i className="dot low"/>Lower-ranked</span><span><i className="dot moderate"/>Mid-ranked</span><span><i className="dot high"/>High-ranked</span><span><i className="dot very-high"/>Highest-ranked</span></div>}

@@ -1,5 +1,5 @@
-from datetime import date
-from pydantic import BaseModel, Field
+from datetime import date, datetime
+from pydantic import BaseModel, Field, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -19,7 +19,12 @@ class RedesignLoginRequest(BaseModel):
 class CitizenRegistrationRequest(BaseModel):
     email: str = Field(min_length=5, max_length=255)
     name: str = Field(min_length=1, max_length=255)
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=1, max_length=128)
+    accepted_terms: bool = False
+
+
+class CitizenPasswordResetRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=255)
 
 
 class CitizenReportRequest(BaseModel):
@@ -33,6 +38,23 @@ class CitizenReportRequest(BaseModel):
 
 class CommunityPostRequest(BaseModel):
     content: str = Field(min_length=1, max_length=2000)
+    post_type: str = Field(default='question', pattern='^(question|information|thanks)$')
+    region: str | None = Field(default=None, max_length=80)
+    topic: str | None = Field(default=None, pattern='^(question|information|thanks)$')
+    language: str = Field(default='en', pattern='^(en|hi|or|other)$')
+
+
+class CommunityEditRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class CommunityRemovalRequest(BaseModel):
+    reason: str | None = Field(default=None, max_length=500)
+
+
+class CommunityModerationDecision(BaseModel):
+    action: str = Field(pattern='^(approve|remove|dismiss)$')
+    reason: str | None = Field(default=None, max_length=500)  # required (3+ characters) for remove; checked by the route
 
 
 class CommunityCommentRequest(BaseModel):
@@ -40,7 +62,20 @@ class CommunityCommentRequest(BaseModel):
 
 
 class CommunityMessageRequest(BaseModel):
-    content: str = Field(min_length=1, max_length=1000)
+    content: str = Field(min_length=1, max_length=500)
+
+
+class CommunityRoomUpdate(BaseModel):
+    slow_mode_seconds: int | None = Field(default=None, ge=0, le=3600)
+    frozen: bool | None = None
+    retention_days: int | None = Field(default=None, ge=1, le=3650)  # send null explicitly to keep messages forever
+
+
+class CommunitySanctionRequest(BaseModel):
+    user_id: int = Field(gt=0)
+    kind: str = Field(pattern='^(warn|mute)$')
+    reason: str = Field(min_length=3, max_length=500)
+    hours: int | None = Field(default=None, ge=1, le=24 * 365)  # mute only; omitted = until a moderator lifts it
 
 
 class CommunityReportRequest(BaseModel):
@@ -55,6 +90,7 @@ class IncidentAssignmentRequest(BaseModel):
 
 class AssignmentDecisionRequest(BaseModel):
     decision: str = Field(pattern='^(accepted|declined|in_progress)$')
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class AssignmentReassignmentRequest(BaseModel):
@@ -76,7 +112,8 @@ class InviteCreateRequest(BaseModel):
 
 
 class InviteAcceptRequest(BaseModel):
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, max_length=128)
+    name: str | None = Field(None, max_length=100)
 
 
 class AdminPasswordResetRequest(BaseModel):
@@ -84,7 +121,7 @@ class AdminPasswordResetRequest(BaseModel):
 
 
 class PasswordResetCompleteRequest(BaseModel):
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=1, max_length=128)
 
 
 class AccessRequest(BaseModel):
@@ -109,11 +146,21 @@ class IncidentRequest(BaseModel):
     size: str
     notes: str = ''
     state: str | None = None
+    latitude: float | None = Field(None, ge=-90, le=90)
+    longitude: float | None = Field(None, ge=-180, le=180)
+    observed_at: datetime | None = None
+
+    @model_validator(mode='after')
+    def _both_coordinates_or_none(self):
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError('Give both latitude and longitude, or neither')
+        return self
 
 
 class IncidentStatusUpdate(BaseModel):
     status: str
     notes: str | None = None
+    close_reason: str | None = Field(default=None, pattern='^(resolved|false_alarm|duplicate|unable_to_verify|other)$')
 
 
 class IncidentImageReviewRequest(BaseModel):

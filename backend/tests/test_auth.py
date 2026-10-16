@@ -255,7 +255,7 @@ class InviteAndResetTokenTests(SetUpDB):
         client = fresh_client()
         headers = {**self._admin_headers(client), **csrf_headers(client)}
         email = f"expired-{uuid.uuid4().hex[:8]}@resq.local"
-        created = client.post('/api/auth/invites', json={'email': email, 'role': 'range_officer', 'scopes': []}, headers=headers)
+        created = client.post('/api/auth/invites', json={'email': email, 'role': 'range_officer', 'scopes': ['OD']}, headers=headers)
         token = created.json()['token']
         with engine.begin() as db:
             db.execute(text("UPDATE resq_invites SET expires_at = now() - interval '1 day' WHERE email=:email"), {'email': email})
@@ -281,7 +281,7 @@ class InviteAndResetTokenTests(SetUpDB):
         _, email = make_user('range_officer')
         client = fresh_client()
         headers = {**_authed_headers(client, email), **csrf_headers(client)}
-        resp = client.post('/api/auth/invites', json={'email': 'x@resq.local', 'role': 'range_officer', 'scopes': []}, headers=headers)
+        resp = client.post('/api/auth/invites', json={'email': 'x@resq.local', 'role': 'range_officer', 'scopes': ['OD']}, headers=headers)
         self.assertEqual(resp.status_code, 403)
 
 
@@ -361,8 +361,10 @@ class RouteCoverageTests(SetUpDB):
         ('POST', '/api/auth/access-requests'),
         ('POST', '/api/auth/password-reset/request'),
         ('POST', '/api/auth/redesign/login'),
+        ('POST', '/api/auth/sign-in'),
         ('POST', '/api/auth/citizen/register'),
         ('POST', '/api/auth/citizen/login'),
+        ('POST', '/api/auth/citizen/password-reset/request'),
         ('POST', '/api/auth/refresh'),
         ('POST', '/api/auth/invites/{token}/accept'),
         ('POST', '/api/auth/password-reset/{token}/complete'),

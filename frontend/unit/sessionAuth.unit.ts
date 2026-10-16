@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { addCsrfHeader, clearExpiredToken, getAuthToken, getCsrfToken } from '../src/redesign/lib/sessionAuth.ts';
+import { addCsrfHeader, clearExpiredToken, getAuthToken, getCsrfToken } from '../src/lib/sessionAuth.ts';
 
 test('missing redesign session stays unauthenticated; no seeded account is created', async () => {
   const values = new Map<string, string>();

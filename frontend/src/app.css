@@ -1,0 +1,3 @@
+/* Palette first, then Tailwind and the tokens that name it. */
+@import './ui/palette.generated.css';
+@import './styles/index.css';

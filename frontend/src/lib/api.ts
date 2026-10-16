@@ -1,5 +1,5 @@
 import { API } from '../app/config';
-import { addCsrfHeader } from '../redesign/lib/sessionAuth';
+import { addCsrfHeader } from './sessionAuth';
 
 export class ApiError extends Error {
   constructor(readonly status: number) {

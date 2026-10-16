@@ -30,12 +30,16 @@ def generate_alert(
             dedupe_items = [entity_type, str(entity_id), kind]
             if rule_id is not None:
                 dedupe_items.append(rule_id)
+            if user_id is not None:
+                dedupe_items.append(f"user:{user_id}")
             dedupe_key = json.dumps(dedupe_items, separators=(",", ":"))
             db.execute(
                 text("SELECT pg_advisory_xact_lock(hashtextextended(:dedupe_key, 0))"),
                 {"dedupe_key": dedupe_key},
             )
             rule_clause = "AND rule_id = :rule_id " if rule_id is not None else "AND rule_id IS NULL "
+            # Each recipient is deduplicated separately; otherwise only the first person told about an event ever receives it.
+            rule_clause += "AND user_id = :user_id " if user_id is not None else "AND user_id IS NULL "
             query_params = {
                 "entity_type": entity_type,
                 "entity_id": str(entity_id),
@@ -44,6 +48,8 @@ def generate_alert(
             }
             if rule_id is not None:
                 query_params["rule_id"] = rule_id
+            if user_id is not None:
+                query_params["user_id"] = user_id
             existing = db.execute(
                 text(
                     f"SELECT id, kind, message, state, severity, status, entity_type, entity_id, created_at "

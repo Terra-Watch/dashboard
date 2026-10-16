@@ -47,11 +47,15 @@ class RiskBandFilterTests(unittest.TestCase):
         app.include_router(risk.router)
         cls._secret_patcher = patch.object(security, "RESQ_SECRET_KEY", "test-only-secret-with-more-than-32-bytes")
         cls._secret_patcher.start()
+        # These tests are about the risk filter, not about which accounts exist; account checks have their own tests (test_admin).
+        cls._active_patcher = patch.object(security, "_confirm_active", side_effect=lambda identity: identity)
+        cls._active_patcher.start()
         token = security.make_access_token(1, "admin")
         cls.client = TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
     @classmethod
     def tearDownClass(cls) -> None:
+        cls._active_patcher.stop()
         cls._secret_patcher.stop()
 
     def test_daily_geojson_high_filter_keeps_only_existing_high_categories_in_order(self):

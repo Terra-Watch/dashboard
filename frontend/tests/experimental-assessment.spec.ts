@@ -29,8 +29,9 @@ async function mock(page: import('@playwright/test').Page) {
 
 test('experimental, unavailable and pending assessments are labelled and never shown as an approved finding', async ({ page }) => {
   await mock(page);
-  await page.goto('/control-room/incidents/17');
-  await expect(page.getByRole('heading', { name: 'Report 17' })).toBeVisible();
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByRole('heading', { name: 'Incident #17' })).toBeVisible();
   const cells = page.getByTestId('image-assessment');
   await expect(cells).toHaveCount(3);
   await expect(cells.nth(0)).toContainText('EXPERIMENTAL / NOT FOR OPERATIONAL USE');
@@ -47,7 +48,7 @@ test('experimental, unavailable and pending assessments are labelled and never s
 
 test('the queue never calls an experimental assessment complete', async ({ page }) => {
   await mock(page);
-  await page.goto('/control-room/incidents');
+  await page.goto('/ops/queue');
   await expect(page.getByText('Experimental output, not for operational use').first()).toBeVisible();
   expect((await page.locator('body').innerText())).not.toMatch(/assessment complete|completed/i);
 });

@@ -76,7 +76,7 @@ def actor(role: str, scopes=None):
     client = fresh_client()
     if role == "citizen":  # citizens self-register and use their own auth endpoints
         resp = client.post("/api/auth/citizen/register", json={"name": "Test Citizen", "email": f"citizen-{uuid.uuid4().hex[:10]}@resq.local",
-                                                               "password": "correct-horse-battery-staple-9"})
+                                                               "password": "correct-horse-battery-staple-9", "accepted_terms": True})
         assert resp.status_code == 201, resp.text
         return client, {"Authorization": f"Bearer {resp.json()['access_token']}", **csrf_headers(client)}, resp.json()["user"]["id"]
     user_id, email = make_user(role, scopes=scopes)

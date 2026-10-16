@@ -39,6 +39,17 @@ def make_token(user_id: int, role: str) -> str:
     return jwt.encode(payload, key, algorithm='HS256')
 
 
+def _confirm_active(identity: dict[str, object]) -> dict[str, object]:
+    """A token is only as good as the account behind it: a deactivated person is refused at once, and the role is the one on record."""
+    from sqlalchemy import text
+    from ..database.session import engine
+    with engine.connect() as db:
+        row = db.execute(text('SELECT role FROM resq_users WHERE id=:i AND deactivated_at IS NULL'), {'i': identity['id']}).first()
+    if not row:
+        raise HTTPException(status_code=401, detail='Session expired')
+    return {'id': identity['id'], 'role': row[0]}
+
+
 def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
     if not credentials:
         raise HTTPException(status_code=401, detail='Authentication required')
@@ -52,9 +63,13 @@ def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bear
         )
         if 'typ' in payload:
             raise ValueError('unexpected token type')
-        return {'id': int(payload['sub']), 'role': payload['role']}
+        identity = {'id': int(payload['sub']), 'role': payload['role']}
     except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=401, detail='Session expired') from exc
+    return _confirm_active(identity)
+
+
+WRITE_ROLES = {'admin', 'officer', 'control_room_operator', 'incident_commander'}
 
 
 def require_write(user: dict[str, object] = Depends(current_user)) -> dict[str, object]:
@@ -92,15 +107,21 @@ def decode_access_token(token: str) -> dict[str, object]:
         )
         if payload.get('typ') != 'access':
             raise ValueError('wrong token type')
-        return {'id': int(payload['sub']), 'role': payload['role']}
+        identity = {'id': int(payload['sub']), 'role': payload['role']}
     except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=401, detail='Session expired') from exc
+    return _confirm_active(identity)
 
 
 def current_redesign_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
     if not credentials:
         raise HTTPException(status_code=401, detail='Authentication required')
     return decode_access_token(credentials.credentials)
+
+
+def optional_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object] | None:
+    """The signed-in user, or None when no credentials were sent. A bad or expired token is still rejected."""
+    return decode_access_token(credentials.credentials) if credentials else None
 
 
 def current_risk_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
@@ -121,9 +142,17 @@ def current_risk_user(credentials: HTTPAuthorizationCredentials | None = Depends
         )
         if 'typ' in payload and payload['typ'] != 'access':
             raise ValueError('wrong token type')
-        return {'id': int(payload['sub']), 'role': payload['role']}
+        identity = {'id': int(payload['sub']), 'role': payload['role']}
     except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=401, detail='Session expired') from exc
+    return _confirm_active(identity)
+
+
+def require_staff_write(user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
+    """Staff who may create and change operational records, signed in with the current session tokens (or the older signed tokens)."""
+    if user['role'] not in WRITE_ROLES:
+        raise HTTPException(status_code=403, detail='This role cannot make changes')
+    return user
 
 
 def require_roles(*roles: str):

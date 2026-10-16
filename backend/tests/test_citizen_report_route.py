@@ -26,7 +26,7 @@ def database():
 def citizen():
     client = fresh_client()
     resp = client.post("/api/auth/citizen/register", json={"name": "Report Citizen", "email": f"rc-{uuid.uuid4().hex[:10]}@resq.local",
-                                                           "password": "correct-horse-battery-staple-9"})
+                                                           "password": "correct-horse-battery-staple-9", "accepted_terms": True})
     assert resp.status_code == 201, resp.text
     return client, {"Authorization": f"Bearer {resp.json()['access_token']}", **csrf_headers(client)}, resp.json()["user"]["id"]
 
@@ -56,8 +56,8 @@ def test_create_report_returns_201_with_every_response_field_and_stores_the_auth
     data = resp.json()
     assert data["created"] is True
     report = data["report"]
-    assert set(report) == {"id", "status", "state", "latitude", "longitude", "observed_at", "created_at", "updated_at"}
-    assert all(report[k] is not None for k in report)
+    assert set(report) == {"id", "status", "close_reason", "state", "latitude", "longitude", "observed_at", "created_at", "updated_at"}
+    assert all(report[k] is not None for k in report if k != "close_reason") and report["close_reason"] is None   # open report: no closure reason
     assert "reporter_id" not in report and "reporter_id" not in data
     stored = row(report["id"])
     assert stored["reporter_id"] == uid and stored["source"] == "citizen" and stored["client_key"] == payload["client_key"]

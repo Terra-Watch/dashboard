@@ -52,7 +52,7 @@ class IncidentsAndAlertsTests(unittest.TestCase):
         for next_status in ("verified", "responding", "contained", "closed"):
             update_resp = self.client.patch(
                 f"/api/incidents/{incident_id}/status",
-                json={"status": next_status, "notes": f"Transitioned to {next_status}"},
+                json={"status": next_status, "notes": f"Transitioned to {next_status}", **({"close_reason": "resolved"} if next_status == "closed" else {})},
                 headers=headers,
             )
             self.assertEqual(update_resp.status_code, 200)
@@ -180,7 +180,7 @@ class IncidentsAndAlertsTests(unittest.TestCase):
 
         # 2. Valid transitions to closed
         self.client.patch(f"/api/incidents/{inc_id}/status", json={"status": "verified"}, headers=headers)
-        self.client.patch(f"/api/incidents/{inc_id}/status", json={"status": "closed"}, headers=headers)
+        self.client.patch(f"/api/incidents/{inc_id}/status", json={"status": "closed", "close_reason": "resolved"}, headers=headers)
 
         # 3. Transition from closed is terminal: closed -> reported rejected
         reopen_bad = self.client.patch(
