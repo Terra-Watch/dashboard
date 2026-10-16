@@ -14,9 +14,9 @@ const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 function CitizenShell({ path, go, children }: { path: CitizenPath; go: Navigate; children: ReactNode }) {
   const links: Array<[CitizenPath, string, string]> = [
     ['/citizen', 'Home', '⌂'],
-    ['/citizen/map', 'Fire Map', '⌖'],
     ['/citizen/report', 'Report', '＋'],
     ['/citizen/reports', 'My Reports', '▤'],
+    ['/community', 'Community', '◉'],
   ];
   return (
     <div data-rq-app data-citizen-app className="min-h-screen bg-paper text-ink">
@@ -177,7 +177,6 @@ export function CitizenRouter({ path, go }: { path: string; go: Navigate }) {
   const reportMatch = path.match(/^\/citizen\/reports\/(\d+)$/);
   if (reportMatch) return <CitizenReportDetailPage id={Number(reportMatch[1])} go={go} />;
   if (path === '/citizen/safety') return <CitizenSafetyPage go={go} />;
-  if (path.startsWith('/citizen/community')) return <CitizenUnavailablePage go={go} title="Community discussions unavailable" />;
   if (path === '/citizen/profile') return <CitizenUnavailablePage go={go} title="Profile unavailable" />;
   return <CitizenUnavailablePage go={go} title="Citizen page unavailable" />;
 }
