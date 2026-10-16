@@ -56,7 +56,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
             (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
             VALUES (:reporter_id,:client_key,'citizen','unknown',:notes,:state,:latitude,:longitude,:observed_at)
             ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
-            RETURNING id,status,state,latitude,longitude,observed_at,created_at,updated_at'''), {
+            RETURNING id,reporter_id,status,state,latitude,longitude,observed_at,created_at,updated_at'''), {
                 'reporter_id': user['id'], 'client_key': payload.client_key.strip(), 'notes': description,
                 'state': payload.state.upper(), 'latitude': payload.latitude, 'longitude': payload.longitude,
                 'observed_at': observed_at,

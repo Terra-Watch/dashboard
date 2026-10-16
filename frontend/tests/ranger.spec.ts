@@ -57,12 +57,13 @@ test('field report submits only through the supported endpoint and requires conf
   await expect(page.getByText(/assessment complete|human verified|evidence uploaded/i)).toHaveCount(0);
 });
 
-test('Ranger evidence route preserves explicit unavailable behavior', async ({ page }) => {
+test('Ranger evidence route requires an authorized assignment and supports secure upload', async ({ page }) => {
   await signInAsFieldCrew(page);
   await page.goto('/ranger/evidence');
-  await expect(page.getByRole('heading', { name: 'Evidence upload unavailable' })).toBeVisible();
-  await expect(page.getByText(/cannot safely claim/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Record a text observation' })).toBeVisible();
+  await expect(page.getByText(/server-authorized assignment/i)).toBeVisible();
+  await page.goto('/ranger/evidence?assignment=1');
+  await expect(page.getByRole('heading', { name: 'Capture evidence' })).toBeVisible();
+  await expect(page.getByLabel('Photograph')).toBeVisible();
 });
 
 test('field task errors preserve truthful 503 handling and mobile navigation', async ({ page }) => {

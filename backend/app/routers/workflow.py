@@ -81,7 +81,7 @@ def create_assignment(incident_id: int, payload: IncidentAssignmentRequest, user
             raise HTTPException(status_code=422, detail='Assignee is not an eligible Ranger')
         if ranger['home_state'] and ranger['home_state'] != incident['state'] and user.get('role') != 'admin':
             raise HTTPException(status_code=403, detail='Ranger is outside the incident state scope')
-        existing = db.execute(text("SELECT id,status FROM resq_incident_assignments WHERE incident_id=:incident_id AND status IN ('assigned','accepted') FOR UPDATE"), {'incident_id': incident_id}).mappings().first()
+        existing = db.execute(text("SELECT id,status FROM resq_incident_assignments WHERE incident_id=:incident_id AND status IN ('assigned','accepted','in_progress') FOR UPDATE"), {'incident_id': incident_id}).mappings().first()
         if existing:
             raise HTTPException(status_code=409, detail='Incident already has an active assignment')
         due_at = _parse_timestamp(payload.due_at) if payload.due_at else None
@@ -120,7 +120,7 @@ def ranger_assignments(user: dict = Depends(require_roles('field_crew'))) -> dic
         rows = db.execute(text('''SELECT a.id AS assignment_id,a.incident_id,a.status,a.priority,a.due_at,a.created_at,a.updated_at,
             i.source,i.size,i.notes,i.state,i.latitude,i.longitude,i.observed_at
             FROM resq_incident_assignments a JOIN resq_incidents i ON i.id=a.incident_id
-            WHERE a.ranger_id=:ranger_id AND a.status IN ('assigned','accepted') ORDER BY a.created_at DESC'''), {'ranger_id': user['id']}).mappings().all()
+            WHERE a.ranger_id=:ranger_id AND a.status IN ('assigned','accepted','in_progress') ORDER BY a.created_at DESC'''), {'ranger_id': user['id']}).mappings().all()
     return {'items': [dict(row) for row in rows]}
 
 
@@ -148,7 +148,7 @@ def decide_assignment(assignment_id: int, payload: AssignmentDecisionRequest, us
         if payload.decision not in allowed.get(row['status'], set()):
             raise HTTPException(status_code=409, detail='Assignment cannot make that transition')
         new_status = 'cancelled' if payload.decision == 'declined' else payload.decision
-        updated = db.execute(text("UPDATE resq_incident_assignments SET status=:status,updated_at=now(),cancelled_at=CASE WHEN :status='cancelled' THEN now() ELSE cancelled_at END WHERE id=:id RETURNING id,incident_id,ranger_id,status,priority,due_at,updated_at"), {'id': assignment_id, 'status': new_status}).mappings().one()
+        updated = db.execute(text("UPDATE resq_incident_assignments SET status=CAST(:status_value AS varchar(20)),updated_at=now(),cancelled_at=CASE WHEN CAST(:cancelled_value AS varchar(20))='cancelled' THEN now() ELSE cancelled_at END WHERE id=:id RETURNING id,incident_id,ranger_id,status,priority,due_at,updated_at"), {'id': assignment_id, 'status_value': new_status, 'cancelled_value': new_status}).mappings().one()
         audit_log.write_audit_log(action=f'assignment_{payload.decision}', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id']}, connection=db)
     with engine.connect() as db:
         recipients = db.execute(text("SELECT id FROM resq_users WHERE role IN ('admin','control_room_operator','incident_commander')")).scalars().all()
@@ -165,7 +165,7 @@ def submit_verification(assignment_id: int, payload: VerificationRequest, user: 
         assignment = db.execute(text("SELECT id,incident_id,ranger_id,status FROM resq_incident_assignments WHERE id=:id AND ranger_id=:ranger_id FOR UPDATE"), {'id': assignment_id, 'ranger_id': user['id']}).mappings().first()
         if not assignment:
             raise HTTPException(status_code=404, detail='Assignment not found')
-        if assignment['status'] not in {'assigned', 'accepted'}:
+        if assignment['status'] not in {'assigned', 'accepted', 'in_progress'}:
             raise HTTPException(status_code=409, detail='Assignment is no longer accepting verification')
         row = db.execute(text('''INSERT INTO resq_field_verifications (assignment_id,ranger_id,outcome,notes,observed_at)
             VALUES (:assignment_id,:ranger_id,:outcome,:notes,:observed_at)

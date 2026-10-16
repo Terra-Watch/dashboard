@@ -167,7 +167,7 @@ class PermissionMatrixTests(SetUpDB):
             client = fresh_client()
             resp = client.get('/api/redesign/detections', headers=_authed_headers(client, email))
             self.assertEqual(resp.status_code, 200, f"{role} should read Watch")
-        _, fc_email = make_user('field_crew')
+        _, fc_email = make_user('field_crew', scopes=['OD'])
         client = fresh_client()
         resp = client.get('/api/redesign/detections', headers=_authed_headers(client, fc_email))
         self.assertEqual(resp.status_code, 403)
@@ -189,7 +189,7 @@ class PermissionMatrixTests(SetUpDB):
             self.assertEqual(resp.status_code, 403, f"{role} must not be able to act on a detection")
 
     def test_only_field_crew_sees_field_tasks(self):
-        _, fc_email = make_user('field_crew')
+        _, fc_email = make_user('field_crew', scopes=['OD'])
         client = fresh_client()
         self.assertEqual(client.get('/api/redesign/field/tasks', headers=_authed_headers(client, fc_email)).status_code, 200)
         for role in ('range_officer', 'control_room_operator', 'incident_commander'):
@@ -319,7 +319,7 @@ class AuditLogTests(SetUpDB):
 class FieldReportScopeTests(SetUpDB):
     def test_field_reports_list_is_filtered_to_scope(self):
         od_task = next(item['id'] for item in redesign_data.list_detections() if item['state'] == 'OD')
-        _, fc_email = make_user('field_crew')
+        _, fc_email = make_user('field_crew', scopes=['OD'])
         submitter = fresh_client()
         submit_headers = {**_authed_headers(submitter, fc_email), **csrf_headers(submitter)}
         key = uuid.uuid4().hex
@@ -361,6 +361,8 @@ class RouteCoverageTests(SetUpDB):
         ('POST', '/api/auth/access-requests'),
         ('POST', '/api/auth/password-reset/request'),
         ('POST', '/api/auth/redesign/login'),
+        ('POST', '/api/auth/citizen/register'),
+        ('POST', '/api/auth/citizen/login'),
         ('POST', '/api/auth/refresh'),
         ('POST', '/api/auth/invites/{token}/accept'),
         ('POST', '/api/auth/password-reset/{token}/complete'),
