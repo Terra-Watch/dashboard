@@ -199,7 +199,7 @@ Nothing below is enabled by this repository. Do it in this order and stop at the
    ```
    The assessor needs `torch`, `open_clip_torch`, `pillow`, `numpy`, `pydantic` in the backend's Python (`requirements/experimental-inference.txt` in the assessor repo lists tested versions).
 4. **Run**: `cd backend && DATABASE_URL=postgresql+psycopg://resq:<password>@localhost:5432/resq uvicorn app.main:app --port 8000`.
-5. **Check before relying on it**: upload a test image as staff; the row must show `COMPLETED`, `artifact_status: APPROVED`, and `review_required: true`. With a not-approved or edited bundle it must show `UNAVAILABLE` with `MODEL_ARTIFACT_NOT_APPROVED` or `MODEL_ARTIFACT_INVALID`. Run in **shadow mode** first: compare assessments with Control Room decisions before anyone relies on a label.
+5. **Check before relying on it**: upload a test image as staff; the row must show `COMPLETED`, `artifact_status: APPROVED`, and `review_required: true`. With a not-approved or edited bundle it must show `UNAVAILABLE` with `MODEL_ARTIFACT_NOT_APPROVED` (or another `MODEL_ARTIFACT_*` code). Run in **shadow mode** first: compare assessments with Control Room decisions before anyone relies on a label.
 
 Known facts that bear on that decision: in distribution the model is strong (test ROC-AUC flames 0.991, smoke 0.986), but on a held-out fixed-camera source smoke ROC-AUC falls to 0.707 and the false-negative rate is 29% (flames) and 52% (smoke); no phone-photo evaluation exists. A "no visible fire" label is never proof of absence. Human Control Room review remains authoritative.
 
