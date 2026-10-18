@@ -170,6 +170,39 @@ result from an APPROVED artifact, and always labels it advisory.
 The 345 MB research bundle is intentionally absent; do not copy it here. No calibration, OOD thresholds, approval, or
 phone-photo evaluation exist, so the artifact remains INCOMPLETE and inference stays off.
 
+## Production go-live (only after a human approves an artifact)
+
+Nothing below is enabled by this repository. Do it in this order and stop at the first failure.
+
+1. **Fetch a built bundle** (three files; it is NOT_APPROVED until a person adds an approval record):
+   `gsutil -m cp -r gs://terrawatch-fire-ace-478304/artifacts/fire-assessor-v1.0.0-NOT_APPROVED/bundle/ /srv/fire-assessor/fire-assessor-v1.0.0/`
+   and check `sha256sum -c SHA256SUMS` in that directory. Hashes and the build record are in the assessor repo,
+   `docs/artifact/PROMOTION_RUNBOOK.md`.
+2. **Human approval**: copy the bundle, put a completed record (template `docs/artifact/approval_record.TEMPLATE.json` in the assessor repo)
+   under `approval.record` in the copy's `artifact.json`, with `artifact_binding_sha256` from
+   `python -m fire_assessor.artifact_tools digest <dir>`. Then `python -m fire_assessor.artifact_tools verify <dir>` must report APPROVED.
+   No tool in either repository writes this record.
+3. **Configure** (production values; `TERRAWATCH_ENV` must not be a development value):
+   ```
+   TERRAWATCH_ENV=production
+   FIRE_EVIDENCE_EXPERIMENTAL_ENABLED=false
+   FIRE_EVIDENCE_INFERENCE_ENABLED=true
+   FIRE_EVIDENCE_REPO=/srv/fire-evidence-assessor
+   FIRE_EVIDENCE_ARTIFACT_DIR=/srv/fire-assessor/fire-assessor-v1.0.0-approved
+   FIRE_EVIDENCE_MODEL_VERSION=fire-assessor-v1.0.0
+   # optional but recommended once a signing key exists:
+   # FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY=<base64 raw Ed25519 public key>
+   # FIRE_EVIDENCE_TRUSTED_KEY_ID=<key id>
+   # community media moderation stays off unless both are set:
+   # COMMUNITY_IMAGES_ENABLED=true
+   # FIRE_EVIDENCE_COMMUNITY_ENABLED=true
+   ```
+   The assessor needs `torch`, `open_clip_torch`, `pillow`, `numpy`, `pydantic` in the backend's Python (`requirements/experimental-inference.txt` in the assessor repo lists tested versions).
+4. **Run**: `cd backend && DATABASE_URL=postgresql+psycopg://resq:<password>@localhost:5432/resq uvicorn app.main:app --port 8000`.
+5. **Check before relying on it**: upload a test image as staff; the row must show `COMPLETED`, `artifact_status: APPROVED`, and `review_required: true`. With a not-approved or edited bundle it must show `UNAVAILABLE` with `MODEL_ARTIFACT_NOT_APPROVED` or `MODEL_ARTIFACT_INVALID`. Run in **shadow mode** first: compare assessments with Control Room decisions before anyone relies on a label.
+
+Known facts that bear on that decision: in distribution the model is strong (test ROC-AUC flames 0.991, smoke 0.986), but on a held-out fixed-camera source smoke ROC-AUC falls to 0.707 and the false-negative rate is 29% (flames) and 52% (smoke); no phone-photo evaluation exists. A "no visible fire" label is never proof of absence. Human Control Room review remains authoritative.
+
 ## Development-only experimental path
 See `docs/fire_evidence_experimental_inference.md`. It is a separate, default-off, development-only path; none of the production rules above are relaxed by it.
 
