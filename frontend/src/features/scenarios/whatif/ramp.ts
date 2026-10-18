@@ -67,3 +67,22 @@ export function legendTicks(maxHours: number): number[] {
 
 /** Spacing in hours of the contour lines: hourly up to 24 h, every 2 h beyond. */
 export const contourEveryH = (maxHours: number): number => (maxHours <= 24 ? 1 : 2);
+
+/** Fire colours for the dark and satellite views, just burning (bright yellow) to burned earlier (deep red). */
+export const FIRE_TOKENS = ['wi-fire-1', 'wi-fire-2', 'wi-fire-3', 'wi-fire-4', 'wi-fire-5'] as const;
+/** Light stand-ins used only when a token cannot be read: a bright-to-dark orange-ish ramp in numbers, no hex. */
+export const FALLBACK_FIRE: RGB[] = [[255, 240, 60], [255, 184, 28], [255, 122, 18], [224, 54, 15], [179, 18, 28]];
+
+export function readTokenStops(names: readonly string[], fallback: RGB[]): RGB[] {
+  if (typeof document === 'undefined') return fallback;
+  const style = getComputedStyle(document.documentElement);
+  const stops = names.map(n => parseColor(style.getPropertyValue(`--tw-${n}`)));
+  return stops.every(Boolean) ? (stops as RGB[]) : fallback;
+}
+
+/** Position on the fire ramp for a cell reached at `arrival`, seen at `hour`: 0 at the front (just burning), 1 for the oldest burn. */
+export function ageFraction(arrival: number, hour: number): number {
+  const age = hour - arrival;
+  if (!(age > 0)) return 0;
+  return Math.min(1, age / Math.max(hour, 0.5));
+}

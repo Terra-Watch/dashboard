@@ -30,12 +30,36 @@ export function basemapStyle(colors: MapColors, dark: boolean, origin: string = 
 }
 
 /** Satellite basemap style from a raster tile URL. Used when VITE_SATELLITE_BASEMAP is enabled. */
-export function satelliteStyle(tileUrl: string, attribution: string, origin: string = window.location.origin): StyleSpecification {
+export function satelliteStyle(tileUrl: string, attribution: string, origin: string = window.location.origin, maxzoom?: number): StyleSpecification {
   return {
     version: 8,
     glyphs: `${origin}/map/glyphs/{fontstack}/{range}.pbf`,
     sprite: `${origin}/map/sprites/light`,
-    sources: { satellite: { type: 'raster', tiles: [tileUrl], tileSize: 256, attribution } },
+    sources: { satellite: { type: 'raster', tiles: [tileUrl], tileSize: 256, attribution, ...(maxzoom !== undefined ? { maxzoom } : {}) } },
     layers: [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }],
+  };
+}
+
+/** Colours for the what-if dark terrain basemap (all from the --tw-wi-* tokens). */
+export type TerrainColors = Record<'land' | 'earth' | 'forest' | 'water' | 'road' | 'roadMajor' | 'boundary' | 'label' | 'halo', string>;
+
+/** Protomaps dark flavour with brighter roads, water and labels, for the what-if page. Not used anywhere else; basemapStyle and flavorFor are unchanged. */
+export function whatifTerrainStyle(c: TerrainColors, origin: string = window.location.origin): StyleSpecification {
+  const base = namedFlavor('dark');
+  const flavor = {
+    ...base,
+    background: c.land, earth: c.earth, park_a: c.forest, park_b: c.forest, wood_a: c.forest, wood_b: c.forest, scrub_a: c.forest, scrub_b: c.forest,
+    water: c.water, minor_a: c.road, minor_b: c.road, minor_service: c.road, link: c.road, other: c.road, major: c.roadMajor, highway: c.roadMajor,
+    railway: c.boundary, boundaries: c.boundary, buildings: c.road,
+    minor_casing: c.land, major_casing_early: c.land, major_casing_late: c.land, highway_casing_early: c.land, highway_casing_late: c.land, link_casing: c.land, minor_service_casing: c.land,
+    city_label: c.label, city_label_halo: c.halo, subplace_label: c.label, subplace_label_halo: c.halo, state_label: c.boundary, state_label_halo: c.halo, country_label: c.boundary,
+    roads_label_minor: c.label, roads_label_minor_halo: c.halo, roads_label_major: c.label, roads_label_major_halo: c.halo, ocean_label: c.water, address_label: c.boundary, address_label_halo: c.halo,
+  } as Flavor;
+  return {
+    version: 8,
+    glyphs: `${origin}/map/glyphs/{fontstack}/{range}.pbf`,
+    sprite: `${origin}/map/sprites/dark`,
+    sources: { protomaps: { type: 'vector', url: `pmtiles://${origin}${BASEMAP_URL}`, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · © <a href="https://protomaps.com">Protomaps</a>' } },
+    layers: basemapLayers('protomaps', flavor, { lang: 'en' }) as StyleSpecification['layers'],
   };
 }

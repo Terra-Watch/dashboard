@@ -1,12 +1,15 @@
 /** Draws the burned area into RGBA pixels (S x S pixels per grid cell). Pure, so it is unit tested. */
-import { contourEveryH, arrivalColor, type RGB } from './ramp.ts';
+import { ageFraction, arrivalColor, contourEveryH, rampColor, type RGB } from './ramp.ts';
 
 export const OVERLAY_SCALE = 4;
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
 export interface OverlayLayers {
   /** Fill by arrival time. */
-  fill?: { stops: readonly RGB[]; alpha: number };
+  /** `age`: colour by how long ago the cell caught (front = first stop); otherwise by arrival time over the run (first stop = earliest). */
+  fill?: { stops: readonly RGB[]; alpha: number; age?: boolean };
+  /** A one-cell soft ring just outside the front. */
+  glow?: { rgb: RGB; alpha: number };
   /** Thin lines where one contour interval meets the next. */
   hourLines?: { rgb: RGB; alpha: number };
   /** Outline of the burned area (edge against unburned cells). */
@@ -54,7 +57,7 @@ export function paintRun(buf: Uint8ClampedArray, arrivalH: Float32Array, width: 
       const a = arrivalH[i];
       if (!(a <= hour)) continue;
       if (layers.fill) {
-        const rgb = arrivalColor(layers.fill.stops, a, maxHours);
+        const rgb = layers.fill.age ? rampColor(layers.fill.stops, ageFraction(a, hour)) : arrivalColor(layers.fill.stops, a, maxHours);
         for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) put(buf, stride, col * S + x, row * S + y, rgb, layers.fill.alpha);
       }
       const bin = Math.floor(a / every);
@@ -66,8 +69,14 @@ export function paintRun(buf: Uint8ClampedArray, arrivalH: Float32Array, width: 
         const b = arrivalH[j];
         if (b <= hour) {
           if (layers.hourLines && Math.floor(b / every) > bin) edge(col, row, side, layers.hourLines.rgb, layers.hourLines.alpha, 1, 'solid');
-        } else if (layers.outline) {
-          edge(col, row, side, layers.outline.rgb, 1, layers.outline.thickness, layers.outline.style);
+        } else {
+          if (layers.glow) {
+            const gc = side === 1 ? col + 1 : side === 3 ? col - 1 : col;
+            const gr = side === 2 ? row + 1 : side === 0 ? row - 1 : row;
+            for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const o = ((gr * S + y) * stride + gc * S + x) * 4; if (buf[o + 3] === 0) put(buf, stride, gc * S + x, gr * S + y, layers.glow.rgb, layers.glow.alpha); }
+          }
+          if (layers.outline)
+            edge(col, row, side, layers.outline.rgb, 1, layers.outline.thickness, layers.outline.style);
         }
       }
     }

@@ -15,6 +15,9 @@ import { runJob } from '../src/features/scenarios/whatif/simJob.ts';
 import { wrapWords } from '../src/features/scenarios/whatif/exportImage.ts';
 import { FUEL_GRASS, FUEL_WATER } from '../src/features/scenarios/whatif/fuels.ts';
 import { CASE_IDS, clampSpeed, compassName, describeWind, headBearing, neighboursFor, normaliseDeg, windInputFor, type WindCase } from '../src/features/scenarios/whatif/wind.ts';
+import { SUN_ALTITUDE_DEG, hillshade, terrainPixels, tintGroup } from '../src/features/scenarios/whatif/hillshade.ts';
+import { DEFAULT_VIEW, SATELLITE_MAX_ZOOM, VIEW_KEY, readView, satelliteConfig, writeView } from '../src/features/scenarios/whatif/mapView.ts';
+import { ageFraction } from '../src/features/scenarios/whatif/ramp.ts';
 import type { Grid } from '../src/features/scenarios/whatif/types.ts';
 
 const here = (p: string) => new URL(p, import.meta.url);
@@ -365,4 +368,102 @@ test('every text key in the what-if page has a Hindi and an Odia entry', () => {
   for (const k of keys) { assert.ok(hi[k], `hi lacks ${k}`); assert.ok(or[k], `or lacks ${k}`); }
   assert.ok(hi['nav.whatif'] && or['nav.whatif']);
   assert.ok(keys.size > 80);
+});
+
+const FLAT = Math.sin((SUN_ALTITUDE_DEG * Math.PI) / 180);
+
+test('hillshade: flat ground is uniform at sin(altitude); a tilted plane is brighter facing the north-west sun and darker facing away', () => {
+  const w = 9, h = 9;
+  const flat = hillshade(new Float32Array(w * h).fill(500), w, h, 30);
+  assert.ok(flat.every(v => Math.abs(v - FLAT) < 1e-6));
+  // Height rises toward the EAST: the surface faces WEST (toward the sun at 315 degrees): brighter than flat.
+  const up = new Float32Array(w * h).map((_, i) => (i % w) * 30 * 0.5);
+  const east = hillshade(up, w, h, 30);
+  // Height rises toward the WEST: the surface faces EAST, away from the sun: darker than flat.
+  const down = new Float32Array(w * h).map((_, i) => (w - 1 - (i % w)) * 30 * 0.5);
+  const west = hillshade(down, w, h, 30);
+  const mid = 4 * w + 4;
+  assert.ok(east[mid] > FLAT + 0.05, `sun-facing ${east[mid]}`);
+  assert.ok(west[mid] < FLAT - 0.05, `away ${west[mid]}`);
+  // A plane is uniform everywhere, edges included.
+  assert.ok(east.every(v => Math.abs(v - east[mid]) < 1e-5));
+  // North-facing slope (height rises toward the south, row index grows) faces north: sun is north-west, so it is lit more than a south-facing one.
+  const rises = new Float32Array(w * h).map((_, i) => Math.floor(i / w) * 15);
+  const falls = new Float32Array(w * h).map((_, i) => (h - 1 - Math.floor(i / w)) * 15);
+  assert.ok(hillshade(rises, w, h, 30)[mid] > hillshade(falls, w, h, 30)[mid]);
+});
+
+test('hillshade: output has the grid shape, stays within 0 and 1, and is finite even with missing heights', () => {
+  const w = 6, h = 4;
+  const z = new Float32Array(w * h).map((_, i) => (i * 37) % 200);
+  z[5] = NaN; z[w * h - 1] = Infinity;
+  const out = hillshade(z, w, h, 30);
+  assert.equal(out.length, w * h);
+  assert.ok([...out].every(v => Number.isFinite(v) && v >= 0 && v <= 1));
+  assert.ok(Math.abs(out[5] - FLAT) < 1e-6, 'a missing centre height is shaded as flat');
+  assert.equal(hillshade(new Float32Array(1), 1, 1, 30).length, 1);
+  assert.ok(hillshade(new Float32Array(0), 0, 0, 30).length === 0);
+});
+
+test('terrain picture: tint for each class, light on sunny faces and dark on shaded ones, transparent where nothing applies', () => {
+  const tints = { tree: [0, 100, 0], grass: [200, 200, 0], crop: [200, 150, 0], built: [150, 150, 150], water: [0, 0, 200], bare: [150, 120, 90] } as never;
+  const opts = { tints, light: [255, 255, 255], dark: [0, 0, 0], tintAlpha: 0.3, strength: 1 } as never;
+  assert.equal(tintGroup(1), 'tree'); assert.equal(tintGroup(8), 'water'); assert.equal(tintGroup(0), null);
+  const flatPix = terrainPixels([1, 0], new Float32Array([FLAT, FLAT]), opts);
+  assert.deepEqual([...flatPix.slice(0, 4)], [0, 100, 0, Math.round(0.3 * 255) - 0]); // tint only
+  assert.equal(flatPix[7], 0, 'unmapped flat cell is transparent');
+  const sunny = terrainPixels([1], new Float32Array([FLAT + 0.2]), opts);
+  const shady = terrainPixels([1], new Float32Array([FLAT - 0.4]), opts);
+  assert.ok(sunny[0] > 100 && sunny[3] > 0.3 * 255);
+  assert.ok(shady[0] < 5 && shady[3] > sunny[3]);
+});
+
+test('view switch: dark terrain is the default whatever is stored badly; choices are remembered; blocked storage never throws', () => {
+  const mem = new Map<string, string>();
+  const store = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => { mem.set(k, v); } };
+  assert.equal(DEFAULT_VIEW, 'dark');
+  assert.equal(readView(store, false), 'dark');
+  writeView(store, 'light');
+  assert.equal(mem.get(VIEW_KEY), 'light');
+  assert.equal(readView(store, false), 'light');
+  writeView(store, 'satellite');
+  assert.equal(readView(store, true), 'satellite');
+  assert.equal(readView(store, false), 'dark', 'a saved satellite choice is ignored when satellite is not set up');
+  mem.set(VIEW_KEY, 'neon');
+  assert.equal(readView(store, true), 'dark');
+  const broken = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
+  assert.equal(readView(broken, true), 'dark');
+  assert.doesNotThrow(() => writeView(broken, 'dark'));
+  assert.equal(readView(null, true), 'dark');
+  assert.doesNotThrow(() => writeView(undefined, 'dark'));
+});
+
+test('satellite is available only when opted in with both a tile URL and an attribution', () => {
+  const url = 'https://tiles.example.test/{z}/{y}/{x}.jpg';
+  assert.equal(satelliteConfig({}), null);
+  assert.equal(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'true' }), null);
+  assert.equal(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'true', VITE_SATELLITE_TILE_URL: url }), null);
+  assert.equal(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'false', VITE_SATELLITE_TILE_URL: url, VITE_SATELLITE_ATTRIBUTION: 'x' }), null);
+  assert.deepEqual(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'true', VITE_SATELLITE_TILE_URL: ` ${url} `, VITE_SATELLITE_ATTRIBUTION: 'Credit' }), { url, attribution: 'Credit', note: "Check the imagery provider's terms before public use.", maxZoom: 13 });
+  assert.equal(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'true', VITE_SATELLITE_TILE_URL: url, VITE_SATELLITE_ATTRIBUTION: 'C', VITE_SATELLITE_NOTE: 'Imagery: X', VITE_SATELLITE_MAX_ZOOM: '17' })?.maxZoom, 17);
+  assert.equal(satelliteConfig({ VITE_SATELLITE_BASEMAP: 'true', VITE_SATELLITE_TILE_URL: url, VITE_SATELLITE_ATTRIBUTION: 'C', VITE_SATELLITE_NOTE: 'Imagery: X' })?.note, 'Imagery: X');
+  assert.equal(SATELLITE_MAX_ZOOM, 13);
+});
+
+test('fire ramp: the front is the first colour and the oldest burn the last; overlay by age; glow sits just outside the front', () => {
+  assert.equal(ageFraction(6, 6), 0);
+  assert.equal(ageFraction(0, 6), 1);
+  assert.equal(ageFraction(3, 6), 0.5);
+  assert.equal(ageFraction(9, 6), 0);
+  assert.equal(ageFraction(0, 0), 0);
+  const w = 5, h = 1, S = OVERLAY_SCALE;
+  const arr = new Float32Array([0, 2, 4, Infinity, Infinity]);
+  const buf = createOverlay(w, h);
+  const yellow: [number, number, number] = [255, 255, 0], red: [number, number, number] = [150, 0, 0];
+  paintRun(buf, arr, w, h, 4, 24, { fill: { stops: [yellow, red], alpha: 1, age: true }, glow: { rgb: [1, 2, 3], alpha: 0.5 } });
+  const px = (x: number) => [...buf.slice((w * S + x) * 4, (w * S + x) * 4 + 4)];
+  assert.deepEqual(px(0 * S + 1).slice(0, 3), red, 'oldest');
+  assert.deepEqual(px(2 * S + 1).slice(0, 3), yellow, 'just burning at the front');
+  assert.deepEqual(px(3 * S + 1), [1, 2, 3, 128], 'glow in the first unburned cell');
+  assert.equal(px(4 * S + 1)[3], 0, 'nothing further out');
 });

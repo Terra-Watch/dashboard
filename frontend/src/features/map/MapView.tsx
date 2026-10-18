@@ -22,7 +22,7 @@ function ensureProtocol() {
 }
 
 const POINTS = 'tw-points', POINTS_SEL = 'tw-points-selected', POLY = 'tw-polygons', RISK = 'tw-risk';
-const LINES = 'tw-lines', IMAGE = 'tw-image';
+const LINES = 'tw-lines', IMAGE = 'tw-image', TERRAIN = 'tw-terrain';
 const LINE_TONES = ['road', 'water', 'draft', 'fireline'] as const;
 type Quad = [[number, number], [number, number], [number, number], [number, number]];
 /** A georeferenced picture drawn under the symbols (used by the what-if page for the burned area). Corner order: top-left, top-right, bottom-right, bottom-left. */
@@ -42,8 +42,8 @@ function lineStyle(tone: (typeof LINE_TONES)[number], c: MapColors): { color: st
 
 function installExtras(map: MapLibreMap, colors: MapColors) {
   for (const tone of LINE_TONES) for (const part of ['casing', 'line']) { const id = `${LINES}-${tone}-${part}`; if (map.getLayer(id)) map.removeLayer(id); }
-  if (map.getLayer(IMAGE)) map.removeLayer(IMAGE);
-  for (const id of [LINES, IMAGE]) if (map.getSource(id)) map.removeSource(id);
+  for (const id of [IMAGE, TERRAIN]) if (map.getLayer(id)) map.removeLayer(id);
+  for (const id of [LINES, IMAGE, TERRAIN]) if (map.getSource(id)) map.removeSource(id);
   map.addSource(LINES, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   for (const tone of LINE_TONES) {
     const s = lineStyle(tone, colors);
@@ -156,10 +156,14 @@ export type MapViewProps = {
   onMapReady?: (map: MapLibreMapInstance) => void;
   onMapDoubleClick?: (lat: number, lon: number) => void;
   doubleClickZoom?: boolean;
+  /** A picture drawn under the basemap labels (hillshade and land-cover tint). */
+  terrainOverlay?: MapImageOverlay | null;
+  /** Replaces some map colours (labels, symbols, lines) for a dark view whatever the page theme is. */
+  colorsOverride?: Partial<MapColors>;
 };
 
 /** The one map. MapLibre GL, self-hosted PMTiles basemap, fonts and icons from this site (no third-party requests). */
-export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle, imageOverlay = null, lines, onMapReady, onMapDoubleClick, doubleClickZoom = true }: MapViewProps) {
+export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle, imageOverlay = null, lines, onMapReady, onMapDoubleClick, doubleClickZoom = true, terrainOverlay = null, colorsOverride }: MapViewProps) {
   console.log('[DEBUG MapView] Received props:', { pointsCount: points.length, polygonsCount: polygons.length, riskCellsCount: riskCells.length });
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
@@ -168,6 +172,11 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
   const handlers = useRef({ onSelect, onMapClick, onMapDoubleClick, onMapReady });
   handlers.current = { onSelect, onMapClick, onMapDoubleClick, onMapReady };
   const [ready, setReady] = useState(false);
+  /** Counts style rebuilds; every effect that fills the map depends on it so data is put back after a restyle. */
+  const [epoch, setEpoch] = useState(0);
+  const overrideRef = useRef(colorsOverride); overrideRef.current = colorsOverride;
+  const externalRef = useRef(externalBasemapStyle); externalRef.current = externalBasemapStyle;
+  const applied = useRef({ style: externalBasemapStyle, override: colorsOverride });
   const [failed, setFailed] = useState(false);
   const pointData = useMemo(() => pointsToGeoJson(points), [points]);
   const polygonData = useMemo(() => polygonsToGeoJson(polygons), [polygons]);
@@ -180,7 +189,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
   useEffect(() => {
     if (!host.current) return;
     ensureProtocol();
-    let colors = readMapColors(); colorsRef.current = colors;
+    let colors: MapColors = { ...readMapColors(), ...overrideRef.current }; colorsRef.current = colors;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let map: MapLibreMap;
     try {
@@ -232,7 +241,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
     });
     map.on('dblclick', (event: ClickEvent) => { handlers.current.onMapDoubleClick?.(event.lngLat.lat, event.lngLat.lng); });
     map.on('mousemove', (event: ClickEvent) => { if (map.getLayer(POINTS)) map.getCanvas().style.cursor = map.queryRenderedFeatures(event.point, { layers: [POINTS] }).length ? 'pointer' : handlers.current.onMapClick ? 'crosshair' : ''; });
-    const restyle = () => { colors = readMapColors(); colorsRef.current = colors; for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind); map.setStyle(basemapStyle(colors, isDark())); map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); }); };
+    const restyle = () => { colors = { ...readMapColors(), ...overrideRef.current }; colorsRef.current = colors; for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind); map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); setEpoch(n => n + 1); }); map.setStyle((externalRef.current ?? basemapStyle(colors, isDark())) as StyleSpecification); };
     window.addEventListener('tw-theme', restyle);
     const mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', restyle);
     return () => { window.removeEventListener('tw-theme', restyle); mq.removeEventListener('change', restyle); map.remove(); mapRef.current = null; };
@@ -240,8 +249,8 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POINTS) as unknown as DataSource | undefined)?.setData(pointData); }, [ready, pointData]);
-  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POLY) as unknown as DataSource | undefined)?.setData(polygonData); }, [ready, polygonData]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POINTS) as unknown as DataSource | undefined)?.setData(pointData); }, [ready, epoch, pointData]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POLY) as unknown as DataSource | undefined)?.setData(polygonData); }, [ready, epoch, polygonData]);
   useEffect(() => { 
     const map = mapRef.current; 
     if (ready && map) {
@@ -251,11 +260,21 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
         source.setData(riskData);
       }
     }
-  }, [ready, riskData]);
+  }, [ready, epoch, riskData]);
   const lineData = useMemo(() => ({ type: 'FeatureCollection', features: (lines ?? []).filter(l => l.coords.length >= 2).map(l => ({ type: 'Feature', id: l.id, properties: { id: l.id, tone: l.tone }, geometry: { type: 'LineString', coordinates: l.coords } })) }), [lines]);
-  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(LINES) as unknown as DataSource | undefined)?.setData(lineData); }, [ready, lineData]);
-  useEffect(() => { const map = mapRef.current; if (ready && map) handlers.current.onMapReady?.(map); }, [ready]);
-  useEffect(() => { const map = mapRef.current; if (!map) return; if (doubleClickZoom) map.doubleClickZoom.enable(); else map.doubleClickZoom.disable(); }, [ready, doubleClickZoom]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(LINES) as unknown as DataSource | undefined)?.setData(lineData); }, [ready, epoch, lineData]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) handlers.current.onMapReady?.(map); }, [ready, epoch]);
+  useEffect(() => { const map = mapRef.current; if (!map) return; if (doubleClickZoom) map.doubleClickZoom.enable(); else map.doubleClickZoom.disable(); }, [ready, epoch, doubleClickZoom]);
+  useEffect(() => {
+    const map = mapRef.current; if (!ready || !map) return;
+    const existing = map.getSource(TERRAIN) as unknown as { updateImage(o: { url: string; coordinates: Quad }): void } | undefined;
+    if (!terrainOverlay) { if (map.getLayer(TERRAIN)) map.removeLayer(TERRAIN); if (existing) map.removeSource(TERRAIN); return; }
+    if (existing) { existing.updateImage({ url: terrainOverlay.url, coordinates: terrainOverlay.coordinates }); return; }
+    // Under the basemap labels, so place names stay crisp on top of the shading.
+    const firstLabel = map.getStyle().layers.find((l: { type: string }) => l.type === 'symbol')?.id;
+    map.addSource(TERRAIN, { type: 'image', url: terrainOverlay.url, coordinates: terrainOverlay.coordinates });
+    map.addLayer({ id: TERRAIN, type: 'raster', source: TERRAIN, paint: { 'raster-opacity': terrainOverlay.opacity ?? 1, 'raster-fade-duration': 0, 'raster-resampling': 'linear' } }, firstLabel ?? (map.getLayer(`${POLY}-cell-fill`) ? `${POLY}-cell-fill` : undefined));
+  }, [ready, epoch, terrainOverlay]);
   useEffect(() => {
     const map = mapRef.current; if (!ready || !map) return;
     const existing = map.getSource(IMAGE) as unknown as { updateImage(o: { url: string; coordinates: Quad }): void } | undefined;
@@ -263,21 +282,21 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
     if (existing) { existing.updateImage({ url: imageOverlay.url, coordinates: imageOverlay.coordinates }); return; }
     map.addSource(IMAGE, { type: 'image', url: imageOverlay.url, coordinates: imageOverlay.coordinates });
     map.addLayer({ id: IMAGE, type: 'raster', source: IMAGE, paint: { 'raster-opacity': imageOverlay.opacity ?? 1, 'raster-fade-duration': 0 } }, map.getLayer(`${POLY}-cell-fill`) ? `${POLY}-cell-fill` : undefined);
-  }, [ready, imageOverlay]);
-  useEffect(() => { const map = mapRef.current; if (ready && map?.getLayer(POINTS_SEL)) map.setFilter(POINTS_SEL, ['==', ['get', 'id'], selectedId ?? '__none__']); }, [ready, selectedId]);
+  }, [ready, epoch, imageOverlay]);
+  useEffect(() => { const map = mapRef.current; if (ready && map?.getLayer(POINTS_SEL)) map.setFilter(POINTS_SEL, ['==', ['get', 'id'], selectedId ?? '__none__']); }, [ready, epoch, selectedId]);
   useEffect(() => {
-    const map = mapRef.current; const colors = colorsRef.current;
-    if (!ready || !map || !externalBasemapStyle || !colors) return;
-    
-    console.log('[DEBUG Basemap Effect] Changing basemap style');
-    map.setStyle(externalBasemapStyle as StyleSpecification);
-    map.once('style.load', () => { 
-      console.log('[DEBUG Basemap Effect] Style loaded, reinstalling sources');
-      install(map, colors); 
-      setReady(false); 
-      setReady(true); 
-    });
-  }, [ready, externalBasemapStyle]);
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    // Only when the style or the colour override really changed since the map was built (or last restyled).
+    if (applied.current.style === externalBasemapStyle && applied.current.override === colorsOverride) return;
+    applied.current = { style: externalBasemapStyle, override: colorsOverride };
+    const colors: MapColors = { ...readMapColors(), ...colorsOverride };
+    colorsRef.current = colors;
+    for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind);
+    // Listen first: a style with only raster sources can finish loading before the next line runs.
+    map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); setEpoch(n => n + 1); });
+    map.setStyle((externalBasemapStyle ?? basemapStyle(colors, isDark())) as StyleSpecification);
+  }, [ready, externalBasemapStyle, colorsOverride]);
   useEffect(() => {
     const map = mapRef.current; if (!ready || !map || !bounds) return;
     map.fitBounds(bounds, { padding: 48, maxZoom: 13, animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches });

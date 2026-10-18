@@ -7,6 +7,7 @@ import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
 import { useOpsSettings } from '../ops/useOps';
 import { MapView, type MapLine } from '../map/MapView';
+import { satelliteStyle, whatifTerrainStyle } from '../map/style';
 import type { MapPoint } from '../map/geojson';
 import { AREAS, DEFAULT_AREA } from './whatif/areas.ts';
 import { assetRows, formatHours, reachKm, type AssetRow } from './whatif/assets.ts';
@@ -20,6 +21,9 @@ import { createOverlay, OVERLAY_SCALE, paintRun, type LineStyle } from './whatif
 import { PackError } from './whatif/pack.ts';
 import { loadPack, type LoadedPack } from './whatif/packLoader.ts';
 import { legendTicks, readRampStops, readTokenColor, rampColor, type RGB } from './whatif/ramp.ts';
+import { hillshade, terrainPixels } from './whatif/hillshade.ts';
+import { MAP_VIEWS, readView, safeStorage, satelliteConfig, writeView, type MapViewId } from './whatif/mapView.ts';
+import { readDarkTokens } from './whatif/viewTokens.ts';
 import { SimClient } from './whatif/simClient.ts';
 import type { SimResult } from './whatif/types.ts';
 import { CASE_IDS, compassName, headBearing, neighboursFor, normaliseDeg, round1, STRONG_WIND_KMH, type WindCase } from './whatif/wind.ts';
@@ -125,6 +129,10 @@ function Workspace({ pack }: { pack: LoadedPack }) {
   const [note, setNote] = useState<string | null>(null);
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
   const [themeTick, setThemeTick] = useState(0);
+  const sat = useMemo(() => satelliteConfig(import.meta.env as Record<string, string | boolean | undefined>), []);
+  const [view, setViewState] = useState<MapViewId>(() => readView(safeStorage(), sat !== null));
+  const setView = (v: MapViewId) => { setViewState(v); writeView(safeStorage(), v); };
+  const [terrainUrl, setTerrainUrl] = useState<string | null>(null);
   const mapRef = useRef<MapLike | null>(null);
   const draftRef = useRef<Cell[]>([]);
   draftRef.current = draft;
@@ -240,11 +248,30 @@ function Workspace({ pack }: { pack: LoadedPack }) {
     const reach = reachKm(res.arrivalH, W, H, grid.cellSizeM, ignitions, hour, headBearing(c.fromDeg));
     return { burned: burnedAreaKm2(res, grid, hour), ...reach };
   });
-  const rowsPerCase: AssetRow[][] = cases.map((_, i) => (runs[i].arrivalH ? assetRows(assets, runs[i].arrivalH!, W, H, maxHours) : []));
+  const rowsPerCase = useMemo<AssetRow[][]>(() => cases.map((_, i) => (runs[i].arrivalH ? assetRows(assets, runs[i].arrivalH!, W, H, maxHours) : [])), [cases, runs, assets, W, H, maxHours]);
   const here = metrics[active];
   const hasVillages = assets.some(a => a.kind === 'village');
   const fireLinedIgnitions = ignitions.filter(c => fireMask[c.row * W + c.col]).length;
   const stops = useMemo(() => readRampStops(), [themeTick]);
+  const tok = useMemo(() => readDarkTokens(), [themeTick]);
+  const bright = view !== 'light';                       // dark terrain and satellite share the bright fire colours and dark-rimmed symbols
+  const shade = useMemo(() => hillshade(grid.elevationM, W, H, grid.cellSizeM), [grid, W, H]);
+  const mapStyle = useMemo(() => (view === 'dark' ? whatifTerrainStyle(tok.terrain) : view === 'satellite' && sat ? satelliteStyle(sat.url, sat.attribution, undefined, sat.maxZoom) : undefined), [view, tok, sat]);
+  const override = useMemo(() => (bright ? (tok.mapColors as never) : undefined), [bright, tok]);
+  const caseColor = (i: number): RGB => (bright ? tok.cases[i] : readTokenColor(CASE_TOKEN[i]));
+  const caseCss = (i: number): string => (bright ? tok.caseCss[i] : `var(--tw-${CASE_TOKEN[i]})`);
+
+  // Hillshade and land-cover tint: computed once per pack, drawn only in the dark terrain view.
+  useEffect(() => {
+    if (view !== 'dark') { setTerrainUrl(null); return; }
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    ctx.putImageData(new ImageData(terrainPixels(grid.fuel, shade, { tints: tok.tints, light: tok.light, dark: tok.dark, tintAlpha: 0.32, strength: 1 }), W, H), 0, 0);
+    let stale = false;
+    c.toBlob(blob => { if (stale || !blob) return; const url = URL.createObjectURL(blob); setTerrainUrl(prev => { if (prev) setTimeout(() => URL.revokeObjectURL(prev), 2000); return url; }); });
+    return () => { stale = true; };
+  }, [view, grid, shade, tok, W, H]);
 
   // ---- the picture on the map ----
   useEffect(() => {
@@ -254,8 +281,10 @@ function Workspace({ pack }: { pack: LoadedPack }) {
     const multi = cases.length > 1;
     const text = readTokenColor('text', [30, 30, 30]);
     const a = runs[active]?.arrivalH;
-    if (a) paintRun(buf, a, W, H, hour, maxHours, { fill: { stops, alpha: multi ? 0.5 : 0.78 }, hourLines: { rgb: text, alpha: 0.45 }, outline: multi ? undefined : { rgb: text, style: 'solid', thickness: 2 } });
-    if (multi) cases.forEach((_, i) => { const r = runs[i]?.arrivalH; if (r) paintRun(buf, r, W, H, hour, maxHours, { outline: { rgb: readTokenColor(CASE_TOKEN[i]), style: CASE_STYLE[i], thickness: 2 } }); });
+    if (a) paintRun(buf, a, W, H, hour, maxHours, bright
+      ? { fill: { stops: tok.fire, alpha: multi ? 0.6 : 0.92, age: true }, hourLines: { rgb: tok.contour, alpha: 0.55 }, ...(multi ? {} : { outline: { rgb: tok.front, style: 'solid' as const, thickness: 1 }, glow: { rgb: tok.front, alpha: 0.28 } }) }
+      : { fill: { stops, alpha: multi ? 0.5 : 0.78 }, hourLines: { rgb: text, alpha: 0.45 }, outline: multi ? undefined : { rgb: text, style: 'solid', thickness: 2 } });
+    if (multi) cases.forEach((_, i) => { const r = runs[i]?.arrivalH; if (r) paintRun(buf, r, W, H, hour, maxHours, { outline: { rgb: caseColor(i), style: CASE_STYLE[i], thickness: bright ? 4 : 2 } }); });
     ctx.putImageData(new ImageData(buf, W * OVERLAY_SCALE, H * OVERLAY_SCALE), 0, 0);
     let stale = false;
     canvas.toBlob(blob => {
@@ -264,16 +293,18 @@ function Workspace({ pack }: { pack: LoadedPack }) {
       setOverlayUrl(prev => { if (prev) setTimeout(() => URL.revokeObjectURL(prev), 2000); return url; });
     });
     return () => { stale = true; };
-  }, [canvas, runs, active, cases, hour, maxHours, stops, themeTick, W, H]);
+  }, [canvas, runs, active, cases, hour, maxHours, stops, tok, bright, themeTick, W, H]);
 
   const bounds = useMemo(() => packBounds(layout), [layout]);
   const square = useMemo(() => [{ id: 'pack', ring: [layout.nw, layout.ne, layout.se, layout.sw] as Array<[number, number]>, tone: 'envelope' as const }], [layout]);
   const quad = useMemo(() => imageQuad(layout), [layout]);
+  const terrain = useMemo(() => (terrainUrl ? { url: terrainUrl, coordinates: quad, opacity: 1 } : null), [terrainUrl, quad]);
   const overlay = useMemo(() => (overlayUrl ? { url: overlayUrl, coordinates: quad, opacity: 1 } : null), [overlayUrl, quad]);
   const points = useMemo<MapPoint[]>(() => [
-    ...assets.filter(a => a.kind === 'village').map(a => ({ id: `v-${a.id}`, lat: a.lonlat[1], lon: a.lonlat[0], symbol: 'officer' as const, label: a.name })),
+    // A village the fire could reach by the selected time gets a round marker with the hour; the others stay square. Shape, not colour, tells them apart.
+    ...assets.filter(a => a.kind === 'village').map(a => { const h = rowsPerCase[active]?.find(r => r.asset.id === a.id && r.asset.kind === 'village')?.hours ?? null; const hit = h !== null && h <= hour; return { id: `v-${a.id}`, lat: a.lonlat[1], lon: a.lonlat[0], symbol: hit ? ('verified' as const) : ('officer' as const), label: hit ? `${a.name || assetKind(t, 'village')} · ${formatHours(h!)} h` : a.name }; }),
     ...ignitions.map((c, i) => { const [lon, lat] = cellCentre(layout, c.col, c.row); return { id: `ign-${i}`, lat, lon, symbol: 'signal' as const, label: t('whatif.ignition_n', 'Ignition {{n}}', { n: i + 1 }) }; }),
-  ], [assets, ignitions, layout, t]);
+  ], [assets, ignitions, layout, t, rowsPerCase, active, hour]);
   const mapLines = useMemo<MapLine[]>(() => [
     ...(showMapAssets ? assets.filter(a => a.kind !== 'village' && a.coords.length >= 2).map(a => ({ id: `${a.kind}-${a.id}`, coords: a.coords, tone: a.kind as 'road' | 'water' })) : []),
     ...lines.map((l, i) => ({ id: `fl-${i}`, coords: l.map(c => cellCentre(layout, c.col, c.row)), tone: 'fireline' as const })),
@@ -291,7 +322,7 @@ function Workspace({ pack }: { pack: LoadedPack }) {
       const out = composeExport(map.getCanvas(), [
         t('whatif.export_caption', '{{area}}, {{hour}} h after ignition', { area: manifest.name, hour: round1(hour) }),
         ...cases.map((c, i) => `${CASE_IDS[i]}: ${caseSummary(c)}`),
-        t('whatif.export_data', 'Data: {{sources}}', { sources: [...new Set(manifest.sources.map(s => s.name))].join('; ') }),
+        t('whatif.export_data', 'Data: {{sources}}', { sources: [...new Set(manifest.sources.map(s => s.name)), ...(view === 'satellite' && sat ? [sat.attribution] : [])].join('; ') }),
       ], t('whatif.disclaimer', DISCLAIMER), { background: style.getPropertyValue('--tw-surface').trim() || 'white', text: style.getPropertyValue('--tw-text').trim() || 'black' });
       const a = document.createElement('a');
       a.href = out.toDataURL('image/png');
@@ -387,9 +418,24 @@ function Workspace({ pack }: { pack: LoadedPack }) {
       </div>
 
       <div className="min-w-0 space-y-4">
-        <div className="space-y-2">
-          <MapView label={t('whatif.map', 'What-if fire map')} className="h-[62vh] min-h-96" bounds={bounds} points={points} polygons={square} selectedId={selected === null ? null : `ign-${selected}`} onSelect={id => { if (id?.startsWith('ign-')) setSelected(Number(id.slice(4))); }} onMapClick={onMapClick} onMapDoubleClick={() => { if (drawing) finishLine(); }} doubleClickZoom={!drawing} imageOverlay={overlay} lines={mapLines} onMapReady={m => { mapRef.current = m as unknown as MapLike; }} />
-          <p className="text-xs text-ink-muted">{t('whatif.attribution', 'Data: {{sources}}', { sources: manifest.sources.map(s => s.attribution).join(' ') })}</p>
+        <div className="space-y-2" data-testid="whatif-map-block" data-view={view}>
+          <fieldset className="rounded-rq border border-line p-3">
+            <legend className="px-1 text-sm font-semibold">{t('whatif.view', 'Map view')}</legend>
+            <div className="flex flex-wrap gap-x-5 gap-y-1">
+              {MAP_VIEWS.map(v => {
+                const off = v === 'satellite' && sat === null;
+                return (
+                  <label key={v} className={`flex min-h-11 items-center gap-2 text-sm font-semibold ${off ? 'opacity-60' : ''}`}>
+                    <input type="radio" name="whatif-view" value={v} checked={view === v} disabled={off} onChange={() => setView(v)} aria-describedby={v === 'satellite' ? 'whatif-sat-help' : undefined} />
+                    {v === 'dark' ? t('whatif.view_dark', 'Dark terrain') : v === 'light' ? t('whatif.view_light', 'Light') : t('whatif.view_sat', 'Satellite')}
+                  </label>
+                );
+              })}
+            </div>
+            <p id="whatif-sat-help" className="text-xs text-ink-muted">{sat === null ? t('whatif.sat_off', 'Satellite is off: it needs a tile service set up for this deployment.') : t('whatif.sat_on', '{{note}} Hillshade is off on this view.', { note: sat.note })}</p>
+          </fieldset>
+          <MapView label={t('whatif.map', 'What-if fire map')} className="h-[62vh] min-h-96" bounds={bounds} points={points} polygons={square} basemapStyle={mapStyle} colorsOverride={override} terrainOverlay={terrain} selectedId={selected === null ? null : `ign-${selected}`} onSelect={id => { if (id?.startsWith('ign-')) setSelected(Number(id.slice(4))); }} onMapClick={onMapClick} onMapDoubleClick={() => { if (drawing) finishLine(); }} doubleClickZoom={!drawing} imageOverlay={overlay} lines={mapLines} onMapReady={m => { mapRef.current = m as unknown as MapLike; }} />
+          <p className="text-xs text-ink-muted">{t('whatif.attribution', 'Data: {{sources}}', { sources: [...manifest.sources.map(s => s.attribution), ...(view === 'satellite' && sat ? [sat.attribution] : [])].join(' ') })}</p>
           <p className="text-xs text-ink-muted">{pack.integrity === 'verified' ? t('whatif.integrity_ok', 'The area files matched their checksums.') : t('whatif.integrity_skip', 'Checksums were not checked: this browser context has no crypto support.')}</p>
           <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showMapAssets} onChange={e => setShowMapAssets(e.target.checked)} />{t('whatif.show_assets', 'Show roads and water on the map')}</label>
         </div>
@@ -417,7 +463,7 @@ function Workspace({ pack }: { pack: LoadedPack }) {
             </div>
           </div>
           <p className="mt-2 text-xs text-ink-muted">{prefersReducedMotion() ? t('whatif.reduced', 'Reduced motion is on: Play moves in whole hours, one step per second.') : t('whatif.noauto', 'Nothing plays by itself. Use Play or move the slider.')}</p>
-          <Legend stops={stops} maxHours={maxHours} cases={cases} />
+          <Legend stops={bright ? tok.fire : stops} bright={bright} hour={hour} maxHours={maxHours} cases={cases} caseCss={caseCss} />
         </Card>
 
         <Card title={t('whatif.numbers', 'At {{h}} h', { h: round1(hour) })}>
@@ -538,22 +584,23 @@ function CompareTable({ t, cases, metrics, rows, hour, maxHours }: { t: T; cases
   );
 }
 
-function Legend({ stops, maxHours, cases }: { stops: RGB[]; maxHours: number; cases: WindCase[] }) {
+function Legend({ stops, bright, hour, maxHours, cases, caseCss }: { stops: RGB[]; bright: boolean; hour: number; maxHours: number; cases: WindCase[]; caseCss: (i: number) => string }) {
   const { t } = useTranslation();
   const css = (c: RGB) => `rgb(${c[0]} ${c[1]} ${c[2]})`;
   const gradient = `linear-gradient(to right, ${Array.from({ length: 11 }, (_, i) => css(rampColor(stops, i / 10))).join(', ')})`;
-  const ticks = legendTicks(maxHours);
+  const ticks = bright ? [0, round1(hour / 2), round1(hour)] : legendTicks(maxHours);
   return (
     <div data-testid="whatif-legend" className="mt-3 space-y-3">
       <div>
-        <p className="text-sm font-semibold">{t('whatif.legend_ramp', 'When the fire could arrive (hours after ignition): darker is earlier, lighter is later')}</p>
+        <p className="text-sm font-semibold">{bright ? t('whatif.legend_age', 'How long ago the fire could have reached each place: bright yellow is just now, deep red is earliest') : t('whatif.legend_ramp', 'When the fire could arrive (hours after ignition): darker is earlier, lighter is later')}</p>
         <div aria-hidden="true" className="mt-1 h-4 w-full rounded border border-control" style={{ background: gradient }} />
-        <ol className="mt-1 flex justify-between text-xs" aria-label={t('whatif.legend_ticks', 'Hour marks')}>{ticks.map(h => <li key={h}>{h} h</li>)}</ol>
+        <ol className="mt-1 flex justify-between text-xs" aria-label={t('whatif.legend_ticks', 'Hour marks')}>{bright ? ticks.map((h, i) => <li key={i}>{t('whatif.ago', '{{h}} h ago', { h })}</li>) : ticks.map(h => <li key={h}>{h} h</li>)}</ol>
         <p className="mt-1 text-xs text-ink-muted">{t('whatif.legend_lines', 'Thin lines mark each {{n}} h of spread.', { n: maxHours <= 24 ? 1 : 2 })}</p>
       </div>
       <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <li className="flex items-center gap-2"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 28 28"><path d="M14 4 24 14 14 24 4 14Z" fill="var(--tw-surface)" stroke="var(--tw-unconfirmed)" strokeWidth="2.5" strokeDasharray="3 2" /></svg>{t('whatif.leg_ignition', 'Ignition')}</li>
         <li className="flex items-center gap-2"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 28 28"><rect x="6" y="6" width="16" height="16" fill="var(--tw-text)" /></svg>{t('whatif.leg_village', 'Village or hamlet')}</li>
+        <li className="flex items-center gap-2"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 28 28"><circle cx="14" cy="14" r="8" fill="var(--tw-danger)" /></svg>{t('whatif.leg_hit', 'Village the fire could reach by the selected time (round, with the hour)')}</li>
         <li className="flex items-center gap-2"><svg aria-hidden="true" width="30" height="12" viewBox="0 0 30 12"><line x1="2" y1="6" x2="28" y2="6" stroke="var(--tw-text)" strokeWidth="4" strokeLinecap="round" /></svg>{t('whatif.leg_fireline', 'Fire line')}</li>
         <li className="flex items-center gap-2"><svg aria-hidden="true" width="30" height="12" viewBox="0 0 30 12"><line x1="2" y1="6" x2="28" y2="6" stroke="var(--tw-map-road-major)" strokeWidth="2" /></svg>{t('whatif.leg_road', 'Road')}</li>
         <li className="flex items-center gap-2"><svg aria-hidden="true" width="30" height="12" viewBox="0 0 30 12"><line x1="2" y1="6" x2="28" y2="6" stroke="var(--tw-map-boundary)" strokeWidth="2.5" strokeDasharray="2 3" /></svg>{t('whatif.leg_water', 'River or water')}</li>
@@ -562,7 +609,7 @@ function Legend({ stops, maxHours, cases }: { stops: RGB[]; maxHours: number; ca
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label={t('whatif.leg_cases', 'Wind case outlines')}>
           {cases.map((c, i) => (
             <li key={i} className="flex items-center gap-2">
-              <svg aria-hidden="true" width="34" height="12" viewBox="0 0 34 12"><line x1="2" y1="6" x2="32" y2="6" stroke={`var(--tw-${CASE_TOKEN[i]})`} strokeWidth="3" strokeDasharray={CASE_BORDER[i] === 'solid' ? undefined : CASE_BORDER[i] === 'dashed' ? '8 4' : '2 4'} /></svg>
+              <svg aria-hidden="true" width="34" height="12" viewBox="0 0 34 12"><line x1="2" y1="6" x2="32" y2="6" stroke={caseCss(i)} strokeWidth="3" strokeDasharray={CASE_BORDER[i] === 'solid' ? undefined : CASE_BORDER[i] === 'dashed' ? '8 4' : '2 4'} /></svg>
               <span>{t('whatif.leg_case', 'Case {{id}}: {{style}} line', { id: CASE_IDS[i], style: CASE_BORDER[i] === 'solid' ? t('whatif.solid', 'solid') : CASE_BORDER[i] === 'dashed' ? t('whatif.dashed', 'dashed') : t('whatif.dotted', 'dotted') })}</span>
             </li>
           ))}

@@ -1,10 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { cellCentre, parseManifestLayout } from './whatifLayout';
 import { json, signedInAs } from './helpers';
 
 const layout = parseManifestLayout(JSON.parse(readFileSync(new URL('../public/whatif/similipal/manifest.json', import.meta.url), 'utf8')));
+
+// The satellite view needs a tile service in frontend/.env.local (see .env.example). The spec checks whichever case this machine is in.
+const SATELLITE_ON = existsSync(new URL('../.env.local', import.meta.url)) && /VITE_SATELLITE_BASEMAP=true/.test(readFileSync(new URL('../.env.local', import.meta.url), 'utf8'));
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+const hasLayer = (page: Page, id: string) => page.evaluate(i => !!(window as unknown as { __twMap: { getLayer(i: string): unknown } }).__twMap.getLayer(i), id);
 
 async function openAs(page: Page, role: string, scenario = true) {
   await signedInAs(page, role, 'Lead Rao');
@@ -118,7 +123,7 @@ test.describe('What-if fire spread', () => {
     await setHour(page, 12);
     const at12 = await burned(page);
     expect(at12).toBeGreaterThan(at4);
-    await expect(page.getByTestId('whatif-legend')).toContainText('darker is earlier');
+    await expect(page.getByTestId('whatif-legend')).toContainText('bright yellow is just now');
 
     const calm = await burned(page);
     await page.getByLabel('Wind speed (km/h)').fill('30');
@@ -210,6 +215,73 @@ test.describe('What-if fire spread', () => {
     await expect(page.getByText('Measured limits')).toBeVisible();
   });
 
+  test('the map opens in dark terrain with hillshade whatever the OS theme; fire stays on every view; the choice is remembered', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await openAs(page, 'incident_commander');
+    await openPage(page);
+    const block = page.getByTestId('whatif-map-block');
+    await expect(block).toHaveAttribute('data-view', 'dark');
+    await expect(page.getByRole('radio', { name: 'Dark terrain' })).toBeChecked();
+    await expect.poll(() => hasLayer(page, 'tw-terrain'), { timeout: 15000 }).toBe(true);
+    await clickCell(page, 167, 167);
+    await waitRun(page);
+    await expect.poll(() => hasLayer(page, 'tw-image'), { timeout: 15000 }).toBe(true);
+    await expect(page.getByTestId('whatif-legend')).toContainText('bright yellow is just now');
+    await expect(page.getByTestId('disclaimer')).toBeVisible();
+
+    await page.getByRole('radio', { name: 'Light' }).check();
+    await expect(block).toHaveAttribute('data-view', 'light');
+    await expect.poll(() => hasLayer(page, 'tw-terrain')).toBe(false);
+    await expect.poll(() => hasLayer(page, 'tw-image'), { timeout: 15000 }).toBe(true);
+    await expect(page.getByTestId('whatif-legend')).toContainText('darker is earlier');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download image' }).click();
+    expect((await download).suggestedFilename()).toMatch(/\.png$/);
+
+    await page.reload();
+    await expect(page.getByTestId('map')).toHaveAttribute('data-ready', 'true', { timeout: 30000 });
+    await expect(page.getByTestId('whatif-map-block')).toHaveAttribute('data-view', 'light');
+    await page.getByRole('radio', { name: 'Dark terrain' }).check();
+    await expect.poll(() => hasLayer(page, 'tw-terrain'), { timeout: 15000 }).toBe(true);
+  });
+
+  test('the page works when browser storage is blocked', async ({ page }) => {
+    // Only this page's own key is refused, as a full or blocked store would; the rest of the app keeps its session.
+    await page.addInitScript(() => { const get = Storage.prototype.getItem, set = Storage.prototype.setItem; Storage.prototype.getItem = function (k: string) { if (k === 'tw_whatif_view') throw new Error('blocked'); return get.call(this, k); }; Storage.prototype.setItem = function (k: string, v: string) { if (k === 'tw_whatif_view') throw new Error('blocked'); return set.call(this, k, v); }; });
+    await openAs(page, 'incident_commander');
+    await page.goto('/app/whatif');
+    await expect(page.getByTestId('whatif-map-block')).toHaveAttribute('data-view', 'dark');
+    await page.getByRole('radio', { name: 'Light' }).check();
+    await expect(page.getByTestId('whatif-map-block')).toHaveAttribute('data-view', 'light');
+  });
+
+  test('satellite: off with a one-line reason unless the deployment sets it up; when set up it shows the licence and keeps fire and assets', async ({ page }) => {
+    // Tile services are stubbed: the spec never reaches the network and never needs a token.
+    await page.route(/^https:\/\/(api\.mapbox\.com|tiles\.maps\.eox\.at)\//, route => route.fulfill({ status: 200, contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
+    await openAs(page, 'incident_commander');
+    await openPage(page);
+    const sat = page.getByRole('radio', { name: 'Satellite' });
+    if (!SATELLITE_ON) {
+      await expect(sat).toBeDisabled();
+      await expect(page.getByText('Satellite is off: it needs a tile service set up for this deployment.')).toBeVisible();
+      return;
+    }
+    await expect(sat).toBeEnabled();
+    await expect(page.locator('#whatif-sat-help')).toContainText('Imagery');
+    await expect(page.locator('#whatif-sat-help')).toContainText('Hillshade is off on this view.');
+    await clickCell(page, 167, 167);
+    await waitRun(page);
+    await sat.check();
+    await expect(page.getByTestId('whatif-map-block')).toHaveAttribute('data-view', 'satellite');
+    await expect(page.getByText(/OpenStreetMap|EOxCloudless/).first()).toBeVisible();
+    await expect.poll(() => hasLayer(page, 'tw-terrain')).toBe(false);
+    await expect.poll(() => hasLayer(page, 'tw-image'), { timeout: 15000 }).toBe(true);
+    await expect(page.getByRole('listitem').filter({ hasText: 'Ignition 1' })).toBeVisible();
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download image' }).click();
+    await download;
+  });
+
   for (const scheme of ['light', 'dark'] as const) {
     test(`no serious accessibility violations (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
@@ -218,6 +290,7 @@ test.describe('What-if fire spread', () => {
       await clickCell(page, 167, 167);
       await waitRun(page);
       await page.getByRole('button', { name: 'Add a wind case to compare' }).click();
+      await page.getByRole('radio', { name: 'Dark terrain' }).check();
       await page.getByLabel('The wind changes later').check();
       await page.getByRole('button', { name: 'Draw fire line' }).click();
       await page.getByText('How this works').click();
