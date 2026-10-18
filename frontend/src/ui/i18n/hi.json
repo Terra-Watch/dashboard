@@ -428,6 +428,7 @@
  "map.weather": "मौसम",
  "map.wind": "हवा {{speed}} मी/से, {{dir}}° से",
  "map.window": "समय अवधि",
+ "nav.whatif": "अगर-तो",
  "ops.action.assignment_accepted": "अधिकारी ने स्वीकार किया",
  "ops.action.assignment_completed": "अधिकारी ने काम पूरा किया",
  "ops.action.assignment_declined": "अधिकारी ने अस्वीकार किया",

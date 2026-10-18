@@ -1,5 +1,121 @@
 {
   "light": {
+    "wi-land": {
+      "$type": "color",
+      "$value": "#12161b"
+    },
+    "wi-earth": {
+      "$type": "color",
+      "$value": "#171c22"
+    },
+    "wi-forest": {
+      "$type": "color",
+      "$value": "#1b2a1e"
+    },
+    "wi-water": {
+      "$type": "color",
+      "$value": "#245a80"
+    },
+    "wi-water-line": {
+      "$type": "color",
+      "$value": "#7cc4f0"
+    },
+    "wi-road": {
+      "$type": "color",
+      "$value": "#7d8896"
+    },
+    "wi-road-major": {
+      "$type": "color",
+      "$value": "#c4ccd6"
+    },
+    "wi-boundary": {
+      "$type": "color",
+      "$value": "#9aa7b6"
+    },
+    "wi-label": {
+      "$type": "color",
+      "$value": "#f4f1ea"
+    },
+    "wi-halo": {
+      "$type": "color",
+      "$value": "#0b0e11"
+    },
+    "wi-fire-1": {
+      "$type": "color",
+      "$value": "#fff23a"
+    },
+    "wi-fire-2": {
+      "$type": "color",
+      "$value": "#ffb81c"
+    },
+    "wi-fire-3": {
+      "$type": "color",
+      "$value": "#ff7a12"
+    },
+    "wi-fire-4": {
+      "$type": "color",
+      "$value": "#e0360f"
+    },
+    "wi-fire-5": {
+      "$type": "color",
+      "$value": "#b3121c"
+    },
+    "wi-front": {
+      "$type": "color",
+      "$value": "#fff8c2"
+    },
+    "wi-contour": {
+      "$type": "color",
+      "$value": "#2a0a05"
+    },
+    "wi-ignition": {
+      "$type": "color",
+      "$value": "#3df5ff"
+    },
+    "wi-case-a": {
+      "$type": "color",
+      "$value": "#56b4e9"
+    },
+    "wi-case-b": {
+      "$type": "color",
+      "$value": "#ff79c6"
+    },
+    "wi-case-c": {
+      "$type": "color",
+      "$value": "#b6f03c"
+    },
+    "wi-tint-tree": {
+      "$type": "color",
+      "$value": "#2f7d43"
+    },
+    "wi-tint-grass": {
+      "$type": "color",
+      "$value": "#b5b84a"
+    },
+    "wi-tint-crop": {
+      "$type": "color",
+      "$value": "#c99a3a"
+    },
+    "wi-tint-built": {
+      "$type": "color",
+      "$value": "#b8b8c8"
+    },
+    "wi-tint-water": {
+      "$type": "color",
+      "$value": "#3a86c8"
+    },
+    "wi-tint-bare": {
+      "$type": "color",
+      "$value": "#a08a6c"
+    },
+    "wi-shade-light": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "wi-shade-dark": {
+      "$type": "color",
+      "$value": "#000000"
+    },
     "bg": {
       "$type": "color",
       "$value": "#f5f2eb"
@@ -150,6 +266,122 @@
     }
   },
   "dark": {
+    "wi-land": {
+      "$type": "color",
+      "$value": "#12161b"
+    },
+    "wi-earth": {
+      "$type": "color",
+      "$value": "#171c22"
+    },
+    "wi-forest": {
+      "$type": "color",
+      "$value": "#1b2a1e"
+    },
+    "wi-water": {
+      "$type": "color",
+      "$value": "#245a80"
+    },
+    "wi-water-line": {
+      "$type": "color",
+      "$value": "#7cc4f0"
+    },
+    "wi-road": {
+      "$type": "color",
+      "$value": "#7d8896"
+    },
+    "wi-road-major": {
+      "$type": "color",
+      "$value": "#c4ccd6"
+    },
+    "wi-boundary": {
+      "$type": "color",
+      "$value": "#9aa7b6"
+    },
+    "wi-label": {
+      "$type": "color",
+      "$value": "#f4f1ea"
+    },
+    "wi-halo": {
+      "$type": "color",
+      "$value": "#0b0e11"
+    },
+    "wi-fire-1": {
+      "$type": "color",
+      "$value": "#fff23a"
+    },
+    "wi-fire-2": {
+      "$type": "color",
+      "$value": "#ffb81c"
+    },
+    "wi-fire-3": {
+      "$type": "color",
+      "$value": "#ff7a12"
+    },
+    "wi-fire-4": {
+      "$type": "color",
+      "$value": "#e0360f"
+    },
+    "wi-fire-5": {
+      "$type": "color",
+      "$value": "#b3121c"
+    },
+    "wi-front": {
+      "$type": "color",
+      "$value": "#fff8c2"
+    },
+    "wi-contour": {
+      "$type": "color",
+      "$value": "#2a0a05"
+    },
+    "wi-ignition": {
+      "$type": "color",
+      "$value": "#3df5ff"
+    },
+    "wi-case-a": {
+      "$type": "color",
+      "$value": "#56b4e9"
+    },
+    "wi-case-b": {
+      "$type": "color",
+      "$value": "#ff79c6"
+    },
+    "wi-case-c": {
+      "$type": "color",
+      "$value": "#b6f03c"
+    },
+    "wi-tint-tree": {
+      "$type": "color",
+      "$value": "#2f7d43"
+    },
+    "wi-tint-grass": {
+      "$type": "color",
+      "$value": "#b5b84a"
+    },
+    "wi-tint-crop": {
+      "$type": "color",
+      "$value": "#c99a3a"
+    },
+    "wi-tint-built": {
+      "$type": "color",
+      "$value": "#b8b8c8"
+    },
+    "wi-tint-water": {
+      "$type": "color",
+      "$value": "#3a86c8"
+    },
+    "wi-tint-bare": {
+      "$type": "color",
+      "$value": "#a08a6c"
+    },
+    "wi-shade-light": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "wi-shade-dark": {
+      "$type": "color",
+      "$value": "#000000"
+    },
     "bg": {
       "$type": "color",
       "$value": "#151310"

@@ -10,7 +10,18 @@ import { writeFileSync } from 'node:fs';
 //  Signal red / Turmeric / Sal green   hazard, caution, contained (Sal = the forest tree); each is always paired with an icon and a word
 //  Neel                       indigo dye: "not yet confirmed by a person" (dashed outlines, never a status of fact)
 //  Outlook + probability scales   ColorBrewer YlOrRd / Blues (Brewer, Apache-2.0): peer-reviewed, colour-blind-safe sequential scales
+// What-if page map colours. They are the SAME in light and dark: that page draws its own dark terrain view whatever the OS theme is.
+const wi = {
+  'wi-land': '#12161b', 'wi-earth': '#171c22', 'wi-forest': '#1b2a1e', 'wi-water': '#245a80', 'wi-water-line': '#7cc4f0',
+  'wi-road': '#7d8896', 'wi-road-major': '#c4ccd6', 'wi-boundary': '#9aa7b6', 'wi-label': '#f4f1ea', 'wi-halo': '#0b0e11',
+  'wi-fire-1': '#fff23a', 'wi-fire-2': '#ffb81c', 'wi-fire-3': '#ff7a12', 'wi-fire-4': '#e0360f', 'wi-fire-5': '#b3121c',
+  'wi-front': '#fff8c2', 'wi-contour': '#2a0a05', 'wi-ignition': '#3df5ff',
+  'wi-case-a': '#56b4e9', 'wi-case-b': '#ff79c6', 'wi-case-c': '#b6f03c',
+  'wi-tint-tree': '#2f7d43', 'wi-tint-grass': '#b5b84a', 'wi-tint-crop': '#c99a3a', 'wi-tint-built': '#b8b8c8', 'wi-tint-water': '#3a86c8', 'wi-tint-bare': '#a08a6c',
+  'wi-shade-light': '#ffffff', 'wi-shade-dark': '#000000',
+};
 const light = {
+  ...wi,
   'bg': '#f5f2eb', 'surface': '#fffdf9', 'surface-2': '#ece7dc',
   'line': '#d8d0c0', 'line-control': '#7a6f5e',
   'text': '#1f1b16', 'text-muted': '#5a5247',
@@ -25,6 +36,7 @@ const light = {
   'map-land': '#ece8de', 'map-forest': '#dfe6d3', 'map-water': '#d3e0e6', 'map-road': '#cfc7b6', 'map-road-major': '#aaa08c', 'map-boundary': '#8d8370', 'map-label': '#463f35',
 };
 const dark = {
+  ...wi,
   'bg': '#151310', 'surface': '#1e1b17', 'surface-2': '#27231e',
   'line': '#3a342c', 'line-control': '#8a7f6e',
   'text': '#f1ede4', 'text-muted': '#b5ab9b',
@@ -54,6 +66,11 @@ for (const [theme, t] of [['light', light], ['dark', dark]]) {
     need('', 'focus', bg, 3, theme, t);
   }
   rows.push([theme, 'on-action/action', need('', 'on-action', 'action', 4.5, theme, t)]);
+  // What-if map: labels, markers, fire and the three compare outlines must stand out from its dark land.
+  rows.push([theme, 'wi-label/wi-land', need('', 'wi-label', 'wi-land', 7, theme, t)]);
+  for (const f of ['wi-ignition', 'wi-case-a', 'wi-case-b', 'wi-case-c', 'wi-road-major', 'wi-water-line', 'wi-fire-1', 'wi-fire-3']) need('', f, 'wi-land', 4.5, theme, t);
+  need('', 'wi-fire-5', 'wi-land', 2, theme, t);
+  need('', 'wi-road', 'wi-land', 3, theme, t);
   for (const s of ['danger', 'warn', 'ok', 'unconfirmed', 'action']) rows.push([theme, `${s}/${s}-tint`, need('', s, `${s}-tint`, 4.5, theme, t)]);
   for (let i = 1; i <= 5; i++) { const r = ratio(t[`outlook-${i}`], t.bg); rows.push([theme, `outlook-${i}/bg (fill, needs outline)`, r]); }
 }
@@ -67,7 +84,7 @@ const M = {
 const sim = (hexv, m) => { const c = new Color(hexv).to('srgb-linear'); const [r, g, b] = c.coords; const v = m.map(row => row[0] * r + row[1] * g + row[2] * b); return new Color('srgb-linear', v.map(x => Math.min(1, Math.max(0, x)))); };
 const cvd = [];
 for (const [theme, t] of [['light', light], ['dark', dark]]) {
-  const groups = { outlook: [1, 2, 3, 4, 5].map(i => t[`outlook-${i}`]), meaning: [t.danger, t.warn, t.ok, t.unconfirmed, t.action] };
+  const groups = { outlook: [1, 2, 3, 4, 5].map(i => t[`outlook-${i}`]), meaning: [t.danger, t.warn, t.ok, t.unconfirmed, t.action], 'compare outlines': [t['wi-case-a'], t['wi-case-b'], t['wi-case-c']] };
   for (const [kind, colors] of Object.entries(groups)) for (const [name, m] of Object.entries(M)) {
     let min = Infinity;
     for (let i = 0; i < colors.length; i++) for (let j = i + 1; j < colors.length; j++) {

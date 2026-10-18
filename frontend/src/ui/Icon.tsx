@@ -1,11 +1,11 @@
-import { BadgeCheck, Camera, CheckCircle2, ClipboardCheck, ClipboardList, HardHat, Inbox, ListTodo, Map as MapIcon, Megaphone, MapPin, MessageSquareWarning, Plus, Radio, Satellite, ShieldCheck, User, Users, type LucideProps } from 'lucide-react';
+import { BadgeCheck, Camera, CheckCircle2, Flame, ClipboardCheck, ClipboardList, HardHat, Inbox, ListTodo, Map as MapIcon, Megaphone, MapPin, MessageSquareWarning, Plus, Radio, Satellite, ShieldCheck, User, Users, type LucideProps } from 'lucide-react';
 import type { ComponentType } from 'react';
 import type { IconId } from './nav';
 import type { Rung } from './ladder';
 
 const NAV_ICONS: Record<IconId, ComponentType<LucideProps>> = {
   'map-pin': MapPin, plus: Plus, 'clipboard-list': ClipboardList, users: Users, user: User, inbox: Inbox, map: MapIcon, radio: Radio,
-  megaphone: Megaphone, 'clipboard-check': ClipboardCheck, 'list-todo': ListTodo, camera: Camera,
+  megaphone: Megaphone, 'clipboard-check': ClipboardCheck, 'list-todo': ListTodo, camera: Camera, flame: Flame,
 };
 const RUNG_ICONS = { satellite: Satellite, message: MessageSquareWarning, 'badge-check': BadgeCheck, 'hard-hat': HardHat, 'shield-check': ShieldCheck, 'circle-check': CheckCircle2 } as const;
 

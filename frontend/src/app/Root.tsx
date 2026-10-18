@@ -33,6 +33,7 @@ const HandoverPage = lazy(() => import('../features/ops/HandoverPage').then(m =>
 const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({ default: m.OpsFieldPage })));
 const OpsIncidentPage = lazy(() => import('../features/ops/IncidentPage').then(m => ({ default: m.OpsIncidentPage })));
 const NoticesPage = lazy(() => import('../features/ops/NoticesPage').then(m => ({ default: m.NoticesPage })));
+const WhatIfPage = lazy(() => import('../features/scenarios/WhatIfPage').then(m => ({ default: m.WhatIfPage })));
 const OpsLayout = lazy(() => import('../features/ops/OpsLayout').then(m => ({ default: m.OpsLayout })));
 const QueuePage = lazy(() => import('../features/ops/QueuePage').then(m => ({ default: m.QueuePage })));
 const CapturePage = lazy(() => import('../features/field/CapturePage').then(m => ({ default: m.CapturePage })));
@@ -87,6 +88,9 @@ export function Root() {
           <Route path="admin" element={<AdminPage />} />
           <Route path="alert-rules" element={<AlertRulesPage />} />
           {PATROL_PLANNING && <><Route path="plans" element={<PlanListPage />} /><Route path="plans/new" element={<PlanPage />} /></>}
+        </Route>
+        <Route path="/app" element={<OpsLayout />}>
+          <Route path="whatif" element={<WhatIfPage />} />
         </Route>
         <Route path="/field" element={<PositionProvider><FieldLayout /></PositionProvider>}>
           <Route index element={<Navigate to="tasks" replace />} />

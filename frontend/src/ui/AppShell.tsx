@@ -8,7 +8,8 @@ import { Inbox } from './Inbox';
 import { NavIcon } from './Icon';
 import { LanguageMenu } from './LanguageMenu';
 import { ThemeMenu } from './ThemeMenu';
-import { NAV, activeItem, homePath, type NavItem, type ProductRole } from './nav';
+import { useOpsSettings } from '../features/ops/useOps';
+import { navFor, activeItem, homePath, type NavItem, type ProductRole } from './nav';
 
 type Props = { role: ProductRole; userName?: string; pending?: number; onSignOut: () => void; topSlot?: ReactNode; children: ReactNode };
 
@@ -17,7 +18,9 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const main = useRef<HTMLElement>(null);
-  const items = NAV[role];
+  // The what-if page is listed for the Control Room only, and only while the Scenario setting is on (same rule as the Scenario tab).
+  const settings = useOpsSettings(role === 'control_room');
+  const items = navFor(role, { scenario: role === 'control_room' && settings.data?.scenario_enabled === true });
   const current = activeItem(role, pathname);
   const rail = role === 'control_room';
 

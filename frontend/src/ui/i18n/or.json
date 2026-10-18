@@ -428,6 +428,7 @@
  "map.weather": "ପାଣିପାଗ",
  "map.wind": "ପବନ {{speed}} ମି/ସେ, {{dir}}° ରୁ",
  "map.window": "ସମୟ ସୀମା",
+ "nav.whatif": "ଯଦି-ତେବେ",
  "ops.action.assignment_accepted": "ଅଧିକାରୀ ଗ୍ରହଣ କଲେ",
  "ops.action.assignment_completed": "ଅଧିକାରୀ କାମ ଶେଷ କଲେ",
  "ops.action.assignment_declined": "ଅଧିକାରୀ ଅଗ୍ରାହ୍ୟ କଲେ",
