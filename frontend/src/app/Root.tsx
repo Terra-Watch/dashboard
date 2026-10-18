@@ -7,6 +7,8 @@ import { applyTheme, readTheme } from '../ui/theme';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
 import { PositionProvider } from '../features/field/Position';
 import { StatusPage } from '../features/system/StatusPage';
+import { Brand } from '../components/Brand';
+import { LogoLoader } from '../ui/Loading';
 
 // Every screen is loaded when it is first opened, so the landing page and sign-in stay small and the map code only loads with a map.
 const AcceptInvitePage = lazy(() => import('../features/auth/AcceptInvitePage').then(m => ({ default: m.AcceptInvitePage })));
@@ -45,7 +47,7 @@ const TasksPage = lazy(() => import('../features/field/TasksPage').then(m => ({ 
 
 function Waiting() {
   const { t } = useTranslation();
-  return <p role="status" className="p-6">{t('common.loading', 'Loading…')}</p>;
+  return <div data-rq-app className="min-h-screen bg-canvas text-ink"><header className="flex min-h-14 items-center border-b border-line bg-surface px-4"><Brand /></header><main><LogoLoader label={t('common.loading', 'Loading…')} /></main></div>;
 }
 
 /** Patrol planning is built but off until the department agrees how it should work (see docs/design/decisions.md). */

@@ -35,6 +35,7 @@ export const resources = {
       footer: { sources: 'Data sources: NASA FIRMS (satellite detections), Copernicus ERA5 (weather), OpenStreetMap contributors and Protomaps (maps).' } },
     rung: { signal: 'Satellite signal', report: 'Reported · not yet checked', verified: 'Verified', responding: 'Responding', contained: 'Contained', closed: 'Closed' },
     nav: { near_me: 'Near me', report: 'Report', my_reports: 'My reports', community: 'Community', account: 'Account', queue: 'Queue', map: 'Map', field: 'Field', notices: 'Notices', handover: 'Handover', whatif: 'What-if', tasks: 'Tasks', capture: 'Capture', me: 'Me' },
+    whatif: { err_network: 'The files could not be fetched. Check the connection.' },
     basemap: { label: 'Basemap', map: 'Map', satellite: 'Satellite', offline_notice: 'Satellite tiles are not available offline. Switching to map.' },
   } },
   hi: { translation: {
@@ -53,6 +54,7 @@ export const resources = {
       how: { title: 'रिपोर्ट कैसे संभाली जाती है' }, data: { title: 'आपका डेटा' } },
     rung: { signal: 'उपग्रह संकेत', report: 'रिपोर्ट किया गया · अभी जाँच नहीं हुई', verified: 'सत्यापित', responding: 'कार्रवाई जारी', contained: 'नियंत्रित', closed: 'बंद' },
     nav: { near_me: 'मेरे पास', report: 'रिपोर्ट करें', my_reports: 'मेरी रिपोर्ट', community: 'समुदाय', account: 'खाता', queue: 'कतार', map: 'नक्शा', field: 'फ़ील्ड', notices: 'सूचनाएँ', handover: 'हैंडओवर', whatif: 'अगर-तो', tasks: 'कार्य', capture: 'फ़ोटो लें', me: 'मेरा' },
+    whatif: { err_network: 'फ़ाइलें प्राप्त नहीं हो सकीं। अपना कनेक्शन जाँचें।' },
     basemap: { label: 'बेस मैप', map: 'नक्शा', satellite: 'उपग्रह', offline_notice: 'उपग्रह टाइलें ऑफ़लाइन उपलब्ध नहीं हैं। नक्शे पर जा रहे हैं।' },
   } },
   or: { translation: {
@@ -71,6 +73,7 @@ export const resources = {
       how: { title: 'ରିପୋର୍ଟ କିପରି ସମ୍ଭାଳାଯାଏ' }, data: { title: 'ଆପଣଙ୍କ ତଥ୍ୟ' } },
     rung: { signal: 'ଉପଗ୍ରହ ସଙ୍କେତ', report: 'ରିପୋର୍ଟ ହୋଇଛି · ଏପର୍ଯ୍ୟନ୍ତ ଯାଞ୍ଚ ହୋଇନାହିଁ', verified: 'ଯାଞ୍ଚିତ', responding: 'କାର୍ଯ୍ୟାନୁଷ୍ଠାନ ଚାଲିଛି', contained: 'ନିୟନ୍ତ୍ରିତ', closed: 'ବନ୍ଦ' },
     nav: { near_me: 'ମୋ ପାଖରେ', report: 'ରିପୋର୍ଟ', my_reports: 'ମୋ ରିପୋର୍ଟ', community: 'ସମ୍ପ୍ରଦାୟ', account: 'ଖାତା', queue: 'ଧାଡ଼ି', map: 'ମାନଚିତ୍ର', field: 'କ୍ଷେତ୍ର', notices: 'ସୂଚନା', handover: 'ହସ୍ତାନ୍ତର', whatif: 'ଯଦି-ତେବେ', tasks: 'କାର୍ଯ୍ୟ', capture: 'ଫଟୋ ନିଅନ୍ତୁ', me: 'ମୁଁ' },
+    whatif: { err_network: 'ଫାଇଲ୍ ଆଣିହେଲା ନାହିଁ। ଆପଣଙ୍କ ସଂଯୋଗ ଯାଞ୍ଚ କରନ୍ତୁ।' },
     basemap: { label: 'ବେସ୍ ମ୍ୟାପ୍', map: 'ମାନଚିତ୍ର', satellite: 'ଉପଗ୍ରହ', offline_notice: 'ଉପଗ୍ରହ ଟାଇଲ୍ ଅଫଲାଇନ୍ରେ ଉପଲବ୍ଧ ନାହିଁ। ମାନଚିତ୍ରକୁ ଯାଉଛି।' },
   } },
 } as const;

@@ -6,7 +6,7 @@ import { ApiError, api } from '../../app/http';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
-import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
+import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { STATES, formatWhen, stateName } from '../citizen/format';
 import { useIncidents, useOpsRegion } from './useOps';
 
@@ -33,7 +33,7 @@ export function HandoverPage() {
     <div className="mx-auto max-w-3xl space-y-4">
       <PageTitle title={t('nav.handover')} subtitle={t('ops.handover.subtitle', 'What the next shift needs to know.')} />
       <Card title={t('ops.handover.open', 'Open now')}>
-        {incidents.isLoading ? <Skeleton lines={1} /> : <ul className="flex flex-wrap gap-3">{counts.map(item => <li key={item.status} className="rounded-rq border border-line px-3 py-2"><span className="text-2xl font-bold">{item.count}</span> <span className="text-ink-muted">{t(`ops.tab.${item.status === 'reported' ? 'new' : item.status === 'contained' ? 'contained' : 'active'}`, item.status)} · {item.status}</span></li>)}</ul>}
+        {incidents.isLoading ? <Skeleton lines={1} /> : incidents.isError ? <LoadError message={t('ops.handover.incidents_error', 'Open incidents could not be loaded.')} onRetry={() => void incidents.refetch()} retryLabel={t('citizen.retry', 'Try again')} /> : <ul className="flex flex-wrap gap-3">{counts.map(item => <li key={item.status} className="rounded-rq border border-line px-3 py-2"><span className="text-2xl font-bold">{item.count}</span> <span className="text-ink-muted">{t(`ops.tab.${item.status === 'reported' ? 'new' : item.status === 'contained' ? 'contained' : 'active'}`, item.status)} · {item.status}</span></li>)}</ul>}
         <p className="mt-2 text-sm"><Link to="/ops/queue" className="underline">{t('nav.queue')}</Link></p>
       </Card>
       <Card title={t('ops.handover.write', 'Leave a note')}>
@@ -44,7 +44,7 @@ export function HandoverPage() {
           <Button type="submit" loading={busy} disabled={!body.trim()}>{t('ops.handover.save', 'Save note')}</Button>
         </form>
       </Card>
-      {notes.isLoading ? <Skeleton lines={3} /> : !notes.data?.items.length ? <EmptyState title={t('ops.handover.none', 'No notes yet.')} />
+      {notes.isLoading ? <Skeleton lines={3} /> : notes.isError ? <LoadError message={t('ops.handover.notes_error', 'Handover notes could not be loaded.')} onRetry={() => void notes.refetch()} retryLabel={t('citizen.retry', 'Try again')} /> : !notes.data?.items.length ? <EmptyState title={t('ops.handover.none', 'No notes yet.')} />
         : <ul className="space-y-3">{notes.data.items.map(note => (
           <li key={note.id} className="rounded-panel border border-line bg-surface p-4"><p className="whitespace-pre-wrap text-lg">{note.body}</p>
             <p className="mt-2 text-sm text-ink-muted">{note.author_name} · {stateName(note.state)} · {formatWhen(note.created_at)}{note.incident_id ? ` · #${note.incident_id}` : ''}</p>

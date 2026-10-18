@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button';
 import { SelectField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
+import { LogoLoader } from '../../ui/Loading';
 import { useOpsSettings } from '../ops/useOps';
 import { MapView, type MapLine } from '../map/MapView';
 import { satelliteStyle, whatifTerrainStyle } from '../map/style';
@@ -37,9 +38,8 @@ const CASE_BORDER = ['solid', 'dashed', 'dotted'] as const;
 const INPUT = 'mt-1 block w-full min-h-11 rounded-rq border border-control bg-surface px-3 py-2 text-base text-ink';
 const DEFAULT_WIND: WindCase = { speedKmh: 10, fromDeg: 270, shift: null };
 
-type Inputs = { ignitions: Cell[]; cases: WindCase[]; maxHours: number; fireMask: Uint8Array };
 /** `for` is the set of inputs the run was made from: a run is current only while it is the live set. */
-type Run = { status: 'idle' | 'running' | 'ok' | 'error'; arrivalH: Float32Array | null; message?: string; skipped?: number; for?: Inputs };
+type Run = { status: 'idle' | 'running' | 'ok' | 'error'; arrivalH: Float32Array | null; message?: string; skipped?: number; inputKey?: string };
 type Say = { kind: 'info' | 'warning' | 'danger' | 'success'; text: string } | null;
 type MapLike = { getCenter(): { lat: number; lng: number }; getCanvas(): HTMLCanvasElement; triggerRepaint(): void };
 
@@ -71,23 +71,23 @@ export function WhatIfPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaId]);
 
-  if (settings.isPending) return <Skeleton lines={4} />;
+  if (settings.isPending) return <LogoLoader label={t('common.loading', 'Loading…')} />;
   if (settings.data?.scenario_enabled !== true) {
     return <EmptyState title={t('whatif.off_title', 'What-if fire spread is not switched on')}>{t('whatif.off_body', 'An administrator can turn on the scenario tools for this deployment.')}</EmptyState>;
   }
 
   const chosen = AREAS.find(a => a.id === areaId);
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-[90rem] space-y-4">
       <PageTitle title={t('whatif.title', 'What-if fire spread')} subtitle={t('whatif.subtitle', 'Place an ignition, set the wind and see how a fire could grow over real terrain, and which villages and roads it could reach. A planning and training aid.')} />
       <Disclaimer />
-      <Card title={t('whatif.area', 'Area')}>
+      <Card title={t('whatif.area', 'Area')} className="max-w-3xl">
         <div className="max-w-md">
           <SelectField label={t('whatif.area_pick', 'Area')} value={areaId} onChange={e => setAreaId(e.target.value)}>
             {AREAS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </SelectField>
         </div>
-        {load.status === 'loading' && <div className="mt-3"><Skeleton lines={2} /><p role="status" className="mt-2 text-sm text-ink-muted">{t('whatif.loading', 'Loading the area files…')}</p></div>}
+        {load.status === 'loading' && <div className="mt-3"><LogoLoader compact label={t('whatif.loading', 'Loading the area files…')} /></div>}
         {load.status === 'error' && <Notice kind="danger" className="mt-3" title={t('whatif.err_title', 'This area could not be loaded')}>{t('whatif.err_body', '“{{name}}”: {{why}} Choose another area from the list.', { name: chosen?.name ?? areaId, why: load.message })}</Notice>}
       </Card>
       {load.status === 'ready' && <Workspace key={load.pack.id} pack={load.pack} />}
@@ -98,7 +98,7 @@ export function WhatIfPage() {
 function Disclaimer() {
   const { t } = useTranslation();
   return (
-    <div role="note" data-testid="disclaimer" className="sticky top-14 z-20 flex gap-3 rounded-rq border-l-4 border-warn bg-warn-tint p-3 text-sm font-semibold text-ink">
+    <div role="note" data-testid="disclaimer" className="sticky top-14 z-20 flex gap-3 rounded-rq border border-warn/40 border-l-4 border-l-warn bg-warn-tint p-3 text-sm text-ink shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
       <AlertTriangle aria-hidden="true" size={20} strokeWidth={1.75} className="mt-0.5 shrink-0" />
       <p>{t('whatif.disclaimer', DISCLAIMER)}</p>
     </div>
@@ -149,20 +149,20 @@ function Workspace({ pack }: { pack: LoadedPack }) {
   }, []);
 
   // Re-run when anything that matters changes, after a short pause so typing a number does not start a run per key.
-  const inputs = useMemo<Inputs>(() => ({ ignitions, cases, maxHours, fireMask }), [ignitions, cases, maxHours, fireMask]);
+  const inputKey = useMemo(() => JSON.stringify({ ignitions, cases, maxHours, lines }), [ignitions, cases, maxHours, lines]);
   useEffect(() => {
-    if (ignitions.length === 0) { setRuns(r => r.map(x => ({ ...x, status: 'idle', arrivalH: null, message: undefined, for: undefined }))); return; }
+    if (ignitions.length === 0) { setRuns(r => r.map(x => ({ ...x, status: 'idle', arrivalH: null, message: undefined, inputKey: undefined }))); return; }
     const timer = setTimeout(() => {
       cases.forEach((wind, idx) => {
         setRuns(r => r.map((x, i) => (i === idx ? { ...x, status: 'running' } : x)));
         void clients[idx].run({ ignitions, wind, maxHours, fireLines: fireMask }).then(outcome => {
           if (!outcome) return;
-          setRuns(r => r.map((x, i) => (i !== idx ? x : outcome.ok ? { status: 'ok', arrivalH: outcome.arrivalH, skipped: outcome.skippedIgnitions, for: inputs } : { status: 'error', arrivalH: null, message: outcome.message, for: inputs })));
+          setRuns(r => r.map((x, i) => (i !== idx ? x : outcome.ok ? { status: 'ok', arrivalH: outcome.arrivalH, skipped: outcome.skippedIgnitions, inputKey } : { status: 'error', arrivalH: null, message: outcome.message, inputKey })));
         });
       });
     }, 250);
     return () => clearTimeout(timer);
-  }, [clients, ignitions, cases, maxHours, fireMask, inputs]);
+  }, [clients, ignitions, cases, maxHours, fireMask, inputKey]);
 
   useEffect(() => { setHour(h => Math.min(h, maxHours)); }, [maxHours]);
 
@@ -256,7 +256,8 @@ function Workspace({ pack }: { pack: LoadedPack }) {
   const tok = useMemo(() => readDarkTokens(), [themeTick]);
   const bright = view !== 'light';                       // dark terrain and satellite share the bright fire colours and dark-rimmed symbols
   const shade = useMemo(() => hillshade(grid.elevationM, W, H, grid.cellSizeM), [grid, W, H]);
-  const mapStyle = useMemo(() => (view === 'dark' ? whatifTerrainStyle(tok.terrain) : view === 'satellite' && sat ? satelliteStyle(sat.url, sat.attribution, undefined, sat.maxZoom) : undefined), [view, tok, sat]);
+  const hillshadeTileUrl = import.meta.env.VITE_HILLSHADE_TILE_URL as string | undefined;
+  const mapStyle = useMemo(() => (view === 'dark' ? whatifTerrainStyle(tok.terrain) : view === 'satellite' && sat ? satelliteStyle(sat.url, sat.attribution, undefined, sat.maxZoom, hillshadeTileUrl) : undefined), [view, tok, sat, hillshadeTileUrl]);
   const override = useMemo(() => (bright ? (tok.mapColors as never) : undefined), [bright, tok]);
   const caseColor = (i: number): RGB => (bright ? tok.cases[i] : readTokenColor(CASE_TOKEN[i]));
   const caseCss = (i: number): string => (bright ? tok.caseCss[i] : `var(--tw-${CASE_TOKEN[i]})`);
@@ -346,7 +347,8 @@ function Workspace({ pack }: { pack: LoadedPack }) {
     try { await navigator.clipboard.writeText(text); setSay({ kind: 'success', text: t('whatif.note_copied', 'Note copied. It is also shown below.') }); } catch { setSay({ kind: 'info', text: t('whatif.note_manual', 'Select the text below and copy it.') }); }
   };
 
-  const running = ignitions.length > 0 && runs.slice(0, cases.length).some(r => r.status === 'running' || r.for !== inputs);
+  const running = ignitions.length > 0 && runs.slice(0, cases.length).some(r => r.status === 'running' || r.inputKey !== inputKey);
+  const hasCurrentResults = ignitions.length > 0 && !running && runs.slice(0, cases.length).every(r => r.status === 'ok');
   const errored = running ? undefined : runs.slice(0, cases.length).find(r => r.status === 'error');
 
   return (
@@ -419,6 +421,9 @@ function Workspace({ pack }: { pack: LoadedPack }) {
 
       <div className="min-w-0 space-y-4">
         <div className="space-y-2" data-testid="whatif-map-block" data-view={view}>
+          <div className={`rounded-rq border-l-4 p-3 text-sm font-semibold ${drawing ? 'border-action bg-action-tint' : running ? 'border-warn bg-warn-tint' : 'border-line bg-surface'}`} role="status" aria-live="polite">
+            {drawing ? t('whatif.mode_draw', 'Drawing fire line: click points on the map, then finish the line.') : running ? t('whatif.results_running', 'Calculating the current scenario. The map is temporarily showing the previous result.') : ignitions.length === 0 ? t('whatif.mode_ignition', 'Place an ignition by clicking inside the outlined area.') : hasCurrentResults ? t('whatif.results_current', 'Scenario results are current for the selected inputs.') : t('whatif.results_ready', 'Scenario is ready to calculate.')}
+          </div>
           <fieldset className="rounded-rq border border-line p-3">
             <legend className="px-1 text-sm font-semibold">{t('whatif.view', 'Map view')}</legend>
             <div className="flex flex-wrap gap-x-5 gap-y-1">
@@ -432,17 +437,19 @@ function Workspace({ pack }: { pack: LoadedPack }) {
                 );
               })}
             </div>
-            <p id="whatif-sat-help" className="text-xs text-ink-muted">{sat === null ? t('whatif.sat_off', 'Satellite is off: it needs a tile service set up for this deployment.') : t('whatif.sat_on', '{{note}} Hillshade is off on this view.', { note: sat.note })}</p>
+            <p id="whatif-sat-help" className="text-xs text-ink-muted">{sat === null ? t('whatif.sat_off', 'Satellite is off: it needs a tile service set up for this deployment.') : hillshadeTileUrl ? t('whatif.sat_on_hillshade', '{{note}} Mapbox hillshade is enabled.', { note: sat.note }) : t('whatif.sat_on', '{{note}} Hillshade is unavailable for this deployment.', { note: sat.note })}</p>
           </fieldset>
-          <MapView label={t('whatif.map', 'What-if fire map')} className="h-[62vh] min-h-96" bounds={bounds} points={points} polygons={square} basemapStyle={mapStyle} colorsOverride={override} terrainOverlay={terrain} selectedId={selected === null ? null : `ign-${selected}`} onSelect={id => { if (id?.startsWith('ign-')) setSelected(Number(id.slice(4))); }} onMapClick={onMapClick} onMapDoubleClick={() => { if (drawing) finishLine(); }} doubleClickZoom={!drawing} imageOverlay={overlay} lines={mapLines} onMapReady={m => { mapRef.current = m as unknown as MapLike; }} />
+          <div className={`rounded-panel ${drawing ? 'ring-2 ring-action' : ''}`}>
+            <MapView label={t('whatif.map', 'What-if fire map')} className="h-[62vh] min-h-96" bounds={bounds} points={points} polygons={square} basemapStyle={mapStyle} colorsOverride={override} terrainOverlay={terrain} selectedId={selected === null ? null : `ign-${selected}`} onSelect={id => { if (id?.startsWith('ign-')) setSelected(Number(id.slice(4))); }} onMapClick={onMapClick} onMapDoubleClick={() => { if (drawing) finishLine(); }} doubleClickZoom={!drawing} imageOverlay={overlay} lines={mapLines} onMapReady={m => { mapRef.current = m as unknown as MapLike; }} />
+          </div>
           <p className="text-xs text-ink-muted">{t('whatif.attribution', 'Data: {{sources}}', { sources: [...manifest.sources.map(s => s.attribution), ...(view === 'satellite' && sat ? [sat.attribution] : [])].join(' ') })}</p>
           <p className="text-xs text-ink-muted">{pack.integrity === 'verified' ? t('whatif.integrity_ok', 'The area files matched their checksums.') : t('whatif.integrity_skip', 'Checksums were not checked: this browser context has no crypto support.')}</p>
           <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showMapAssets} onChange={e => setShowMapAssets(e.target.checked)} />{t('whatif.show_assets', 'Show roads and water on the map')}</label>
         </div>
 
-        {say && <div aria-live="polite"><Notice kind={say.kind}>{say.text}</Notice></div>}
+        {say && <p aria-live="polite" role="status" className="text-sm text-ink-muted">{say.text}</p>}
         {errored && <Notice kind="danger" title={t('whatif.run_failed', 'The run could not finish')}>{errored.message}</Notice>}
-        <p role="status" className="text-sm text-ink-muted">{running ? t('whatif.running', 'Calculating…') : ignitions.length === 0 ? t('whatif.start_hint', 'Click the map or use “Place ignition at map centre” to start.') : t('whatif.ready', 'Up to date.')}</p>
+        {(running || ignitions.length === 0) && <p role="status" className="text-sm text-ink-muted">{running ? t('whatif.running', 'Calculating…') : t('whatif.start_hint', 'Click the map or use “Place ignition at map centre” to start.')}</p>}
 
         <Card title={t('whatif.time', 'Time')}>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
@@ -468,27 +475,27 @@ function Workspace({ pack }: { pack: LoadedPack }) {
 
         <Card title={t('whatif.numbers', 'At {{h}} h', { h: round1(hour) })}>
           <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Stat label={t('whatif.burned', 'Burned area')} value={here ? `${here.burned.toFixed(2)} km²` : '–'} test="burned-km2" raw={here?.burned} />
-            <Stat label={t('whatif.head', 'Head reach')} value={here ? `${here.headKm.toFixed(1)} km` : '–'} test="head-km" />
-            <Stat label={t('whatif.back', 'Back reach')} value={here ? `${here.backKm.toFixed(1)} km` : '–'} test="back-km" />
+            <Stat label={t('whatif.burned', 'Burned area')} value={here && hasCurrentResults ? `${here.burned.toFixed(2)} km²` : '–'} test="burned-km2" raw={here?.burned} />
+            <Stat label={t('whatif.head', 'Head reach')} value={here && hasCurrentResults ? `${here.headKm.toFixed(1)} km` : '–'} test="head-km" />
+            <Stat label={t('whatif.back', 'Back reach')} value={here && hasCurrentResults ? `${here.backKm.toFixed(1)} km` : '–'} test="back-km" />
           </dl>
           <p className="mt-2 text-xs text-ink-muted">{t('whatif.reach_def', 'Reach is measured along the wind from the nearest ignition: head is downwind, back is upwind. Case {{id}} is shown.', { id: CASE_IDS[active] })}</p>
         </Card>
 
         <Card title={t('whatif.assets', 'Villages, roads and water')}>
-          <AssetTable t={t} rows={rowsPerCase[active]} hasRun={!!runs[active].arrivalH} assetsCount={assets.length} hasVillages={hasVillages} maxHours={maxHours} hour={hour} showAll={showAll} onToggle={() => setShowAll(s => !s)} />
+          <AssetTable t={t} rows={rowsPerCase[active]} hasRun={hasCurrentResults && !!runs[active].arrivalH} assetsCount={assets.length} hasVillages={hasVillages} maxHours={maxHours} hour={hour} showAll={showAll} onToggle={() => setShowAll(s => !s)} />
         </Card>
 
         {cases.length > 1 && (
           <Card title={t('whatif.compare', 'Compare wind cases')}>
-            <CompareTable t={t} cases={cases} metrics={metrics} rows={rowsPerCase} hour={hour} maxHours={maxHours} />
+            <CompareTable t={t} cases={cases} metrics={hasCurrentResults ? metrics : metrics.map(() => null)} rows={rowsPerCase} hour={hour} maxHours={maxHours} />
           </Card>
         )}
 
         <Card title={t('whatif.share', 'Share')}>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" icon={<Download aria-hidden="true" size={18} />} onClick={downloadImage}>{t('whatif.download', 'Download image')}</Button>
-            <Button variant="secondary" onClick={() => void copyNote()}>{t('whatif.copy_note', 'Copy scenario as note')}</Button>
+            <Button variant="secondary" icon={<Download aria-hidden="true" size={18} />} disabled={running || !hasCurrentResults} onClick={downloadImage}>{t('whatif.download', 'Download image')}</Button>
+            <Button variant="secondary" disabled={running || !hasCurrentResults} onClick={() => void copyNote()}>{t('whatif.copy_note', 'Copy scenario as note')}</Button>
           </div>
           <p className="mt-2 text-xs text-ink-muted">{t('whatif.share_help', 'The image holds the map as shown and the notice. Nothing is saved to the server and no incident is changed.')}</p>
           {note && <textarea readOnly aria-label={t('whatif.note_text', 'Scenario note')} value={note} rows={10} className={`${INPUT} font-mono text-sm`} />}

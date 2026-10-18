@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { api } from '../../app/http';
 import { Notice } from '../../ui/Notice';
-import { PageTitle } from '../../ui/Page';
+import { PageTitle, LoadError } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { STATES, STATE_BOUNDS, formatWhen, stateName } from '../citizen/format';
@@ -49,6 +49,7 @@ export function OpsMapPage() {
   const satelliteEnabled = import.meta.env.VITE_SATELLITE_BASEMAP === 'true';
   const satelliteTileUrl = import.meta.env.VITE_SATELLITE_TILE_URL as string | undefined;
   const satelliteAttribution = import.meta.env.VITE_SATELLITE_ATTRIBUTION as string | undefined;
+  const hillshadeTileUrl = import.meta.env.VITE_HILLSHADE_TILE_URL as string | undefined;
   
   const [basemapType, setBasemapType] = useState<'map' | 'satellite'>(() => {
     if (!satelliteEnabled) return 'map';
@@ -64,11 +65,11 @@ export function OpsMapPage() {
 
   const currentBasemapStyle = useMemo(() => {
     if (basemapType === 'satellite' && satelliteTileUrl && satelliteAttribution) {
-      return satelliteStyle(satelliteTileUrl, satelliteAttribution);
+      return satelliteStyle(satelliteTileUrl, satelliteAttribution, undefined, undefined, hillshadeTileUrl);
     }
     // Return null for default basemap - MapView will use its own basemapStyle()
     return null;
-  }, [basemapType, satelliteTileUrl, satelliteAttribution]);
+  }, [basemapType, satelliteTileUrl, satelliteAttribution, hillshadeTileUrl]);
 
   useEffect(() => {
     if (!satelliteEnabled) return;
@@ -112,15 +113,8 @@ export function OpsMapPage() {
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
   ], [shown, signals.data, layers]);
   const riskCells = useMemo(() => {
-    console.log('[DEBUG Risk Layer]', {
-      hasRiskInLayers: layers.has('risk_forecast'),
-      riskEnabled,
-      queryStatus: riskForecast.status,
-      queryError: riskForecast.error,
-      featuresCount: riskForecast.data?.features?.length,
-    });
     if (!layers.has('risk_forecast') || !riskEnabled || !riskForecast.data?.features) return [];
-    const cells = riskForecast.data.features.map(f => ({
+    return riskForecast.data.features.map(f => ({
       id: f.properties.cell_id,
       lat: f.geometry.coordinates[1],
       lon: f.geometry.coordinates[0],
@@ -128,9 +122,7 @@ export function OpsMapPage() {
       band: f.properties.band,
       state: f.properties.state,
     }));
-    console.log('[DEBUG Risk Cells]', cells.length, 'cells created');
-    return cells;
-  }, [layers, riskEnabled, riskForecast.data, riskForecast.status, riskForecast.error]);
+  }, [layers, riskEnabled, riskForecast.data]);
   const polygons: MapPolygon[] = useMemo(() => (layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title })), [notices.data, layers]);
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
@@ -140,26 +132,29 @@ export function OpsMapPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-3">
       <PageTitle title={t('nav.map')} subtitle={region ? stateName(region) : t('ops.all_regions', 'All my regions')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div>
-        <div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item} h</button>)}</div>
+      <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.preset', 'What to show')}</p><div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex max-w-full rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div></div>
+        <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.window', 'Time window')}</p><div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex max-w-full rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item} h</button>)}</div></div>
         {satelliteEnabled && (
-          <div role="radiogroup" aria-label={t('basemap.label', 'Basemap')} className="inline-flex rounded-rq border border-control p-1">
+          <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('basemap.label', 'Basemap')}</p><div role="radiogroup" aria-label={t('basemap.label', 'Basemap')} className="inline-flex rounded-rq border border-control p-1">
             <button key="map" type="button" role="radio" aria-checked={basemapType === 'map'} onClick={() => setBasemapType('map')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'map' ? 'bg-action text-on-action' : ''}`}>{t('basemap.map', 'Map')}</button>
             <button key="satellite" type="button" role="radio" aria-checked={basemapType === 'satellite'} onClick={() => setBasemapType('satellite')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'satellite' ? 'bg-action text-on-action' : ''}`}>{t('basemap.satellite', 'Satellite')}</button>
-          </div>
+          </div></div>
         )}
         {layers.has('risk_forecast') && riskEnabled && (
-          <label className="inline-flex items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+          <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
             <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />
             <span>{t('map.risk_high_only', 'High risk only')}</span>
           </label>
         )}
-        <Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} />
-        <Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} />
+        <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
       </div>
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
+      {wind.isLoading && <p role="status" className="text-sm text-ink-muted">{t('map.loading_weather', 'Updating weather…')}</p>}
+      {wind.isError && <Notice kind="warning">{t('map.weather_off', 'Weather is not available right now.')}</Notice>}
       {signals.isError && layers.has('signals') && <Notice kind="warning">{t('map.signals_off', 'Satellite signals are not available right now.')}</Notice>}
+      {notices.isError && layers.has('advisories') && <Notice kind="warning">{t('map.advisories_off', 'Advisories are not available right now.')}</Notice>}
+      {riskForecast.isError && layers.has('risk_forecast') && riskEnabled && <LoadError message={t('map.risk_off', 'The risk layer could not be loaded.')} onRetry={() => void riskForecast.refetch()} retryLabel={t('citizen.retry', 'Try again')} />}
       {satelliteFailed && <Notice kind="warning">{t('basemap.offline_notice', 'Satellite tiles are not available offline. Switching to map.')}</Notice>}
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">

@@ -51,6 +51,9 @@ export function QueuePage() {
 
   useEffect(() => setCursor(0), [tab, region]);
   useEffect(() => {
+    list.current?.children[cursor]?.scrollIntoView({ block: 'nearest' });
+  }, [cursor]);
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || event.metaKey || event.ctrlKey) return;
@@ -65,7 +68,7 @@ export function QueuePage() {
     <div className="mx-auto max-w-5xl space-y-4">
       <PageTitle title={t('nav.queue')} subtitle={t('ops.queue.subtitle', 'Everything reported in your regions, oldest decisions first.')} actions={<Link to="/ops/incidents/new" className="inline-flex min-h-11 items-center rounded-rq border border-control px-4 font-semibold hover:bg-surface-2">{t('ops.log.title', 'Log a report')}</Link>} />
       <div role="tablist" aria-label={t('nav.queue')} className="flex flex-wrap gap-1 border-b border-line">
-        {TABS.map(item => <button key={item.id} role="tab" aria-selected={tab === item.id} onClick={() => setTab(item.id)} className={`min-h-12 border-b-4 px-4 font-semibold ${tab === item.id ? 'border-action' : 'border-transparent hover:bg-surface-2'}`}>{t(`ops.tab.${item.id}`, item.label)} <span className="ml-1 rounded-full bg-surface-2 px-2 text-sm">{counts[item.id]}</span></button>)}
+        {TABS.map(item => <button key={item.id} id={`queue-tab-${item.id}`} type="button" role="tab" aria-selected={tab === item.id} aria-controls="queue-panel" onClick={() => setTab(item.id)} className={`min-h-12 border-b-4 px-4 font-semibold ${tab === item.id ? 'border-action' : 'border-transparent hover:bg-surface-2'}`}>{t(`ops.tab.${item.id}`, item.label)} <span className="ml-1 rounded-full bg-surface-2 px-2 text-sm">{counts[item.id]}</span></button>)}
       </div>
 
       {groups.length > 0 && (
@@ -75,10 +78,13 @@ export function QueuePage() {
           <ul className="mt-2 space-y-1">{groups.map(group => <li key={group.ids.join()} className="text-sm">{t('ops.queue.group', { reports: group.summary.reports + group.summary.incidents, signals: group.summary.signals, radius: cfg!.radius_km, minutes: cfg!.window_minutes, defaultValue: '{{reports}} claim(s) and {{signals}} satellite signal(s) within {{radius}} km in {{minutes}} min' })}: {group.ids.filter(id => id.startsWith('i')).map(id => <Link key={id} className="mr-2 font-bold underline" to={`/ops/incidents/${id.slice(1)}`}>#{id.slice(1)}</Link>)}</li>)}</ul>
         </section>)}
       {!cfg && settings.isSuccess && <p className="text-sm text-ink-muted">{t('ops.queue.links_off', 'Suggested links are off until their distance and time limits are configured.')}</p>}
+      {signals.isError && cfg && <Notice kind="warning">{t('ops.queue.links_error', 'Suggested links are temporarily unavailable. The queue itself is still usable.')}</Notice>}
 
-      {incidents.isLoading ? <Skeleton lines={5} /> : incidents.isError ? <Notice kind="danger">{t('ops.queue.error', 'The queue could not be loaded.')} <button className="underline" onClick={() => void incidents.refetch()}>{t('citizen.retry', 'Try again')}</button></Notice>
-        : !rows.length ? <EmptyState title={t('ops.queue.empty', 'Nothing here.')}>{tab === 'new' ? t('ops.queue.empty_new', 'No report is waiting for a decision.') : t('ops.queue.empty_other', 'No incidents in this group.')}</EmptyState>
-        : <ul ref={list} className="space-y-2" aria-label={t('ops.queue.list', 'Incidents')}>{rows.map((item, index) => <Row key={item.id} item={item} focused={index === cursor} />)}</ul>}
+      <div id="queue-panel" role="tabpanel" aria-labelledby={`queue-tab-${tab}`} tabIndex={0}>
+        {incidents.isLoading ? <Skeleton lines={5} /> : incidents.isError ? <Notice kind="danger">{t('ops.queue.error', 'The queue could not be loaded.')} <button className="underline" onClick={() => void incidents.refetch()}>{t('citizen.retry', 'Try again')}</button></Notice>
+          : !rows.length ? <EmptyState title={t('ops.queue.empty', 'Nothing here.')}>{tab === 'new' ? t('ops.queue.empty_new', 'No report is waiting for a decision.') : t('ops.queue.empty_other', 'No incidents in this group.')}</EmptyState>
+          : <ul ref={list} className="space-y-2" aria-label={t('ops.queue.list', 'Incidents')}>{rows.map((item, index) => <Row key={item.id} item={item} focused={index === cursor} />)}</ul>}
+      </div>
       <p className="text-sm text-ink-muted">{t('ops.queue.keys', 'Keys: j and k move, Enter opens.')}</p>
     </div>
   );

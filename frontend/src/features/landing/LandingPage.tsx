@@ -38,14 +38,18 @@ export function LandingPage() {
   return (
     <div data-rq-app className="min-h-screen bg-canvas text-ink">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-rq focus:bg-action focus:px-4 focus:py-2 focus:text-on-action">{t('app.skip')}</a>
-      <header className="sticky top-0 z-30 flex min-h-14 items-center gap-2 sm:gap-3 border-b border-line bg-surface px-4 md:px-8">
-        <Link to="/" aria-label={t('app.name')}><Brand /></Link>
-        <nav aria-label={t('app.menu')} className="ml-6 hidden gap-5 md:flex">
-          <a href="#features" className="font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.features')}</a>
-          <a href="#how" className="font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.how')}</a>
-          <a href="#privacy" className="font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.privacy')}</a>
-        </nav>
-        <div className="ml-auto flex items-center gap-2"><LanguageMenu /><ThemeMenu /><Link to="/login" className="inline-flex min-h-11 items-center rounded-rq border border-control px-4 font-semibold text-ink hover:bg-surface-2">{t('app.signin')}</Link></div>
+      <header className="z-30 min-h-16 border-b border-line bg-surface px-4 md:px-8">
+        <div className="flex min-h-16 items-center gap-4">
+          <Link to="/" aria-label={t('app.name')} className="shrink-0"><Brand /></Link>
+          <nav aria-label={t('app.menu')} className="ml-8 hidden md:block">
+            <div className="flex items-center gap-8 text-base">
+              <a href="#features" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.features')}</a>
+              <a href="#how" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.how')}</a>
+              <a href="#privacy" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.privacy')}</a>
+            </div>
+          </nav>
+          <div className="ml-auto flex items-center gap-2"><LanguageMenu /><ThemeMenu /><Link to="/login" className="inline-flex min-h-11 items-center rounded-rq border border-control px-4 font-semibold text-ink hover:bg-surface-2">{t('app.signin')}</Link></div>
+        </div>
       </header>
 
       <main id="main" className="mx-auto max-w-6xl space-y-16 px-4 pb-20 pt-10 md:px-8 md:pt-16">

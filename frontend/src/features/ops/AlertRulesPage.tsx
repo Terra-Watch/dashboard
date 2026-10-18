@@ -6,7 +6,7 @@ import { ApiError, api } from '../../app/http';
 import { Button } from '../../ui/Button';
 import { SelectField, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
-import { Card, PageTitle, Skeleton } from '../../ui/Page';
+import { Card, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { useSession } from '../../app/session';
 import { STATES, stateName } from '../citizen/format';
 
@@ -50,6 +50,7 @@ export function AlertRulesPage() {
       </Card>
       <Card title={t('ops.rules.yours', 'Your rules')}>
         {rules.isLoading && <Skeleton lines={3} />}
+        {rules.isError && <LoadError message={t('ops.rules.error', 'Alert rules could not be loaded.')} onRetry={() => void rules.refetch()} retryLabel={t('citizen.retry', 'Try again')} />}
         {rules.data && !rules.data.length && <p className="text-ink-muted">{t('ops.rules.none', 'No rules yet. New reports reach you through the queue only.')}</p>}
         <ul className="divide-y divide-line">{rules.data?.map(rule => <li key={rule.id} className="py-2"><strong>{rule.name}</strong> <span className="text-sm text-ink-muted">· {rule.state ? stateName(rule.state) : t('ops.rules.any_state', 'Any state I cover')} · {rule.conditions?.min_size ? `${t('ops.rules.size', 'At least this size')}: ${rule.conditions.min_size}` : t('ops.rules.any_size', 'Any size')} · {rule.severity}</span></li>)}</ul>
       </Card>

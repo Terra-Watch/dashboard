@@ -46,6 +46,7 @@ from typing import Any
 from sqlalchemy import text
 
 from . import image_assessment as shared_model
+from . import blob_storage
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,12 @@ def write_clean_copy(key: str, data: bytes) -> bool:
     return True
 
 
+async def write_clean_copy_async(key: str, data: bytes, mime: str) -> bool:
+    if blob_storage.enabled():
+        return await blob_storage.put(f'community/{key}', data, mime)
+    return write_clean_copy(key, data)
+
+
 def discard(key: str) -> None:
     path = stored_path(key)
     try:
@@ -185,6 +192,20 @@ def discard(key: str) -> None:
             path.unlink()
     except OSError:
         logger.exception("could not remove a community image after a failed save")
+
+
+async def discard_async(key: str) -> None:
+    if blob_storage.enabled():
+        await blob_storage.delete(f'community/{key}')
+    else:
+        discard(key)
+
+
+async def read_verified_async(key: str, expected_sha256: str) -> bytes | None:
+    if blob_storage.enabled():
+        return await blob_storage.get(f'community/{key}', expected_sha256)
+    path = stored_path(key)
+    return blob_storage.local_read(path, expected_sha256) if path is not None else None
 
 
 # ----------------------------------------------------------------------------------------------------------------------------

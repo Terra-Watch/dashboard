@@ -7,7 +7,7 @@ import { useSession } from '../../app/session';
 import { Button } from '../../ui/Button';
 import { SelectField, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
-import { Card, PageTitle, Skeleton } from '../../ui/Page';
+import { Card, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { STATES, formatWhen } from '../citizen/format';
 
 type Staff = { id: number; name: string; email: string; role: string; scopes: string[]; created_at: string; deactivated_at: string | null };
@@ -76,6 +76,7 @@ export function AdminPage() {
       </Card>
 
       {people.isLoading && <Skeleton lines={5} />}
+      {people.isError && <LoadError message={t('ops.admin.people_error', 'People and access data could not be loaded.')} onRetry={() => void people.refetch()} retryLabel={t('citizen.retry', 'Try again')} />}
       {people.data && (
         <>
           <Card title={`${t('ops.admin.staff', 'Staff')} (${people.data.staff.length})`}>

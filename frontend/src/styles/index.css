@@ -16,6 +16,19 @@
   outline-offset: 2px;
 }
 
+/* Shared interaction baseline: clickable surfaces acknowledge hover, focus and press without changing layout. */
+[data-rq-app] :where(a, button, [role='button'], [role='tab'], [role='radio']) {
+  transition-property: background-color, border-color, box-shadow, color, opacity, transform;
+  transition-duration: 170ms;
+  transition-timing-function: ease-out;
+}
+[data-rq-app] :where(button, [role='button']):not(:disabled):active {
+  transform: scale(0.98);
+}
+[data-rq-app] :where(a, button, [role='button'], [role='tab'], [role='radio']):focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tw-focus) 28%, transparent);
+}
+
 /* Zero specificity so utility classes such as `hidden` and `grid` still win. */
 :where([data-rq-app]) nav {
   display: flex;

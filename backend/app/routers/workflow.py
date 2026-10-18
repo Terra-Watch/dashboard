@@ -14,6 +14,7 @@ from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
+from ..services import blob_storage
 from ..services.recipients import incident_staff_recipients
 from ..services.image_assessment import assess_image_async, persistence_fields
 from .operations import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _image_row, _stored_image_path
@@ -270,8 +271,8 @@ async def upload_ranger_evidence(assignment_id: int, image: UploadFile = File(..
     path = _stored_image_path(f'{assignment["incident_id"]}/{digest}.{extension}'); existed = path.is_file()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        if not existed: path.write_bytes(data)
-        else: _assert_stored_image_integrity(path, digest)
+        created_file = await blob_storage.write_or_local(key, path, data, detected_type)
+        if not created_file and not blob_storage.enabled(): _assert_stored_image_integrity(path, digest)
         assessment = await assess_image_async(data, f'{assignment["incident_id"]}/{digest}.{extension}')
         with engine.begin() as db:
             row = db.execute(text('''INSERT INTO resq_incident_images
@@ -283,6 +284,6 @@ async def upload_ranger_evidence(assignment_id: int, image: UploadFile = File(..
                 RETURNING id,original_filename,content_type,size_bytes,sha256,assessment_status,created_at'''), {'incident_id': assignment['incident_id'], 'storage_key': f'{assignment["incident_id"]}/{digest}.{extension}', 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120], 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, **persistence_fields(assessment), 'uploaded_by': user['id']}).mappings().one()
             audit_log.write_audit_log(action='ranger_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': assignment['incident_id'], 'assignment_id': assignment_id}, connection=db)
     except Exception as exc:
-        if not existed and path.is_file(): path.unlink(missing_ok=True)
+        await blob_storage.delete_or_local(key, path)
         raise HTTPException(status_code=503, detail='Evidence could not be stored. No upload was confirmed.') from exc
     return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}

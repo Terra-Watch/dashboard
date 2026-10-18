@@ -16,6 +16,7 @@ from ..contracts.schemas import (
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
 from ..services import alert_service, audit_log
+from ..services import blob_storage
 from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment, attach_media_integrity_status, displayed_authenticity_status, mask_authenticity_status
 from ..services.simulation_service import validate_simulation
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["operations"])
 
-MAX_IMAGE_BYTES = 10 * 1024 * 1024
+MAX_IMAGE_BYTES = int(os.getenv('RESQ_MAX_IMAGE_BYTES', str(10 * 1024 * 1024)))
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 IMAGE_ROOT = Path(os.getenv("RESQ_IMAGE_STORAGE_DIR", str(Path(__file__).resolve().parents[2] / "runtime_data" / "incident_images")))
 
@@ -233,7 +234,7 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
 
 
 @router.get('/incidents/{incident_id}/images/{image_id}')
-def get_incident_image(incident_id: int, image_id: int, user: dict[str, object] = Depends(current_risk_user)) -> Response:
+async def get_incident_image(incident_id: int, image_id: int, user: dict[str, object] = Depends(current_risk_user)) -> Response:
     with engine.connect() as db:
         incident = db.execute(text('SELECT id,state FROM resq_incidents WHERE id=:id'), {'id': incident_id}).mappings().first()
         row = db.execute(text('SELECT storage_key,content_type,sha256 FROM resq_incident_images WHERE id=:image_id AND incident_id=:incident_id'), {'image_id': image_id, 'incident_id': incident_id}).mappings().first()
@@ -243,10 +244,10 @@ def get_incident_image(incident_id: int, image_id: int, user: dict[str, object] 
         raise HTTPException(status_code=403, detail='Your role cannot view incident evidence')
     require_scope(user, incident.get('state'), entity_type='incident', entity_id=str(incident_id))
     path = _stored_image_path(row['storage_key'])
-    if not path.is_file():
+    data = await blob_storage.read_or_local(row['storage_key'], path, row['sha256'])
+    if data is None:
         raise HTTPException(status_code=404, detail='Stored image is unavailable')
-    _assert_stored_image_integrity(path, row['sha256'])
-    return Response(content=path.read_bytes(), media_type=row['content_type'], headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
+    return Response(content=data, media_type=row['content_type'], headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
 
 
 @router.get('/incidents/{incident_id}')
@@ -305,10 +306,8 @@ async def upload_incident_image(
     path = _stored_image_path(key)
     path_preexisting = path.is_file()
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if not path_preexisting:
-            path.write_bytes(data)
-        else:
+        created_file = await blob_storage.write_or_local(key, path, data, detected_type)
+        if not created_file and not blob_storage.enabled():
             _assert_stored_image_integrity(path, digest)
         assessment = await assess_image_async(data, key)
         with engine.begin() as db:
@@ -326,8 +325,7 @@ async def upload_incident_image(
             }).mappings().one()
     except Exception as exc:
         try:
-            if not path_preexisting and path.is_file():
-                path.unlink()
+            await blob_storage.delete_or_local(key, path)
         except OSError:
             logger.exception('Failed to clean up incident image after persistence failure')
         raise HTTPException(status_code=503, detail='Image could not be stored or assessed') from exc

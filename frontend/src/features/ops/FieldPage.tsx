@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { api } from '../../app/http';
 import { Notice } from '../../ui/Notice';
-import { EmptyState, PageTitle, Skeleton } from '../../ui/Page';
+import { EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { stateName } from '../citizen/format';
@@ -20,7 +20,7 @@ export function OpsFieldPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <PageTitle title={t('nav.field')} subtitle={t('ops.field.subtitle', 'Open assignments and what each officer has recorded.')} />
-      {list.isLoading ? <Skeleton lines={4} /> : list.isError ? <Notice kind="danger">{t('ops.field.error', 'Assignments could not be loaded.')}</Notice>
+      {list.isLoading ? <Skeleton lines={4} /> : list.isError ? <LoadError message={t('ops.field.error', 'Assignments could not be loaded.')} onRetry={() => void list.refetch()} retryLabel={t('citizen.retry', 'Try again')} />
         : !rows.length ? <EmptyState title={t('ops.field.empty', 'No open assignments.')}>{t('ops.field.empty_hint', 'Assign an officer from an incident.')}</EmptyState>
         : <>
           {waiting.length > 0 && <Notice kind="warning">{t('ops.field.waiting', { count: waiting.length, defaultValue: '{{count}} assignment(s) have not been answered yet.' })}</Notice>}

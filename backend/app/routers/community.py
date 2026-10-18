@@ -322,7 +322,7 @@ async def upload_post_image(post_id: int, image: UploadFile = File(...), user: d
     result = await media.assess_upload(data, key) if media.assessment_enabled() else None  # original bytes: provenance markers live in the metadata
     created_file = False
     try:
-        created_file = media.write_clean_copy(key, clean)
+        created_file = await media.write_clean_copy_async(key, clean, mime)
         with engine.begin() as db:
             _rate_limit(db, 'resq_community_post_images', uid, limit=5, role=user.get('role'))
             locked = db.execute(text('SELECT status FROM resq_community_posts WHERE id=:id AND removed_at IS NULL FOR UPDATE'), {'id': post_id}).scalar()
@@ -339,18 +339,18 @@ async def upload_post_image(post_id: int, image: UploadFile = File(...), user: d
             status = db.execute(text('SELECT status FROM resq_community_posts WHERE id=:id'), {'id': post_id}).scalar()
     except HTTPException:
         if created_file:
-            media.discard(key)
+            await media.discard_async(key)
         raise
     except Exception as exc:
         if created_file:
-            media.discard(key)
+            await media.discard_async(key)
         raise HTTPException(status_code=503, detail='Image could not be stored') from exc
     return {'image': {'id': row['id'], 'mime': row['mime'], 'size_bytes': row['size_bytes']}, 'post_status': status,
             'message': HELD_MESSAGE if status == 'held' else 'Image added. It does not notify responders or create an incident.'}
 
 
 @router.get('/posts/{post_id}/image')
-def get_post_image(post_id: int, user: dict = Depends(community_user)) -> Response:
+async def get_post_image(post_id: int, user: dict = Depends(community_user)) -> Response:
     """The clean copy. Moderators and the author always (unless removed); everyone else only while the post is published."""
     if not media.images_enabled():
         raise HTTPException(status_code=404, detail='Not found')
@@ -359,7 +359,7 @@ def get_post_image(post_id: int, user: dict = Depends(community_user)) -> Respon
             JOIN resq_community_posts p ON p.id=i.post_id WHERE i.post_id=:id'''), {'id': post_id}).mappings().first()
     allowed = row and not row['removed_at'] and row['status'] != 'removed' and (
         row['status'] == 'published' or row['author_id'] == int(user['id']) or user.get('role') in MODERATOR_ROLES)
-    data = media.read_verified(row['storage_key'], row['sha256']) if allowed else None
+    data = await media.read_verified_async(row['storage_key'], row['sha256']) if allowed else None
     if data is None:
         raise HTTPException(status_code=404, detail='Image not found')
     return Response(content=data, media_type=row['mime'], headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})

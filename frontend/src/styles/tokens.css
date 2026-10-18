@@ -27,8 +27,8 @@
 
   --font-sans: 'Noto Sans Variable', 'Noto Sans Devanagari', 'Noto Sans Oriya', system-ui, sans-serif;
   --font-serif: 'Noto Sans Variable', 'Noto Sans Devanagari', 'Noto Sans Oriya', system-ui, sans-serif;
-  --radius-rq: 0.5rem;
-  --radius-panel: 0.625rem;
+  --radius-rq: 0.375rem;
+  --radius-panel: 0.5rem;
 }
 
 [data-rq-app] {
@@ -54,6 +54,21 @@
 }
 
 html, body { background: var(--tw-bg); color: var(--tw-text); }
+
+@keyframes rq-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rq-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes rq-slide-in-right { from { opacity: 0; transform: translateX(1.5rem); } to { opacity: 1; transform: translateX(0); } }
+@keyframes rq-slide-out-right { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(1.5rem); } }
+@keyframes rq-pop-in { from { opacity: 0; transform: translateY(0.5rem) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes rq-pop-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(0.5rem) scale(0.98); } }
+
+.rq-dialog-overlay[data-state='open'] { animation: rq-fade-in 180ms ease-out; }
+.rq-dialog-overlay[data-state='closed'] { animation: rq-fade-out 140ms ease-in; pointer-events: none; }
+.rq-dialog-content[data-state='open'] { animation: rq-slide-in-right 240ms cubic-bezier(.22,1,.36,1); }
+.rq-dialog-content[data-state='closed'] { animation: rq-slide-out-right 180ms ease-in; pointer-events: none; visibility: hidden; }
+.rq-menu-content[data-state='open'], .rq-popover-open { animation: rq-pop-in 180ms cubic-bezier(.22,1,.36,1); transform-origin: top right; }
+.rq-menu-content[data-state='closed'] { animation: rq-pop-out 120ms ease-in; pointer-events: none; visibility: hidden; }
+.rq-popover-closed { opacity: 0; transform: translateY(0.5rem) scale(0.98); transform-origin: bottom center; }
 
 /* The page container takes focus after each navigation so keyboard and screen-reader users start at the top; it is not a control, so it gets no ring. */
 [data-rq-app] main:focus, [data-rq-app] main:focus-visible { outline: none; }

@@ -21,6 +21,7 @@ from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
 from ..services.recipients import incident_staff_recipients
 from ..services import audit_log
+from ..services import blob_storage
 from ..services.alert_service import generate_alert
 from ..services.image_assessment import assess_image_async, persistence_fields
 
@@ -101,7 +102,7 @@ def get_report(report_id: int, user: dict = Depends(citizen_user)) -> dict:
 
 
 @router.get('/reports/{report_id}/evidence/{image_id}')
-def get_report_evidence(report_id: int, image_id: int, user: dict = Depends(citizen_user)) -> Response:
+async def get_report_evidence(report_id: int, image_id: int, user: dict = Depends(citizen_user)) -> Response:
     """Retrieve evidence image for a citizen-owned report."""
     with engine.connect() as db:
         report = db.execute(text('SELECT id,reporter_id FROM resq_incidents WHERE id=:id'), {'id': report_id}).mappings().first()
@@ -116,9 +117,11 @@ def get_report_evidence(report_id: int, image_id: int, user: dict = Depends(citi
     path = _stored_image_path(image['storage_key'])
     if not path.is_file():
         raise HTTPException(status_code=404, detail='Stored image is unavailable')
-    _assert_stored_image_integrity(path, image['sha256'])
+    data = await blob_storage.read_or_local(image['storage_key'], path, image['sha256'])
+    if data is None:
+        raise HTTPException(status_code=404, detail='Stored image is unavailable')
     return Response(
-        content=path.read_bytes(),
+        content=data,
         media_type=image['content_type'],
         headers={
             'Cache-Control': 'private, no-store',
@@ -211,10 +214,8 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
     path = _stored_image_path(key)
     existed = path.is_file()
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if not existed:
-            path.write_bytes(data)
-        else:
+        created_file = await blob_storage.write_or_local(key, path, data, detected_type)
+        if not created_file and not blob_storage.enabled():
             _assert_stored_image_integrity(path, digest)
         assessment = await assess_image_async(data, key)
         with engine.begin() as db:
@@ -231,8 +232,7 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
             }).mappings().one()
             audit_log.write_audit_log(action='citizen_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': report_id}, connection=db)
     except Exception as exc:
-        if not existed and path.is_file():
-            path.unlink(missing_ok=True)
+        await blob_storage.delete_or_local(key, path)
         if isinstance(exc, HTTPException):
             raise
         raise HTTPException(status_code=503, detail='Evidence could not be stored. The report remains persisted.') from exc

@@ -19,3 +19,5 @@ data/osm/geofabrik/*.osm.pbf
 data/osm/geofabrik/*.osm.pbf.part
 data/osm/geofabrik/*.osm.pbf.part.aria2
 frontend/.playwright-output/
+.vercel
+.env*

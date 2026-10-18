@@ -12,6 +12,7 @@ export function inboxTarget(role: ProductRole, item: Pick<InboxItem, 'entity_typ
     return null;
   }
   if (role === 'field') return item.entity_type === 'incident_assignment' ? `/field/tasks/${id}` : '/field/tasks';
+  if (role === 'citizen' && item.entity_type === 'community_sanction') return '/citizen/community';
   return null;
 }
 

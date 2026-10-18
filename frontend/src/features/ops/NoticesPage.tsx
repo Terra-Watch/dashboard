@@ -7,7 +7,7 @@ import { useSession } from '../../app/session';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
-import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
+import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { STATES, formatWhen } from '../citizen/format';
 import type { CommunityImageAssessment } from '../../lib/assessmentPresentation';
 import { ModerationMedia, type ModerationImage } from './ModerationMedia';
@@ -28,7 +28,7 @@ export function NoticesPage() {
           {[['notices', t('ops.notices.tab', 'Notices')], ['moderation', `${t('ops.moderation.tab', 'Moderation')}${queue.data?.items.length ? ` (${queue.data.items.length})` : ''}`], ['rooms', t('ops.rooms.tab', 'Chat rooms')]].map(([value, label]) => <Tabs.Trigger key={value} value={value} className="min-h-12 border-b-4 border-transparent px-4 font-semibold data-[state=active]:border-action hover:bg-surface-2">{label}</Tabs.Trigger>)}
         </Tabs.List>
         <Tabs.Content value="notices" className="pt-4 outline-none"><NoticeAdmin /></Tabs.Content>
-        <Tabs.Content value="moderation" className="pt-4 outline-none"><Moderation queue={queue.data?.items} loading={queue.isLoading} reload={() => void queue.refetch()} /></Tabs.Content>
+        <Tabs.Content value="moderation" className="pt-4 outline-none"><Moderation queue={queue.data?.items} loading={queue.isLoading} error={queue.isError} reload={() => void queue.refetch()} /></Tabs.Content>
         <Tabs.Content value="rooms" className="pt-4 outline-none"><Rooms /></Tabs.Content>
       </Tabs.Root>
     </div>
@@ -74,7 +74,7 @@ function NoticeAdmin() {
           <Button type="submit" loading={busy} disabled={!ready}>{t('ops.notices.save_draft', 'Save draft')}</Button>
         </form>
       </Card>
-      {list.isLoading ? <Skeleton lines={3} /> : !list.data?.items.length ? <EmptyState title={t('ops.notices.none', 'No notices yet.')} />
+      {list.isLoading ? <Skeleton lines={3} /> : list.isError ? <LoadError message={t('ops.notices.load_error', 'Notices could not be loaded.')} onRetry={() => void list.refetch()} retryLabel={t('citizen.retry', 'Try again')} /> : !list.data?.items.length ? <EmptyState title={t('ops.notices.none', 'No notices yet.')} />
         : <ul className="space-y-3">{list.data.items.map(item => (
           <li key={item.id} className="rounded-panel border border-line bg-surface p-4">
             <p className="text-sm font-bold uppercase tracking-wide text-ink-muted">{t(`ops.notice_status.${item.status}`, item.status.replace('_', ' '))}{item.expired ? ` · ${t('ops.notices.expired', 'expired')}` : ''} · {t(`citizen.severity.${item.severity}`, item.severity)} · {item.regions.join(', ')}</p>
@@ -95,7 +95,7 @@ function NoticeAdmin() {
   );
 }
 
-function Moderation({ queue, loading, reload }: { queue?: QueueItem[]; loading: boolean; reload: () => void }) {
+function Moderation({ queue, loading, error, reload }: { queue?: QueueItem[]; loading: boolean; error: boolean; reload: () => void }) {
   const { t } = useTranslation();
   const [reasons, setReasons] = useState<Record<number, string>>({}); const [problem, setProblem] = useState(''); const [message, setMessage] = useState('');
   async function decide(item: QueueItem, action: 'approve' | 'remove' | 'dismiss') {
@@ -109,6 +109,7 @@ function Moderation({ queue, loading, reload }: { queue?: QueueItem[]; loading: 
     try { await api('/api/community/sanctions', { method: 'POST', json: { user_id: item.author_id, kind: 'mute', reason, hours: 24 } }); setProblem(''); setMessage(t('ops.moderation.muted', 'Muted for 24 hours.')); } catch (error) { setProblem(error instanceof ApiError ? error.detail : t('ops.failed', 'That was not saved. Try again.')); }
   }
   if (loading) return <Skeleton lines={3} />;
+  if (error) return <LoadError message={t('ops.moderation.load_error', 'The moderation queue could not be loaded.')} onRetry={reload} retryLabel={t('citizen.retry', 'Try again')} />;
   return (
     <div className="space-y-3" data-testid="moderation">
       {message && <Notice kind="success">{message}</Notice>}
@@ -141,6 +142,7 @@ function Rooms() {
     try { await api(`/api/community/rooms/${encodeURIComponent(room.region)}`, { method: 'PATCH', json: change }); setProblem(''); await queryClient.invalidateQueries({ queryKey: ['rooms'] }); } catch (error) { setProblem(error instanceof ApiError ? error.detail : t('ops.failed', 'That was not saved. Try again.')); }
   }
   if (rooms.isLoading) return <Skeleton lines={3} />;
+  if (rooms.isError) return <LoadError message={t('ops.rooms.load_error', 'Chat rooms could not be loaded.')} onRetry={() => void rooms.refetch()} retryLabel={t('citizen.retry', 'Try again')} />;
   return (
     <div className="space-y-3">{problem && <Notice kind="danger">{problem}</Notice>}
       {!rooms.data?.items.length ? <EmptyState title={t('ops.rooms.none', 'No chat rooms yet. They appear when someone first writes in one.')} />
