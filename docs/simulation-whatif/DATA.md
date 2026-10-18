@@ -42,6 +42,19 @@ Attribution strings (show in the map or scenario footer):
 - "(c) ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium. CC BY 4.0."
 - "(c) OpenStreetMap contributors, https://www.openstreetmap.org/copyright"
 
+## Packs available
+All built with the same command and verified by manifest hash; all sources are real open data, nothing synthetic. Slope is computed from the packed elevation (central differences, 30 m), so it includes GLO-30 canopy roughness.
+
+| Pack | Centre | Grid | Elevation | Slope >15 / >30 deg | Land cover (cells) | OSM contents | Bytes (elev + cover + assets) | Best for |
+|---|---|---|---|---|---|---|---|---|
+| `similipal` | 21.8679 N, 86.5007 E | 10 km, 334x334 | 192 to 968 m | 39.9% / 4.2% | tree 111,167; grass 227; crop 162 | 0 settlements, 0 roads, 1 stream | 336,894 | Featureless forest core: pure terrain and wind behaviour, empty-assets edge case |
+| `almora` | 29.597 N, 79.659 E | 10 km, 334x334 | 1040 to 2052 m | 78.9% / 14.1% | tree 62,165; grass 41,367; crop 2,493; built-up 5,247; bare 214; water 70 | 87 places (1 city, 16 villages, 62 hamlets, 8 isolated dwellings), 199 roads (7,744 vertices), 41 streams/rivers (Kali Rau, Sual River, Benji Gad) | 573,091 | Steep-slope demo: strong uphill/downhill effect, ridges and many at-risk hamlets |
+| `ramnagar` | 29.39 N, 79.12 E | **14 km**, 467x467 | 273 to 735 m | 16.0% / 1.4% | tree 155,581; shrub 2,577; grass 4,710; crop 45,997; built-up 5,687; bare 3,433; water 104 | 7 places (1 town Ramnagar, 5 villages, 1 hamlet), 4,855 road vertices, 39 water features incl. the Kosi river | 941,635 | Forest-edge-with-farmland demo: fire in the Corbett forest, fields and the Kosi as barriers, villages and roads at the edge |
+
+Why `ramnagar` is 14 km: at 10 km it had only 4 places in OSM (below the 5 wanted), so the same centre was rebuilt with `--size-km 14`, which gave 7. The centre was not moved. Settlements in OSM are sparse on the Corbett side; the farmland to the south is mapped mostly as land use rather than named places. Almora needed no change.
+
+Network notes for these builds: same as Similipal (Overpass endpoints unreachable or failing, OSM API map call used; COG tiles read directly).
+
 ## Similipal National Park pack (built 2026-10-18)
 Centre 21.8679 N, 86.5007 E, EPSG:32645, 334 x 334 cells of 30 m.
 - Elevation 192 to 968 m over the whole grid (5th to 95th percentile 332 to 898 m); the centre cell is 590 m and the 15 x 15 cell block around the centre spans 517 to 625 m, consistent with the earlier demo reading of 487 to 713 m at the centre. No void cells.

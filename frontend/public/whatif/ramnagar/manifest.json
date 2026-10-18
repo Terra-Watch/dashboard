@@ -1,0 +1,155 @@
+{
+  "schema": "resq-whatif-area-pack/1",
+  "name": "ramnagar",
+  "center": {
+    "lat": 29.39,
+    "lon": 79.12
+  },
+  "crs": {
+    "epsg": 32644,
+    "description": "WGS 84 / UTM zone, EPSG:32644"
+  },
+  "grid": {
+    "originX": 310560.0,
+    "originY": 3259680.0,
+    "originMeaning": "UTM metres of the TOP-LEFT CORNER of cell (col 0, row 0)",
+    "width": 467,
+    "height": 467,
+    "cellSizeM": 30.0,
+    "orientation": "north-up; row 0 is the northernmost row; col 0 the westernmost; index = row*width + col",
+    "cellCentre": "x = originX + (col+0.5)*cellSizeM ; y = originY - (row+0.5)*cellSizeM",
+    "extentKm": [
+      14.01,
+      14.01
+    ]
+  },
+  "cornersLonLat": {
+    "nw": {
+      "lon": 79.04666228852611,
+      "lat": 29.4522416948575
+    },
+    "ne": {
+      "lon": 79.19105883944765,
+      "lat": 29.45428266192139
+    },
+    "se": {
+      "lon": 79.19329429637027,
+      "lat": 29.3278994130696
+    },
+    "sw": {
+      "lon": 79.04907592223184,
+      "lat": 29.325868895770203
+    }
+  },
+  "files": [
+    {
+      "name": "elevation.i16",
+      "bytes": 436178,
+      "sha256": "b32b1aa6ac7e9b26b20b3dc8e3a0544d788846e743fb6d5150a5cf879b86f12e",
+      "description": "Int16 little-endian metres above the EGM2008 geoid (GLO-30 surface model incl. canopy), row-major from the NORTH row; -32768 = no data",
+      "dtype": "int16",
+      "endianness": "little",
+      "noData": -32768
+    },
+    {
+      "name": "landcover.u8",
+      "bytes": 218089,
+      "sha256": "0f487191d4c0de57e057c0c4984a8e164c38840fc548fd3e0ff2df2f276a4c2b",
+      "description": "ESA WorldCover 2021 v200 class codes, uint8, same layout as elevation; 0 = no data",
+      "dtype": "uint8",
+      "classes": {
+        "10": "Tree cover",
+        "20": "Shrubland",
+        "30": "Grassland",
+        "40": "Cropland",
+        "50": "Built-up",
+        "60": "Bare / sparse vegetation",
+        "70": "Snow and ice",
+        "80": "Permanent water bodies",
+        "90": "Herbaceous wetland",
+        "95": "Mangroves",
+        "100": "Moss and lichen"
+      }
+    },
+    {
+      "name": "assets.json",
+      "bytes": 287368,
+      "sha256": "9017ef111f68a105d9a983430c22b84f69622941a9e71338ab8af82fc29977da",
+      "description": "GeoJSON FeatureCollection in lon/lat: villages (Point), roads (LineString, simplified), water (LineString/Polygon)",
+      "format": "GeoJSON"
+    }
+  ],
+  "totalBytes": 941635,
+  "compression": "none (files are raw; the browser can fetch them directly)",
+  "sources": [
+    {
+      "layer": "elevation",
+      "name": "Copernicus DEM GLO-30 (COP-DEM_GLO-30, 2021 release)",
+      "urls": [
+        "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N29_00_E079_00_DEM/Copernicus_DSM_COG_10_N29_00_E079_00_DEM.tif"
+      ],
+      "licence": "Copernicus DEM licence (free, including commercial use, with attribution)",
+      "attribution": "Contains modified Copernicus DEM GLO-30 data (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA; all rights reserved.",
+      "resampling": "bilinear (valid neighbours only), geographic -> UTM at cell centres",
+      "note": "Surface model: includes canopy and buildings; heights are above EGM2008 geoid."
+    },
+    {
+      "layer": "landcover",
+      "name": "ESA WorldCover 10 m 2021 v200",
+      "urls": [
+        "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N27E078_Map.tif"
+      ],
+      "licence": "CC BY 4.0",
+      "attribution": "(c) ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium. CC BY 4.0.",
+      "resampling": "nearest neighbour at cell centres (10 m source -> 30 m cell; no majority filter)",
+      "note": "Land-cover class, not a fuel model."
+    },
+    {
+      "layer": "assets",
+      "name": "OpenStreetMap",
+      "urls": [
+        "https://api.openstreetmap.org/api/0.6/map"
+      ],
+      "method": "OSM API 0.6 map call (Overpass endpoints failed: https://overpass-api.de/api/interpreter: URLError <urlopen error [Errno 104] Connection reset by peer>; https://overpass.kumi.systems/api/interpreter: HTTPError HTTP Error 500: Internal Server Error; https://overpass.private.coffee/api/interpreter: HTTPError HTTP Error 500: Internal Server Error)",
+      "licence": "ODbL 1.0",
+      "attribution": "(c) OpenStreetMap contributors, https://www.openstreetmap.org/copyright",
+      "retrieved": "2026-10-18",
+      "note": "Completeness varies by region."
+    }
+  ],
+  "stats": {
+    "elevationMinM": 273,
+    "elevationMaxM": 735,
+    "elevationVoidCells": 0,
+    "landcoverHistogram": {
+      "10": 155581,
+      "20": 2577,
+      "30": 4710,
+      "40": 45997,
+      "50": 5687,
+      "60": 3433,
+      "80": 104
+    },
+    "landcoverNoDataCells": 0,
+    "villages": 7,
+    "roadFeatures": 1061,
+    "roadVertices": 4855,
+    "roadVerticesBeforeSimplify": 8934,
+    "roadSimplifyToleranceM": 2.0,
+    "waterLineFeatures": 37,
+    "waterPolygons": 2,
+    "waterFeatures": 39,
+    "waterVertices": 1167
+  },
+  "syntheticInputs": "none",
+  "statement": "Synthetic inputs: none. Spread rates are not part of this pack; the engine assigns uncalibrated spread assumptions to land-cover classes.",
+  "buildTime": "2026-10-18T09:23:03Z",
+  "toolVersions": {
+    "python": "3.13.16",
+    "numpy": "2.5.3",
+    "prepare_area.py": "1",
+    "pyproj": "3.8.0",
+    "rasterio": "1.5.2",
+    "gdal": "3.12.2"
+  }
+}
