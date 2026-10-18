@@ -54,3 +54,6 @@
 }
 
 html, body { background: var(--tw-bg); color: var(--tw-text); }
+
+/* The page container takes focus after each navigation so keyboard and screen-reader users start at the top; it is not a control, so it gets no ring. */
+[data-rq-app] main:focus, [data-rq-app] main:focus-visible { outline: none; }
