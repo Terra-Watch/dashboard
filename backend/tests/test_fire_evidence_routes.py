@@ -67,6 +67,12 @@ def other_jpeg(seed: int) -> bytes:
     buf = io.BytesIO(); img.save(buf, "JPEG"); return buf.getvalue()
 
 
+def with_csrf(client, headers=None) -> dict:
+    """Double-submit CSRF pair for a client that authenticates with a bare bearer token (no login cookie)."""
+    client.cookies.set("resq_csrf", "test-csrf-token")
+    return {**(headers or {}), "x-resq-csrf": "test-csrf-token"}
+
+
 def files(data: bytes, name="evidence.jpg"):
     return {"image": (name, data, "image/jpeg")}
 
@@ -190,7 +196,7 @@ def test_completed_assessment_is_persisted_but_changes_nothing_operational(monke
     row = image_row(rid)
     assert row["assessment_status"] == "COMPLETED" and row["model_version"] == FIXTURE_VERSION and row["assessment_error"] is None
     assert row["assessment"]["decision"] == "REQUIRES_REVIEW" and row["assessment"]["artifact_status"] == "APPROVED"
-    assert row["authenticity_status"] == row["assessment"]["authenticity"]["status"]
+    assert row["authenticity_status"] is None and row["assessment"]["authenticity"]["status"] == "NOT_ASSESSED"   # flag off, fixture artifact has no authenticity
     assert row["human_review_status"] == "NOT_REVIEWED"
     assert operational_state(rid) == before                                          # no status change, no assignment, no alert from model output
     assert db_scalar("SELECT status FROM resq_incidents WHERE id=:i", i=rid) == "reported"
@@ -207,7 +213,7 @@ def test_reupload_refreshes_every_assessment_column_in_both_directions(monkeypat
     row = image_row(rid)
     assert db_scalar("SELECT count(*) FROM resq_incident_images WHERE incident_id=:i", i=rid) == 1
     assert (row["assessment_status"], row["model_version"], row["assessment_error"]) == ("COMPLETED", FIXTURE_VERSION, None)
-    assert row["assessment"]["assessment_status"] == "COMPLETED" and row["authenticity_status"] is not None
+    assert row["assessment"]["assessment_status"] == "COMPLETED" and row["authenticity_status"] is None
     configure(monkeypatch, approved_bundle, enabled=False)                            # and back: no stale scores, label or authenticity left behind
     client.post(f"/api/citizen/reports/{rid}/evidence", headers=headers, files=files(jpeg_bytes()))
     row = image_row(rid)
@@ -239,10 +245,10 @@ def test_incident_image_upload_requires_authentication_role_and_state_scope():
     iid = created.json()["id"]
     assert client.post(f"/api/incidents/{iid}/images", files=files(jpeg_bytes())).status_code in (401, 403)             # anonymous
     crew = make_user("field_crew", scopes=["OD"])[0]
-    assert client.post(f"/api/incidents/{iid}/images", headers={"Authorization": f"Bearer {make_token(crew, 'field_crew')}"}, files=files(jpeg_bytes())).status_code in (401, 403)
+    assert client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, {"Authorization": f"Bearer {make_token(crew, 'field_crew')}"}), files=files(jpeg_bytes())).status_code == 403
     out_of_scope = make_user("officer", scopes=["MH"])[0]
-    r = client.post(f"/api/incidents/{iid}/images", headers={"Authorization": f"Bearer {make_token(out_of_scope, 'officer')}"}, files=files(jpeg_bytes()))
-    assert r.status_code == 403
+    r = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, {"Authorization": f"Bearer {make_token(out_of_scope, 'officer')}"}), files=files(jpeg_bytes()))
+    assert r.status_code == 403 and "CSRF" not in r.text   # refused for scope, not for the missing CSRF pair
     assert db_scalar("SELECT count(*) FROM resq_incident_images WHERE incident_id=:i", i=iid) == 0
 
 
@@ -285,7 +291,7 @@ def test_human_review_and_status_changes_are_independent_of_the_automated_assess
     client = fresh_client()
     iid = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                "notes": "review", "state": "OD"}).json()["id"]
-    up = client.post(f"/api/incidents/{iid}/images", headers=bearer, files=files(jpeg_bytes()))
+    up = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, bearer), files=files(jpeg_bytes()))
     assert up.status_code == 201
     image = up.json()["image"]
     assert image["assessment_status"] == "UNAVAILABLE" and image["human_review_status"] == "NOT_REVIEWED"

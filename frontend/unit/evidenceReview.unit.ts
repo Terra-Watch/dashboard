@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { MAX_NOTE_LENGTH, MIN_REASON_LENGTH, REVIEW_OPTIONS, reviewPayload, reviewStatusLabel, validateReview } from '../src/features/incidents/evidenceReview.ts';
+import { MAX_NOTE_LENGTH, MIN_REASON_LENGTH, REVIEW_OPTIONS, reviewPayload, reviewStatusLabel, validateReview } from '../src/features/incidents/evidenceReviewTypes.ts';
 
 test('every review option maps to a status the API accepts, with a plain label', () => {
   const accepted = new Set(['NOT_REVIEWED', 'REVIEWED', 'VERIFIED_AUTHENTIC', 'POTENTIALLY_SYNTHETIC']);

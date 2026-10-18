@@ -8,11 +8,15 @@ Contract (see docs/fire_evidence_artifact_contract.md and docs/fire_evidence_int
     2. FIRE_EVIDENCE_INFERENCE_ENABLED is explicitly true (default: off)         MODEL_INFERENCE_DISABLED
     3. a stdlib-only pre-flight of the artifact bundle passes (schema, version pin, SHA-256 of every file, checkpoint hash,
        output mapping, completeness, human approval bound to the content digest)  MODEL_ARTIFACT_* codes below
+       and, only if FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY is set, the Ed25519 signature verifies    MODEL_ARTIFACT_SIGNATURE_INVALID
     4. the assessor package imports and its own loader accepts the bundle
        (re-verifies hashes, tensor/architecture compatibility, approval)          MODEL_RUNTIME_UNAVAILABLE / _INCOMPATIBLE / ...
     5. the model builds                                                           MODEL_LOAD_FAILED
 * Nothing is ever fabricated: a non-COMPLETED result carries no scores and no label, and a COMPLETED result must come from an
   APPROVED artifact and satisfy the output contract, otherwise it is replaced by UNAVAILABLE (MODEL_RESULT_INVALID / _NOT_APPROVED).
+* Every result has ONE staff-facing shape (see docs/fire_evidence_integration.md): review_required is always true, UNAVAILABLE reads as
+  "not assessed" (null OOD, NOT_ASSESSED authenticity and indications), and `indications` are derived per concern from the authenticity
+  status and signals. `present_assessment` re-applies the whitelist to stored rows on read.
 * Model output is advisory data. This module has no access to incident status, assignments or dispatch, and the only decision it can
   express is REQUIRES_REVIEW. Human review is recorded elsewhere (resq_incident_images.human_review_*).
 * A SEPARATE, development-only experimental path exists for running the audited research checkpoint locally (see
@@ -20,6 +24,12 @@ Contract (see docs/fire_evidence_artifact_contract.md and docs/fire_evidence_int
   explicit development value AND the production flag is off; it accepts only the one checkpoint hash pinned below; and it can only ever
   return assessment_status "EXPERIMENTAL" (raw, uncalibrated logits, labelled NOT FOR OPERATIONAL USE) or UNAVAILABLE. It never returns
   COMPLETED or APPROVED, and the production checks below are neither bypassed nor relaxed by it.
+* Incident (fire-report) assessments may carry an ADVISORY `media_integrity` signal (see `media_integrity_for`, the single mapping). It is computed
+  only from the authenticity component of an APPROVED artifact AND only when FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED is true; it is kept
+  completely apart from the fire/smoke fields (scores, label, priority, OOD, quality) and nothing in the application reads it to change an
+  incident, priority, assignment, dispatch, alert, notification, visibility or ordering. Community moderation uses its OWN artifact configuration
+  (config name "community": FIRE_EVIDENCE_COMMUNITY_ARTIFACT_DIR / _MODEL_VERSION), never the fire-report artifact.
+* SHADOW MODE (FIRE_EVIDENCE_SHADOW_MODE, default off; incident path only): the full assessment is persisted but is never shown or used.
 * Request path: `assess_image_async` never runs inference or hashes weights on the event loop; it uses one bounded worker, a hard
   timeout and a pending cap, and degrades to UNAVAILABLE (MODEL_TIMEOUT / MODEL_BUSY) instead of blocking or queuing without bound.
 """
@@ -47,6 +57,43 @@ OUTPUT_NAMES = ["flames_visible", "smoke_visible"]
 LABEL_MAPPING = {"0": "flames_visible", "1": "smoke_visible"}
 DERIVED_LABELS = {"ACTIVE_FIRE", "SMOKE_ONLY", "NO_VISIBLE_FIRE", "UNCERTAIN"}
 AUTH_STATUSES = {"NO_CONCERNS_FOUND", "POSSIBLE_SYNTHETIC", "POSSIBLE_EDITED", "REUSED", "INCONSISTENT", "INCONCLUSIVE"}
+NOT_ASSESSED = "NOT_ASSESSED"  # authenticity was excluded by the artifact policy, absent, or the assessment did not run
+INDICATION_VALUES = ("NOT_ASSESSED", "NONE_FOUND", "POSSIBLE")
+# The website adapter builds the assessor WITHOUT a reuse index (Assessor(..., reuse_index=None)), so the pipeline cannot detect reuse:
+# "no concerns" must therefore never be reported as "no reuse found". Flip only together with passing a real index to the Assessor.
+REUSE_CHECK_ACTIVE = False
+# Signals that the assessor adds when it sets a concern. Weak/informational signals (EDITING_SOFTWARE_TAG, C2PA_*, EXIF_CAPTURE_OLD) never
+# change the status and are therefore not indications.
+_SYNTHETIC_SIGNALS = ("IPTC_DIGITAL_SOURCE_ALGORITHMIC", "GENERATOR_TAG_IN_METADATA", "LEARNED_SYNTHETIC_SCORE")
+_EDITED_SIGNALS = ("LEARNED_EDITED_SCORE", "EXIF_CAPTURE_AFTER_UPLOAD", "EXIF_GPS_FAR_FROM_REPORTED_LOCATION")
+_REUSED_SIGNALS = ("REUSED_MATCHES",)
+INCONSISTENT_NOTE = ("Capture metadata is inconsistent with the report (for example EXIF time or GPS). This is shown as a possible edit; "
+                     "it can also have an innocent explanation such as a wrong camera clock.")
+NOT_ASSESSED_NOTE = "Authenticity was not assessed for this image (excluded by the model artifact policy or not available)."
+MAX_SIGNALS = 20
+MEDIA_STATUSES = ("NO_CONCERN_DETECTED", "POSSIBLE_SYNTHETIC", "POSSIBLE_EDITED", "POSSIBLE_REUSED", "INCONCLUSIVE", "NOT_ASSESSED", "UNAVAILABLE")
+_MEDIA_MAP = {"NO_CONCERNS_FOUND": "NO_CONCERN_DETECTED", "POSSIBLE_SYNTHETIC": "POSSIBLE_SYNTHETIC", "POSSIBLE_EDITED": "POSSIBLE_EDITED",
+              "REUSED": "POSSIBLE_REUSED", "INCONSISTENT": "POSSIBLE_EDITED", "INCONCLUSIVE": "INCONCLUSIVE", NOT_ASSESSED: "NOT_ASSESSED"}
+MEDIA_ADVISORY = "Advisory only: this does not verify or reject the report and does not change priority, status, dispatch or visibility."
+_MEDIA_NOTES = {
+    "NO_CONCERN_DETECTED": "No media-integrity concern was detected. This is not proof that the photo is a true record of the scene.",
+    "POSSIBLE_SYNTHETIC": "The image shows signs that it may be computer-generated.",
+    "POSSIBLE_EDITED": "The image shows signs that it may have been edited.",
+    "POSSIBLE_REUSED": "The image may match an earlier image.",
+    "INCONCLUSIVE": "The media-integrity check could not reach a conclusion for this image.",
+    "NOT_ASSESSED": "Media integrity was not assessed for this image.",
+    "UNAVAILABLE": "The media-integrity check could not run for this image. This is not a negative result.",
+}
+_MEDIA_NOT_ASSESSED_REASON = {
+    "no_component": "No approved authenticity component is in use for fire reports, so media integrity was not assessed.",
+    "not_run": "No completed assessment is available, so media integrity was not assessed.",
+}
+SHADOW_STATUS = "SHADOW"
+SHADOW_NOTE = "Shadow mode: recorded for evaluation only"
+REPORT, COMMUNITY = "report", "community"  # named artifact configurations
+# env var names per configuration; the assessor code checkout (FIRE_EVIDENCE_REPO) and the master switch are shared, the artifact is not
+_CONFIGS = {REPORT: {"artifact_dir": "FIRE_EVIDENCE_ARTIFACT_DIR", "version": "FIRE_EVIDENCE_MODEL_VERSION"},
+            COMMUNITY: {"artifact_dir": "FIRE_EVIDENCE_COMMUNITY_ARTIFACT_DIR", "version": "FIRE_EVIDENCE_COMMUNITY_MODEL_VERSION"}}
 
 NOT_CONFIGURED = "MODEL_ARTIFACT_NOT_CONFIGURED"
 INFERENCE_DISABLED = "MODEL_INFERENCE_DISABLED"
@@ -65,7 +112,8 @@ TIMEOUT = "MODEL_TIMEOUT"
 BUSY = "MODEL_BUSY"
 INFERENCE_FAILED = "MODEL_INFERENCE_FAILED"
 RESULT_INVALID = "MODEL_RESULT_INVALID"
-ALL_ERROR_CODES = (NOT_CONFIGURED, INFERENCE_DISABLED, NOT_FOUND, MALFORMED, UNSUPPORTED_VERSION, VERSION_MISMATCH, INTEGRITY_FAILED,
+SIGNATURE_INVALID = "MODEL_ARTIFACT_SIGNATURE_INVALID"
+ALL_ERROR_CODES = (SIGNATURE_INVALID, NOT_CONFIGURED, INFERENCE_DISABLED, NOT_FOUND, MALFORMED, UNSUPPORTED_VERSION, VERSION_MISMATCH, INTEGRITY_FAILED,
                    INVALID_OUTPUT_MAPPING, INCOMPLETE, NOT_APPROVED, INCOMPATIBLE, RUNTIME_UNAVAILABLE, LOAD_FAILED, TIMEOUT, BUSY,
                    INFERENCE_FAILED, RESULT_INVALID)
 
@@ -98,8 +146,7 @@ _NAME_TO_CODE = {  # assessor exception class name -> code (matched along the ex
 }
 
 _lock = threading.Lock()
-_service: Any | None = None
-_load_error: str | None = None
+_services: dict[str, tuple[Any | None, str | None]] = {}  # config name -> (assessor, load error); filled lazily, one entry per configuration
 _executor: ThreadPoolExecutor | None = None
 _pending: threading.BoundedSemaphore | None = None
 _scorer_factory: Optional[Callable[[str], Any]] = None  # tests only; production uses the assessor's TorchScorer
@@ -148,60 +195,203 @@ def _experimental_configuration_error() -> Optional[str]:
     return None
 
 
-def configuration_error() -> Optional[str]:
-    """Cheap, I/O-free checks. A non-None result means UNAVAILABLE without touching the filesystem or a worker thread."""
-    if experimental_requested():
+def shadow_requested() -> bool:
+    return _env("FIRE_EVIDENCE_SHADOW_MODE").lower() in ("1", "true", "yes", "on")
+
+
+def artifact_dir_for(config: str = REPORT) -> str:
+    return _env(_CONFIGS[config]["artifact_dir"]) if config in _CONFIGS else ""
+
+
+def model_version_for(config: str = REPORT) -> str:
+    return _env(_CONFIGS[config]["version"], EXPECTED_MODEL_VERSION) if config in _CONFIGS else EXPECTED_MODEL_VERSION
+
+
+def configuration_error(config: str = REPORT) -> Optional[str]:
+    """Cheap, I/O-free checks. A non-None result means UNAVAILABLE without touching the filesystem or a worker thread.
+
+    The "community" configuration reads only its own variables (there is no fallback to the fire-report artifact) and ignores the
+    development-only experimental path."""
+    if config == REPORT and experimental_requested():
         return _experimental_configuration_error()
-    if not _env("FIRE_EVIDENCE_REPO") or not _env("FIRE_EVIDENCE_ARTIFACT_DIR"):
+    if not _env("FIRE_EVIDENCE_REPO") or not artifact_dir_for(config):
         return NOT_CONFIGURED
     if not inference_enabled():
         return INFERENCE_DISABLED
     return None
 
 
+def shadow_active() -> bool:
+    """Shadow mode applies to the incident path only when it is requested AND production inference is configured and enabled."""
+    return shadow_requested() and not experimental_requested() and configuration_error(REPORT) is None
+
+
 # ----------------------------------------------------------------------------------------------------------------------------
 # structured results
 # ----------------------------------------------------------------------------------------------------------------------------
+def _not_assessed_indications() -> dict[str, str]:
+    return {"synthetic": NOT_ASSESSED, "edited": NOT_ASSESSED, "reused": NOT_ASSESSED}
+
+
+def report_authenticity_enabled() -> bool:
+    return _env("FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED") == "true"  # exactly "true"
+
+
+def media_integrity_for(assessment_status: Any, artifact_status: Any = None, authenticity_status: Any = None, visible: bool = False,
+                        reason: str = "no_component") -> dict[str, Any]:
+    """THE mapping from an assessment to the advisory staff `media_integrity` object (the only place it is decided).
+
+    UNAVAILABLE -> UNAVAILABLE (never clean). PENDING / EXPERIMENTAL / SHADOW / anything else -> NOT_ASSESSED.
+    COMPLETED + APPROVED: NOT_ASSESSED unless `visible` (flag on AND the artifact's authenticity component is PROVIDED); otherwise the
+    authenticity status is mapped (INCONSISTENT -> POSSIBLE_EDITED with a note). Unknown statuses are NOT_ASSESSED, never clean.
+    The note always says the result is advisory and changes nothing."""
+    extra = ""
+    if assessment_status == "UNAVAILABLE":
+        status = "UNAVAILABLE"
+    elif assessment_status == "COMPLETED" and artifact_status == "APPROVED":
+        status = _MEDIA_MAP.get(authenticity_status, "NOT_ASSESSED") if visible else "NOT_ASSESSED"
+        if status == "POSSIBLE_EDITED" and authenticity_status == "INCONSISTENT":
+            extra = " Capture details were inconsistent with the report; this can have an innocent explanation such as a wrong camera clock."
+    else:
+        status, reason = "NOT_ASSESSED", "not_run"
+    if status == "NOT_ASSESSED":
+        reason = reason if assessment_status != "COMPLETED" else "no_component"
+    body = _MEDIA_NOT_ASSESSED_REASON[reason] if status == "NOT_ASSESSED" else _MEDIA_NOTES[status]
+    return {"status": status, "note": f"{body}{extra} {MEDIA_ADVISORY}", "advisory": True, "affects_incident": False}
+
+
 def unavailable(code: str, model_version: str = "unconfigured") -> dict[str, Any]:
-    """The only result a refused or failed assessment may take: explicit state, no scores, no label, human review required."""
+    """The only result a refused or failed assessment may take: explicit state, no scores, no label, human review required.
+
+    Nothing here may read as a negative finding: ood_flag is null (not false), authenticity is NOT_ASSESSED (not INCONCLUSIVE/NO_CONCERNS)
+    and every indication is NOT_ASSESSED.
+    """
     safe_code = code if isinstance(code, str) and _CODE_SHAPE.fullmatch(code) else RESULT_INVALID
     return {
-        "assessment_status": "UNAVAILABLE", "model_version": model_version, "error_code": safe_code, "scores": None, "derived_label": None,
-        "decision": "REQUIRES_REVIEW", "review_priority": "STANDARD", "quality_flags": [], "ood_flag": False,
-        "authenticity": {"status": "INCONCLUSIVE", "signals": []}, "limitations": list(LIMITATIONS), "artifact_status": None,
+        "assessment_status": "UNAVAILABLE", "artifact_status": None, "model_version": model_version, "error_code": safe_code,
+        "scores": None, "derived_label": None, "decision": "REQUIRES_REVIEW", "review_required": True, "review_priority": "STANDARD",
+        "quality_flags": [], "ood_flag": None, "authenticity": {"status": NOT_ASSESSED, "signals": []},
+        "indications": _not_assessed_indications(), "media_integrity": media_integrity_for("UNAVAILABLE"), "limitations": list(LIMITATIONS),
     }
 
 
-def sanitize_assessment(result: Any, model_version: str = "unconfigured") -> dict[str, Any]:
-    """Admit a model result only if it satisfies the output contract and comes from an APPROVED artifact; else UNAVAILABLE."""
+def shadow_view(model_version: Any = "unconfigured") -> dict[str, Any]:
+    """The ONLY thing a shadow-mode assessment may show: nothing about the model's opinion."""
+    return {
+        "assessment_status": SHADOW_STATUS, "artifact_status": None, "model_version": str(model_version or "unconfigured")[:120], "error_code": None,
+        "scores": None, "derived_label": None, "decision": None, "review_required": False, "review_priority": "STANDARD",
+        "quality_flags": [], "ood_flag": None, "authenticity": {"status": NOT_ASSESSED, "signals": []}, "indications": _not_assessed_indications(),
+        "media_integrity": media_integrity_for(SHADOW_STATUS), "limitations": [SHADOW_NOTE],
+    }
+
+
+def _clean_signal(value: Any) -> str:
+    text = str(value)[:120]
+    return text.split(":", 1)[0] if text.startswith(_REUSED_SIGNALS) else text  # never carry other images' ids into the response
+
+
+def indications_for(status: str, signals: list[str]) -> tuple[dict[str, str], list[str]]:
+    """Per-concern indications derived from the single authenticity status plus the signals that led to it.
+
+    The assessor reduces several concerns to ONE status by priority (REUSED > POSSIBLE_SYNTHETIC > POSSIBLE_EDITED > INCONSISTENT), but its
+    signals still list every concern that fired, so both are read. Rules:
+      * a concern that fired -> POSSIBLE (INCONSISTENT is shown as edited POSSIBLE plus a limitation note)
+      * NO_CONCERNS_FOUND -> NONE_FOUND only for what was actually assessed: synthetic and edited (the learned head ran);
+        reuse is NONE_FOUND only when REUSE_CHECK_ACTIVE, otherwise NOT_ASSESSED
+      * a concern that did not fire next to another one that did is NOT_ASSESSED (a conclusive negative is not established)
+      * INCONCLUSIVE / NOT_ASSESSED -> everything NOT_ASSESSED
+    Returns (indications, extra limitation notes).
+    """
+    out, notes = _not_assessed_indications(), []
+    if status == "NO_CONCERNS_FOUND":
+        out["synthetic"] = out["edited"] = "NONE_FOUND"
+        out["reused"] = "NONE_FOUND" if REUSE_CHECK_ACTIVE else NOT_ASSESSED
+    if status == "POSSIBLE_SYNTHETIC" or any(x.startswith(_SYNTHETIC_SIGNALS) for x in signals):
+        out["synthetic"] = "POSSIBLE"
+    if status in ("POSSIBLE_EDITED", "INCONSISTENT") or any(x.startswith(_EDITED_SIGNALS) for x in signals):
+        out["edited"] = "POSSIBLE"
+    if status == "REUSED" or any(x.startswith(_REUSED_SIGNALS) for x in signals):
+        out["reused"] = "POSSIBLE"
+    if status == "INCONSISTENT" or any(x.startswith(("EXIF_CAPTURE_AFTER_UPLOAD", "EXIF_GPS_FAR_FROM_REPORTED_LOCATION")) for x in signals):
+        notes.append(INCONSISTENT_NOTE)
+    if status == NOT_ASSESSED:
+        notes.append(NOT_ASSESSED_NOTE)
+    return out, notes
+
+
+def _admit(result: Any, model_version: str) -> tuple[Optional[dict[str, Any]], Optional[dict[str, Any]]]:
+    """Validate a model result against the output contract. Returns (unavailable_result, None) or (None, validated_fields)."""
     if not isinstance(result, dict):
-        return unavailable(RESULT_INVALID, model_version)
+        return unavailable(RESULT_INVALID, model_version), None
     version = str(result.get("model_version") or model_version)
     if result.get("assessment_status") != "COMPLETED":
         code = result.get("error_code")
-        return unavailable(code if isinstance(code, str) and code else INFERENCE_FAILED, version)
+        return unavailable(code if isinstance(code, str) and code else INFERENCE_FAILED, version), None
     if result.get("artifact_status") != "APPROVED":
-        return unavailable(NOT_APPROVED, version)
+        return unavailable(NOT_APPROVED, version), None
     scores, auth = result.get("scores"), result.get("authenticity")
     try:
         ok = (
             isinstance(scores, dict) and set(scores) == set(OUTPUT_NAMES)
             and all(isinstance(scores[k], (int, float)) and not isinstance(scores[k], bool) and 0.0 <= float(scores[k]) <= 1.0 for k in OUTPUT_NAMES)
             and result.get("derived_label") in DERIVED_LABELS and result.get("decision") == "REQUIRES_REVIEW"
-            and result.get("review_priority") in ("HIGH", "STANDARD") and isinstance(auth, dict) and auth.get("status") in AUTH_STATUSES
+            and result.get("review_priority") in ("HIGH", "STANDARD") and isinstance(auth, dict) and auth.get("status") in AUTH_STATUSES | {NOT_ASSESSED}
             and isinstance(result.get("quality_flags"), list) and isinstance(result.get("ood_flag"), bool)
         )
     except (TypeError, ValueError):
         ok = False
     if not ok:
-        return unavailable(RESULT_INVALID, version)
-    return {  # whitelist: nothing the model returns outside the contract is stored or shown
-        "assessment_status": "COMPLETED", "model_version": version, "error_code": None,
-        "scores": {k: float(scores[k]) for k in OUTPUT_NAMES}, "derived_label": result["derived_label"], "decision": "REQUIRES_REVIEW",
-        "review_priority": result["review_priority"], "quality_flags": [str(f) for f in result["quality_flags"]], "ood_flag": result["ood_flag"],
-        "authenticity": {"status": auth["status"], "signals": [str(s) for s in (auth.get("signals") or [])]},
-        "limitations": [str(x) for x in (result.get("limitations") or [])], "artifact_status": "APPROVED",
+        return unavailable(RESULT_INVALID, version), None
+    return None, {
+        "version": version, "scores": {k: float(scores[k]) for k in OUTPUT_NAMES}, "derived_label": result["derived_label"],
+        "review_priority": result["review_priority"], "quality_flags": [str(f)[:40] for f in result["quality_flags"]][:20],
+        "ood_flag": result["ood_flag"], "auth": auth, "limitations": [str(x) for x in (result.get("limitations") or [])],
     }
+
+
+def _authenticity_view(f: dict[str, Any], visible: bool) -> tuple[dict[str, Any], dict[str, str], list[str]]:
+    auth = f["auth"]
+    status = auth["status"] if visible else NOT_ASSESSED
+    signals = [_clean_signal(x) for x in (auth.get("signals") or [])][:MAX_SIGNALS] if visible else []
+    indications, notes = indications_for(status, signals)
+    return {"status": status, "signals": signals}, indications, notes
+
+
+def _completed(f: dict[str, Any], authenticity: dict, indications: dict, notes: list[str]) -> dict[str, Any]:
+    limitations = [x for x in f["limitations"] if x not in (INCONSISTENT_NOTE, NOT_ASSESSED_NOTE)]
+    return {  # whitelist: nothing the model returns outside the contract is stored or shown
+        "assessment_status": "COMPLETED", "artifact_status": "APPROVED", "model_version": f["version"], "error_code": None,
+        "scores": f["scores"], "derived_label": f["derived_label"], "decision": "REQUIRES_REVIEW",
+        "review_required": True, "review_priority": f["review_priority"], "quality_flags": f["quality_flags"],
+        "ood_flag": f["ood_flag"], "authenticity": authenticity, "indications": indications, "limitations": limitations + notes,
+    }
+
+
+def sanitize_assessment(result: Any, model_version: str = "unconfigured", authenticity_assessed: Optional[bool] = None) -> dict[str, Any]:
+    """INCIDENT-IMAGE sanitizer. Admits a model result only if it satisfies the output contract and comes from an APPROVED artifact; else UNAVAILABLE.
+
+    Authenticity is exposed (as `authenticity`, `indications` and the advisory `media_integrity`) only when FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED
+    is true AND `authenticity_assessed` is not False (the caller passes False when the artifact's authenticity component is not PROVIDED);
+    otherwise all of it is NOT_ASSESSED. Authenticity never influences the fire/smoke fields, which are computed from the validated model output
+    alone. Idempotent, so stored rows are re-presented through it."""
+    unavailable_result, f = _admit(result, model_version)
+    if f is None:
+        return unavailable_result  # type: ignore[return-value]
+    visible = report_authenticity_enabled() and authenticity_assessed is not False
+    authenticity, indications, notes = _authenticity_view(f, visible)
+    out = _completed(f, authenticity, indications, notes)
+    out["media_integrity"] = media_integrity_for("COMPLETED", "APPROVED", f["auth"].get("status"), visible)
+    return out
+
+
+def sanitize_community_assessment(result: Any, model_version: str = "unconfigured", authenticity_assessed: bool = True) -> dict[str, Any]:
+    """COMMUNITY-path sanitizer (media moderation only; independent of the report flag). Same contract checks; the authenticity verdict is kept
+    unless `authenticity_assessed` is False (the community artifact excludes authenticity). Carries no `media_integrity` key."""
+    unavailable_result, f = _admit(result, model_version)
+    if f is None:
+        return unavailable_result  # type: ignore[return-value]
+    authenticity, indications, notes = _authenticity_view(f, authenticity_assessed)
+    return _completed(f, authenticity, indications, notes)
 
 
 def sanitize_experimental(result: Any, model_version: str = "unconfigured") -> dict[str, Any]:
@@ -230,8 +420,9 @@ def sanitize_experimental(result: Any, model_version: str = "unconfigured") -> d
         "assessment_status": EXPERIMENTAL_STATUS, "experimental": True, "notice": EXPERIMENTAL_NOTICE, "model_version": version,
         "checkpoint_sha256": EXPERIMENTAL_ALLOWED_SHA256, "error_code": None, "artifact_status": EXPERIMENTAL_ARTIFACT_STATUS,
         "raw_logits": {k: float(logits[k]) for k in OUTPUT_NAMES}, "scores_calibrated": False, "scores": None, "derived_label": None,
-        "decision": "REQUIRES_REVIEW", "review_priority": "STANDARD", "quality_flags": [], "ood_flag": None,
-        "authenticity": {"status": "NOT_ASSESSED", "signals": []},
+        "decision": "REQUIRES_REVIEW", "review_required": True, "review_priority": "STANDARD", "quality_flags": [], "ood_flag": None,
+        "authenticity": {"status": NOT_ASSESSED, "signals": []}, "indications": _not_assessed_indications(),
+        "media_integrity": media_integrity_for(EXPERIMENTAL_STATUS),
         "limitations": [EXPERIMENTAL_NOTICE + ": unapproved research checkpoint.",
                         "Raw logits are uncalibrated and are not probabilities; no threshold, OOD or authenticity check was applied.",
                         "Does not confirm a fire, location or time, and never changes incident status or dispatches anyone."],
@@ -239,14 +430,68 @@ def sanitize_experimental(result: Any, model_version: str = "unconfigured") -> d
 
 
 def persistence_fields(assessment: dict[str, Any]) -> dict[str, Any]:
-    """Columns for resq_incident_images. Authenticity is persisted only for a COMPLETED assessment, never for an unavailable one."""
-    completed = assessment.get("assessment_status") == "COMPLETED"
-    experimental = assessment.get("assessment_status") == EXPERIMENTAL_STATUS
+    """Columns for resq_incident_images. The authenticity column holds the mapped media-integrity status only for a COMPLETED, APPROVED assessment
+    whose authenticity was actually exposed (flag on, component PROVIDED, status not NOT_ASSESSED); otherwise NULL. Nothing reads it to decide anything.
+
+    The assessment is re-passed through the incident sanitizer, so nothing but the whitelisted incident shape is stored. In shadow mode
+    (see `shadow_active`) a production result, COMPLETED or UNAVAILABLE, is stored in full but marked: status column SHADOW and `shadow: true`
+    in the JSON, so every reader hides it. Configuration refusals (not configured / inference disabled) are not shadow rows."""
+    assessment = present_assessment(assessment)
+    status = assessment.get("assessment_status")
+    shadow = (shadow_active() and status in ("COMPLETED", "UNAVAILABLE")
+              and assessment.get("error_code") not in (NOT_CONFIGURED, INFERENCE_DISABLED))
+    stored = {**assessment, "shadow": True} if shadow else assessment
+    media = (assessment.get("media_integrity") or {}).get("status")
+    auth = media if status == "COMPLETED" and not shadow and media not in (None, "NOT_ASSESSED", "UNAVAILABLE") else None
     return {
-        "status": "COMPLETED" if completed else EXPERIMENTAL_STATUS if experimental else "UNAVAILABLE", "version": assessment.get("model_version"),
-        "auth": (assessment.get("authenticity") or {}).get("status") if completed else None,
-        "assessment": json.dumps(assessment), "error": assessment.get("error_code"),
+        "status": SHADOW_STATUS if shadow else "COMPLETED" if status == "COMPLETED" else EXPERIMENTAL_STATUS if status == EXPERIMENTAL_STATUS else "UNAVAILABLE",
+        "version": assessment.get("model_version"), "auth": auth, "assessment": json.dumps(stored), "error": assessment.get("error_code"),
     }
+
+
+def displayed_authenticity_status(column_value: Any, shown: dict[str, Any]) -> Any:
+    """Display-only: the stored row-level value is shown only when the presented assessment itself exposes a media-integrity result."""
+    return column_value if (shown.get("media_integrity") or {}).get("status") not in (None, "NOT_ASSESSED", "UNAVAILABLE") else None
+
+
+def attach_media_integrity_status(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Staff list rows: add display-only `image_media_integrity_status` (the latest image's media_integrity.status from the single mapping, or None
+    when the incident has no image) and drop the helper columns. Never used for filtering, ordering or any decision."""
+    for row in rows:
+        stored, err = row.pop("_image_assessment", None), row.pop("_image_error", None)
+        row["image_media_integrity_status"] = (
+            present_assessment(stored, row.get("image_assessment_status"), err)["media_integrity"]["status"] if row.get("image_assessment_status") is not None else None)
+    return rows
+
+
+def mask_authenticity_status(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Display-only for list endpoints: hide the stored row-level value while FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED is not true."""
+    if not report_authenticity_enabled():
+        for row in rows:
+            row["authenticity_status"] = None
+    return rows
+
+
+def present_assessment(stored: Any, status: Optional[str] = None, error: Optional[str] = None) -> dict[str, Any]:
+    """Staff-facing view of a stored incident-image assessment (the typed contract). Re-applies the whitelist, so rows written by earlier
+    versions (no indications / review_required / media_integrity, INCONCLUSIVE on an unavailable result) are shown in the current shape and unknown
+    stored keys are dropped; authenticity content is shown only while FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED is true. Shadow rows show only the
+    SHADOW object. Never raises; a missing or unreadable stored assessment is NOT_ASSESSED media integrity (and an UNAVAILABLE assessment),
+    never a clean result."""
+    try:
+        if status == SHADOW_STATUS or (isinstance(stored, dict) and (stored.get("shadow") is True or stored.get("assessment_status") == SHADOW_STATUS)):
+            return shadow_view(stored.get("model_version") if isinstance(stored, dict) else None)
+        if not isinstance(stored, dict) or not stored:
+            out = unavailable(error if isinstance(error, str) and error else RESULT_INVALID)
+            out["media_integrity"] = media_integrity_for("PENDING")  # nothing stored: not assessed (the assessment itself stays UNAVAILABLE)
+            return out
+        if stored.get("assessment_status") == EXPERIMENTAL_STATUS:
+            return sanitize_experimental(stored)
+        if stored.get("assessment_status") == "COMPLETED":
+            return sanitize_assessment(stored)
+        return unavailable(stored.get("error_code") or error or INFERENCE_FAILED, str(stored.get("model_version") or "unconfigured"))
+    except Exception:
+        return unavailable(RESULT_INVALID)
 
 
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -342,6 +587,36 @@ def preflight_artifact(artifact_dir: str, expected_version: str = EXPECTED_MODEL
     if not isinstance(rec, dict) or any(not (isinstance(rec.get(k), str) and rec[k].strip()) for k in ("approver", "approved_at", "scope")) \
             or not (isinstance(rec.get("evidence"), list) and rec["evidence"]) or rec.get("artifact_binding_sha256") != binding_digest(meta):
         return NOT_APPROVED
+    return _signature_error(meta)  # last: only reached by an otherwise complete, approved bundle
+
+
+def signing_payload(meta: dict) -> bytes:
+    """The bytes the approver signs: canonical JSON (sorted keys, no spaces, ASCII) of artifact.json with `approval.signature` removed.
+    Everything else is covered: file hashes, calibration, approval record, `artifact_status` and `approval.binding_sha256`."""
+    body = json.loads(json.dumps(meta))
+    body.get("approval", {}).pop("signature", None)
+    return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+
+
+def _signature_error(meta: dict) -> Optional[str]:
+    """OPTIONAL Ed25519 verification. Enforced only when FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY (base64 raw 32-byte key) is set; when it is unset
+    the signature is NOT checked (the content-digest approval binding above still is). With the key set, a missing/invalid signature, a key id
+    that differs from FIRE_EVIDENCE_TRUSTED_KEY_ID (when that is set), or a missing `cryptography` package all fail closed."""
+    key_b64 = _env("FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY")
+    if not key_b64:
+        return None
+    sig = (meta.get("approval") or {}).get("signature")
+    if not isinstance(sig, dict) or sig.get("algorithm") != "Ed25519" or not isinstance(sig.get("value"), str):
+        return SIGNATURE_INVALID
+    expected_id = _env("FIRE_EVIDENCE_TRUSTED_KEY_ID")
+    if expected_id and sig.get("key_id") != expected_id:
+        return SIGNATURE_INVALID
+    try:
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(key_b64, validate=True)).verify(base64.b64decode(sig["value"], validate=True), signing_payload(meta))
+    except Exception:  # bad key, bad base64, wrong signature, or the verifier library is missing: all refuse
+        return SIGNATURE_INVALID
     return None
 
 
@@ -355,9 +630,14 @@ def _code_for_exception(exc: BaseException) -> str:
     return LOAD_FAILED
 
 
-def _build_service() -> tuple[Any | None, str | None]:
-    repo, artifact_dir = Path(_env("FIRE_EVIDENCE_REPO")), _env("FIRE_EVIDENCE_ARTIFACT_DIR")
-    version = _env("FIRE_EVIDENCE_MODEL_VERSION", EXPECTED_MODEL_VERSION)
+def _build_service(config: str = REPORT) -> tuple[Any | None, str | None]:
+    """Build the assessor for one named configuration. Identical fail-closed checks for "report" and "community"; no cross-fallback."""
+    if config not in _CONFIGS:
+        return None, NOT_CONFIGURED
+    repo, artifact_dir = Path(_env("FIRE_EVIDENCE_REPO")), artifact_dir_for(config)
+    version = model_version_for(config)
+    if not artifact_dir:
+        return None, NOT_CONFIGURED
     code = preflight_artifact(artifact_dir, version)
     if code:
         return None, code
@@ -429,29 +709,35 @@ def _assess_experimental(data: bytes, image_id: str) -> dict[str, Any]:
     return sanitize_experimental(service.assess_bytes(data, image_id), getattr(service, "model_version", "unconfigured"))
 
 
-def _load_service() -> Any | None:
-    global _service, _load_error
-    if _service is not None or _load_error is not None:
-        return _service
+def _load_service(config: str = REPORT) -> Any | None:
+    entry = _services.get(config)
+    if entry is not None:
+        return entry[0]
     with _lock:
-        if _service is not None or _load_error is not None:
-            return _service
-        _service, _load_error = _build_service()
-        if _load_error:
-            logger.warning("fire evidence assessor unavailable: %s", _load_error)  # code only; never image content
-        return _service
+        entry = _services.get(config)
+        if entry is not None:
+            return entry[0]
+        entry = _build_service(config)
+        _services[config] = entry
+        if entry[1]:
+            logger.warning("fire evidence assessor (%s) unavailable: %s", config, entry[1])  # code only; never image content
+        return entry[0]
 
 
 def load_state() -> dict[str, Any]:
     """Operator-facing, I/O-free view for health checks."""
-    return {"configuration_error": configuration_error(), "loaded": _service is not None, "load_error": _load_error,
+    rep_svc, com_svc = _services.get(REPORT, (None, None)), _services.get(COMMUNITY, (None, None))
+    return {"configuration_error": configuration_error(), "loaded": rep_svc[0] is not None, "load_error": rep_svc[1],
+            "community_configuration_error": configuration_error(COMMUNITY), "community_loaded": com_svc[0] is not None, "community_load_error": com_svc[1],
+            "shadow_mode": shadow_active(),
             "experimental_loaded": _exp_service is not None, "experimental_load_error": _exp_error}
 
 
 def reset_for_tests() -> None:
-    global _service, _load_error, _executor, _pending, _scorer_factory, _exp_service, _exp_error, _experimental_spec, EXPERIMENTAL_ALLOWED_SHA256
+    global _executor, _pending, _scorer_factory, _exp_service, _exp_error, _experimental_spec, EXPERIMENTAL_ALLOWED_SHA256
     with _lock:
-        _service, _load_error, _scorer_factory, _experimental_spec = None, None, None, None
+        _services.clear()
+        _scorer_factory, _experimental_spec = None, None
         EXPERIMENTAL_ALLOWED_SHA256 = _PINNED_EXPERIMENTAL_SHA256
         _exp_service, _exp_error = None, None
         if _executor is not None:
@@ -463,18 +749,30 @@ def reset_for_tests() -> None:
 # ----------------------------------------------------------------------------------------------------------------------------
 # public API
 # ----------------------------------------------------------------------------------------------------------------------------
-def assess_image(data: bytes, image_id: str) -> dict[str, Any]:
-    """Synchronous assessment (blocking). Route handlers must use `assess_image_async`. Never raises."""
-    code = configuration_error()
+def _authenticity_provided(assessor: Any) -> bool:
+    """False when the loaded artifact excludes (or does not provide) authenticity: the result must then say NOT_ASSESSED, not INCONCLUSIVE."""
+    auth = getattr(getattr(assessor, "artifact", None), "authenticity", None)
+    return auth.get("status") == "PROVIDED" if isinstance(auth, dict) else True
+
+
+def assess_image(data: bytes, image_id: str, config: str = REPORT) -> dict[str, Any]:
+    """Synchronous assessment (blocking). Route handlers must use `assess_image_async`. Never raises.
+
+    config "report" (default) is the fire-report path: the result goes through the incident sanitizer (no authenticity, ever).
+    config "community" runs the community artifact and returns the community sanitizer's result (authenticity kept for the moderation policy)."""
+    code = configuration_error(config)
     if code:
         return unavailable(code)
     try:
-        if experimental_requested():  # separate path: its configuration_error() above already enforced dev-only gating
+        if config == REPORT and experimental_requested():  # separate path: its configuration_error() above already enforced dev-only gating
             return _assess_experimental(data, image_id)
-        assessor = _load_service()
+        assessor = _load_service(config)
         if assessor is None:
-            return unavailable(_load_error or LOAD_FAILED)
-        return sanitize_assessment(assessor.assess_bytes(data, image_id).model_dump(), getattr(assessor.artifact, "model_version", "unconfigured"))
+            return unavailable((_services.get(config) or (None, None))[1] or LOAD_FAILED)
+        raw, version = assessor.assess_bytes(data, image_id).model_dump(), getattr(assessor.artifact, "model_version", "unconfigured")
+        if config == REPORT:
+            return sanitize_assessment(raw, version, authenticity_assessed=_authenticity_provided(assessor))
+        return sanitize_community_assessment(raw, version, authenticity_assessed=_authenticity_provided(assessor))
     except Exception:
         logger.exception("fire evidence assessment failed for %s", image_id)
         return unavailable(INFERENCE_FAILED)
@@ -499,8 +797,8 @@ def _process_worker_main(conn) -> None:
         if message is None:
             return
         try:
-            data, image_id = message
-            conn.send(assess_image(data, image_id))
+            data, image_id, config = message
+            conn.send(assess_image(data, image_id, config))
         except Exception:
             try:
                 conn.send(unavailable(INFERENCE_FAILED))
@@ -527,14 +825,14 @@ def _stop_process_worker() -> None:
             worker.join(timeout=1.0)
 
 
-def _process_request(data: bytes, image_id: str) -> dict[str, Any]:
+def _process_request(data: bytes, image_id: str, config: str = REPORT) -> dict[str, Any]:
     global _process_worker, _process_conn
     # The scorer factory is an intentionally private test seam.  Keeping its
     # execution in the existing executor lets unit tests inject a tiny scorer;
     # production never sets it, so every real model call crosses the killable
     # subprocess boundary below.
     if _scorer_factory is not None:
-        return assess_image(data, image_id)
+        return assess_image(data, image_id, config)
     with _process_lock:
         if _process_worker is None or not _process_worker.is_alive():
             if _process_conn is not None:
@@ -554,7 +852,7 @@ def _process_request(data: bytes, image_id: str) -> dict[str, Any]:
             _process_worker, _process_conn = worker, parent
         conn = _process_conn
         try:
-            conn.send((data, image_id))
+            conn.send((data, image_id, config))
         except (EOFError, OSError) as exc:
             _stop_process_worker()
             raise RuntimeError("inference worker unavailable") from exc
@@ -565,14 +863,15 @@ def _process_request(data: bytes, image_id: str) -> dict[str, Any]:
         raise RuntimeError("inference worker exited") from exc
 
 
-async def assess_image_async(data: bytes, image_id: str) -> dict[str, Any]:
+async def assess_image_async(data: bytes, image_id: str, config: str = REPORT) -> dict[str, Any]:
     """Non-blocking assessment for async routes. Never raises; always returns a contract-shaped dict.
 
     Refusals that need no I/O return immediately (no thread hop). Otherwise the work (artifact hashing on first use, image decoding and
     model inference) runs on ONE dedicated worker with a pending cap and a hard timeout, so a slow model cannot stall the event loop,
     other requests, or the upload itself: it degrades to MODEL_BUSY / MODEL_TIMEOUT and the report proceeds to human review.
+    `config` names the artifact configuration ("report" by default, "community" for media moderation).
     """
-    code = configuration_error()
+    code = configuration_error(config)
     if code:
         return unavailable(code)
     try:
@@ -585,7 +884,7 @@ async def assess_image_async(data: bytes, image_id: str) -> dict[str, Any]:
 
     def work() -> dict[str, Any]:
         try:
-            return _process_request(data, image_id)
+            return _process_request(data, image_id, config)
         finally:
             pending.release()
 
