@@ -14,7 +14,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import rasterio.features
 from affine import Affine
 from pyproj import Transformer
 from shapely.geometry import Point, mapping, shape
@@ -288,6 +287,15 @@ def simulation_start_utc(incident_id: str) -> str:
 
 
 def _grid_to_wgs84_geojson(grid: np.ndarray, incident_id: str, mask: np.ndarray | None = None) -> dict:
+    # Rasterio contains native GDAL/Expat dependencies that are not available in
+    # every serverless Python runtime. Keep it out of application startup so
+    # authentication, citizen reports, and other API routes remain available.
+    try:
+        import rasterio.features
+    except ImportError as exc:
+        raise RuntimeError(
+            "Simulation map rendering requires a runtime with Rasterio native libraries"
+        ) from exc
     transform, crs, _cell_m, _n = domain_transform(incident_id)
     tr = _wgs84_transformer(crs)
     features = []
