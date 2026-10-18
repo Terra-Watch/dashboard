@@ -1,0 +1,7 @@
+.venv/
+runtime_data/
+.pytest_cache/
+__pycache__/
+*.pyc
+.env*
+citizen-cookies.txt
