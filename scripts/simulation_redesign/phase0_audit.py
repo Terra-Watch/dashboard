@@ -34,11 +34,15 @@ def load_detections(paths, min_confidence: str = "n", keep_types=(0,)) -> pd.Dat
         missing = [c for c in REQUIRED if c not in frame.columns]
         if missing:
             raise ValueError(f"{path}: missing columns {missing}")
+        if frame.empty:  # header-only files (no detections in that window) would make columns object-typed
+            continue
         frame["source_file"] = Path(path).name
         frames.append(frame)
     if not frames:
-        raise ValueError("no input files")
+        raise ValueError("no input files with detections")
     df = pd.concat(frames, ignore_index=True)
+    for col in ("latitude", "longitude"):
+        df[col] = pd.to_numeric(df[col], errors="raise")
     df["acq_time"] = df["acq_time"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(4)
     df["time"] = pd.to_datetime(df["acq_date"].astype(str) + " " + df["acq_time"], format="%Y-%m-%d %H%M", utc=True)
     if "type" in df.columns and keep_types is not None:
@@ -81,62 +85,70 @@ def _neighbour_offsets():
     return offsets
 
 
-def _block_pairs(a, b, x, y, t, eps, gap, same, chunk=1500):
-    us, vs = [], []
-    bx, by, bt = x[b], y[b], t[b]
-    for start in range(0, len(a), chunk):
-        aa = a[start:start + chunk]
-        dx = x[aa][:, None] - bx[None, :]
-        dy = y[aa][:, None] - by[None, :]
-        dt = np.abs(t[aa][:, None] - bt[None, :])
-        mask = (dx * dx + dy * dy <= eps * eps) & (dt <= gap)
-        if same:
-            mask &= aa[:, None] < b[None, :]
-        ui, vi = np.nonzero(mask)
-        if ui.size:
-            us.append(aa[ui])
-            vs.append(b[vi])
-    if not us:
-        return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64)
-    return np.concatenate(us), np.concatenate(vs)
+def _propagate(labels, u, v):
+    """Min-label propagation with pointer jumping over the edges (u, v); mutates labels in place."""
+    while True:
+        m = np.minimum(labels[u], labels[v])
+        new = labels.copy()
+        np.minimum.at(new, u, m)
+        np.minimum.at(new, v, m)
+        new = new[new]
+        if np.array_equal(new, labels):
+            return
+        labels[:] = new
 
 
-def cluster_events(x_km, y_km, t_h, eps_km: float, gap_h: float) -> np.ndarray:
-    """Connected components of detections closer than eps_km in space and gap_h in time. Returns event ids 0..E-1."""
+def cluster_events(x_km, y_km, t_h, eps_km: float, gap_h: float, max_pairs: int = 3_000_000) -> np.ndarray:
+    """Connected components of detections closer than eps_km in space and gap_h in time. Returns event ids 0..E-1.
+
+    Detections are hashed into (x, y, time) cells of size (eps, eps, gap); candidate pairs come from the cell and its 13
+    forward neighbours, are filtered exactly, and linked with vectorised min-label propagation (no per-point Python loop).
+    """
     n = len(x_km)
     if n == 0:
         return np.empty(0, dtype=np.int64)
     ix = np.floor(x_km / eps_km).astype(np.int64)
     iy = np.floor(y_km / eps_km).astype(np.int64)
     it = np.floor(t_h / gap_h).astype(np.int64)
-    keys = {}
-    for i, key in enumerate(zip(ix.tolist(), iy.tolist(), it.tolist())):
-        keys.setdefault(key, []).append(i)
-    blocks = {k: np.asarray(v, dtype=np.int64) for k, v in keys.items()}
-    us, vs = [], []
-    for (kx, ky, kt), a in blocks.items():
-        for ox, oy, ot in _neighbour_offsets():
-            b = blocks.get((kx + ox, ky + oy, kt + ot))
-            if b is None:
-                continue
-            same = (ox, oy, ot) == (0, 0, 0)
-            u, v = _block_pairs(a, b, x_km, y_km, t_h, eps_km, gap_h, same)
-            if u.size:
-                us.append(u)
-                vs.append(v)
+    ix, iy, it = ix - ix.min() + 1, iy - iy.min() + 1, it - it.min() + 1
+    ny, nt = int(iy.max()) + 2, int(it.max()) + 2
+    key = (ix * ny + iy) * nt + it
+    order = np.argsort(key, kind="stable")
+    uniq, start = np.unique(key[order], return_index=True)
+    counts = np.diff(np.append(start, n))
     labels = np.arange(n, dtype=np.int64)
-    if us:
-        u = np.concatenate(us)
-        v = np.concatenate(vs)
-        while True:
-            m = np.minimum(labels[u], labels[v])
-            new = labels.copy()
-            np.minimum.at(new, u, m)
-            np.minimum.at(new, v, m)
-            new = new[new]
-            if np.array_equal(new, labels):
-                break
-            labels = new
+    eps2 = eps_km * eps_km
+    for _ in range(50):
+        before = labels.copy()
+        for ox, oy, ot in _neighbour_offsets():
+            same = (ox, oy, ot) == (0, 0, 0)
+            nkey = key + (ox * ny + oy) * nt + ot
+            pos = np.searchsorted(uniq, nkey)
+            pos[pos >= len(uniq)] = len(uniq) - 1
+            pts = np.flatnonzero(uniq[pos] == nkey)
+            if pts.size == 0:
+                continue
+            cnt, st = counts[pos[pts]], start[pos[pts]]
+            csum = np.cumsum(cnt)
+            lo = 0
+            while lo < pts.size:
+                base = csum[lo - 1] if lo else 0
+                hi = int(np.searchsorted(csum, base + max_pairs, side="right"))
+                hi = max(hi, lo + 1)
+                c = cnt[lo:hi]
+                total = int(c.sum())
+                a = np.repeat(pts[lo:hi], c)
+                within = np.arange(total) - np.repeat(np.cumsum(c) - c, c)
+                b = order[np.repeat(st[lo:hi], c) + within]
+                dx, dy = x_km[a] - x_km[b], y_km[a] - y_km[b]
+                ok = (dx * dx + dy * dy <= eps2) & (np.abs(t_h[a] - t_h[b]) <= gap_h)
+                if same:
+                    ok &= a < b
+                if ok.any():
+                    _propagate(labels, a[ok], b[ok])
+                lo = hi
+        if np.array_equal(before, labels):
+            break
     _, inverse = np.unique(labels, return_inverse=True)
     return inverse.astype(np.int64)
 
@@ -162,25 +174,32 @@ def nearest_distance_km(points_xy: np.ndarray, ref_xy: np.ndarray, chunk=2000) -
 
 
 def build_cases(df: pd.DataFrame, growth_tol_km: float, min_new: int, pass_gap_min: float):
-    """Return (events DataFrame, cases DataFrame). df needs event_id, t_h, x_km, y_km and the usual FIRMS columns."""
-    event_rows, case_rows = [], []
-    for event_id, g in df.groupby("event_id", sort=True):
+    """Return (events DataFrame, cases DataFrame). df needs event_id, t_h, x_km, y_km and the usual FIRMS columns.
+
+    Event rows are aggregated for every event with vectorised group operations; the per-event pass/growth loop runs only for
+    events whose detections span more than one possible pass, since a single-pass event cannot form a forecast case.
+    """
+    work = df.assign(cx=np.floor(df["x_km"].to_numpy() / PIXEL_KM).astype(np.int64),
+                     cy=np.floor(df["y_km"].to_numpy() / PIXEL_KM).astype(np.int64))
+    grp = work.groupby("event_id", sort=True)
+    agg = grp.agg(n_detections=("t_h", "size"), t_min=("t_h", "min"), t_max=("t_h", "max"), start=("time", "min"), end=("time", "max"),
+                  lat=("latitude", "mean"), lon=("longitude", "mean"))
+    agg["max_frp"] = grp["frp"].max() if "frp" in work.columns else np.nan
+    cells = work[["event_id", "cx", "cy"]].drop_duplicates().groupby("event_id").size()
+    events = agg.assign(area_proxy_km2=cells.reindex(agg.index).to_numpy() * PIXEL_KM ** 2,
+                        duration_h=agg["t_max"] - agg["t_min"], n_passes=1).reset_index()
+    candidates = events.loc[events["duration_h"] * 60.0 > pass_gap_min, "event_id"].to_numpy()
+    case_rows = []
+    passes_by_event = {}
+    sub = work[work["event_id"].isin(candidates)]
+    for event_id, g in sub.groupby("event_id", sort=True):
         g = g.sort_values("t_h")
         pass_idx = split_passes(g["t_h"].to_numpy(), pass_gap_min)
         g = g.assign(pass_idx=pass_idx)
         xy = g[["x_km", "y_km"]].to_numpy()
         n_passes = int(pass_idx.max()) + 1
-        cell_x = np.floor(g["x_km"].to_numpy() / PIXEL_KM).astype(np.int64)
-        cell_y = np.floor(g["y_km"].to_numpy() / PIXEL_KM).astype(np.int64)
-        area_km2 = len(set(zip(cell_x.tolist(), cell_y.tolist()))) * PIXEL_KM ** 2
+        passes_by_event[int(event_id)] = n_passes
         lat_c, lon_c = float(g["latitude"].mean()), float(g["longitude"].mean())
-        event_rows.append({
-            "event_id": int(event_id), "n_detections": len(g), "n_passes": n_passes,
-            "start": g["time"].iloc[0], "end": g["time"].iloc[-1],
-            "duration_h": float(g["t_h"].iloc[-1] - g["t_h"].iloc[0]),
-            "lat": lat_c, "lon": lon_c, "area_proxy_km2": area_km2,
-            "max_frp": float(g["frp"].max()) if "frp" in g.columns else np.nan,
-        })
         pass_times = g.groupby("pass_idx")["t_h"].median().to_numpy()
         for k in range(1, n_passes):
             prev_mask = pass_idx < k
@@ -198,7 +217,9 @@ def build_cases(df: pd.DataFrame, growth_tol_km: float, min_new: int, pass_gap_m
                 "next_daynight": str(g.loc[nxt_mask, "daynight"].iloc[0]) if "daynight" in g.columns else "",
                 "lat": lat_c, "lon": lon_c, "t_next": g.loc[nxt_mask, "time"].iloc[0],
             })
-    events = pd.DataFrame(event_rows)
+    if passes_by_event:
+        events["n_passes"] = events["event_id"].map(passes_by_event).fillna(1).astype(int)
+    events = events.drop(columns=["t_min", "t_max"])
     cases = pd.DataFrame(case_rows)
     if len(cases):
         cases["gap_bin"] = pd.cut(cases["gap_h"], GAP_BINS_H, labels=GAP_LABELS, right=True, include_lowest=True)
@@ -300,9 +321,23 @@ def write_report(out_dir: Path, summary: dict, events: pd.DataFrame, cases: pd.D
     (out_dir / "report.md").write_text("\n".join(lines))
 
 
+def apply_mask(df: pd.DataFrame, geojson_path) -> pd.DataFrame:
+    """Keep detections inside the (Multi)Polygon of a GeoJSON Feature/Geometry (lon/lat). Needs shapely >= 2."""
+    import shapely
+    from shapely.geometry import shape
+    gj = json.loads(Path(geojson_path).read_text())
+    geom = shape(gj["geometry"] if gj.get("type") == "Feature" else gj)
+    inside = shapely.contains_xy(geom, df["longitude"].to_numpy(), df["latitude"].to_numpy())
+    return df[inside].reset_index(drop=True)
+
+
 def run(args) -> dict:
     paths = sorted(Path(args.input_dir).glob("*.csv"))
     df = load_detections(paths, min_confidence=args.min_confidence)
+    if getattr(args, "mask_geojson", None):
+        n_before = len(df)
+        df = apply_mask(df, args.mask_geojson)
+        print(f"mask {args.mask_geojson}: kept {len(df)} of {n_before} detections")
     df["event_id"] = cluster_events(df["x_km"].to_numpy(), df["y_km"].to_numpy(), df["t_h"].to_numpy(), args.eps_km, args.event_gap_h)
     events, cases = build_cases(df, args.growth_tol_km, args.min_new, args.pass_gap_min)
     summary = summarise(events, cases, len(df), args.min_events)
@@ -330,6 +365,7 @@ def main(argv=None):
     p.add_argument("--min-confidence", choices=["l", "n", "h"], default="n")
     p.add_argument("--min-events", type=int, default=None, help="frozen G0 threshold of independent growth events")
     p.add_argument("--first-study-dir", type=Path, default=None)
+    p.add_argument("--mask-geojson", type=Path, default=None, help="keep only detections inside this polygon (e.g. an India boundary)")
     args = p.parse_args(argv)
     summary = run(args)
     print(json.dumps({k: v for k, v in summary.items() if not isinstance(v, dict)}, indent=2))

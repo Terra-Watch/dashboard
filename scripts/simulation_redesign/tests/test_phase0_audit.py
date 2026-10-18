@@ -121,3 +121,20 @@ def test_projection_distances_are_close_to_true():
         xe, ye = p0.project_laea(np.array([lat]), np.array([lon + dlon]))
         assert np.hypot(xn - x0, yn - y0)[0] == pytest.approx(1.0, abs=0.02)
         assert np.hypot(xe - x0, ye - y0)[0] == pytest.approx(1.0, abs=0.02)
+
+
+def test_header_only_file_is_skipped(tmp_path):
+    make_csv(tmp_path / "a.csv", [(20.0, 80.0, "2024-03-01", "0200", "N")])
+    (tmp_path / "empty.csv").write_text("latitude,longitude,acq_date,acq_time,satellite,confidence,type,frp,daynight\n")
+    df = p0.load_detections([tmp_path / "a.csv", tmp_path / "empty.csv"])
+    assert len(df) == 1 and df["latitude"].dtype.kind == "f"
+
+
+def test_mask_keeps_only_points_inside(tmp_path):
+    pytest.importorskip("shapely")
+    make_csv(tmp_path / "a.csv", [(20.0, 80.0, "2024-03-01", "0200", "N"), (20.0, 96.0, "2024-03-01", "0200", "N")])
+    df = p0.load_detections([tmp_path / "a.csv"])
+    box = {"type": "Polygon", "coordinates": [[[70, 10], [90, 10], [90, 30], [70, 30], [70, 10]]]}
+    (tmp_path / "m.geojson").write_text(__import__("json").dumps({"type": "Feature", "properties": {}, "geometry": box}))
+    out = p0.apply_mask(df, tmp_path / "m.geojson")
+    assert len(out) == 1 and float(out["longitude"].iloc[0]) == 80.0

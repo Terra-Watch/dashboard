@@ -1,6 +1,6 @@
 # Simulation redesign: plan
 
-Status: **plan only**. No simulation code, data or results are added by this folder. Everything here is a proposal to be frozen before any scoring starts.
+Status: **plan plus a Phase 0 audit** (file 10). No model has been fitted and nothing has been scored. Everything else here is a proposal to be frozen before any scoring starts.
 
 Branch: `feat/simulation-redesign-plan`, created from `origin/main` at `a1ac62a` (includes merged PR #2 and PR #3).
 
@@ -35,6 +35,7 @@ The first simulation study (`docs/simulation/`) asked: *can a physics simulator 
 | [07_product_integration.md](07_product_integration.md) | API, sync vs queue, UI, wording, monitoring |
 | [08_roadmap_and_gates.md](08_roadmap_and_gates.md) | Phases, gates, stop rules, risks, decisions needed |
 | [09_references.md](09_references.md) | Sources, with a note on which were checked |
+| [10_phase0_results.md](10_phase0_results.md) | Phase 0 audit results (Jan to May 2024) and what they change |
 
 ## Decisions needed before Phase 0 starts
 
