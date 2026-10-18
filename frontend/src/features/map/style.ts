@@ -2,6 +2,8 @@ import { layers as basemapLayers, namedFlavor, type Flavor } from '@protomaps/ba
 import type { StyleSpecification } from '@maplibre/maplibre-gl-style-spec';
 import type { MapColors } from './colors';
 
+export type { StyleSpecification };
+
 const SOURCE = 'protomaps';
 export const BASEMAP_URL = '/tiles/resq-basemap.pmtiles';
 
@@ -29,14 +31,36 @@ export function basemapStyle(colors: MapColors, dark: boolean, origin: string = 
   };
 }
 
-/** Satellite basemap style from a raster tile URL. Used when VITE_SATELLITE_BASEMAP is enabled. */
-export function satelliteStyle(tileUrl: string, attribution: string, origin: string = window.location.origin, maxzoom?: number): StyleSpecification {
+/** Satellite basemap style from raster imagery, optionally with Mapbox terrain-RGB hillshade. */
+export function satelliteStyle(tileUrl: string, attribution: string, origin: string = window.location.origin, maxzoom?: number, hillshadeTileUrl?: string): StyleSpecification {
+  const sources: StyleSpecification['sources'] = {
+    satellite: { type: 'raster', tiles: [tileUrl], tileSize: 256, attribution, ...(maxzoom !== undefined ? { maxzoom } : {}) },
+  };
+  const layers: StyleSpecification['layers'] = [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }];
+  if (hillshadeTileUrl) {
+    sources.terrain = { type: 'raster-dem', tiles: [hillshadeTileUrl], tileSize: 512, maxzoom: 15, encoding: 'mapbox', attribution };
+    layers.push({
+      id: 'mapbox-hillshade',
+      type: 'hillshade',
+      source: 'terrain',
+      minzoom: 0,
+      maxzoom: 22,
+      paint: {
+        'hillshade-illumination-direction': 315,
+        'hillshade-illumination-anchor': 'map',
+        'hillshade-exaggeration': 0.28,
+        'hillshade-shadow-color': '#24352c',
+        'hillshade-highlight-color': '#fff8dc',
+        'hillshade-accent-color': '#8b7255',
+      },
+    });
+  }
   return {
     version: 8,
     glyphs: `${origin}/map/glyphs/{fontstack}/{range}.pbf`,
     sprite: `${origin}/map/sprites/light`,
-    sources: { satellite: { type: 'raster', tiles: [tileUrl], tileSize: 256, attribution, ...(maxzoom !== undefined ? { maxzoom } : {}) } },
-    layers: [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }],
+    sources,
+    layers,
   };
 }
 

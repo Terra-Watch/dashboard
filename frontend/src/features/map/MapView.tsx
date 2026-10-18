@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isDark, readMapColors, type MapColors } from './colors';
 import { polygonsToGeoJson, pointsToGeoJson, riskCellsToGeoJson, type MapPoint, type MapPolygon, type RiskCell } from './geojson';
-import { basemapStyle } from './style';
+import { basemapStyle, type StyleSpecification } from './style';
 import { drawSymbol, SYMBOL_PIXEL_RATIO } from './symbols';
 import type { SymbolKind } from './geojson';
 
