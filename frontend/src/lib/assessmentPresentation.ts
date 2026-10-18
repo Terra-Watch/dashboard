@@ -5,8 +5,10 @@
 //    verified, confirmed or ready for dispatch.
 //  * UNAVAILABLE, pending, unknown, or a COMPLETED result that does not come from an APPROVED artifact is never shown as a finding.
 //    An unavailable assessment is "not assessed", never "no fire". Scores and labels are ignored unless artifact_status is APPROVED.
-//  * Scores, the derived label, quality/OOD warnings and authenticity indications are shown only for COMPLETED + APPROVED, as
-//    advisory model estimates. "Not assessed" is never shown as "authentic".
+//  * Scores, the derived label and quality/OOD warnings are shown only for COMPLETED + APPROVED, as advisory model estimates.
+//  * Media integrity (authenticity-style) wording for incident photos comes only from presentMediaIntegrity: a separate, advisory
+//    section that never feeds the tone, headline or colours of the fire/smoke assessment, queue order or any control.
+//  * SHADOW rows are recorded for evaluation only: nothing is shown and there is nothing to review.
 //  * Decisions are taken from the row's own assessment_status, never from nested JSON alone.
 //  * Community (moderation) image assessments are a separate function with no fire or smoke wording at all.
 //
@@ -17,7 +19,6 @@ export type Indications = { synthetic?: string | null; edited?: string | null; r
 
 export type AssessmentLike = {
   assessment_status?: string | null;
-  authenticity_status?: string | null;
   assessment?: {
     assessment_status?: string | null;
     derived_label?: string | null;
@@ -30,8 +31,7 @@ export type AssessmentLike = {
     review_priority?: string | null;
     scores?: { flames_visible?: number | null; smoke_visible?: number | null } | null;
     quality_flags?: string[] | null;
-    authenticity?: { status?: string | null; signals?: Record<string, unknown> | null } | null;
-    indications?: Indications | null;
+    media_integrity?: { status?: string | null; note?: string | null; advisory?: boolean | null; affects_incident?: boolean | null } | null;
     limitations?: string[] | null;
     raw_logits?: { flames_visible?: number | null; smoke_visible?: number | null } | null;
   } | null;
@@ -40,7 +40,7 @@ export type AssessmentLike = {
 export type Translate = (key: string, defaultValue: string, vars?: Record<string, string | number>) => string;
 const plainT: Translate = (_key, defaultValue, vars) => vars ? defaultValue.replace(/\{\{(\w+)\}\}/g, (_m, name: string) => String(vars[name] ?? '')) : defaultValue;
 
-export type AssessmentTone = 'unavailable' | 'pending' | 'advisory' | 'experimental' | 'review_required';
+export type AssessmentTone = 'unavailable' | 'pending' | 'advisory' | 'experimental' | 'review_required' | 'shadow';
 
 export type AuthenticityLine = { key: 'synthetic' | 'edited' | 'reused'; label: string; value: string; state: Indication };
 
@@ -60,8 +60,6 @@ export type AssessmentPresentation = {
   scoresNote: string | null;
   qualityWarnings: string[];
   oodWarning: string | null;
-  authenticityText: string | null;
-  authenticityLines: AuthenticityLine[];
   limitations: string[];
   advisoryNote: string;
   /** Raw, uncalibrated development output; present only for tone 'experimental'. Never a finding. */
@@ -125,15 +123,6 @@ const INDICATION_TEXT: Record<Indication, [string, string]> = {
   NONE_FOUND: ['assess.ind.NONE_FOUND', 'None found (not proof the photo is genuine)'],
   POSSIBLE: ['assess.ind.POSSIBLE', 'Possible — a person should check'],
 };
-const AUTH_OVERALL: Record<string, [string, string]> = {
-  NO_CONCERNS_FOUND: ['assess.auth.NO_CONCERNS_FOUND', 'No concerns found (advisory; not proof the photo is genuine)'],
-  POSSIBLE_SYNTHETIC: ['assess.auth.POSSIBLE_SYNTHETIC', 'Possible AI-generated or synthetic image'],
-  POSSIBLE_EDITED: ['assess.auth.POSSIBLE_EDITED', 'Possible edited or manipulated image'],
-  REUSED: ['assess.auth.REUSED', 'Possible reused image'],
-  INCONSISTENT: ['assess.auth.INCONSISTENT', 'Inconsistent signals'],
-  INCONCLUSIVE: ['assess.auth.INCONCLUSIVE', 'Inconclusive'],
-  NOT_ASSESSED: ['assess.auth.NOT_ASSESSED', 'Not assessed'],
-};
 
 const indication = (value: string | null | undefined): Indication => (value === 'NONE_FOUND' || value === 'POSSIBLE' ? value : 'NOT_ASSESSED');
 const isProbability = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
@@ -159,7 +148,7 @@ function qualityText(flag: string, t: Translate): string {
 
 const base = (t: Translate): Omit<AssessmentPresentation, 'tone' | 'headline'> => ({
   detail: null, reason: null, showLabel: false, labelText: null, reviewRequired: false, reviewRequiredText: null, scores: null, scoresNote: null,
-  qualityWarnings: [], oodWarning: null, authenticityText: null, authenticityLines: [], limitations: [],
+  qualityWarnings: [], oodWarning: null, limitations: [],
   advisoryNote: t('assess.advisory', ADVISORY_NOTE), experimentalOutput: null,
 });
 
@@ -184,6 +173,12 @@ export function presentAssessment(image: AssessmentLike, t: Translate = plainT):
       experimentalOutput: l ? t('assess.experimental_logits', 'Raw logits (uncalibrated, not probabilities): flames {{flames}}, smoke {{smoke}}', { flames: fmt(l.flames_visible), smoke: fmt(l.smoke_visible) }) : null,
     };
   }
+  if (status === 'SHADOW') {
+    return {
+      ...base(t), tone: 'shadow', headline: t('assess.shadow', 'Shadow mode'),
+      detail: t('assess.shadow_detail', 'An automated assessment is being recorded for evaluation only. It is not shown here and is not used for any decision.'),
+    };
+  }
   if (status === 'UNAVAILABLE') return unavailable(image.assessment?.error_code, t);
   if (status === 'PENDING' || status === 'RUNNING' || status === null) {
     return { ...base(t), tone: 'pending', headline: t('assess.pending', 'Assessment pending') };
@@ -199,10 +194,6 @@ export function presentAssessment(image: AssessmentLike, t: Translate = plainT):
   const labelText = ood ? t(...LABEL_TEXT.UNCERTAIN) : label ? t(...LABEL_TEXT[label]) : null;
   const flames = a.scores?.flames_visible; const smoke = a.scores?.smoke_visible;
   const scores = isProbability(flames) && isProbability(smoke) ? { flames: pct(flames), smoke: pct(smoke) } : null;
-  const nested = a.authenticity?.status ?? image.authenticity_status ?? null;
-  const overall = nested && AUTH_OVERALL[nested] ? t(...AUTH_OVERALL[nested]) : null;
-  const lines = indicationLines(a.indications, t);
-  const noAuth = !a.indications && !nested;
   return {
     ...base(t),
     tone: a.decision === 'REQUIRES_REVIEW' || a.review_required === true ? 'review_required' : 'advisory',
@@ -213,10 +204,51 @@ export function presentAssessment(image: AssessmentLike, t: Translate = plainT):
     scoresNote: scores ? t('assess.scores_note', 'Model estimate, advisory. Not a certainty and not a measurement.') : null,
     qualityWarnings: list(a.quality_flags).map(flag => qualityText(flag, t)),
     oodWarning: ood ? t('assess.ood', 'This photo is outside what the model was tested on, so treat the result with extra caution.') : null,
-    authenticityText: overall,
-    authenticityLines: noAuth ? [] : lines,
     limitations: list(a.limitations),
   };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Media integrity for incident photos (staff only). Advisory, separate from the fire/smoke assessment, never affects anything.
+
+export type MediaIntegrityPresentation = {
+  state: 'NO_CONCERN_DETECTED' | 'POSSIBLE_SYNTHETIC' | 'POSSIBLE_EDITED' | 'POSSIBLE_REUSED' | 'INCONCLUSIVE' | 'NOT_ASSESSED' | 'UNAVAILABLE';
+  title: string;
+  label: string;
+  caveat: string | null;
+  advisoryLine: string;
+};
+export const MEDIA_INTEGRITY_ADVISORY = 'Advisory only. This does not verify or reject the report and does not change its priority, status or visibility. A person decides.';
+const MEDIA_INTEGRITY: Record<string, string> = {
+  NO_CONCERN_DETECTED: 'No concern detected',
+  POSSIBLE_SYNTHETIC: 'Possible AI-generated or synthetic image',
+  POSSIBLE_EDITED: 'Possible edited image',
+  POSSIBLE_REUSED: 'Possible reused image',
+  INCONCLUSIVE: 'Inconclusive',
+  NOT_ASSESSED: 'Not assessed',
+  UNAVAILABLE: 'Assessment unavailable (not a clean result)',
+};
+
+export function presentMediaIntegrity(image: AssessmentLike, t: Translate = plainT): MediaIntegrityPresentation {
+  const rowStatus = image.assessment_status ?? null;
+  const stored = image.assessment?.media_integrity?.status ?? null;
+  // The row's own status decides: UNAVAILABLE rows are unavailable; only COMPLETED rows may carry a stored result; all else is Not assessed.
+  const state: MediaIntegrityPresentation['state'] = rowStatus === 'UNAVAILABLE' ? 'UNAVAILABLE'
+    : rowStatus === 'COMPLETED' && stored && Object.prototype.hasOwnProperty.call(MEDIA_INTEGRITY, stored) ? (stored as MediaIntegrityPresentation['state'])
+    : 'NOT_ASSESSED';
+  return {
+    state,
+    title: t('assess.mi.title', 'Media integrity (advisory)'),
+    label: t(`assess.mi.${state}`, MEDIA_INTEGRITY[state]),
+    caveat: state === 'NO_CONCERN_DETECTED' ? t('assess.mi.caveat', 'Not proof the photo is genuine.') : null,
+    advisoryLine: t('assess.mi.advisory', MEDIA_INTEGRITY_ADVISORY),
+  };
+}
+
+/** Plain-text list suffix, only for the three POSSIBLE_* states. No emphasis, no ordering effect. */
+export function mediaCheckSuffix(status?: string | null, t: Translate = plainT): string | null {
+  return status === 'POSSIBLE_SYNTHETIC' || status === 'POSSIBLE_EDITED' || status === 'POSSIBLE_REUSED'
+    ? `${t('assess.mi.list', 'Media check')}: ${t(`assess.mi.${status}`, MEDIA_INTEGRITY[status])}` : null;
 }
 
 /** One-line status for lists. Never reassuring for anything that is not an approved, completed assessment. */
@@ -224,6 +256,7 @@ export function listStatusText(status?: string | null): string {
   if (!status) return 'None reported';
   if (status === 'COMPLETED') return 'Automated assessment complete (advisory) · human review required';
   if (status === 'EXPERIMENTAL') return 'Experimental output, not for operational use';
+  if (status === 'SHADOW') return 'Shadow mode: not shown';
   if (status === 'PENDING' || status === 'RUNNING') return 'Assessment pending';
   return 'Assessment unavailable';
 }

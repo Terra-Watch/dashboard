@@ -48,10 +48,13 @@ def enable(monkeypatch, *, assess=False):
 
 
 def model_returns(monkeypatch, result=None, *, raises=None):
-    calls = []
+    class Calls(list):
+        configs: list = []
+    calls = Calls(); configs = calls.configs = []
 
-    async def fake(data, image_id):
+    async def fake(data, image_id, config="report"):
         calls.append(image_id)
+        configs.append(config)
         if raises:
             raise raises
         return result

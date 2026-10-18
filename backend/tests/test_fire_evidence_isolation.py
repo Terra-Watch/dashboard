@@ -46,9 +46,10 @@ def fake_model(monkeypatch):
     monkeypatch.setenv("FIRE_EVIDENCE_REPO", "/nonexistent-assessor")
     monkeypatch.setenv("FIRE_EVIDENCE_ARTIFACT_DIR", "/nonexistent-artifact")
     monkeypatch.setenv("FIRE_EVIDENCE_INFERENCE_ENABLED", "true")
+    monkeypatch.setenv("FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED", "true")
     ia.reset_for_tests()
     monkeypatch.setattr(ia, "_scorer_factory", lambda *a: None)
-    monkeypatch.setattr(ia, "_load_service", lambda: FakeService())
+    monkeypatch.setattr(ia, "_load_service", lambda *a: FakeService())
 
 
 def world(incident_id: int) -> dict:
@@ -106,6 +107,7 @@ def test_staff_view_of_a_completed_assessment_follows_the_typed_contract(fake_mo
     shown = up.json()["image"]["assessment"]
     assert set(shown) == COMPLETED_KEYS and shown["review_required"] is True and shown["decision"] == "REQUIRES_REVIEW"
     assert shown["indications"] == {"synthetic": "POSSIBLE", "edited": "NOT_ASSESSED", "reused": "NOT_ASSESSED"}
+    assert shown["media_integrity"]["status"] == "POSSIBLE_SYNTHETIC" and shown["media_integrity"]["affects_incident"] is False
     assert up.json()["image"]["authenticity_status"] == "POSSIBLE_SYNTHETIC"
     detail = client.get(f"/api/incidents/{iid}", headers=bearer).json()
     assert set(detail["images"][0]["assessment"]) == COMPLETED_KEYS

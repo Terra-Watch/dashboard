@@ -9,7 +9,7 @@ async function signInAsControlRoom(page: import('@playwright/test').Page) {
 }
 
 const base = { id: 17, source: 'citizen', size: 'small', notes: 'Smoke near the ridge', status: 'reported', state: 'OD', created_at: '2026-10-16T08:00:00Z', updated_at: '2026-10-16T08:00:00Z' };
-const image = (id: number, over: object) => ({ id, original_filename: `photo-${id}.jpg`, authenticity_status: null, human_review_status: 'NOT_REVIEWED', model_version: 'x', ...over });
+const image = (id: number, over: object) => ({ id, original_filename: `photo-${id}.jpg`, human_review_status: 'NOT_REVIEWED', model_version: 'x', ...over });
 const images = [
   // a forged experimental row: its own JSON claims APPROVED + a fire label; the UI must go by the row status
   image(1, { assessment_status: 'EXPERIMENTAL', assessment: { raw_logits: { flames_visible: 1.8648, smoke_visible: -2.1549 }, artifact_status: 'APPROVED', derived_label: 'ACTIVE_FIRE', ood_flag: false } }),

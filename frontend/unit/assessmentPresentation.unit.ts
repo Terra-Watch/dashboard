@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { listStatusText, presentAssessment, presentCommunityAssessment } from '../src/lib/assessmentPresentation.ts';
+import { listStatusText, mediaCheckSuffix, presentAssessment, presentMediaIntegrity, presentCommunityAssessment } from '../src/lib/assessmentPresentation.ts';
 
 const completed = (over: object = {}) => ({
-  assessment_status: 'COMPLETED', authenticity_status: 'INCONCLUSIVE',
+  assessment_status: 'COMPLETED',
   assessment: { assessment_status: 'COMPLETED', derived_label: 'ACTIVE_FIRE', ood_flag: false, error_code: null, artifact_status: 'APPROVED', ...over },
 });
 
@@ -14,13 +14,11 @@ test('an unavailable assessment is shown as unavailable with its reason, never a
   assert.equal(p.showLabel, false);
   assert.match(p.detail ?? '', /not a negative result/);
   assert.match(p.reason ?? '', /not been approved/);
-  assert.equal(p.authenticityText, null);
 });
 
 test('a label smuggled onto an UNAVAILABLE row is still not shown', () => {
-  const p = presentAssessment({ assessment_status: 'UNAVAILABLE', authenticity_status: 'NO_CONCERNS_FOUND', assessment: { derived_label: 'NO_VISIBLE_FIRE', error_code: 'MODEL_TIMEOUT' } });
+  const p = presentAssessment({ assessment_status: 'UNAVAILABLE', assessment: { derived_label: 'NO_VISIBLE_FIRE', error_code: 'MODEL_TIMEOUT' } });
   assert.equal(p.showLabel, false);
-  assert.equal(p.authenticityText, null);
   assert.ok(!/no visible fire/i.test(p.headline + (p.detail ?? '')));
 });
 
@@ -43,7 +41,6 @@ test('a completed result from an approved artifact is advisory and shows the lab
   assert.equal(p.showLabel, true);
   assert.match(p.headline, /active fire/);
   assert.match(p.advisoryNote, /advisory/);
-  assert.equal(p.authenticityText, 'Inconclusive');
   assert.equal(p.reviewRequired, true);
 });
 
@@ -72,7 +69,7 @@ test('list status text is never reassuring for anything but a completed assessme
 });
 
 const experimental = (assessment: object = {}) => ({
-  assessment_status: 'EXPERIMENTAL', authenticity_status: null,
+  assessment_status: 'EXPERIMENTAL',
   assessment: { raw_logits: { flames_visible: 1.8647, smoke_visible: -2.1549 }, artifact_status: 'EXPERIMENTAL_UNAPPROVED', ...assessment },
 });
 
@@ -81,7 +78,6 @@ test('an experimental result is labelled NOT FOR OPERATIONAL USE, shows raw logi
   assert.equal(p.tone, 'experimental');
   assert.equal(p.headline, 'EXPERIMENTAL / NOT FOR OPERATIONAL USE');
   assert.equal(p.showLabel, false);
-  assert.equal(p.authenticityText, null);
   assert.match(p.experimentalOutput ?? '', /uncalibrated, not probabilities/);
   assert.match(p.experimentalOutput ?? '', /flames 1\.86, smoke -2\.15/);
   assert.match(p.detail ?? '', /not a fire or no-fire finding/);
@@ -116,13 +112,13 @@ test('experimental error codes have plain-language reasons', () => {
 // ---- productionised assessment: review-required state, scores, authenticity, community ----
 
 const full = (over: object = {}, row: object = {}) => ({
-  assessment_status: 'COMPLETED', authenticity_status: null,
+  assessment_status: 'COMPLETED',
   assessment: {
     assessment_status: 'COMPLETED', artifact_status: 'APPROVED', model_version: 'v1', error_code: null,
     scores: { flames_visible: 0.874, smoke_visible: 0.31 }, derived_label: 'ACTIVE_FIRE', decision: 'REQUIRES_REVIEW', review_required: true,
     review_priority: 'HIGH', quality_flags: ['BLURRY'], ood_flag: false,
-    authenticity: { status: 'NO_CONCERNS_FOUND', signals: {} },
-    indications: { synthetic: 'NONE_FOUND', edited: 'NOT_ASSESSED', reused: 'POSSIBLE' }, limitations: ['Only the visible frame was checked.'],
+    authenticity: { status: 'POSSIBLE_SYNTHETIC', signals: [] }, media_integrity: { status: 'POSSIBLE_EDITED', note: 'x', advisory: true, affects_incident: false },
+    indications: { synthetic: 'POSSIBLE', edited: 'POSSIBLE', reused: 'POSSIBLE' }, limitations: ['Only the visible frame was checked.'],
     ...over,
   },
   ...row,
@@ -130,7 +126,7 @@ const full = (over: object = {}, row: object = {}) => ({
 const FORBIDDEN = /verified|confirmed|dispatch|authentic\b|genuine/i;
 const allText = (p: ReturnType<typeof presentAssessment>) => JSON.stringify(p);
 
-test('an approved completed result is review-required, with percentages, wording, quality and authenticity', () => {
+test('an approved completed result is review-required, with percentages, wording and quality', () => {
   const p = presentAssessment(full());
   assert.equal(p.tone, 'review_required');
   assert.equal(p.reviewRequired, true);
@@ -140,9 +136,6 @@ test('an approved completed result is review-required, with percentages, wording
   assert.equal(p.labelText, 'Possible active fire');
   assert.deepEqual(p.qualityWarnings, ['The photo is blurry.']);
   assert.equal(p.oodWarning, null);
-  assert.deepEqual(p.authenticityLines.map(l => [l.key, l.value]), [
-    ['synthetic', 'None found (not proof the photo is genuine)'], ['edited', 'Not assessed'], ['reused', 'Possible — a person should check'],
-  ]);
   assert.deepEqual(p.limitations, ['Only the visible frame was checked.']);
   assert.ok(!FORBIDDEN.test(allText(p).replace(/not proof the photo is genuine|not proof the photo is genuine\)/g, '')), allText(p));
 });
@@ -169,16 +162,13 @@ test('scores and labels are ignored unless the row is COMPLETED and the artifact
     assert.equal(p.scores, null);
     assert.equal(p.labelText, null);
     assert.equal(p.showLabel, false);
-    assert.deepEqual(p.authenticityLines, []);
-    assert.equal(p.authenticityText, null);
-    assert.equal(p.reviewRequired, true);
+      assert.equal(p.reviewRequired, true);
     assert.match(p.reviewRequiredText ?? '', /Human review required/);
   }
   for (const status of ['UNAVAILABLE', 'PENDING', 'EXPERIMENTAL']) {
     const p = presentAssessment(full({}, { assessment_status: status }));
     assert.equal(p.scores, null, status);
     assert.equal(p.labelText, null, status);
-    assert.deepEqual(p.authenticityLines, [], status);
   }
 });
 
@@ -202,30 +192,78 @@ test('experimental carries the review-required statement and never shows scores 
   assert.match(p.reviewRequiredText ?? '', /Human review required/);
   assert.equal(p.scores, null);
   assert.equal(p.labelText, null);
-  assert.deepEqual(p.authenticityLines, []);
 });
 
-test('NOT_ASSESSED is never worded as authentic or genuine', () => {
-  const p = presentAssessment(full({ authenticity: { status: 'NOT_ASSESSED', signals: {} }, indications: { synthetic: 'NOT_ASSESSED', edited: 'NOT_ASSESSED', reused: 'NOT_ASSESSED' } }));
-  assert.equal(p.authenticityText, 'Not assessed');
-  for (const line of p.authenticityLines) { assert.equal(line.value, 'Not assessed'); assert.equal(line.state, 'NOT_ASSESSED'); }
-  assert.ok(!/authentic|genuine|real photo|no concern/i.test([p.authenticityText, ...p.authenticityLines.map(l => l.value)].join(' ')));
-  // missing or unknown indication values also fall back to Not assessed
-  const q = presentAssessment(full({ indications: { synthetic: 'WHATEVER' } }));
-  assert.deepEqual(q.authenticityLines.map(l => l.value), ['Not assessed', 'Not assessed', 'Not assessed']);
+const FORBIDDEN_AUTH = /authentic|genuine|synthetic|ai-generated|edited|manipulated|reused|tamper/i;
+const visibleText = (p: ReturnType<typeof presentAssessment>) => [p.headline, p.detail, p.reason, p.reviewRequiredText, p.scoresNote, p.advisoryNote, p.labelText, p.oodWarning, ...p.qualityWarnings, ...p.limitations].filter(Boolean).join(' ');
+
+const mi = (status: string | undefined, row: object = {}) => ({ assessment_status: 'COMPLETED', assessment: { artifact_status: 'APPROVED', media_integrity: status === undefined ? undefined : { status, note: 'n', advisory: true, affects_incident: false } }, ...row });
+const MI_FORBIDDEN = /\b(fake|forged|authentic\w*|genuine|verified|confirmed|dispatch)\b/i;
+
+test('media integrity: all seven display states use the exact cautious labels', () => {
+  const expected: Record<string, string> = {
+    NO_CONCERN_DETECTED: 'No concern detected', POSSIBLE_SYNTHETIC: 'Possible AI-generated or synthetic image', POSSIBLE_EDITED: 'Possible edited image',
+    POSSIBLE_REUSED: 'Possible reused image', INCONCLUSIVE: 'Inconclusive', NOT_ASSESSED: 'Not assessed', UNAVAILABLE: 'Assessment unavailable (not a clean result)',
+  };
+  for (const [status, label] of Object.entries(expected)) {
+    const row = status === 'UNAVAILABLE' ? mi(status, { assessment_status: 'UNAVAILABLE' }) : mi(status);
+    const p = presentMediaIntegrity(row);
+    assert.equal(p.state, status); assert.equal(p.label, label); assert.equal(p.title, 'Media integrity (advisory)');
+    assert.equal(p.advisoryLine, 'Advisory only. This does not verify or reject the report and does not change its priority, status or visibility. A person decides.');
+    assert.equal(p.caveat, status === 'NO_CONCERN_DETECTED' ? 'Not proof the photo is genuine.' : null);
+    assert.ok(!MI_FORBIDDEN.test([p.label, p.title, p.advisoryLine.replace('does not verify or reject', '')].join(' ')), status);
+  }
 });
 
-test('authenticity outcomes use plain advisory wording', () => {
-  const t = (status: string) => presentAssessment(full({ authenticity: { status, signals: {} } })).authenticityText;
-  assert.match(t('NO_CONCERNS_FOUND') ?? '', /advisory; not proof/);
-  assert.equal(t('POSSIBLE_SYNTHETIC'), 'Possible AI-generated or synthetic image');
-  assert.equal(t('POSSIBLE_EDITED'), 'Possible edited or manipulated image');
-  assert.equal(t('REUSED'), 'Possible reused image');
-  assert.equal(t('INCONCLUSIVE'), 'Inconclusive');
+test('media integrity: absent, unknown or non-completed rows read as Not assessed, never clean; unavailable rows are not clean', () => {
+  for (const row of [mi(undefined), mi('WHATEVER'), mi('NO_CONCERN_DETECTED', { assessment_status: 'PENDING' }), mi('NO_CONCERN_DETECTED', { assessment_status: 'EXPERIMENTAL' }), mi('NO_CONCERN_DETECTED', { assessment_status: 'SHADOW' }), { assessment_status: 'COMPLETED', assessment: null }, {}]) {
+    const p = presentMediaIntegrity(row);
+    assert.equal(p.label, 'Not assessed'); assert.equal(p.caveat, null);
+  }
+  const u = presentMediaIntegrity(mi('NO_CONCERN_DETECTED', { assessment_status: 'UNAVAILABLE' }));
+  assert.match(u.label, /Assessment unavailable/); assert.match(u.label, /not a clean result/);
+});
+
+test('media integrity never changes the fire/smoke presentation', () => {
+  const strip = (p: ReturnType<typeof presentAssessment>) => JSON.stringify(p);
+  const base = strip(presentAssessment(full({ media_integrity: undefined })));
+  for (const status of ['NO_CONCERN_DETECTED', 'POSSIBLE_SYNTHETIC', 'POSSIBLE_EDITED', 'POSSIBLE_REUSED', 'INCONCLUSIVE', 'NOT_ASSESSED', 'UNAVAILABLE']) {
+    assert.equal(strip(presentAssessment(full({ media_integrity: { status } }))), base, status);
+  }
+  const p = presentAssessment(full());
+  assert.ok(!MI_FORBIDDEN.test(visibleText(p)) && !FORBIDDEN_AUTH.test(visibleText(p)), visibleText(p));
+  assert.equal(p.tone, 'review_required');
+  assert.equal(p.labelText, 'Possible active fire');
+});
+
+test('media check list suffix exists only for the three POSSIBLE states and the queue order text is unchanged', () => {
+  assert.equal(mediaCheckSuffix('POSSIBLE_EDITED'), 'Media check: Possible edited image');
+  assert.equal(mediaCheckSuffix('POSSIBLE_SYNTHETIC'), 'Media check: Possible AI-generated or synthetic image');
+  assert.equal(mediaCheckSuffix('POSSIBLE_REUSED'), 'Media check: Possible reused image');
+  for (const s of ['NO_CONCERN_DETECTED', 'INCONCLUSIVE', 'NOT_ASSESSED', 'UNAVAILABLE', null, undefined, 'X']) assert.equal(mediaCheckSuffix(s), null);
+  assert.equal(listStatusText('COMPLETED'), 'Automated assessment complete (advisory) · human review required');
+});
+
+test('SHADOW media integrity is Not assessed', () => {
+  assert.equal(presentMediaIntegrity(mi('POSSIBLE_SYNTHETIC', { assessment_status: 'SHADOW' })).label, 'Not assessed');
+});
+
+test('SHADOW shows only the shadow notice: no scores, label, quality, OOD or review-required statement', () => {
+  const p = presentAssessment({ assessment_status: 'SHADOW', assessment: { assessment_status: 'SHADOW', model_version: 'v2', review_required: false, scores: null, derived_label: null, limitations: ['Shadow only.'] } });
+  assert.equal(p.tone, 'shadow');
+  assert.equal(p.headline, 'Shadow mode');
+  assert.equal(p.detail, 'An automated assessment is being recorded for evaluation only. It is not shown here and is not used for any decision.');
+  assert.equal(p.scores, null); assert.equal(p.labelText, null); assert.equal(p.showLabel, false);
+  assert.deepEqual(p.qualityWarnings, []); assert.equal(p.oodWarning, null);
+  assert.equal(p.reviewRequired, false); assert.equal(p.reviewRequiredText, null);
+  // forged contents on a SHADOW row are ignored
+  const q = presentAssessment(full({}, { assessment_status: 'SHADOW' }));
+  assert.equal(q.tone, 'shadow'); assert.equal(q.scores, null); assert.equal(q.labelText, null); assert.deepEqual(q.qualityWarnings, []); assert.equal(q.reviewRequiredText, null);
+  assert.equal(listStatusText('SHADOW'), 'Shadow mode: not shown');
 });
 
 test('no state reads as verified, confirmed or dispatch-ready', () => {
-  const rows = [full(), full({ derived_label: 'NO_VISIBLE_FIRE' }), full({ ood_flag: true }), full({ artifact_status: null }), { assessment_status: 'EXPERIMENTAL', assessment: { raw_logits: { flames_visible: 3, smoke_visible: 3 } } }, { assessment_status: 'UNAVAILABLE', assessment: null }, { assessment_status: 'PENDING' }];
+  const rows = [full(), { assessment_status: 'SHADOW' }, full({ derived_label: 'NO_VISIBLE_FIRE' }), full({ ood_flag: true }), full({ artifact_status: null }), { assessment_status: 'EXPERIMENTAL', assessment: { raw_logits: { flames_visible: 3, smoke_visible: 3 } } }, { assessment_status: 'UNAVAILABLE', assessment: null }, { assessment_status: 'PENDING' }];
   for (const row of rows) {
     const p = presentAssessment(row);
     const text = [p.headline, p.detail, p.reason, p.reviewRequiredText, p.scoresNote, p.advisoryNote, p.labelText, p.oodWarning].filter(Boolean).join(' ');

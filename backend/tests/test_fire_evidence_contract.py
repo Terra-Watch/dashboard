@@ -23,7 +23,13 @@ from tests.test_fire_evidence_adapter import (FIXTURE_VERSION, FIXTURES, ASSESSO
                                               jpeg_bytes, needs_assessor, use_stub)
 
 COMPLETED_KEYS = {"assessment_status", "artifact_status", "model_version", "error_code", "scores", "derived_label", "decision", "review_required",
-                  "review_priority", "quality_flags", "ood_flag", "authenticity", "indications", "limitations"}
+                  "review_priority", "quality_flags", "ood_flag", "authenticity", "indications", "media_integrity", "limitations"}
+
+
+@pytest.fixture(autouse=True)
+def report_authenticity_on(monkeypatch):
+    """This file tests the exposed-authenticity contract; the flag-off behaviour is tested in test_fire_evidence_media_integrity.py."""
+    monkeypatch.setenv("FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED", "true")
 
 
 def completed(status="NO_CONCERNS_FOUND", signals=(), **overrides):
@@ -187,8 +193,8 @@ class FakeAssessor:
 
 
 def run_with(monkeypatch, result, authenticity=None):
-    monkeypatch.setattr(ia, "configuration_error", lambda: None)
-    monkeypatch.setattr(ia, "_load_service", lambda: FakeAssessor(result, authenticity))
+    monkeypatch.setattr(ia, "configuration_error", lambda *a: None)
+    monkeypatch.setattr(ia, "_load_service", lambda *a: FakeAssessor(result, authenticity))
     return ia.assess_image(b"x", "img")
 
 

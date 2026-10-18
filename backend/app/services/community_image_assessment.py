@@ -269,7 +269,7 @@ def hold_reason(result: dict[str, Any]) -> str | None:
 async def assess_upload(original_bytes: bytes, key: str) -> dict[str, Any]:
     """Run the shared model on the original upload. Never raises; any failure is an UNAVAILABLE result (which holds the post)."""
     try:
-        return map_assessment(await shared_model.assess_image_async(original_bytes, f"community/{key}"))
+        return map_assessment(await shared_model.assess_image_async(original_bytes, f"community/{key}", config=shared_model.COMMUNITY))
     except Exception:
         logger.exception("community media assessment failed")
         return unavailable_result(shared_model.INFERENCE_FAILED)

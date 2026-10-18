@@ -16,7 +16,7 @@ from ..contracts.schemas import (
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
 from ..services import alert_service, audit_log
-from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment
+from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment, attach_media_integrity_status, displayed_authenticity_status, mask_authenticity_status
 from ..services.simulation_service import validate_simulation
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ def _assert_stored_image_integrity(path: Path, expected_sha256: str) -> None:
 
 
 def _image_row(row: dict) -> dict:
+    shown = present_assessment(row.get("assessment"), row.get("assessment_status"), row.get("assessment_error"))
     return {
         "id": row["id"],
         "incident_id": row["incident_id"],
@@ -54,8 +55,8 @@ def _image_row(row: dict) -> dict:
         "size_bytes": row["size_bytes"],
         "assessment_status": row["assessment_status"],
         "model_version": row.get("model_version"),
-        "authenticity_status": row.get("authenticity_status"),
-        "assessment": present_assessment(row.get("assessment"), row.get("assessment_status"), row.get("assessment_error")),
+        "authenticity_status": displayed_authenticity_status(row.get("authenticity_status"), shown),
+        "assessment": shown,
         "human_review_status": row["human_review_status"],
         "human_review_note": row.get("human_review_note"),
         "human_reviewed_by": row.get("human_reviewed_by"),
@@ -148,7 +149,9 @@ def list_incidents(
 ) -> list[dict[str, object]]:
     query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,
         (SELECT assessment_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS image_assessment_status,
-        (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status
+        (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status,
+        (SELECT assessment FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS _image_assessment,
+        (SELECT assessment_error FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS _image_error
         FROM resq_incidents i"""
     params: dict[str, object] = {}
     clauses = []
@@ -165,7 +168,8 @@ def list_incidents(
         query += f" WHERE {' AND '.join(clauses)}"
     query += " ORDER BY created_at DESC"
     with engine.connect() as db:
-        return [dict(row) for row in db.execute(text(query), params).mappings().all()]
+        rows = [dict(row) for row in db.execute(text(query), params).mappings().all()]
+    return mask_authenticity_status(attach_media_integrity_status(rows))
 
 
 @router.post("/incidents", status_code=201)

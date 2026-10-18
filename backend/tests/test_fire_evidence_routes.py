@@ -196,7 +196,7 @@ def test_completed_assessment_is_persisted_but_changes_nothing_operational(monke
     row = image_row(rid)
     assert row["assessment_status"] == "COMPLETED" and row["model_version"] == FIXTURE_VERSION and row["assessment_error"] is None
     assert row["assessment"]["decision"] == "REQUIRES_REVIEW" and row["assessment"]["artifact_status"] == "APPROVED"
-    assert row["authenticity_status"] == row["assessment"]["authenticity"]["status"]
+    assert row["authenticity_status"] is None and row["assessment"]["authenticity"]["status"] == "NOT_ASSESSED"   # flag off, fixture artifact has no authenticity
     assert row["human_review_status"] == "NOT_REVIEWED"
     assert operational_state(rid) == before                                          # no status change, no assignment, no alert from model output
     assert db_scalar("SELECT status FROM resq_incidents WHERE id=:i", i=rid) == "reported"
@@ -213,7 +213,7 @@ def test_reupload_refreshes_every_assessment_column_in_both_directions(monkeypat
     row = image_row(rid)
     assert db_scalar("SELECT count(*) FROM resq_incident_images WHERE incident_id=:i", i=rid) == 1
     assert (row["assessment_status"], row["model_version"], row["assessment_error"]) == ("COMPLETED", FIXTURE_VERSION, None)
-    assert row["assessment"]["assessment_status"] == "COMPLETED" and row["authenticity_status"] is not None
+    assert row["assessment"]["assessment_status"] == "COMPLETED" and row["authenticity_status"] is None
     configure(monkeypatch, approved_bundle, enabled=False)                            # and back: no stale scores, label or authenticity left behind
     client.post(f"/api/citizen/reports/{rid}/evidence", headers=headers, files=files(jpeg_bytes()))
     row = image_row(rid)

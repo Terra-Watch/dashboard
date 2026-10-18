@@ -3,6 +3,9 @@
 Status: **inference disabled by default.** No complete, approved artifact exists. Every upload is persisted with
 `assessment_status = UNAVAILABLE` and a structured error code. Nothing here enables operational inference.
 
+**Product rules (enforced in code, covered by tests):** (1) authenticity, synthetic, edited and reused detection may appear on a fire-report image only as a separate ADVISORY `media_integrity` signal that never feeds any fire-report decision; (2) community media moderation has
+its own artifact configuration; (3) an optional shadow mode records assessments without showing or using them. See the three sections below and "Four gates before production use".
+
 Verified only against this repository at base commit `48789ee` (read-only clone), not against any other working tree.
 
 ## Contract (`fire-assessor-artifact/1`)
@@ -57,7 +60,7 @@ Stored rows from earlier versions are re-presented in this shape (the whitelist 
 
 ```jsonc
 {
-  "assessment_status": "COMPLETED" | "UNAVAILABLE" | "EXPERIMENTAL",
+  "assessment_status": "COMPLETED" | "UNAVAILABLE" | "EXPERIMENTAL" | "SHADOW" | "PENDING",
   "artifact_status": "APPROVED" | "EXPERIMENTAL_UNAPPROVED" | null,
   "model_version": "...", "error_code": null | "MODEL_...",
   "scores": { "flames_visible": 0..1, "smoke_visible": 0..1 } | null,   // calibrated probabilities from an APPROVED artifact, otherwise null
@@ -67,8 +70,10 @@ Stored rows from earlier versions are re-presented in this shape (the whitelist 
   "review_priority": "HIGH" | "STANDARD",
   "quality_flags": ["TOO_DARK", ...],
   "ood_flag": true | false | null,          // null (not false) when nothing was assessed
-  "authenticity": { "status": "NO_CONCERNS_FOUND"|"POSSIBLE_SYNTHETIC"|"POSSIBLE_EDITED"|"REUSED"|"INCONSISTENT"|"INCONCLUSIVE"|"NOT_ASSESSED", "signals": [] },
-  "indications": { "synthetic": I, "edited": I, "reused": I },   // I = "NOT_ASSESSED" | "NONE_FOUND" | "POSSIBLE"
+  "authenticity": { "status": "NO_CONCERNS_FOUND"|"POSSIBLE_SYNTHETIC"|"POSSIBLE_EDITED"|"REUSED"|"INCONSISTENT"|"INCONCLUSIVE"|"NOT_ASSESSED", "signals": [] },   // NOT_ASSESSED unless exposed, see below
+  "indications": { "synthetic": I, "edited": I, "reused": I },      // I = "NOT_ASSESSED" | "NONE_FOUND" | "POSSIBLE"
+  "media_integrity": { "status": M, "note": "...", "advisory": true, "affects_incident": false },
+      // M = NO_CONCERN_DETECTED | POSSIBLE_SYNTHETIC | POSSIBLE_EDITED | POSSIBLE_REUSED | INCONCLUSIVE | NOT_ASSESSED | UNAVAILABLE
   "limitations": ["..."]
 }
 ```
@@ -77,8 +82,24 @@ EXPERIMENTAL additionally carries `raw_logits`, `scores_calibrated: false`, `che
 **UNAVAILABLE never looks like a negative result:** `scores`, `derived_label`, `artifact_status` and `ood_flag` are null, `authenticity.status` is `NOT_ASSESSED` (previously
 `INCONCLUSIVE`, which could be read as "checked, nothing found"), every indication is `NOT_ASSESSED`, and `review_required` is true.
 
-**Authenticity NOT_ASSESSED:** when the loaded artifact's `authenticity.status` is not `PROVIDED` (for example `EXCLUDED_BY_POLICY`, as in the test fixture) the adapter reports
-`NOT_ASSESSED` and drops whatever authenticity the pipeline returned, instead of presenting the pipeline's default `INCONCLUSIVE`.
+### Media integrity on fire-report images (advisory, flag default off)
+`media_integrity` is decided in ONE function, `image_assessment.media_integrity_for`, from the assessment status and the authenticity component only:
+
+| Assessment | `media_integrity.status` |
+|---|---|
+| `UNAVAILABLE` / any error | `UNAVAILABLE` (never clean) |
+| `PENDING`, `EXPERIMENTAL`, `SHADOW`, missing or unreadable stored data | `NOT_ASSESSED` |
+| `COMPLETED` + `APPROVED`, flag off OR the artifact's authenticity component is not `PROVIDED` | `NOT_ASSESSED` ("no approved authenticity component") |
+| `COMPLETED` + `APPROVED`, flag on and component provided: `NO_CONCERNS_FOUND` / `POSSIBLE_SYNTHETIC` / `POSSIBLE_EDITED` / `REUSED` / `INCONSISTENT` / `INCONCLUSIVE` / `NOT_ASSESSED` | `NO_CONCERN_DETECTED` / `POSSIBLE_SYNTHETIC` / `POSSIBLE_EDITED` / `POSSIBLE_REUSED` / `POSSIBLE_EDITED` (note about the inconsistency) / `INCONCLUSIVE` / `NOT_ASSESSED` |
+
+`FIRE_EVIDENCE_REPORT_AUTHENTICITY_ENABLED` (exactly `true` to enable; default off). The authenticity research head must not be used operationally; the flag only exposes an authenticity component that an
+APPROVED artifact already contains and never turns anything on in a model. With the flag off, `authenticity`/`indications` are `NOT_ASSESSED` too, so the three keys stay consistent. Every note says the
+result is advisory, does not verify or reject the report and does not change priority, status, dispatch or visibility; `NO_CONCERN_DETECTED` adds that it is not proof the photo is a true record of the scene.
+The fire/smoke fields (scores, label, decision, priority, quality flags, OOD) are computed from the validated model output alone and are identical whatever the authenticity result (tests).
+Nothing reads `media_integrity` or `authenticity` to change incident status, priority, assignment, dispatch, alerts, notifications, public visibility, filtering or ordering (an AST test scans the application).
+`resq_incident_images.authenticity_status` stores the mapped status only for COMPLETED + APPROVED results whose authenticity was exposed, otherwise NULL, and is shown only while the flag is on.
+Staff incident list rows carry the display-only `image_media_integrity_status` (latest image's status, `null` without an image); it is never used in WHERE/ORDER BY/GROUP BY. Citizen, ranger and public
+responses never carry any of it. The human review values (`VERIFIED_AUTHENTIC`, `POTENTIALLY_SYNTHETIC`) are a person's judgement and unaffected.
 
 **Indications** (`image_assessment.indications_for`). The assessor collapses several concerns into one status by priority (REUSED > POSSIBLE_SYNTHETIC > POSSIBLE_EDITED > INCONSISTENT) but its
 signals list every concern that fired, so both are read:
@@ -113,7 +134,15 @@ Not part of the fire incident workflow. Module `backend/app/services/community_i
 | Flag (default off) | Effect |
 |---|---|
 | `COMMUNITY_IMAGES_ENABLED` | `POST /api/community/posts/{id}/image` (author only, CSRF, one image per post, jpeg/png/webp, `COMMUNITY_IMAGE_MAX_BYTES` default 5 MB, max 25 MP, single frame, must decode and match the declared type) and `GET .../image`. With it off both return 404 and no `image` keys appear anywhere. |
-| `FIRE_EVIDENCE_COMMUNITY_ENABLED` | Also runs the shared model's authenticity check on the upload (only effective with the flag above). The shared model must itself be configured and enabled (`FIRE_EVIDENCE_*`); if not, the result is UNAVAILABLE. |
+| `FIRE_EVIDENCE_COMMUNITY_ENABLED` | Also runs the authenticity check on the upload (only effective with the flag above). It needs its OWN artifact configuration (below); if that is not configured the result is UNAVAILABLE and the post is held. |
+
+**Own artifact configuration (config name `community`).** `FIRE_EVIDENCE_COMMUNITY_ARTIFACT_DIR` and `FIRE_EVIDENCE_COMMUNITY_MODEL_VERSION` (default `fire-assessor-v1.0.0`) select the artifact the
+community path loads, so a community deployment can point at an authenticity-capable artifact while fire reports point at the fire artifact. If `FIRE_EVIDENCE_COMMUNITY_ARTIFACT_DIR` is unset the
+community path is `UNAVAILABLE` / `MODEL_ARTIFACT_NOT_CONFIGURED` and holds posts for a moderator; it never falls back to `FIRE_EVIDENCE_ARTIFACT_DIR`. Shared: the assessor code checkout
+`FIRE_EVIDENCE_REPO`, the master switch `FIRE_EVIDENCE_INFERENCE_ENABLED`, the optional trusted key, timeout and pending cap. Both configurations run the same fail-closed checks (schema, version pin,
+file hashes, checkpoint hash, output mapping, completeness, approval bound to the content digest, optional Ed25519 signature) and each is approved separately: they are different artifacts with different
+digests, so approving one never approves the other. An artifact whose authenticity component is `EXCLUDED_BY_POLICY` gives `NOT_ASSESSED`, which the community policy treats as `INCONCLUSIVE` (held).
+**`FIRE_EVIDENCE_SHADOW_MODE` does not affect the community path.**
 
 Storage: the stored copy is re-encoded from decoded pixels (EXIF, GPS, ICC and PNG text chunks are not kept; orientation is applied first) under `COMMUNITY_IMAGE_STORAGE_DIR`
 (default `backend/runtime_data/community_images`) as `<post_id>/<sha256>.<ext>`; the hash is re-checked on every read. The model is run on the ORIGINAL bytes, in memory only, because provenance
@@ -138,6 +167,31 @@ Policy: every status except `AUTHENTIC_NO_CONCERN` (UNAVAILABLE included) holds 
 post that was held for another reason. Authors see only the existing "A moderator will look at this" message; the public and authors never see signals. The held post's image is visible to its author and to
 moderators only until approved. Source-scan tests prove `community.py` and the new module reference no incident, assignment, dispatch or alert code (the one pre-existing alert call, a warning to a sanctioned member, lives in the sanction route).
 
+## Shadow mode (`FIRE_EVIDENCE_SHADOW_MODE`, default off)
+Purpose: collect real-world model output next to real Control Room decisions before anyone sees a label. Active only when the flag is true AND production inference is configured and enabled
+(`FIRE_EVIDENCE_INFERENCE_ENABLED`, artifact configured; not the development-only experimental path). Then, for every incident image (citizen evidence, ranger evidence, staff incident images):
+- the production path runs unchanged and the FULL sanitized assessment is stored (COMPLETED or UNAVAILABLE, with the error code) with `assessment_status = 'SHADOW'` and `"shadow": true` in the JSON;
+  configuration refusals (not configured / inference disabled) are not shadow rows;
+- nothing is shown or used: the staff assessment is only `{assessment_status: "SHADOW", model_version, review_required: false, scores: null, derived_label: null, decision: null, error_code: null,
+  ood_flag: null, quality_flags: [], authenticity/indications/media_integrity NOT_ASSESSED, limitations: ["Shadow mode: recorded for evaluation only"]}`; list endpoints and the citizen and ranger
+  responses show status `SHADOW`. Rows stored in shadow mode stay hidden even if the flag is later turned off;
+- no workflow changes: incident status, assignments, alerts, notices, verifications and human review are untouched (asserted by tests);
+- the community path is unaffected by this flag.
+
+Evaluate with `cd backend && python -m scripts.shadow_report --json-out shadow.json --md-out shadow.md [threshold arguments]` (read-only; SELECTs only). It compares the stored shadow assessments with
+decisions people already recorded: `human_review_status`, the incident `close_reason` and ranger field-verification outcomes. It prints counts, the model-label x human-review agreement matrix,
+missed fires (human positive, model `NO_VISIBLE_FIRE`), false alarms (human negative, model ACTIVE_FIRE/SMOKE_ONLY), UNCERTAIN share, HIGH-priority share, a daily review-volume estimate, the
+UNAVAILABLE rate per error code and a go/no-go checklist. Thresholds are command-line arguments with no defaults (unset = `NOT_EVALUATED`, overall `INCOMPLETE`); the mapping from stored decisions to
+"fire / credible" and "no fire" is printed in the report and nothing is invented. The report approves nothing.
+
+## Four gates before production use
+Inference stays off by default. Do not enable it for staff until all four are done, in this order:
+1. **Policy selected** - the product rules above are the chosen policy (advisory-only media integrity; separate community artifact; human review authoritative); any change is a deliberate decision.
+2. **Phone-photo evaluation reviewed** - a person has reviewed the assessor's evaluation on phone photos like those citizens and rangers send (none exists yet).
+3. **Named owner approves the exact artifact** - a named person writes the approval record bound to that artifact's content digest (and signs it if a trusted key is configured). Nothing in this repository writes or signs it.
+4. **Shadow mode completed against Control Room decisions** - run with `FIRE_EVIDENCE_SHADOW_MODE=true`, produce `scripts.shadow_report` with thresholds the owner chose, and the owner accepts the result.
+Only then set `FIRE_EVIDENCE_SHADOW_MODE=false` to show assessments to staff.
+
 ## Request path
 Async upload routes (`citizen.py`, `workflow.py`, `operations.py`) call `assess_image_async`, which never raises and
 runs inference on one bounded worker thread (`FIRE_EVIDENCE_TIMEOUT_S`, `FIRE_EVIDENCE_MAX_PENDING`), so the event loop
@@ -152,6 +206,9 @@ result from an APPROVED artifact, and always labels it advisory.
 
 ## Tests
 - `backend/tests/test_fire_evidence_contract.py`: exact staff contract, indications mapping, UNAVAILABLE-not-negative, calibration/threshold behaviour at the adapter boundary (scores equal sigmoid(logit/T) from the artifact; label from the artifact thresholds; none unless APPROVED), optional signature verification, legacy rows.
+- `backend/tests/test_fire_evidence_media_integrity.py`: the media_integrity mapping (7 states), flag/component gating, UNAVAILABLE never clean, no effect on status/assignments/alerts/public map/list ordering, citizen/ranger/public never carry it, source scans.
+- `backend/tests/test_fire_evidence_policy.py`: separate community configuration (unset = UNAVAILABLE and held, never the fire artifact, both fail closed), shadow mode (persisted, hidden on every route, no workflow effect, community unaffected).
+- `backend/tests/test_shadow_report.py`: `scripts/shadow_report.py` against seeded rows (read-only, agreement matrix, missed fires, thresholds only from arguments).
 - `backend/tests/test_fire_evidence_isolation.py`: production path with a fake model returning an extreme result changes no incident status/assignment/alert/notice; failures never block uploads; CSRF on the incident-image route; router source scans.
 - `backend/tests/test_community_media_moderation.py`: community flags, upload hardening, EXIF stripping, every status, UNAVAILABLE holding, moderator-only visibility, separation from the incident workflow, source scans.
 - `backend/tests/test_fire_evidence_adapter.py`: pre-flight and sanitising; tests needing the assessor skip unless
@@ -190,12 +247,15 @@ Nothing below is enabled by this repository. Do it in this order and stop at the
    FIRE_EVIDENCE_REPO=/srv/fire-evidence-assessor
    FIRE_EVIDENCE_ARTIFACT_DIR=/srv/fire-assessor/fire-assessor-v1.0.0-approved
    FIRE_EVIDENCE_MODEL_VERSION=fire-assessor-v1.0.0
+   # FIRE_EVIDENCE_SHADOW_MODE=true   # step 5 and gate 4: record without showing
    # optional but recommended once a signing key exists:
    # FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY=<base64 raw Ed25519 public key>
    # FIRE_EVIDENCE_TRUSTED_KEY_ID=<key id>
    # community media moderation stays off unless both are set:
    # COMMUNITY_IMAGES_ENABLED=true
    # FIRE_EVIDENCE_COMMUNITY_ENABLED=true
+   # FIRE_EVIDENCE_COMMUNITY_ARTIFACT_DIR=/srv/fire-assessor/<separately-approved-authenticity-artifact>
+   # FIRE_EVIDENCE_COMMUNITY_MODEL_VERSION=<its model_version>
    ```
    The assessor needs `torch`, `open_clip_torch`, `pillow`, `numpy`, `pydantic` in the backend's Python (`requirements/experimental-inference.txt` in the assessor repo lists tested versions).
 4. **Run**: `cd backend && DATABASE_URL=postgresql+psycopg://resq:<password>@localhost:5432/resq uvicorn app.main:app --port 8000`.
