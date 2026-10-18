@@ -7,7 +7,14 @@ export type Incident = {
   latitude: number | null; longitude: number | null; observed_at: string | null; created_at: string; updated_at: string;
   image_assessment_status?: string | null;
 };
-export type OpsSettings = { corroboration: { radius_km: number; window_minutes: number } | null; exposure_radii_km: number[] | null; feed_stale_minutes: number | null; scenario_enabled: boolean };
+export type OpsSettings = { 
+  corroboration: { radius_km: number; window_minutes: number } | null; 
+  exposure_radii_km: number[] | null; 
+  feed_stale_minutes: number | null; 
+  scenario_enabled: boolean;
+  risk_forecast_enabled: boolean;
+  risk_forecast_date: string | null;
+};
 
 export const INCIDENTS_KEY = ['ops-incidents'] as const;
 export const useIncidents = () => useQuery({ queryKey: INCIDENTS_KEY, queryFn: () => api<Incident[]>('/api/incidents'), refetchInterval: 30_000 });

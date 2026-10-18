@@ -31,9 +31,16 @@ def settings(user: dict = Depends(current_redesign_user)) -> dict:
     if user.get('role') not in STAFF:
         raise HTTPException(status_code=403, detail='Control Room access required')
     radius, window = _positive_float('CORROBORATION_RADIUS_KM'), _positive_float('CORROBORATION_WINDOW_MINUTES')
+    
+    # Risk forecast settings
+    risk_forecast_enabled = os.environ.get('RISK_FORECAST_ENABLED', '').lower() == 'true'
+    risk_forecast_date = os.environ.get('RISK_FORECAST_DATE', '').strip() or None
+    
     return {
         'corroboration': {'radius_km': radius, 'window_minutes': window} if radius and window else None,
         'exposure_radii_km': _radii(),
         'feed_stale_minutes': _positive_float('FEED_STALE_MINUTES'),
         'scenario_enabled': os.environ.get('SCENARIO_PLANNER_ENABLED', '').lower() == 'true',
+        'risk_forecast_enabled': risk_forecast_enabled,
+        'risk_forecast_date': risk_forecast_date if risk_forecast_enabled else None,
     }

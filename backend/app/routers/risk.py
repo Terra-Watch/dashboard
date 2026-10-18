@@ -1,8 +1,9 @@
 from datetime import date
 import json
+import os
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from ..barv3 import daily_geojson, daily_risk
 from ..core.permissions import user_scopes
@@ -12,6 +13,10 @@ from ..database.session import engine
 router = APIRouter(prefix="/api/risk", tags=["risk"])
 
 RISK_ROLES = ("range_officer", "control_room_operator", "incident_commander")
+
+def _risk_forecast_enabled() -> bool:
+    """Check if risk forecast is enabled via environment variable."""
+    return os.getenv("RISK_FORECAST_ENABLED", "").strip().lower() in ("true", "1", "yes")
 _HIGH_RISK_BANDS = {"Very high", "High"}
 
 
@@ -55,7 +60,17 @@ def risk_geojson_endpoint(
     risk_band: Literal["high"] | None = None,
     user: dict = Depends(require_risk_roles(*RISK_ROLES)),
 ) -> dict[str, object]:
-    """Return ranked imported cell geometry without exposing model scores."""
+    """Return ranked imported cell geometry without exposing model scores.
+    
+    Gated by RISK_FORECAST_ENABLED environment variable. Returns 403 when disabled.
+    Control Room operators only; scoped to user's assigned states.
+    """
+    if not _risk_forecast_enabled():
+        raise HTTPException(
+            status_code=403,
+            detail="Risk forecast layer is not enabled. Set RISK_FORECAST_ENABLED=true to enable."
+        )
+    
     replay = daily_geojson(target)
     if replay["features"]:
         scoped = {**replay, "features": _scope_filter_features(replay["features"], user)}
