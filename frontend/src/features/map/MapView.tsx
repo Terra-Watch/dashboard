@@ -22,6 +22,36 @@ function ensureProtocol() {
 }
 
 const POINTS = 'tw-points', POINTS_SEL = 'tw-points-selected', POLY = 'tw-polygons', RISK = 'tw-risk';
+const LINES = 'tw-lines', IMAGE = 'tw-image';
+const LINE_TONES = ['road', 'water', 'draft', 'fireline'] as const;
+type Quad = [[number, number], [number, number], [number, number], [number, number]];
+/** A georeferenced picture drawn under the symbols (used by the what-if page for the burned area). Corner order: top-left, top-right, bottom-right, bottom-left. */
+export type MapImageOverlay = { url: string; coordinates: Quad; opacity?: number };
+/** A line drawn under the symbols. Tones: road, water, draft (being drawn) and fireline (a drawn fire line). */
+export type MapLine = { id: string; coords: Array<[number, number]>; tone: (typeof LINE_TONES)[number] };
+type MapLibreMapInstance = InstanceType<typeof maplibregl.Map>;
+
+function lineStyle(tone: (typeof LINE_TONES)[number], c: MapColors): { color: string; width: number; dash?: number[]; casing?: string } {
+  switch (tone) {
+    case 'road': return { color: c.muted, width: 1.5 };
+    case 'water': return { color: c.boundary, width: 2.5, dash: [1, 1.5] };
+    case 'draft': return { color: c.text, width: 3, dash: [2, 2] };
+    case 'fireline': return { color: c.text, width: 4, casing: c.surface };
+  }
+}
+
+function installExtras(map: MapLibreMap, colors: MapColors) {
+  for (const tone of LINE_TONES) for (const part of ['casing', 'line']) { const id = `${LINES}-${tone}-${part}`; if (map.getLayer(id)) map.removeLayer(id); }
+  if (map.getLayer(IMAGE)) map.removeLayer(IMAGE);
+  for (const id of [LINES, IMAGE]) if (map.getSource(id)) map.removeSource(id);
+  map.addSource(LINES, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  for (const tone of LINE_TONES) {
+    const s = lineStyle(tone, colors);
+    const filter: ['==', ['get', string], string] = ['==', ['get', 'tone'], tone];
+    if (s.casing) map.addLayer({ id: `${LINES}-${tone}-casing`, type: 'line', source: LINES, filter, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': s.casing, 'line-width': s.width + 3 } });
+    map.addLayer({ id: `${LINES}-${tone}-line`, type: 'line', source: LINES, filter, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': s.color, 'line-width': s.width, ...(s.dash ? { 'line-dasharray': s.dash } : {}) } });
+  }
+}
 const TONES = ['cell', 'advisory', 'warning', 'envelope', 'band', 'observed'] as const;
 
 function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string; fill: number; dash?: number[]; width: number } {
@@ -101,6 +131,8 @@ function install(map: MapLibreMap, colors: MapColors) {
     },
   });
   
+  installExtras(map, colors);
+
   // Point symbols and selection on top
   map.addLayer({ id: POINTS_SEL, type: 'circle', source: POINTS, filter: ['==', ['get', 'id'], '__none__'], paint: { 'circle-radius': 19, 'circle-color': colors.surface, 'circle-opacity': 0.0, 'circle-stroke-color': colors.action, 'circle-stroke-width': 3 } });
   map.addLayer({
@@ -119,17 +151,22 @@ export type MapViewProps = {
   center?: [number, number]; zoom?: number;
   className?: string; children?: ReactNode;
   basemapStyle?: object | null;
+  /** Additive, for the what-if page. */
+  imageOverlay?: MapImageOverlay | null; lines?: MapLine[];
+  onMapReady?: (map: MapLibreMapInstance) => void;
+  onMapDoubleClick?: (lat: number, lon: number) => void;
+  doubleClickZoom?: boolean;
 };
 
 /** The one map. MapLibre GL, self-hosted PMTiles basemap, fonts and icons from this site (no third-party requests). */
-export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle }: MapViewProps) {
+export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle, imageOverlay = null, lines, onMapReady, onMapDoubleClick, doubleClickZoom = true }: MapViewProps) {
   console.log('[DEBUG MapView] Received props:', { pointsCount: points.length, polygonsCount: polygons.length, riskCellsCount: riskCells.length });
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const colorsRef = useRef<MapColors | null>(null);
-  const handlers = useRef({ onSelect, onMapClick });
-  handlers.current = { onSelect, onMapClick };
+  const handlers = useRef({ onSelect, onMapClick, onMapDoubleClick, onMapReady });
+  handlers.current = { onSelect, onMapClick, onMapDoubleClick, onMapReady };
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const pointData = useMemo(() => pointsToGeoJson(points), [points]);
@@ -193,6 +230,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
       const hit = map.getLayer(POINTS) ? map.queryRenderedFeatures(event.point, { layers: [POINTS] })[0] : undefined;
       if (hit) handlers.current.onSelect?.(String(hit.properties?.id)); else { handlers.current.onSelect?.(null); handlers.current.onMapClick?.(event.lngLat.lat, event.lngLat.lng); }
     });
+    map.on('dblclick', (event: ClickEvent) => { handlers.current.onMapDoubleClick?.(event.lngLat.lat, event.lngLat.lng); });
     map.on('mousemove', (event: ClickEvent) => { if (map.getLayer(POINTS)) map.getCanvas().style.cursor = map.queryRenderedFeatures(event.point, { layers: [POINTS] }).length ? 'pointer' : handlers.current.onMapClick ? 'crosshair' : ''; });
     const restyle = () => { colors = readMapColors(); colorsRef.current = colors; for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind); map.setStyle(basemapStyle(colors, isDark())); map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); }); };
     window.addEventListener('tw-theme', restyle);
@@ -214,6 +252,18 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
       }
     }
   }, [ready, riskData]);
+  const lineData = useMemo(() => ({ type: 'FeatureCollection', features: (lines ?? []).filter(l => l.coords.length >= 2).map(l => ({ type: 'Feature', id: l.id, properties: { id: l.id, tone: l.tone }, geometry: { type: 'LineString', coordinates: l.coords } })) }), [lines]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(LINES) as unknown as DataSource | undefined)?.setData(lineData); }, [ready, lineData]);
+  useEffect(() => { const map = mapRef.current; if (ready && map) handlers.current.onMapReady?.(map); }, [ready]);
+  useEffect(() => { const map = mapRef.current; if (!map) return; if (doubleClickZoom) map.doubleClickZoom.enable(); else map.doubleClickZoom.disable(); }, [ready, doubleClickZoom]);
+  useEffect(() => {
+    const map = mapRef.current; if (!ready || !map) return;
+    const existing = map.getSource(IMAGE) as unknown as { updateImage(o: { url: string; coordinates: Quad }): void } | undefined;
+    if (!imageOverlay) { if (map.getLayer(IMAGE)) map.removeLayer(IMAGE); if (existing) map.removeSource(IMAGE); return; }
+    if (existing) { existing.updateImage({ url: imageOverlay.url, coordinates: imageOverlay.coordinates }); return; }
+    map.addSource(IMAGE, { type: 'image', url: imageOverlay.url, coordinates: imageOverlay.coordinates });
+    map.addLayer({ id: IMAGE, type: 'raster', source: IMAGE, paint: { 'raster-opacity': imageOverlay.opacity ?? 1, 'raster-fade-duration': 0 } }, map.getLayer(`${POLY}-cell-fill`) ? `${POLY}-cell-fill` : undefined);
+  }, [ready, imageOverlay]);
   useEffect(() => { const map = mapRef.current; if (ready && map?.getLayer(POINTS_SEL)) map.setFilter(POINTS_SEL, ['==', ['get', 'id'], selectedId ?? '__none__']); }, [ready, selectedId]);
   useEffect(() => {
     const map = mapRef.current; const colors = colorsRef.current;

@@ -18,7 +18,7 @@ export type OpsSettings = {
 
 export const INCIDENTS_KEY = ['ops-incidents'] as const;
 export const useIncidents = () => useQuery({ queryKey: INCIDENTS_KEY, queryFn: () => api<Incident[]>('/api/incidents'), refetchInterval: 30_000 });
-export const useOpsSettings = () => useQuery({ queryKey: ['ops-settings'], queryFn: () => api<OpsSettings>('/api/ops/settings'), staleTime: 300_000 });
+export const useOpsSettings = (enabled = true) => useQuery({ queryKey: ['ops-settings'], queryFn: () => api<OpsSettings>('/api/ops/settings'), staleTime: 300_000, enabled });
 
 // The region choice is shared by every Control Room screen and remembered on this device.
 const KEY = 'tw_ops_region';
