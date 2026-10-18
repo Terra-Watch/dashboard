@@ -12,9 +12,8 @@ import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { stateName, formatWhen } from '../citizen/format';
 import { CloseIncident } from '../incidents/CloseIncident';
-import { EvidenceReview } from '../incidents/EvidenceReview';
+import { EvidenceReview, type EvidenceImage } from '../incidents';
 import { closeReasonLabel, closurePayload, type CloseReason } from '../incidents/closure';
-import type { EvidenceImage } from '../incidents/evidenceReview';
 import { ScenarioTab } from '../scenarios/ScenarioTab';
 import { INCIDENTS_KEY, useOpsSettings, type Incident } from './useOps';
 
@@ -89,7 +88,7 @@ export function OpsIncidentPage() {
         </Tabs.Content>
 
         <Tabs.Content value="evidence" className="space-y-4 pt-4 outline-none">
-          {item.images.length ? item.images.map(image => <EvidenceReview key={image.id} incidentId={item.id} image={image} onUpdated={updated => { void queryClient.setQueryData(['ops-incident', incidentId], (current: Detail | undefined) => current && { ...current, images: current.images.map(existing => existing.id === updated.id ? { ...existing, ...updated } : existing) }); }} />) : <p className="text-ink-muted">{t('ops.no_photos', 'No photos were sent with this report.')}</p>}
+          {item.images.length ? item.images.map(image => <EvidenceReview key={image.id} incidentId={item.id} image={image} onUpdated={(updated: EvidenceImage) => { void queryClient.setQueryData(['ops-incident', incidentId], (current: Detail | undefined) => current && { ...current, images: current.images.map(existing => existing.id === updated.id ? { ...existing, ...updated } : existing) }); }} />) : <p className="text-ink-muted">{t('ops.no_photos', 'No photos were sent with this report.')}</p>}
         </Tabs.Content>
 
         <Tabs.Content value="field" className="space-y-3 pt-4 outline-none">

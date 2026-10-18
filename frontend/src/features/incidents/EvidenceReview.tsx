@@ -2,8 +2,10 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { presentAssessment } from '../../lib/assessmentPresentation';
-import { REVIEW_OPTIONS, reviewPayload, reviewStatusLabel, validateReview, type EvidenceImage, type ReviewStatus } from './evidenceReview';
+import { REVIEW_OPTIONS, reviewPayload, reviewStatusLabel, validateReview, type EvidenceImage, type ReviewStatus } from './evidenceReviewTypes';
 import { useEvidenceImage } from './useEvidenceImage';
+
+export type { EvidenceImage, ReviewStatus };
 
 type Props = {
   incidentId: number;

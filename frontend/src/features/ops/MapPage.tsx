@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { api } from '../../app/http';
@@ -12,7 +12,9 @@ import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { SYMBOL_OF_RUNG, boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { TIME_WINDOWS, canShow, withinHours, type LayerId, type TimeWindow } from '../map/profiles';
-import { useIncidents, useOpsRegion, type Incident } from './useOps';
+import { useOpsSettings, useIncidents, useOpsRegion, type Incident } from './useOps';
+import { basemapStyle, satelliteStyle } from '../map/style';
+import { readMapColors, isDark } from '../map/colors';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -20,7 +22,7 @@ type Wind = { wind_speed_ms: number; wind_dir_deg: number; valid_time: string; f
 type NoticeArea = { id: number; title: string; severity: string; area_geojson: { type: string; coordinates: number[][][] } | null };
 
 const PRESETS: Array<{ id: string; label: string; layers: LayerId[] }> = [
-  { id: 'situation', label: 'Situation', layers: ['incidents', 'reports', 'signals', 'advisories'] },
+  { id: 'situation', label: 'Situation', layers: ['incidents', 'reports', 'signals', 'advisories', 'risk_forecast'] },
   { id: 'field', label: 'Field', layers: ['incidents', 'advisories'] },
 ];
 
@@ -35,22 +37,100 @@ export function OpsMapPage() {
   const { t } = useTranslation();
   const region = useOpsRegion();
   const incidents = useIncidents();
+  const settings = useOpsSettings();
   const [hours, setHours] = useState<TimeWindow>(24);
   const [preset, setPreset] = useState('situation');
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<'map' | 'list'>('map');
+  const [riskHighOnly, setRiskHighOnly] = useState(false);
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
+
+  // Satellite basemap toggle
+  const satelliteEnabled = import.meta.env.VITE_SATELLITE_BASEMAP === 'true';
+  const satelliteTileUrl = import.meta.env.VITE_SATELLITE_TILE_URL as string | undefined;
+  const satelliteAttribution = import.meta.env.VITE_SATELLITE_ATTRIBUTION as string | undefined;
+  
+  const [basemapType, setBasemapType] = useState<'map' | 'satellite'>(() => {
+    if (!satelliteEnabled) return 'map';
+    try {
+      const stored = localStorage.getItem('resq_basemap_pref');
+      return stored === 'satellite' && satelliteTileUrl ? 'satellite' : 'map';
+    } catch {
+      return 'map';
+    }
+  });
+
+  const [satelliteFailed, setSatelliteFailed] = useState(false);
+
+  const currentBasemapStyle = useMemo(() => {
+    if (basemapType === 'satellite' && satelliteTileUrl && satelliteAttribution) {
+      return satelliteStyle(satelliteTileUrl, satelliteAttribution);
+    }
+    // Return null for default basemap - MapView will use its own basemapStyle()
+    return null;
+  }, [basemapType, satelliteTileUrl, satelliteAttribution]);
+
+  useEffect(() => {
+    if (!satelliteEnabled) return;
+    try {
+      localStorage.setItem('resq_basemap_pref', basemapType);
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [basemapType, satelliteEnabled]);
+
+  useEffect(() => {
+    if (basemapType === 'satellite' && !navigator.onLine) {
+      setSatelliteFailed(true);
+      setBasemapType('map');
+      try {
+        localStorage.removeItem('resq_basemap_pref');
+      } catch {
+        // localStorage may be unavailable
+      }
+    }
+  }, [basemapType]);
 
   const box = region ? STATE_BOUNDS[region] : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
   const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
+  
+  const riskEnabled = settings.data?.risk_forecast_enabled === true;
+  const riskDate = settings.data?.risk_forecast_date || new Date().toISOString().slice(0, 10);
+  
+  const riskForecast = useQuery({
+    queryKey: ['risk-forecast', riskDate, riskHighOnly],
+    retry: false,
+    enabled: layers.has('risk_forecast') && riskEnabled,
+    queryFn: () => api<{ type: string; features: Array<{ type: string; geometry: { type: string; coordinates: [number, number] }; properties: { cell_id: number; state: string; rank_percentile: number; band: string } }> }>(`/api/risk/geojson?target=${riskDate}${riskHighOnly ? '&risk_band=high' : ''}`),
+  });
 
   const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.state === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
   const points: MapPoint[] = useMemo(() => [
     ...shown.filter(item => item.status === 'reported' ? layers.has('reports') : layers.has('incidents')).map(item => ({ id: `i${item.id}`, lat: item.latitude!, lon: item.longitude!, symbol: SYMBOL_OF_RUNG[rungOfStatus(item.status)], label: `#${item.id}` })),
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
   ], [shown, signals.data, layers]);
+  const riskCells = useMemo(() => {
+    console.log('[DEBUG Risk Layer]', {
+      hasRiskInLayers: layers.has('risk_forecast'),
+      riskEnabled,
+      queryStatus: riskForecast.status,
+      queryError: riskForecast.error,
+      featuresCount: riskForecast.data?.features?.length,
+    });
+    if (!layers.has('risk_forecast') || !riskEnabled || !riskForecast.data?.features) return [];
+    const cells = riskForecast.data.features.map(f => ({
+      id: f.properties.cell_id,
+      lat: f.geometry.coordinates[1],
+      lon: f.geometry.coordinates[0],
+      rank_percentile: f.properties.rank_percentile,
+      band: f.properties.band,
+      state: f.properties.state,
+    }));
+    console.log('[DEBUG Risk Cells]', cells.length, 'cells created');
+    return cells;
+  }, [layers, riskEnabled, riskForecast.data, riskForecast.status, riskForecast.error]);
   const polygons: MapPolygon[] = useMemo(() => (layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title })), [notices.data, layers]);
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
@@ -63,18 +143,31 @@ export function OpsMapPage() {
       <div className="flex flex-wrap items-center gap-2">
         <div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div>
         <div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item} h</button>)}</div>
+        {satelliteEnabled && (
+          <div role="radiogroup" aria-label={t('basemap.label', 'Basemap')} className="inline-flex rounded-rq border border-control p-1">
+            <button key="map" type="button" role="radio" aria-checked={basemapType === 'map'} onClick={() => setBasemapType('map')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'map' ? 'bg-action text-on-action' : ''}`}>{t('basemap.map', 'Map')}</button>
+            <button key="satellite" type="button" role="radio" aria-checked={basemapType === 'satellite'} onClick={() => setBasemapType('satellite')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'satellite' ? 'bg-action text-on-action' : ''}`}>{t('basemap.satellite', 'Satellite')}</button>
+          </div>
+        )}
+        {layers.has('risk_forecast') && riskEnabled && (
+          <label className="inline-flex items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+            <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />
+            <span>{t('map.risk_high_only', 'High risk only')}</span>
+          </label>
+        )}
         <Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} />
         <Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} />
       </div>
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
       {signals.isError && layers.has('signals') && <Notice kind="warning">{t('map.signals_off', 'Satellite signals are not available right now.')}</Notice>}
+      {satelliteFailed && <Notice kind="warning">{t('basemap.offline_notice', 'Satellite tiles are not available offline. Switching to map.')}</Notice>}
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
         <div className={view === 'list' ? 'hidden lg:block' : ''}>
-          <MapView label={t('nav.map')} points={points} polygons={polygons} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" />
+          <MapView label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
         </div>
         <div className="space-y-3">
-          <Legend kinds={['signal', 'report', 'verified', 'responding', 'contained']} />
+          <Legend kinds={['signal', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />
           {(selectedIncident || selectedSignal) && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
               {selectedIncident ? <>

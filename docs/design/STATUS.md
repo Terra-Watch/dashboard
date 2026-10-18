@@ -18,7 +18,8 @@ This page is the honest list. The landing page and the in-app text only claim wh
 
 | Item | Switch |
 |---|---|
-| Scenario planner (Control Room only, never validated) | `SCENARIO_PLANNER_ENABLED` |
+| Scenario planner (Control Room incident detail only, never validated) | `SCENARIO_PLANNER_ENABLED` |
+| Risk forecast map layer (Control Room map only, model output not verified fire) | `RISK_FORECAST_ENABLED` |
 | Patrol planning | `FEATURE_PATROL_PLANNING`, `VITE_FEATURE_PATROL_PLANNING` (needs a visual refresh before it is switched on) |
 | Public verified areas | `PUBLIC_MAP_*` |
 | Emergency numbers | `EMERGENCY_CONTACTS` |

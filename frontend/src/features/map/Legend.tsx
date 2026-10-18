@@ -14,6 +14,13 @@ const ITEMS: Array<{ kind: SymbolKind; label: string; hint: string }> = [
   { kind: 'me', label: 'You', hint: 'Your position when you tapped locate.' },
 ];
 
+const RISK_BANDS: Array<{ band: string; label: string; color: string }> = [
+  { band: 'Very high', label: 'Very high (top 1%)', color: 'outlook-5' },
+  { band: 'High', label: 'High (top 5%)', color: 'outlook-4' },
+  { band: 'Moderate', label: 'Moderate (top 15%)', color: 'outlook-3' },
+  { band: 'Low', label: 'Low (remaining)', color: 'outlook-2' },
+];
+
 export function SymbolSwatch({ kind }: { kind: SymbolKind }) {
   const stroke = (name: string) => `var(--tw-${name})`;
   return (
@@ -32,14 +39,32 @@ export function SymbolSwatch({ kind }: { kind: SymbolKind }) {
 }
 
 /** Always available, never colour-only: each symbol has its own shape and a plain-words meaning. */
-export function Legend({ kinds }: { kinds: SymbolKind[] }) {
+export function Legend({ kinds, showRisk = false }: { kinds: SymbolKind[]; showRisk?: boolean }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   return (
     <section aria-labelledby="legend-title" className="rounded-rq border border-line bg-surface p-3 text-sm" data-testid="legend">
       <button type="button" className="flex min-h-11 w-full items-center justify-between font-bold" aria-expanded={open} onClick={() => setOpen(value => !value)} id="legend-title">{t('map.legend', 'Legend')}<span aria-hidden="true">{open ? '−' : '+'}</span></button>
       {open && <ul className="mt-1 space-y-2">{ITEMS.filter(item => kinds.includes(item.kind)).map(item => <li key={item.kind} className="flex items-start gap-2"><SymbolSwatch kind={item.kind} /><span><span className="font-semibold">{t(`map.sym.${item.kind}`, item.label)}</span><span className="block text-ink-muted">{t(`map.sym.${item.kind}_hint`, item.hint)}</span></span></li>)}
-        <li className="flex items-start gap-2"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" className="shrink-0"><path d="M3 3H19V19H3Z" fill="var(--tw-warn)" fillOpacity=".16" stroke="var(--tw-warn)" strokeWidth="2" strokeDasharray="2 2" /></svg><span><span className="font-semibold">{t('map.notice_area', 'Notice area')}</span><span className="block text-ink-muted">{t('map.notice_area_hint', 'Where an official notice applies.')}</span></span></li></ul>}
+        <li className="flex items-start gap-2"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" className="shrink-0"><path d="M3 3H19V19H3Z" fill="var(--tw-warn)" fillOpacity=".16" stroke="var(--tw-warn)" strokeWidth="2" strokeDasharray="2 2" /></svg><span><span className="font-semibold">{t('map.notice_area', 'Notice area')}</span><span className="block text-ink-muted">{t('map.notice_area_hint', 'Where an official notice applies.')}</span></span></li>
+        {showRisk && (
+          <li className="flex flex-col gap-1 border-t border-line pt-2">
+            <span className="font-semibold">{t('map.risk_outlook', 'Ignition-risk ranking')}</span>
+            <span className="block text-ink-muted text-xs">{t('map.risk_outlook_hint', 'Model output, not observed fire. Relative likelihood based on archived validation data.')}</span>
+            <ul className="mt-1 space-y-1">
+              {RISK_BANDS.map(item => (
+                <li key={item.band} className="flex items-center gap-2">
+                  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" className="shrink-0">
+                    <circle cx="8" cy="8" r="7" fill="var(--tw-text)" opacity="0.85" />
+                    <circle cx="8" cy="8" r="6" fill={`var(--tw-${item.color})`} opacity="0.7" stroke="var(--tw-surface)" strokeWidth="2" />
+                  </svg>
+                  <span className="text-xs">{t(`map.risk_band.${item.band.toLowerCase().replace(' ', '_')}`, item.label)}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        )}
+      </ul>}
     </section>
   );
 }

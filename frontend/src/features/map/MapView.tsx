@@ -4,7 +4,7 @@ import { Protocol } from 'pmtiles';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isDark, readMapColors, type MapColors } from './colors';
-import { polygonsToGeoJson, pointsToGeoJson, type MapPoint, type MapPolygon } from './geojson';
+import { polygonsToGeoJson, pointsToGeoJson, riskCellsToGeoJson, type MapPoint, type MapPolygon, type RiskCell } from './geojson';
 import { basemapStyle } from './style';
 import { drawSymbol, SYMBOL_PIXEL_RATIO } from './symbols';
 import type { SymbolKind } from './geojson';
@@ -21,7 +21,7 @@ function ensureProtocol() {
   protocolReady = true;
 }
 
-const POINTS = 'tw-points', POINTS_SEL = 'tw-points-selected', POLY = 'tw-polygons';
+const POINTS = 'tw-points', POINTS_SEL = 'tw-points-selected', POLY = 'tw-polygons', RISK = 'tw-risk';
 const TONES = ['cell', 'advisory', 'warning', 'envelope', 'band', 'observed'] as const;
 
 function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string; fill: number; dash?: number[]; width: number } {
@@ -36,17 +36,72 @@ function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string;
 }
 
 function install(map: MapLibreMap, colors: MapColors) {
+  console.log('[DEBUG install] Installing sources and layers');
   for (const id of [POINTS, POINTS_SEL]) if (map.getLayer(id)) map.removeLayer(id);
   for (const tone of TONES) for (const part of ['fill', 'line']) { const id = `${POLY}-${tone}-${part}`; if (map.getLayer(id)) map.removeLayer(id); }
-  for (const id of [POINTS, POLY]) if (map.getSource(id)) map.removeSource(id);
+  if (map.getLayer(RISK)) map.removeLayer(RISK);
+  if (map.getLayer(`${RISK}-outline`)) map.removeLayer(`${RISK}-outline`);
+  for (const id of [POINTS, POLY, RISK]) if (map.getSource(id)) map.removeSource(id);
+  
+  console.log('[DEBUG install] Adding sources');
   map.addSource(POLY, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addSource(POINTS, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addSource(RISK, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  console.log('[DEBUG install] Sources added:', map.getSource(RISK) ? 'SUCCESS' : 'FAILED');
+  
+  // Add polygon layers first (bottom)
   for (const tone of TONES) {
     const s = toneStyle(tone, colors);
     const filter: ['==', ['get', string], string] = ['==', ['get', 'tone'], tone];
     if (s.fill > 0) map.addLayer({ id: `${POLY}-${tone}-fill`, type: 'fill', source: POLY, filter, paint: { 'fill-color': s.color, 'fill-opacity': s.fill } });
     map.addLayer({ id: `${POLY}-${tone}-line`, type: 'line', source: POLY, filter, paint: { 'line-color': s.color, 'line-width': s.width, ...(s.dash ? { 'line-dasharray': s.dash } : {}) } });
   }
+  
+  // Risk layer: graduated circles with two-tone outline (dark outer, white inner)
+  // Outer dark ring layer (bottom)
+  map.addLayer({
+    id: `${RISK}-outline`,
+    type: 'circle',
+    source: RISK,
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['zoom'],
+        5, 5,    // At zoom 5, outer ring is 5px
+        9, 9,    // At zoom 9, outer ring is 9px  
+        11, 13   // At zoom 11, outer ring is 13px
+      ],
+      'circle-color': colors.text,  // Dark outline using text token
+      'circle-opacity': 0.85,
+    },
+  });
+  
+  // Main risk circle layer with white inner stroke (on top of outline)
+  map.addLayer({
+    id: RISK,
+    type: 'circle',
+    source: RISK,
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['zoom'],
+        5, 4,    // At zoom 5, circles are 4px
+        9, 8,    // At zoom 9, circles are 8px
+        11, 12   // At zoom 11, circles are 12px
+      ],
+      'circle-color': [
+        'match', ['get', 'band'],
+        'Very high', colors.outlook5,
+        'High', colors.outlook4,
+        'Moderate', colors.outlook3,
+        'Low', colors.outlook2,
+        colors.outlook1  // Fallback
+      ],
+      'circle-opacity': 0.7,
+      'circle-stroke-width': 2,
+      'circle-stroke-color': colors.surface,  // White/light inner stroke
+    },
+  });
+  
+  // Point symbols and selection on top
   map.addLayer({ id: POINTS_SEL, type: 'circle', source: POINTS, filter: ['==', ['get', 'id'], '__none__'], paint: { 'circle-radius': 19, 'circle-color': colors.surface, 'circle-opacity': 0.0, 'circle-stroke-color': colors.action, 'circle-stroke-width': 3 } });
   map.addLayer({
     id: POINTS, type: 'symbol', source: POINTS,
@@ -57,16 +112,18 @@ function install(map: MapLibreMap, colors: MapColors) {
 
 export type MapViewProps = {
   label: string;
-  points?: MapPoint[]; polygons?: MapPolygon[];
+  points?: MapPoint[]; polygons?: MapPolygon[]; riskCells?: RiskCell[];
   selectedId?: string | null; onSelect?: (id: string | null) => void;
   onMapClick?: (lat: number, lon: number) => void;
   bounds?: [[number, number], [number, number]] | null;
   center?: [number, number]; zoom?: number;
   className?: string; children?: ReactNode;
+  basemapStyle?: object | null;
 };
 
 /** The one map. MapLibre GL, self-hosted PMTiles basemap, fonts and icons from this site (no third-party requests). */
-export function MapView({ label, points = [], polygons = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children }: MapViewProps) {
+export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle }: MapViewProps) {
+  console.log('[DEBUG MapView] Received props:', { pointsCount: points.length, polygonsCount: polygons.length, riskCellsCount: riskCells.length });
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -77,6 +134,11 @@ export function MapView({ label, points = [], polygons = [], selectedId = null, 
   const [failed, setFailed] = useState(false);
   const pointData = useMemo(() => pointsToGeoJson(points), [points]);
   const polygonData = useMemo(() => polygonsToGeoJson(polygons), [polygons]);
+  const riskData = useMemo(() => {
+    const data = riskCellsToGeoJson(riskCells);
+    console.log('[DEBUG MapView] Risk GeoJSON created:', data.features.length, 'features');
+    return data;
+  }, [riskCells]);
 
   useEffect(() => {
     if (!host.current) return;
@@ -85,13 +147,47 @@ export function MapView({ label, points = [], polygons = [], selectedId = null, 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let map: MapLibreMap;
     try {
-      map = new maplibregl.Map({ container: host.current, style: basemapStyle(colors, isDark()), center, zoom, attributionControl: { compact: true }, cancelPendingTileRequestsWhileZooming: true, fadeDuration: reduceMotion ? 0 : 150, canvasContextAttributes: { preserveDrawingBuffer: true } });
+      const initialStyle = externalBasemapStyle ?? basemapStyle(colors, isDark());
+      map = new maplibregl.Map({ container: host.current, style: initialStyle as StyleSpecification, center, zoom, attributionControl: { compact: true }, cancelPendingTileRequestsWhileZooming: true, fadeDuration: reduceMotion ? 0 : 150, canvasContextAttributes: { preserveDrawingBuffer: true } });
     } catch { setFailed(true); return; }
     mapRef.current = map;
+    
+    // DEBUG: Expose map globally for console debugging
+    if (typeof window !== 'undefined') {
+      (window as any).__twMap = map;
+      console.log('Map instance exposed as window.__twMap');
+    }
+    
     map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: false }), 'top-right');
     map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
     (map as unknown as { setMissingStyleImageResolver(resolver: (id: string) => void): void }).setMissingStyleImageResolver(id => { if (!map.hasImage(id)) map.addImage(id, drawSymbol(id as SymbolKind, colorsRef.current ?? colors), { pixelRatio: SYMBOL_PIXEL_RATIO }); });
-    map.on('load', () => { install(map, colors); setReady(true); });
+    
+    // Install sources and layers - use 'style.load' which is more reliable than 'load'
+    const setupMap = () => {
+      console.log('[DEBUG install] Map setup triggered');
+      install(map, colors); 
+      console.log('[DEBUG install] Install complete, setting ready to true');
+      setReady(true); 
+      console.log('[DEBUG install] Map load complete, ready set to true');
+    };
+    
+    // Try both events - whichever fires first
+    let setupCompleted = false;
+    const safeSetup = () => {
+      if (setupCompleted) return;
+      setupCompleted = true;
+      setupMap();
+    };
+    map.once('load', safeSetup);
+    map.once('style.load', safeSetup);
+    
+    // Fallback: if neither fires within 1 second, do it anyway
+    setTimeout(() => {
+      if (!setupCompleted && map.isStyleLoaded()) {
+        console.log('[DEBUG install] Fallback setup triggered');
+        safeSetup();
+      }
+    }, 1000);
     map.on('error', (event: { error?: { message?: string } }) => { if (/pmtiles|resq-basemap|Failed to fetch/i.test(String(event.error?.message))) setFailed(true); });
     map.on('click', (event: ClickEvent) => {
       const hit = map.getLayer(POINTS) ? map.queryRenderedFeatures(event.point, { layers: [POINTS] })[0] : undefined;
@@ -108,7 +204,30 @@ export function MapView({ label, points = [], polygons = [], selectedId = null, 
 
   useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POINTS) as unknown as DataSource | undefined)?.setData(pointData); }, [ready, pointData]);
   useEffect(() => { const map = mapRef.current; if (ready && map) (map.getSource(POLY) as unknown as DataSource | undefined)?.setData(polygonData); }, [ready, polygonData]);
+  useEffect(() => { 
+    const map = mapRef.current; 
+    if (ready && map) {
+      const source = map.getSource(RISK) as unknown as DataSource | undefined;
+      if (source) {
+        console.log('[DEBUG MapView] Setting risk data directly:', riskData.features.length, 'features');
+        source.setData(riskData);
+      }
+    }
+  }, [ready, riskData]);
   useEffect(() => { const map = mapRef.current; if (ready && map?.getLayer(POINTS_SEL)) map.setFilter(POINTS_SEL, ['==', ['get', 'id'], selectedId ?? '__none__']); }, [ready, selectedId]);
+  useEffect(() => {
+    const map = mapRef.current; const colors = colorsRef.current;
+    if (!ready || !map || !externalBasemapStyle || !colors) return;
+    
+    console.log('[DEBUG Basemap Effect] Changing basemap style');
+    map.setStyle(externalBasemapStyle as StyleSpecification);
+    map.once('style.load', () => { 
+      console.log('[DEBUG Basemap Effect] Style loaded, reinstalling sources');
+      install(map, colors); 
+      setReady(false); 
+      setReady(true); 
+    });
+  }, [ready, externalBasemapStyle]);
   useEffect(() => {
     const map = mapRef.current; if (!ready || !map || !bounds) return;
     map.fitBounds(bounds, { padding: 48, maxZoom: 13, animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches });

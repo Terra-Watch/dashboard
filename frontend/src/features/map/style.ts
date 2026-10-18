@@ -28,3 +28,14 @@ export function basemapStyle(colors: MapColors, dark: boolean, origin: string = 
     layers: basemapLayers(SOURCE, flavorFor(colors, dark), { lang: 'en' }) as StyleSpecification['layers'],
   };
 }
+
+/** Satellite basemap style from a raster tile URL. Used when VITE_SATELLITE_BASEMAP is enabled. */
+export function satelliteStyle(tileUrl: string, attribution: string, origin: string = window.location.origin): StyleSpecification {
+  return {
+    version: 8,
+    glyphs: `${origin}/map/glyphs/{fontstack}/{range}.pbf`,
+    sprite: `${origin}/map/sprites/light`,
+    sources: { satellite: { type: 'raster', tiles: [tileUrl], tileSize: 256, attribution } },
+    layers: [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }],
+  };
+}

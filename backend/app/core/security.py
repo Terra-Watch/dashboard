@@ -219,9 +219,20 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str, algo: str = 'bcrypt') -> bool:
-    if algo == 'argon2' and _argon2 is not None:
+    # Defensive check: if hash looks like argon2 but algo is wrong, fix it
+    if password_hash.startswith('$argon2'):
+        algo = 'argon2'
+    
+    if algo == 'argon2':
+        if _argon2 is None:
+            raise HTTPException(status_code=500, detail='argon2 not available but required for this account')
         try:
-            return _argon2.verify(password_hash, password)
-        except Exception:
+            # argon2.verify takes (hash, password) - reverse order from most functions
+            _argon2.verify(password_hash, password)
+            return True
+        except Exception as e:
+            # If argon2 verification fails, return False (wrong password), don't fall through to bcrypt
             return False
+    
+    # Only use bcrypt for actual bcrypt hashes
     return bcrypt.checkpw(password.encode(), password_hash.encode())
