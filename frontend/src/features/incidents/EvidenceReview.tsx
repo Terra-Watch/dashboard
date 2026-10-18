@@ -1,11 +1,20 @@
+import { AlertTriangle } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
-import { presentAssessment } from '../../lib/assessmentPresentation';
+import { presentAssessment, type AssessmentTone } from '../../lib/assessmentPresentation';
 import { REVIEW_OPTIONS, reviewPayload, reviewStatusLabel, validateReview, type EvidenceImage, type ReviewStatus } from './evidenceReviewTypes';
 import { useEvidenceImage } from './useEvidenceImage';
 
 export type { EvidenceImage, ReviewStatus };
+
+const TONE_BOX: Record<AssessmentTone, string> = {
+  review_required: 'border-warn bg-warn-tint',
+  advisory: 'border-warn bg-warn-tint',
+  experimental: 'border-unconfirmed bg-unconfirmed-tint',
+  unavailable: 'border-control bg-canvas',
+  pending: 'border-control bg-canvas',
+};
 
 type Props = {
   incidentId: number;
@@ -27,7 +36,7 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState('');
   const [error, setError] = useState('');
-  const assessment = presentAssessment(image);
+  const assessment = presentAssessment(image, t);
   const problem = validateReview(choice, note);
 
   async function save() {
@@ -65,10 +74,28 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
         )}
       </div>
 
-      <div className="mt-3 rounded-rq bg-canvas p-3">
+      <div className={`mt-3 rounded-rq border-l-4 p-3 ${TONE_BOX[assessment.tone]}`} data-testid="assessment-box" data-tone={assessment.tone}>
         <p className="text-ink-muted" data-testid="image-assessment">{t('ops.ev.auto', 'Automated check')}: {assessment.headline}{assessment.reason ? ` · ${assessment.reason}` : ''}</p>
+        {assessment.reviewRequiredText && <p className="mt-2 flex items-start gap-2 font-semibold text-ink" data-testid="review-required"><AlertTriangle aria-hidden="true" size={18} className="mt-0.5 shrink-0" /><span>{assessment.reviewRequiredText}</span></p>}
         {assessment.experimentalOutput && <p className="mt-1 font-mono text-xs text-ink-muted" data-testid="experimental-output">{assessment.experimentalOutput}</p>}
         {assessment.detail && <p className="mt-1 text-ink-muted">{assessment.detail}</p>}
+        {assessment.scores && (
+          <div className="mt-2" data-testid="assessment-scores">
+            <p>{t('assess.flames', 'Flames visible')}: <span className="font-semibold">{assessment.scores.flames}</span> · {t('assess.smoke', 'Smoke visible')}: <span className="font-semibold">{assessment.scores.smoke}</span></p>
+            {assessment.scoresNote && <p className="text-xs text-ink-muted">{assessment.scoresNote}</p>}
+          </div>
+        )}
+        {assessment.oodWarning && <p className="mt-2 text-warn" data-testid="assessment-ood">{assessment.oodWarning}</p>}
+        {assessment.qualityWarnings.length > 0 && (
+          <ul className="mt-2 list-disc pl-5 text-ink-muted" aria-label={t('assess.quality', 'Photo quality warnings')} data-testid="assessment-quality">{assessment.qualityWarnings.map(text => <li key={text}>{text}</li>)}</ul>
+        )}
+        {(assessment.authenticityLines.length > 0 || assessment.authenticityText) && (
+          <div className="mt-2" data-testid="assessment-authenticity">
+            <p className="font-semibold">{t('assess.authenticity', 'Authenticity check (advisory)')}{assessment.authenticityText ? `: ${assessment.authenticityText}` : ''}</p>
+            {assessment.authenticityLines.length > 0 && <ul className="mt-1 space-y-0.5">{assessment.authenticityLines.map(line => <li key={line.key} data-indication={line.key}>{line.label}: {line.value}</li>)}</ul>}
+          </div>
+        )}
+        {assessment.limitations.length > 0 && <ul className="mt-2 list-disc pl-5 text-xs text-ink-muted" data-testid="assessment-limitations">{assessment.limitations.map(text => <li key={text}>{text}</li>)}</ul>}
         <p className="mt-1 text-xs text-ink-muted">{assessment.advisoryNote}</p>
       </div>
 

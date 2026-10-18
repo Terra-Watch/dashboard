@@ -38,6 +38,8 @@ test('experimental, unavailable and pending assessments are labelled and never s
   await expect(cells.nth(1)).toContainText('Assessment unavailable');
   await expect(cells.nth(1)).toContainText('switched off');
   await expect(cells.nth(2)).toContainText('Assessment pending');
+  await expect(page.getByTestId('review-required').first()).toContainText('Human review required');
+  await expect(page.getByTestId('assessment-scores')).toHaveCount(0);
   await expect(page.getByTestId('experimental-output')).toHaveCount(1);
   await expect(page.getByTestId('experimental-output')).toContainText('uncalibrated, not probabilities');
   await expect(page.getByTestId('experimental-output')).toContainText('flames 1.86, smoke -2.15');
