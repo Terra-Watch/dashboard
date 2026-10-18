@@ -67,6 +67,12 @@ def other_jpeg(seed: int) -> bytes:
     buf = io.BytesIO(); img.save(buf, "JPEG"); return buf.getvalue()
 
 
+def with_csrf(client, headers=None) -> dict:
+    """Double-submit CSRF pair for a client that authenticates with a bare bearer token (no login cookie)."""
+    client.cookies.set("resq_csrf", "test-csrf-token")
+    return {**(headers or {}), "x-resq-csrf": "test-csrf-token"}
+
+
 def files(data: bytes, name="evidence.jpg"):
     return {"image": (name, data, "image/jpeg")}
 
@@ -239,10 +245,10 @@ def test_incident_image_upload_requires_authentication_role_and_state_scope():
     iid = created.json()["id"]
     assert client.post(f"/api/incidents/{iid}/images", files=files(jpeg_bytes())).status_code in (401, 403)             # anonymous
     crew = make_user("field_crew", scopes=["OD"])[0]
-    assert client.post(f"/api/incidents/{iid}/images", headers={"Authorization": f"Bearer {make_token(crew, 'field_crew')}"}, files=files(jpeg_bytes())).status_code in (401, 403)
+    assert client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, {"Authorization": f"Bearer {make_token(crew, 'field_crew')}"}), files=files(jpeg_bytes())).status_code == 403
     out_of_scope = make_user("officer", scopes=["MH"])[0]
-    r = client.post(f"/api/incidents/{iid}/images", headers={"Authorization": f"Bearer {make_token(out_of_scope, 'officer')}"}, files=files(jpeg_bytes()))
-    assert r.status_code == 403
+    r = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, {"Authorization": f"Bearer {make_token(out_of_scope, 'officer')}"}), files=files(jpeg_bytes()))
+    assert r.status_code == 403 and "CSRF" not in r.text   # refused for scope, not for the missing CSRF pair
     assert db_scalar("SELECT count(*) FROM resq_incident_images WHERE incident_id=:i", i=iid) == 0
 
 
@@ -285,7 +291,7 @@ def test_human_review_and_status_changes_are_independent_of_the_automated_assess
     client = fresh_client()
     iid = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                "notes": "review", "state": "OD"}).json()["id"]
-    up = client.post(f"/api/incidents/{iid}/images", headers=bearer, files=files(jpeg_bytes()))
+    up = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, bearer), files=files(jpeg_bytes()))
     assert up.status_code == 201
     image = up.json()["image"]
     assert image["assessment_status"] == "UNAVAILABLE" and image["human_review_status"] == "NOT_REVIEWED"

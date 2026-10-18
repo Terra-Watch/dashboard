@@ -3,6 +3,12 @@
 **Date:** 2026-10-16
 **Status:** LOCAL EXPERIMENTAL INFRASTRUCTURE COMPLETE - BLOCKED ON CHECKPOINT DOWNLOAD
 
+## Addendum 2026-10-18 (productionise: staff contract, CSRF, community moderation)
+
+Verified by running the backend suite against a local PostgreSQL 16 with the assessor checkout supplied as `FIRE_EVIDENCE_TEST_ASSESSOR_REPO`
+(toy fixtures and stub scorers only; no real checkpoint, no torch): see `docs/fire_evidence_integration.md` for the staff assessment contract, the optional
+signature check, the default-off community media moderation flags, and the known limitations. Nothing in this addendum enables inference anywhere; all flags default off.
+
 ## Executive Summary
 
 All code, tests, and infrastructure for local experimental inference are in place and verified working. The integration is blocked solely by OS sandbox restrictions preventing GCP checkpoint download. Once the genuine checkpoint is available locally, the system is ready to run end-to-end.
@@ -57,8 +63,7 @@ shasum -a 256 ~/Desktop/Projects/fire-evidence-assessor/checkpoint/weights.pt
 - ✅ `src/fire_assessor/checkpoint.py` - SHA-256 + architecture verification (no pickle execution)
 - ✅ `src/fire_assessor/model.py` - FireModel (ViT-B/16 + LoRA r8)
 - ✅ `src/fire_assessor/features.py` - Image preprocessing
-- ✅ `src/fire_assessor/json_security.py` - Strict JSON parsing
-- ✅ `src/fire_assessor/signing.py` - Ed25519 verification (unused by experimental path)
+- ⚠️ `src/fire_assessor/json_security.py` and `src/fire_assessor/signing.py` - listed here earlier but NOT present in the assessor checkout inspected on 2026-10-18 (branch `claude/wizardly-turing-qzfyiy`, HEAD `7ddb717`); the website adapter now does its own optional Ed25519 verification (`FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY`)
 - ✅ `docs/provenance/lora_s0_provenance.json` - Provenance record (newly created)
 - ✅ `docs/integration/EXPERIMENTAL_INFERENCE.md` - Documentation
 - ✅ `scripts/experimental_smoke.py` - Standalone smoke test script
@@ -197,7 +202,7 @@ The following cannot be verified without the 345 MB checkpoint:
 5. ❌ Assessment persists to database
 6. ❌ Result renders in frontend
 7. ❌ Human review flow verified
-8. ❌ Incident status unchanged after assessment
+8. ⚠️ Incident status unchanged after assessment - verified with a FAKE model returning an extreme COMPLETED result (`backend/tests/test_fire_evidence_isolation.py`); not verified with the real checkpoint
 
 ---
 
@@ -344,7 +349,7 @@ FIRE_EVIDENCE_REAL_CHECKPOINT=~/Desktop/Projects/fire-evidence-assessor/checkpoi
 2. ✅ **Checkpoint directory prepared** - With .gitignore and download instructions
 3. ✅ **Test infrastructure fixed** - Added missing `tests/__init__.py`
 4. ✅ **Backend .env configured** - Experimental settings with correct paths
-5. ✅ **All testable code verified** - 85 tests pass (63 backend + 22 assessor)
+5. ✅ **All testable code verified** - (figure from 2026-10-16: 85 tests, 63 backend + 22 assessor; superseded, see the addendum below)
 6. ✅ **Configuration logic validated** - Gates, flags, environment checks work
 7. ✅ **Integration documented** - This status report + existing docs
 

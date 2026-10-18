@@ -23,7 +23,7 @@ from tests.test_auth import fresh_client, make_user  # noqa: E402
 from tests.test_fire_evidence_adapter import jpeg_bytes, make_stub_scorer, needs_assessor  # noqa: E402,F401
 from tests.test_fire_evidence_experimental import ENV_NAMES, REAL, _real_image, needs_real, setup_dev  # noqa: E402,F401
 from tests.test_fire_evidence_experimental import PROVENANCE_FILE  # noqa: E402,F401
-from tests.test_fire_evidence_routes import (actor, citizen_report, database, db_one, db_scalar, files, image_row, isolated,  # noqa: E402,F401
+from tests.test_fire_evidence_routes import (actor, citizen_report, with_csrf, database, db_one, db_scalar, files, image_row, isolated,  # noqa: E402,F401
                                              operational_state)
 
 pytestmark = needs_assessor
@@ -79,7 +79,7 @@ def test_staff_upload_review_and_status_remain_human_driven(monkeypatch, tmp_pat
     client = fresh_client()
     iid = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                "notes": "exp", "state": "OD"}).json()["id"]
-    up = client.post(f"/api/incidents/{iid}/images", headers=bearer, files=files(jpeg_bytes()))
+    up = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, bearer), files=files(jpeg_bytes()))
     assert up.status_code == 201, up.text
     image = up.json()["image"]
     assert image["assessment_status"] == "EXPERIMENTAL" and image["assessment"]["raw_logits"]["smoke_visible"] == -1.25

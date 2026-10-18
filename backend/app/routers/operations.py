@@ -14,9 +14,9 @@ from ..contracts.schemas import (
     IncidentImageReviewRequest, OperationalAlertCreateRequest, PlanRequest, SettingsUpdate, SpreadRequest,
 )
 from ..core.permissions import require_scope, user_scopes
-from ..core.security import current_redesign_user, current_risk_user, current_user, require_staff_write, require_write
+from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
 from ..services import alert_service, audit_log
-from ..services.image_assessment import assess_image_async, persistence_fields
+from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment
 from ..services.simulation_service import validate_simulation
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def _image_row(row: dict) -> dict:
         "assessment_status": row["assessment_status"],
         "model_version": row.get("model_version"),
         "authenticity_status": row.get("authenticity_status"),
-        "assessment": row.get("assessment") or {},
+        "assessment": present_assessment(row.get("assessment"), row.get("assessment_status"), row.get("assessment_error")),
         "human_review_status": row["human_review_status"],
         "human_review_note": row.get("human_review_note"),
         "human_reviewed_by": row.get("human_reviewed_by"),
@@ -262,7 +262,7 @@ def get_incident(incident_id: int, user: dict[str, object] = Depends(current_ris
     return result
 
 
-@router.post('/incidents/{incident_id}/images', status_code=201)
+@router.post('/incidents/{incident_id}/images', status_code=201, dependencies=[Depends(require_csrf)])
 async def upload_incident_image(
     incident_id: int,
     image: UploadFile = File(...),

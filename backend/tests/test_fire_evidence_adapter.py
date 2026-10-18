@@ -256,6 +256,7 @@ def test_architecture_mismatch_between_declaration_and_weights(monkeypatch, bund
     edit(bundle, lambda m: m["architecture"]["lora"].__setitem__("rank", 4), reapprove=True)  # signed + complete, but weights are rank 2
     assert ia.preflight_artifact(str(bundle), FIXTURE_VERSION) is None  # the stdlib pre-flight cannot see tensors...
     configure(monkeypatch, bundle); use_stub()
+    monkeypatch.delenv("FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY")  # editing the bundle invalidated the fixture signature; this test is about the tensors
     r = ia.assess_image(jpeg_bytes(), "i")
     assert r["assessment_status"] == "UNAVAILABLE" and r["error_code"] == ia.INCOMPATIBLE and r["scores"] is None  # ...the assessor's loader does
 
@@ -336,7 +337,8 @@ def test_non_dict_results_are_unavailable(junk):
 def test_scores_and_label_on_an_unavailable_result_are_stripped():
     r = good(); r["assessment_status"] = "UNAVAILABLE"; r["error_code"] = "DECODE_FAILED"
     out = ia.sanitize_assessment(r)
-    assert out["scores"] is None and out["derived_label"] is None and out["error_code"] == "DECODE_FAILED" and out["authenticity"]["status"] == "INCONCLUSIVE"
+    assert out["scores"] is None and out["derived_label"] is None and out["error_code"] == "DECODE_FAILED"
+    assert out["authenticity"]["status"] == "NOT_ASSESSED" and out["ood_flag"] is None and out["review_required"] is True  # never reads as a negative
 
 
 def test_persistence_fields_never_store_authenticity_for_unavailable_results():

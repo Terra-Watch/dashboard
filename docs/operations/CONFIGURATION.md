@@ -25,6 +25,10 @@ First administrator: `python -m scripts.create_admin` (reads `RESQ_ADMIN_PASSWOR
 | `FEED_STALE_MINUTES` | "stale" marking on satellite and weather data; scenario "outdated" rule | |
 | `REPORT_ESCALATION_MINUTES` | Reports with no officer are brought to the lead after this long | Run `python -m scripts.escalate_reports` on a schedule. |
 | `COMMUNITY_EDIT_WINDOW_MINUTES`, `COMMUNITY_NEW_ACCOUNT_HOURS` | Community edit window and new-account limits | Chat retention is set per room by a moderator; run `python -m scripts.purge_chat` on a schedule. |
+| `COMMUNITY_IMAGES_ENABLED=true` | One image per community post (author only; re-encoded without EXIF/GPS; jpeg/png/webp) | Off by default; with it off the endpoints return 404 and no image fields exist. `COMMUNITY_IMAGE_MAX_BYTES` (default 5 MB) and `COMMUNITY_IMAGE_STORAGE_DIR` tune it. Separate from incident evidence. |
+| `FIRE_EVIDENCE_COMMUNITY_ENABLED=true` | Media-authenticity check on those images (moderator-only advisory result) | Off by default and needs `COMMUNITY_IMAGES_ENABLED`. Needs the shared Fire Evidence model to be configured; otherwise every image is UNAVAILABLE and its post is held for a moderator. It never removes, mutes or publishes anything. See `docs/fire_evidence_integration.md`. |
+| `FIRE_EVIDENCE_INFERENCE_ENABLED=true`, `FIRE_EVIDENCE_REPO`, `FIRE_EVIDENCE_ARTIFACT_DIR`, `FIRE_EVIDENCE_MODEL_VERSION` | Fire Evidence Assessor on incident evidence | Off by default; every upload is stored as UNAVAILABLE until an APPROVED artifact is configured. Staff review stays authoritative. |
+| `FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY`, `FIRE_EVIDENCE_TRUSTED_KEY_ID` | Ed25519 check of the artifact's approval signature | Enforced only when the public key is set; unset means the signature is not checked. Needs the `cryptography` package. |
 | `FEATURE_PATROL_PLANNING=true` and `VITE_FEATURE_PATROL_PLANNING=true` | Patrol planning screens | Built but off until the department agrees how it should work. |
 
 ## Email (optional)
