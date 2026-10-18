@@ -1,0 +1,302 @@
+{
+  "light": {
+    "bg": {
+      "$type": "color",
+      "$value": "#f5f2eb"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#fffdf9"
+    },
+    "surface-2": {
+      "$type": "color",
+      "$value": "#ece7dc"
+    },
+    "line": {
+      "$type": "color",
+      "$value": "#d8d0c0"
+    },
+    "line-control": {
+      "$type": "color",
+      "$value": "#7a6f5e"
+    },
+    "text": {
+      "$type": "color",
+      "$value": "#1f1b16"
+    },
+    "text-muted": {
+      "$type": "color",
+      "$value": "#5a5247"
+    },
+    "action": {
+      "$type": "color",
+      "$value": "#1f1b16"
+    },
+    "action-strong": {
+      "$type": "color",
+      "$value": "#000000"
+    },
+    "on-action": {
+      "$type": "color",
+      "$value": "#fffdf9"
+    },
+    "action-tint": {
+      "$type": "color",
+      "$value": "#e4ddcd"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#b3261e"
+    },
+    "danger-tint": {
+      "$type": "color",
+      "$value": "#fbe7e3"
+    },
+    "warn": {
+      "$type": "color",
+      "$value": "#6f5a00"
+    },
+    "warn-tint": {
+      "$type": "color",
+      "$value": "#f9eccb"
+    },
+    "ok": {
+      "$type": "color",
+      "$value": "#2d6a3e"
+    },
+    "ok-tint": {
+      "$type": "color",
+      "$value": "#e2efe2"
+    },
+    "unconfirmed": {
+      "$type": "color",
+      "$value": "#3f4aa0"
+    },
+    "unconfirmed-tint": {
+      "$type": "color",
+      "$value": "#e8e9f6"
+    },
+    "ember": {
+      "$type": "color",
+      "$value": "#c2410c"
+    },
+    "focus": {
+      "$type": "color",
+      "$value": "#2a45d1"
+    },
+    "outlook-1": {
+      "$type": "color",
+      "$value": "#ffffb2"
+    },
+    "outlook-2": {
+      "$type": "color",
+      "$value": "#fecc5c"
+    },
+    "outlook-3": {
+      "$type": "color",
+      "$value": "#fd8d3c"
+    },
+    "outlook-4": {
+      "$type": "color",
+      "$value": "#f03b20"
+    },
+    "outlook-5": {
+      "$type": "color",
+      "$value": "#bd0026"
+    },
+    "prob-1": {
+      "$type": "color",
+      "$value": "#eff3ff"
+    },
+    "prob-2": {
+      "$type": "color",
+      "$value": "#bdd7e7"
+    },
+    "prob-3": {
+      "$type": "color",
+      "$value": "#6baed6"
+    },
+    "prob-4": {
+      "$type": "color",
+      "$value": "#2171b5"
+    },
+    "map-land": {
+      "$type": "color",
+      "$value": "#ece8de"
+    },
+    "map-forest": {
+      "$type": "color",
+      "$value": "#dfe6d3"
+    },
+    "map-water": {
+      "$type": "color",
+      "$value": "#d3e0e6"
+    },
+    "map-road": {
+      "$type": "color",
+      "$value": "#cfc7b6"
+    },
+    "map-road-major": {
+      "$type": "color",
+      "$value": "#aaa08c"
+    },
+    "map-boundary": {
+      "$type": "color",
+      "$value": "#8d8370"
+    },
+    "map-label": {
+      "$type": "color",
+      "$value": "#463f35"
+    }
+  },
+  "dark": {
+    "bg": {
+      "$type": "color",
+      "$value": "#151310"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#1e1b17"
+    },
+    "surface-2": {
+      "$type": "color",
+      "$value": "#27231e"
+    },
+    "line": {
+      "$type": "color",
+      "$value": "#3a342c"
+    },
+    "line-control": {
+      "$type": "color",
+      "$value": "#8a7f6e"
+    },
+    "text": {
+      "$type": "color",
+      "$value": "#f1ede4"
+    },
+    "text-muted": {
+      "$type": "color",
+      "$value": "#b5ab9b"
+    },
+    "action": {
+      "$type": "color",
+      "$value": "#f1ede4"
+    },
+    "action-strong": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "on-action": {
+      "$type": "color",
+      "$value": "#1f1b16"
+    },
+    "action-tint": {
+      "$type": "color",
+      "$value": "#2f2a23"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#f08070"
+    },
+    "danger-tint": {
+      "$type": "color",
+      "$value": "#3a1f1c"
+    },
+    "warn": {
+      "$type": "color",
+      "$value": "#e6b04a"
+    },
+    "warn-tint": {
+      "$type": "color",
+      "$value": "#3a2d0f"
+    },
+    "ok": {
+      "$type": "color",
+      "$value": "#7fc08a"
+    },
+    "ok-tint": {
+      "$type": "color",
+      "$value": "#1c3322"
+    },
+    "unconfirmed": {
+      "$type": "color",
+      "$value": "#a9b2ff"
+    },
+    "unconfirmed-tint": {
+      "$type": "color",
+      "$value": "#232748"
+    },
+    "ember": {
+      "$type": "color",
+      "$value": "#ff7a3d"
+    },
+    "focus": {
+      "$type": "color",
+      "$value": "#8fa4ff"
+    },
+    "outlook-1": {
+      "$type": "color",
+      "$value": "#ffffb2"
+    },
+    "outlook-2": {
+      "$type": "color",
+      "$value": "#fecc5c"
+    },
+    "outlook-3": {
+      "$type": "color",
+      "$value": "#fd8d3c"
+    },
+    "outlook-4": {
+      "$type": "color",
+      "$value": "#f03b20"
+    },
+    "outlook-5": {
+      "$type": "color",
+      "$value": "#bd0026"
+    },
+    "prob-1": {
+      "$type": "color",
+      "$value": "#eff3ff"
+    },
+    "prob-2": {
+      "$type": "color",
+      "$value": "#bdd7e7"
+    },
+    "prob-3": {
+      "$type": "color",
+      "$value": "#6baed6"
+    },
+    "prob-4": {
+      "$type": "color",
+      "$value": "#2171b5"
+    },
+    "map-land": {
+      "$type": "color",
+      "$value": "#25211c"
+    },
+    "map-forest": {
+      "$type": "color",
+      "$value": "#27301f"
+    },
+    "map-water": {
+      "$type": "color",
+      "$value": "#1f2c33"
+    },
+    "map-road": {
+      "$type": "color",
+      "$value": "#3d362d"
+    },
+    "map-road-major": {
+      "$type": "color",
+      "$value": "#5a5042"
+    },
+    "map-boundary": {
+      "$type": "color",
+      "$value": "#7a6f5e"
+    },
+    "map-label": {
+      "$type": "color",
+      "$value": "#cfc6b4"
+    }
+  }
+}

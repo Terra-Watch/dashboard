@@ -1,5 +1,0 @@
-import type { RiskRecord } from '../pages/MapPage';
-
-export function CellPanel({ record, count, close }: { record: RiskRecord; count: number; close: () => void }) {
-  return <aside className="cell-panel" aria-labelledby="cell-panel-title"><button className="close-sheet" onClick={close}>Close</button><p className="eyebrow">Fire-risk area</p><h2 id="cell-panel-title">Cell {record.cell_id} · {record.state}</h2><p><span className={`band band-${record.band.toLowerCase().replace(' ', '-')}`}>{record.band} ranking</span></p><p className="muted">Ranked among {count.toLocaleString()} forest areas included for this date.</p><p className="muted">This is a historical ranking, not a detected fire or a calibrated chance of fire. The saved spread example starts separately from a fixed location.</p><section><h3>Why it ranked here</h3><div className="empty">Explanatory details are not available for this example.</div></section><section><h3>Local information</h3><div className="empty">Weather, nearby reports, roads, and settlements are not available in this example.</div></section></aside>;
-}

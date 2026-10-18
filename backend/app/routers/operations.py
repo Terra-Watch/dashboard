@@ -14,7 +14,7 @@ from ..contracts.schemas import (
     IncidentImageReviewRequest, OperationalAlertCreateRequest, PlanRequest, SettingsUpdate, SpreadRequest,
 )
 from ..core.permissions import require_scope, user_scopes
-from ..core.security import current_redesign_user, current_risk_user, current_user, require_write
+from ..core.security import current_redesign_user, current_risk_user, current_user, require_staff_write, require_write
 from ..services import alert_service, audit_log
 from ..services.image_assessment import assess_image_async, persistence_fields
 from ..services.simulation_service import validate_simulation
@@ -82,22 +82,28 @@ def report_summary(_: dict[str, object] = Depends(current_user)) -> dict[str, ob
     return {'incidents': counts['incidents'], 'plans': counts['plans'], 'forecast_runs': counts['forecast_runs']}
 
 
-@router.get("/plans")
-def list_plans(user: dict[str, object] = Depends(current_user)) -> list[dict[str, object]]:
+def patrol_planning_enabled() -> None:
+    """Patrol planning is built but switched off until the department agrees how it should work. FEATURE_PATROL_PLANNING=true turns it on."""
+    if os.environ.get('FEATURE_PATROL_PLANNING', '').lower() != 'true':
+        raise HTTPException(status_code=404, detail='Patrol planning is not available')
+
+
+@router.get("/plans", dependencies=[Depends(patrol_planning_enabled)])
+def list_plans(user: dict[str, object] = Depends(current_risk_user)) -> list[dict[str, object]]:
     with engine.connect() as db:
         rows = db.execute(text("SELECT id,plan_date,region,teams,priority_cells,status,created_at FROM resq_plans WHERE owner_id=:id OR :role='admin' ORDER BY created_at DESC"), {"id": user["id"], "role": user["role"]}).mappings().all()
     return [dict(row) for row in rows]
 
 
-@router.post("/plans", status_code=201)
-def create_plan(payload: PlanRequest, user: dict[str, object] = Depends(require_write)) -> dict[str, object]:
+@router.post("/plans", status_code=201, dependencies=[Depends(patrol_planning_enabled)])
+def create_plan(payload: PlanRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     with engine.begin() as db:
         row = db.execute(text("INSERT INTO resq_plans (owner_id,plan_date,region,teams,priority_cells) VALUES (:owner_id,:date,:region,:teams,:priority_cells) RETURNING id,plan_date,region,teams,priority_cells,status"), {"owner_id": user["id"], **payload.model_dump()}).mappings().one()
     return dict(row)
 
 
-@router.post('/plans/{plan_id}/route')
-def generate_plan_route(plan_id: int, user: dict[str, object] = Depends(require_write)) -> dict[str, object]:
+@router.post('/plans/{plan_id}/route', dependencies=[Depends(patrol_planning_enabled)])
+def generate_plan_route(plan_id: int, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     with engine.connect() as db:
         plan = db.execute(text('SELECT id,plan_date,region,priority_cells FROM resq_plans WHERE id=:id AND (owner_id=:user_id OR :role=\'admin\')'), {'id': plan_id, 'user_id': user['id'], 'role': user['role']}).mappings().first()
         if not plan:
@@ -140,7 +146,7 @@ def list_incidents(
     state: str | None = None,
     user: dict[str, object] = Depends(current_risk_user),
 ) -> list[dict[str, object]]:
-    query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.state,i.created_at,i.updated_at,
+    query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,
         (SELECT assessment_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS image_assessment_status,
         (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status
         FROM resq_incidents i"""
@@ -163,7 +169,7 @@ def list_incidents(
 
 
 @router.post("/incidents", status_code=201)
-def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(require_write)) -> dict[str, object]:
+def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     if not payload.client_key.strip() or len(payload.client_key) > 120:
         raise HTTPException(status_code=422, detail="client_key must contain 1 to 120 characters")
 
@@ -174,10 +180,10 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
     created_new = False
     with engine.begin() as db:
         result = db.execute(
-            text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state)
-                VALUES (:reporter_id,:client_key,:source,:size,:notes,:state)
+            text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
+                VALUES (:reporter_id,:client_key,:source,:size,:notes,:state,:latitude,:longitude,:observed_at)
                 ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
-                RETURNING id,reporter_id,source,size,notes,status,state,created_at,updated_at"""),
+                RETURNING id,reporter_id,source,size,notes,status,state,latitude,longitude,observed_at,created_at,updated_at"""),
             {
                 "reporter_id": user["id"],
                 "client_key": payload.client_key,
@@ -185,6 +191,9 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
                 "size": payload.size,
                 "notes": payload.notes,
                 "state": payload.state,
+                "latitude": payload.latitude,
+                "longitude": payload.longitude,
+                "observed_at": payload.observed_at,
             },
         ).mappings().first()
         if result is not None:
@@ -240,7 +249,7 @@ def get_incident_image(incident_id: int, image_id: int, user: dict[str, object] 
 def get_incident(incident_id: int, user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
     with engine.connect() as db:
         row = db.execute(
-            text('SELECT id,source,size,notes,status,state,latitude,longitude,observed_at,created_at,updated_at FROM resq_incidents WHERE id=:id'),
+            text('SELECT id,source,size,notes,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at FROM resq_incidents WHERE id=:id'),
             {'id': incident_id},
         ).mappings().first()
     if not row:
@@ -364,6 +373,15 @@ def update_incident_status(
     if payload.status not in allowed:
         raise HTTPException(status_code=422, detail='Unknown incident status')
 
+    close_note = (payload.notes or '').strip()
+    if payload.status == 'closed':
+        if not payload.close_reason:
+            raise HTTPException(status_code=422, detail='Choose a closure reason to close an incident')
+        if payload.close_reason == 'other' and len(close_note) < 5:
+            raise HTTPException(status_code=422, detail='Add a short note explaining the closure')
+    elif payload.close_reason:
+        raise HTTPException(status_code=422, detail='A closure reason is only valid when closing an incident')
+
     with engine.begin() as db:
         existing = db.execute(
             text('SELECT id,reporter_id,source,size,notes,status,state,source FROM resq_incidents WHERE id=:id'),
@@ -382,8 +400,8 @@ def update_incident_status(
             )
 
         row = db.execute(
-            text('UPDATE resq_incidents SET status=:status, updated_at=now() WHERE id=:id RETURNING id,source,size,notes,status,state,created_at,updated_at'),
-            {'id': incident_id, 'status': payload.status},
+            text('UPDATE resq_incidents SET status=:status, close_reason=:close_reason, updated_at=now() WHERE id=:id RETURNING id,source,size,notes,status,close_reason,state,created_at,updated_at'),
+            {'id': incident_id, 'status': payload.status, 'close_reason': payload.close_reason if payload.status == 'closed' else None},
         ).mappings().first()
 
         audit_log.write_audit_log(
@@ -392,7 +410,7 @@ def update_incident_status(
             entity_id=str(incident_id),
             user_id=int(user["id"]),
             previous_state=prev_status,
-            metadata={"new_status": payload.status, "notes": payload.notes},
+            metadata={"new_status": payload.status, "notes": payload.notes, "close_reason": payload.close_reason},
             connection=db,
         )
 
@@ -554,7 +572,7 @@ def mark_alert_read(alert_id: int, user: dict[str, object] = Depends(current_use
 
 
 @router.get('/alerts/rules')
-def list_alert_rules(user: dict[str, object] = Depends(current_user)) -> list[dict[str, object]]:
+def list_alert_rules(user: dict[str, object] = Depends(current_risk_user)) -> list[dict[str, object]]:
     with engine.connect() as db:
         rows = db.execute(
             text('SELECT id,name,kind,enabled,channel,state,severity,conditions,created_at FROM resq_alert_rules WHERE owner_id=:id OR :role=\'admin\' ORDER BY id'),
@@ -564,7 +582,11 @@ def list_alert_rules(user: dict[str, object] = Depends(current_user)) -> list[di
 
 
 @router.post('/alerts/rules', status_code=201)
-def create_alert_rule(payload: AlertRuleRequest, user: dict[str, object] = Depends(require_write)) -> dict[str, object]:
+def create_alert_rule(payload: AlertRuleRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
+    if user.get('role') != 'admin':
+        if not payload.state:
+            raise HTTPException(status_code=422, detail='Choose a state for this rule')
+        require_scope(user, payload.state, entity_type='alert_rule', entity_id='new')
     with engine.begin() as db:
         row = db.execute(
             text('INSERT INTO resq_alert_rules (owner_id,name,kind,enabled,channel,state,severity,conditions) '

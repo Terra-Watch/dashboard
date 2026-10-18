@@ -23,6 +23,13 @@ class RedesignWriteGuardTests(unittest.TestCase):
         app = FastAPI()
         app.include_router(redesign.router)
         cls.client = TestClient(app)
+        from app.core import security
+        cls._active = patch.object(security, "_confirm_active", side_effect=lambda identity: identity)   # account checks are tested in test_admin
+        cls._active.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._active.stop()
 
     def test_client_supplied_role_cannot_persist_triage_action(self):
         with patch.object(redesign.redesign_store, "record_triage_action") as record:

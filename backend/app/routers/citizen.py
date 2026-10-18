@@ -13,11 +13,13 @@ from io import BytesIO
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import text
 
+from ..contracts.account import AccountDeleteRequest
 from ..contracts.schemas import CitizenReportRequest, IncidentImageReviewRequest
 from ..core.permissions import SUPPORTED_STATES
-from ..core.security import current_redesign_user, require_csrf
+from ..core.security import current_redesign_user, hash_password_argon2, new_raw_token, require_csrf, verify_password
 from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
+from ..services.recipients import incident_staff_recipients
 from ..services import audit_log
 from ..services.alert_service import generate_alert
 from ..services.image_assessment import assess_image_async, persistence_fields
@@ -42,7 +44,7 @@ def _parse_observed(value: str) -> datetime:
 
 
 def _safe_report(row: dict) -> dict:
-    return {key: row.get(key) for key in ('id', 'status', 'state', 'latitude', 'longitude', 'observed_at', 'created_at', 'updated_at')}
+    return {key: row.get(key) for key in ('id', 'status', 'close_reason', 'state', 'latitude', 'longitude', 'observed_at', 'created_at', 'updated_at')}
 
 
 @router.post('/reports', status_code=201, dependencies=[Depends(require_csrf)])
@@ -63,7 +65,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
             }).mappings().first()
         created = result is not None
         if not result:
-            result = db.execute(text('''SELECT id,reporter_id,status,state,latitude,longitude,observed_at,created_at,updated_at
+            result = db.execute(text('''SELECT id,reporter_id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
                 FROM resq_incidents WHERE client_key=:client_key'''), {'client_key': payload.client_key.strip()}).mappings().first()
         if not result or result['reporter_id'] != user['id']:
             raise HTTPException(status_code=409, detail='Report key conflicts with another account')
@@ -71,9 +73,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
         if created:
             audit_log.write_audit_log(action='citizen_report_created', entity_type='incident', entity_id=str(row['id']), user_id=int(user['id']), metadata={'state': row['state']}, connection=db)
     if created:
-        with engine.connect() as db:
-            recipients = db.execute(text("SELECT id FROM resq_users WHERE role IN ('admin','control_room_operator','incident_commander')")).scalars().all()
-        for recipient_id in sorted(set(int(item) for item in recipients)):
+        for recipient_id in incident_staff_recipients(row['state']):
             generate_alert(kind='citizen_report_received', message=f'Citizen report #{row["id"]} is ready for review.', state=row['state'], severity='info', entity_type='incident', entity_id=str(row['id']), user_id=recipient_id)
     return {'created': created, 'report': _safe_report(row), 'message': 'Report persisted for human review. No emergency notification is implied.'}
 
@@ -81,7 +81,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
 @router.get('/reports')
 def list_reports(user: dict = Depends(citizen_user)) -> dict:
     with engine.connect() as db:
-        rows = db.execute(text('''SELECT id,status,state,latitude,longitude,observed_at,created_at,updated_at
+        rows = db.execute(text('''SELECT id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
             FROM resq_incidents WHERE reporter_id=:reporter_id ORDER BY created_at DESC'''), {'reporter_id': user['id']}).mappings().all()
     return {'items': [_safe_report(dict(row)) for row in rows]}
 
@@ -89,7 +89,7 @@ def list_reports(user: dict = Depends(citizen_user)) -> dict:
 @router.get('/reports/{report_id}')
 def get_report(report_id: int, user: dict = Depends(citizen_user)) -> dict:
     with engine.connect() as db:
-        row = db.execute(text('''SELECT id,reporter_id,status,state,latitude,longitude,observed_at,created_at,updated_at
+        row = db.execute(text('''SELECT id,reporter_id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
             FROM resq_incidents WHERE id=:id AND reporter_id=:reporter_id'''), {'id': report_id, 'reporter_id': user['id']}).mappings().first()
         images = db.execute(text('''SELECT id,original_filename,size_bytes,assessment_status,created_at
             FROM resq_incident_images WHERE incident_id=:id ORDER BY created_at DESC'''), {'id': report_id}).mappings().all()
@@ -121,10 +121,66 @@ def get_report_evidence(report_id: int, image_id: int, user: dict = Depends(citi
         content=path.read_bytes(),
         media_type=image['content_type'],
         headers={
-            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Cache-Control': 'private, no-store',
             'X-Content-Type-Options': 'nosniff',
         }
     )
+
+
+@router.get('/reports/{report_id}/timeline')
+def report_timeline(report_id: int, user: dict = Depends(citizen_user)) -> dict:
+    """What happened to my report, in plain steps. Only status changes and their times: no staff names, notes or assignments."""
+    with engine.connect() as db:
+        row = db.execute(text('SELECT id,created_at FROM resq_incidents WHERE id=:id AND reporter_id=:r'), {'id': report_id, 'r': user['id']}).mappings().first()
+        if not row:
+            raise HTTPException(status_code=404, detail='Report not found')
+        changes = db.execute(text("""SELECT action, occurred_at, metadata->>'close_reason' AS close_reason FROM resq_audit_log
+            WHERE entity_type='incident' AND entity_id=:e AND action LIKE 'incident_status_%' ORDER BY occurred_at ASC, id ASC"""), {'e': str(report_id)}).mappings().all()
+    events = [{'kind': 'received', 'at': row['created_at']}]
+    for change in changes:
+        status = change['action'].removeprefix('incident_status_')
+        event = {'kind': status, 'at': change['occurred_at']}
+        if status == 'closed':
+            event['close_reason'] = change['close_reason']
+        events.append(event)
+    return {'items': events}
+
+
+@router.get('/account')
+def get_account(user: dict = Depends(citizen_user)) -> dict:
+    with engine.connect() as db:
+        row = db.execute(text('SELECT id,name,email,created_at,consented_at FROM resq_users WHERE id=:id'), {'id': user['id']}).mappings().one()
+    return {'account': dict(row)}
+
+
+@router.get('/account/export')
+def export_account(user: dict = Depends(citizen_user)) -> dict:
+    """Everything we hold about this person, as one JSON document they can save."""
+    with engine.connect() as db:
+        account = db.execute(text('SELECT id,name,email,created_at,consented_at FROM resq_users WHERE id=:id'), {'id': user['id']}).mappings().one()
+        reports = db.execute(text('SELECT id,status,close_reason,state,latitude,longitude,observed_at,created_at,notes FROM resq_incidents WHERE reporter_id=:id ORDER BY id'), {'id': user['id']}).mappings().all()
+        posts = db.execute(text('SELECT id,content,created_at,removed_at FROM resq_community_posts WHERE author_id=:id ORDER BY id'), {'id': user['id']}).mappings().all()
+        comments = db.execute(text('SELECT id,post_id,content,created_at,removed_at FROM resq_community_comments WHERE author_id=:id ORDER BY id'), {'id': user['id']}).mappings().all()
+        messages = db.execute(text('SELECT id,content,created_at FROM resq_community_messages WHERE author_id=:id ORDER BY id'), {'id': user['id']}).mappings().all()
+    audit_log.write_audit_log(action='citizen_account_exported', entity_type='session', entity_id=str(user['id']), user_id=int(user['id']))
+    return {'account': dict(account), 'reports': [dict(r) for r in reports], 'community': {'posts': [dict(r) for r in posts], 'comments': [dict(r) for r in comments], 'chat_messages': [dict(r) for r in messages]}}
+
+
+@router.delete('/account', dependencies=[Depends(require_csrf)])
+def delete_account(payload: AccountDeleteRequest, user: dict = Depends(citizen_user)) -> dict:
+    """Closes the account. Sign-in details and community writing are removed; reports already handed to staff stay as safety records without a name."""
+    with engine.begin() as db:
+        row = db.execute(text('SELECT password_hash,password_algo FROM resq_users WHERE id=:id AND deleted_at IS NULL FOR UPDATE'), {'id': user['id']}).mappings().first()
+        if not row or not verify_password(payload.password, row['password_hash'], row.get('password_algo', 'bcrypt')):
+            raise HTTPException(status_code=403, detail='That password is not right')
+        db.execute(text("UPDATE resq_users SET name='Deleted member', email=:e, password_hash=:h, password_algo='argon2', deleted_at=now() WHERE id=:id"),
+                   {'e': f"deleted-{user['id']}@deleted.invalid", 'h': hash_password_argon2(new_raw_token()), 'id': user['id']})
+        db.execute(text('DELETE FROM resq_refresh_tokens WHERE user_id=:id'), {'id': user['id']})
+        db.execute(text("UPDATE resq_community_posts SET status='removed', removed_at=COALESCE(removed_at,now()), removed_by=:id, removal_kind=COALESCE(removal_kind,'author') WHERE author_id=:id"), {'id': user['id']})
+        db.execute(text("UPDATE resq_community_comments SET status='removed', removed_at=COALESCE(removed_at,now()), removed_by=:id, removal_kind=COALESCE(removal_kind,'author') WHERE author_id=:id"), {'id': user['id']})
+        db.execute(text('DELETE FROM resq_community_messages WHERE author_id=:id'), {'id': user['id']})
+        audit_log.write_audit_log(action='citizen_account_deleted', entity_type='session', entity_id=str(user['id']), user_id=int(user['id']), connection=db)
+    return {'status': 'deleted'}
 
 
 @router.post('/reports/{report_id}/evidence', status_code=201, dependencies=[Depends(require_csrf)])

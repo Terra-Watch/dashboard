@@ -23,6 +23,9 @@ class RiskTokenCompatibilityTests(unittest.TestCase):
         self.key_patch = mock.patch.object(security, "RESQ_SECRET_KEY", TEST_KEY)
         self.key_patch.start()
         self.addCleanup(self.key_patch.stop)
+        active = mock.patch.object(security, "_confirm_active", side_effect=lambda identity: identity)   # account checks are tested in test_admin
+        active.start()
+        self.addCleanup(active.stop)
 
     def credentials(self, token: str) -> HTTPAuthorizationCredentials:
         return HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)

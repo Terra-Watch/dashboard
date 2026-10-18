@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="28" fill="#173c35"/>
-  <g fill="none" stroke="#e9f1ec" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="7" d="M16 90c18-34 36-54 58-62 20 16 30 36 42 74"/><path stroke-width="4" opacity=".7" d="M18 68c20-12 36-14 54-10 14 4 26 14 38 26M26 46c16-6 30-4 42 2 10 4 18 10 26 18"/><path stroke="#f2bd36" stroke-width="9" d="M74 24c-8 12-8 22-2 30 4 8 4 14-2 26"/></g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TerraWatch"><title>TerraWatch</title><g fill="none" stroke="#1f1b16" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 27 14 6.6c.8-1.4 3.2-1.4 4 0L29.2 27"/><path d="M8.6 27l6.2-10.2c.5-.8 1.9-.8 2.4 0L23.4 27"/></g><circle cx="16" cy="25.2" r="2.4" fill="#c2410c"/></svg>
