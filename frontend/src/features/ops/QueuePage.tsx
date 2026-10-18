@@ -3,7 +3,7 @@ import { Link2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
-import { listStatusText } from '../../lib/assessmentPresentation';
+import { listStatusText, mediaCheckSuffix } from '../../lib/assessmentPresentation';
 import { api } from '../../app/http';
 import { groupClaims, type Claim } from '../map/corroboration';
 import { Notice } from '../../ui/Notice';
@@ -92,7 +92,7 @@ function Row({ item, focused }: { item: Incident; focused: boolean }) {
       <RungBadge rung={rungOfStatus(item.status)} age={ageText(item.created_at)} />
       <span className="text-ink-muted">{stateName(item.state)}</span>
       {item.notes && <span className="min-w-0 flex-1 truncate text-ink-muted">{item.notes}</span>}
-      {item.image_assessment_status && <span className="text-sm text-ink-muted">{listStatusText(item.image_assessment_status)}</span>}
+      {item.image_assessment_status && <span className="text-sm text-ink-muted">{listStatusText(item.image_assessment_status)}{item.image_assessment_status === 'COMPLETED' && mediaCheckSuffix(item.image_media_integrity_status, t) ? ` · ${mediaCheckSuffix(item.image_media_integrity_status, t)}` : ''}</span>}
       {item.status === 'closed' && item.close_reason && <span className="text-sm">{t(`ops.close.${item.close_reason}`, item.close_reason)}</span>}
     </Link></li>
   );

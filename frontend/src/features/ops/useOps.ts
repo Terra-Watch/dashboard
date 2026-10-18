@@ -6,6 +6,7 @@ export type Incident = {
   id: number; source: string; size: string; notes: string | null; status: string; close_reason: string | null; state: string | null;
   latitude: number | null; longitude: number | null; observed_at: string | null; created_at: string; updated_at: string;
   image_assessment_status?: string | null;
+  image_media_integrity_status?: string | null;
 };
 export type OpsSettings = { 
   corroboration: { radius_km: number; window_minutes: number } | null; 

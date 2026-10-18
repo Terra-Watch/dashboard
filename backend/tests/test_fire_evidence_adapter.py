@@ -256,6 +256,7 @@ def test_architecture_mismatch_between_declaration_and_weights(monkeypatch, bund
     edit(bundle, lambda m: m["architecture"]["lora"].__setitem__("rank", 4), reapprove=True)  # signed + complete, but weights are rank 2
     assert ia.preflight_artifact(str(bundle), FIXTURE_VERSION) is None  # the stdlib pre-flight cannot see tensors...
     configure(monkeypatch, bundle); use_stub()
+    monkeypatch.delenv("FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY")  # editing the bundle invalidated the fixture signature; this test is about the tensors
     r = ia.assess_image(jpeg_bytes(), "i")
     assert r["assessment_status"] == "UNAVAILABLE" and r["error_code"] == ia.INCOMPATIBLE and r["scores"] is None  # ...the assessor's loader does
 
@@ -294,8 +295,7 @@ def test_unreadable_image_is_unavailable_not_an_exception(monkeypatch, bundle):
 @needs_assessor
 def test_unexpected_exception_inside_inference_is_contained(monkeypatch, bundle):
     configure(monkeypatch, bundle); use_stub()
-    ia._load_service()
-    monkeypatch.setattr(ia._service, "assess_bytes", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(ia._load_service(), "assess_bytes", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     r = ia.assess_image(jpeg_bytes(), "i")
     assert r["error_code"] == ia.INFERENCE_FAILED and r["scores"] is None
 
@@ -336,14 +336,15 @@ def test_non_dict_results_are_unavailable(junk):
 def test_scores_and_label_on_an_unavailable_result_are_stripped():
     r = good(); r["assessment_status"] = "UNAVAILABLE"; r["error_code"] = "DECODE_FAILED"
     out = ia.sanitize_assessment(r)
-    assert out["scores"] is None and out["derived_label"] is None and out["error_code"] == "DECODE_FAILED" and out["authenticity"]["status"] == "INCONCLUSIVE"
+    assert out["scores"] is None and out["derived_label"] is None and out["error_code"] == "DECODE_FAILED"
+    assert out["authenticity"]["status"] == "NOT_ASSESSED" and out["ood_flag"] is None and out["review_required"] is True  # never reads as a negative
 
 
 def test_persistence_fields_never_store_authenticity_for_unavailable_results():
     un = ia.persistence_fields(ia.unavailable(ia.NOT_CONFIGURED))
     assert un["status"] == "UNAVAILABLE" and un["auth"] is None and un["error"] == ia.NOT_CONFIGURED and json.loads(un["assessment"])["scores"] is None
     ok = ia.persistence_fields(ia.sanitize_assessment(good()))
-    assert ok["status"] == "COMPLETED" and ok["auth"] == "INCONCLUSIVE" and ok["error"] is None
+    assert ok["status"] == "COMPLETED" and ok["auth"] is None and ok["error"] is None
 
 
 def test_unavailable_payload_has_the_full_contract_shape():
@@ -401,9 +402,9 @@ def test_loading_and_hashing_happen_off_the_event_loop(monkeypatch, bundle):
     configure(monkeypatch, bundle); use_stub()
     seen = {}
     real = ia._build_service
-    def spy():
+    def spy(*a):
         seen["thread"] = threading.current_thread().name
-        return real()
+        return real(*a)
     monkeypatch.setattr(ia, "_build_service", spy)
     r = asyncio.run(ia.assess_image_async(jpeg_bytes(), "i"))
     assert r["assessment_status"] == "COMPLETED" and seen["thread"].startswith("fire-evidence")

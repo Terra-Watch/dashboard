@@ -1,8 +1,9 @@
 """Community discussion and chat, deliberately separate from incident reporting. Rules: docs/design/D5-community-posts-chat-by-role.md."""
+import hashlib
 import math
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 
 from ..contracts.schemas import (CommunityCommentRequest, CommunityEditRequest, CommunityMessageRequest, CommunityModerationDecision,
@@ -11,6 +12,7 @@ from ..contracts.schemas import (CommunityCommentRequest, CommunityEditRequest, 
 from ..core.security import current_redesign_user, optional_user, require_csrf
 from ..database.session import engine
 from ..services import alert_service, audit_log
+from ..services import community_image_assessment as media
 from ..services.community_rules import STAFF_ROLES, badge_for, emergency_hint, held_reason, public_name
 
 router = APIRouter(prefix='/api/community', tags=['community'])
@@ -102,14 +104,18 @@ def _assert_not_muted(db, user_id: int) -> None:
         raise HTTPException(status_code=403, detail=f"You are muted {ends}. Reason: {mute['reason']}")
 
 
+def _hold_with_reason(db, kind: str, item_id: int, reason: str) -> str:
+    """Hold an item and queue it for a human moderator as an auto-held entry (a report with no reporter)."""
+    table, column = TARGETS[kind]
+    db.execute(text(f"UPDATE {table} SET status='held' WHERE id=:id AND status='published'"), {'id': item_id})
+    db.execute(text(f'INSERT INTO resq_community_reports (reporter_id,{column},reason) VALUES (NULL,:id,:reason)'), {'id': item_id, 'reason': reason})
+    return reason
+
+
 def _hold_if_needed(db, kind: str, item_id: int, content: str) -> str | None:
     """Put a flagged item into the moderation queue as an auto-held entry. Returns the reason or None."""
     reason = held_reason(content)
-    if reason:
-        table, column = TARGETS[kind]
-        db.execute(text(f"UPDATE {table} SET status='held' WHERE id=:id AND status='published'"), {'id': item_id})
-        db.execute(text(f'INSERT INTO resq_community_reports (reporter_id,{column},reason) VALUES (NULL,:id,:reason)'), {'id': item_id, 'reason': reason})
-    return reason
+    return _hold_with_reason(db, kind, item_id, reason) if reason else None
 
 
 def _post_columns(extra: str = '') -> str:
@@ -136,7 +142,23 @@ def list_posts(archived: bool = False, topic: str | None = Query(None, pattern='
         rows = db.execute(text(f'''SELECT {_post_columns()} FROM resq_community_posts p LEFT JOIN resq_users u ON u.id=p.author_id
             WHERE {where} ORDER BY p.created_at DESC LIMIT :limit OFFSET :offset'''), {**params, 'limit': page_size, 'offset': offset}).mappings().all()
     items = [{**_shape(dict(row)), 'verified': False} for row in rows]  # nothing posted by neighbours is verified; official facts are in notices
+    if media.images_enabled():  # flag off: the key does not exist at all
+        _attach_image_links(items, user)
     return {'items': items, 'page': page, 'page_size': page_size, 'total': total, 'has_more': offset + len(rows) < total}
+
+
+def _attach_image_links(items: list[dict], user: dict | None) -> None:
+    """Public view of post images: a link only. Never a status, signal or verdict; a held post shows its image to its author only."""
+    ids = [item['id'] for item in items]
+    have: dict = {}
+    if ids:
+        with engine.connect() as db:
+            have = {r['post_id']: r['mime'] for r in db.execute(text('SELECT post_id,mime FROM resq_community_post_images WHERE post_id = ANY(:ids)'), {'ids': ids}).mappings().all()}
+    viewer = _viewer(user)
+    for item in items:
+        mine = item['author']['id'] == viewer
+        shown = item['id'] in have and not item.get('removed') and (item.get('state') != 'held for review' or mine)
+        item['image'] = {'url': f"/api/community/posts/{item['id']}/image", 'mime': have[item['id']]} if shown else None
 
 
 @router.post('/posts', status_code=201, dependencies=[Depends(require_csrf)])
@@ -275,6 +297,74 @@ def create_chat_message(payload: CommunityMessageRequest, room: str = Query('def
     return {'message': message, 'hint': emergency_hint(content), **({'notice': HELD_MESSAGE} if held else {})}
 
 
+@router.post('/posts/{post_id}/image', status_code=201, dependencies=[Depends(require_csrf)])
+async def upload_post_image(post_id: int, image: UploadFile = File(...), user: dict = Depends(community_user)) -> dict:
+    """Attach ONE image to your own post. Feature absent (404) unless COMMUNITY_IMAGES_ENABLED. The stored copy is re-encoded (no EXIF/GPS).
+
+    With FIRE_EVIDENCE_COMMUNITY_ENABLED the original upload is also checked for authenticity signals; anything other than 'no concern found',
+    including an unavailable model, holds the post for a human moderator. It never creates an incident, alert or assignment and never removes
+    or publishes anything by itself. The author is told only that a moderator will look, never why."""
+    if not media.images_enabled():
+        raise HTTPException(status_code=404, detail='Not found')
+    uid = int(user['id'])
+    with engine.connect() as db:
+        _assert_not_muted(db, uid)
+        post = db.execute(text('SELECT id,author_id,status,archived FROM resq_community_posts WHERE id=:id'), {'id': post_id}).mappings().first()
+    if not post or post['author_id'] != uid or post['archived'] or post['status'] == 'removed':
+        raise HTTPException(status_code=404, detail='Community post not found')
+    data = await image.read(media.max_image_bytes() + 1)
+    try:
+        clean, mime = media.validate_and_reencode(data, image.content_type)
+    except media.ImageRejected as exc:
+        raise HTTPException(status_code=exc.status, detail=exc.detail) from exc
+    digest = hashlib.sha256(clean).hexdigest()
+    key = media.storage_key(post_id, digest, mime)
+    result = await media.assess_upload(data, key) if media.assessment_enabled() else None  # original bytes: provenance markers live in the metadata
+    created_file = False
+    try:
+        created_file = media.write_clean_copy(key, clean)
+        with engine.begin() as db:
+            _rate_limit(db, 'resq_community_post_images', uid, limit=5, role=user.get('role'))
+            locked = db.execute(text('SELECT status FROM resq_community_posts WHERE id=:id AND removed_at IS NULL FOR UPDATE'), {'id': post_id}).scalar()
+            if locked is None:
+                raise HTTPException(status_code=404, detail='Community post not found')
+            if db.execute(text('SELECT 1 FROM resq_community_post_images WHERE post_id=:id'), {'id': post_id}).scalar():
+                raise HTTPException(status_code=409, detail='This post already has an image')
+            row = media.insert_image(db, post_id=post_id, author_id=uid, key=key, sha256=digest, mime=mime, size_bytes=len(clean))
+            if result is not None:
+                media.insert_assessment(db, image_id=row['id'], result=result)
+                reason = media.hold_reason(result)
+                if reason:
+                    _hold_with_reason(db, 'post', post_id, reason)
+            status = db.execute(text('SELECT status FROM resq_community_posts WHERE id=:id'), {'id': post_id}).scalar()
+    except HTTPException:
+        if created_file:
+            media.discard(key)
+        raise
+    except Exception as exc:
+        if created_file:
+            media.discard(key)
+        raise HTTPException(status_code=503, detail='Image could not be stored') from exc
+    return {'image': {'id': row['id'], 'mime': row['mime'], 'size_bytes': row['size_bytes']}, 'post_status': status,
+            'message': HELD_MESSAGE if status == 'held' else 'Image added. It does not notify responders or create an incident.'}
+
+
+@router.get('/posts/{post_id}/image')
+def get_post_image(post_id: int, user: dict = Depends(community_user)) -> Response:
+    """The clean copy. Moderators and the author always (unless removed); everyone else only while the post is published."""
+    if not media.images_enabled():
+        raise HTTPException(status_code=404, detail='Not found')
+    with engine.connect() as db:
+        row = db.execute(text('''SELECT i.storage_key,i.sha256,i.mime,p.status,p.author_id,p.removed_at FROM resq_community_post_images i
+            JOIN resq_community_posts p ON p.id=i.post_id WHERE i.post_id=:id'''), {'id': post_id}).mappings().first()
+    allowed = row and not row['removed_at'] and row['status'] != 'removed' and (
+        row['status'] == 'published' or row['author_id'] == int(user['id']) or user.get('role') in MODERATOR_ROLES)
+    data = media.read_verified(row['storage_key'], row['sha256']) if allowed else None
+    if data is None:
+        raise HTTPException(status_code=404, detail='Image not found')
+    return Response(content=data, media_type=row['mime'], headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'})
+
+
 @router.post('/posts/{post_id}/report', status_code=201, dependencies=[Depends(require_csrf)])
 def report_post(post_id: int, payload: CommunityReportRequest, user: dict = Depends(community_user)) -> dict:
     reason = _clean(payload.reason)
@@ -409,6 +499,17 @@ def moderation_queue(user: dict = Depends(_moderator)) -> dict:
         item['kind'] = 'post' if item['post_id'] else 'comment' if item['comment_id'] else 'message'
         item['author_name'] = 'Deleted member' if item.pop('author_exists') is None else public_name(item['author_name'])
         items.append(item)
+    if media.images_enabled():  # moderators only (this route is _moderator); with the flag off none of these keys exist
+        with engine.connect() as db:
+            found = media.moderator_media_for_posts(db, [i['post_id'] for i in items if i['post_id']])
+        for item in items:
+            extra = found.get(item['post_id']) if item['post_id'] else None
+            if extra:
+                item['image'] = extra['image']
+                if 'assessment' in extra:
+                    item['media_assessment'] = extra['assessment']
+                    item['media_assessed_at'] = extra['assessed_at']
+                    item['media_moderator_decision'] = extra['moderator_decision']
     return {'items': items}
 
 
@@ -435,6 +536,8 @@ def resolve_report(report_id: int, payload: CommunityModerationDecision, user: d
             db.execute(text(f"UPDATE {table} SET removed_at=COALESCE(removed_at,now()), status='removed', removed_by=:u, removal_kind='moderator', removal_reason=:r WHERE id=:id AND removed_at IS NULL"), {'u': user['id'], 'r': reason, 'id': item_id})
         resolution = {'approve': 'approved', 'remove': 'removed', 'dismiss': 'dismissed'}[payload.action]
         db.execute(text(f"UPDATE resq_community_reports SET status='resolved', resolution=:res, resolution_reason=:r, resolved_by=:u, resolved_at=now() WHERE status='open' AND {column}=:id"), {'res': resolution, 'r': reason, 'u': user['id'], 'id': item_id})
+        if kind == 'post':  # remember the human decision next to the advisory media assessment (no-op for posts without one)
+            media.record_moderator_decision(db, post_id=item_id, resolution=resolution, moderator_id=int(user['id']), note=reason)
         audit_log.write_audit_log(action=f'community_report_{resolution}', entity_type='community_report', entity_id=str(report_id), user_id=int(user['id']),
                                   metadata={'reason': reason, 'post_id': report['post_id'], 'comment_id': report['comment_id'], 'message_id': report['message_id']}, connection=db)
     return {'status': resolution}

@@ -9,9 +9,11 @@ import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
 import { STATES, formatWhen } from '../citizen/format';
+import type { CommunityImageAssessment } from '../../lib/assessmentPresentation';
+import { ModerationMedia, type ModerationImage } from './ModerationMedia';
 
 type NoticeRow = { id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; regions: string[]; status: 'draft' | 'pending_approval' | 'published' | 'withdrawn'; author_id: number; starts_at: string; expires_at: string; return_reason: string | null; expired: boolean };
-type QueueItem = { id: number; reason: string; kind: string; held: boolean; content: string | null; author_id: number | null; author_name: string | null; author_prior_removals: number; open_reports: number; severity: 'high' | 'held' | 'normal' };
+type QueueItem = { id: number; reason: string; kind: string; held: boolean; content: string | null; author_id: number | null; author_name: string | null; author_prior_removals: number; open_reports: number; severity: 'high' | 'held' | 'normal'; image?: ModerationImage | null; community_image_assessment?: CommunityImageAssessment | null };
 type Room = { region: string; slow_mode_seconds: number; frozen: boolean; retention_days: number | null };
 
 export function NoticesPage() {
@@ -116,6 +118,7 @@ function Moderation({ queue, loading, reload }: { queue?: QueueItem[]; loading: 
           <li key={item.id} className="rounded-panel border border-line bg-surface p-4">
             <p className="text-sm font-bold uppercase tracking-wide text-ink-muted">{item.severity === 'high' ? t('ops.moderation.high', 'Urgent') : item.held ? t('ops.moderation.held', 'Held for review') : t('ops.moderation.flagged', 'Flagged')} · {item.reason} · {t('ops.moderation.reports', { count: item.open_reports, defaultValue: '{{count}} report(s)' })}</p>
             <p className="mt-1 whitespace-pre-wrap text-lg">{item.content ?? t('ops.moderation.gone', '(already removed)')}</p>
+            {item.image?.url && <ModerationMedia image={item.image} assessment={item.community_image_assessment} />}
             <p className="text-sm text-ink-muted">{item.author_name ?? '—'} · {t('ops.moderation.prior', { count: item.author_prior_removals, defaultValue: '{{count}} earlier removal(s)' })}</p>
             <div className="mt-2"><TextField label={t('ops.moderation.reason', 'Reason for your decision (the author sees it)')} value={reasons[item.id] ?? ''} onChange={event => setReasons(current => ({ ...current, [item.id]: event.target.value }))} /></div>
             <div className="mt-2 flex flex-wrap gap-2">

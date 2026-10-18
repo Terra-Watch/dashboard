@@ -1,0 +1,42 @@
+{
+  "n_detections": 582723,
+  "n_events": 249055,
+  "events_with_2plus_passes": 42580,
+  "events_with_3plus_passes": 12786,
+  "event_size_km2_quantiles": {
+    "0.1": 0.140625,
+    "0.5": 0.140625,
+    "0.9": 0.421875,
+    "0.99": 1.96875
+  },
+  "n_cases": 72549,
+  "n_cases_with_growth": 9939,
+  "events_with_growth_case": 7465,
+  "events_with_growth_and_prior_growth": 955,
+  "gap_hours_share": {
+    "<=6h": 0.4235068712180733,
+    "6-12h": 0.17848626445574714,
+    "12-24h": 0.31181684103157864,
+    "24-48h": 0.08619002329460089,
+    ">48h": 0.0
+  },
+  "growth_by_gap": {
+    "<=6h": 1856,
+    "6-12h": 2442,
+    "12-24h": 4500,
+    "24-48h": 1141,
+    ">48h": 0
+  },
+  "advance_p95_km_quantiles": {
+    "0.1": 0.9062663372323464,
+    "0.5": 1.2261757655827945,
+    "0.9": 2.1414814235878175
+  },
+  "advance_p95_km_sd": 0.704816835354634,
+  "events_needed_by_effect_size": {
+    "0.5": 32,
+    "0.35": 64,
+    "0.25": 126
+  },
+  "gate_g0": "NOT EVALUATED (no --min-events given; the threshold must be frozen first)"
+}

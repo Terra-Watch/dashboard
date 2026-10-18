@@ -1,0 +1,539 @@
+% ============================================================
+% TERRAWATCH PLATFORM SLIDES (slides 7 to 25)
+% Your deck is not edited. Two additions only:
+%   1) preamble, after \usetikzlibrary{calc}:
+%        \usetikzlibrary{positioning,arrows.meta,shapes.misc}
+%        \newcommand{\todo}[1]{\textcolor{red}{\textbf{[#1]}}}
+%      and extend your graphicspath to:  \graphicspath{{../}{./}{figures/}}
+%   2) just before the References frame:
+%        \input{terrawatch_slides.tex}
+% Red [TODO] marks content only you can supply (your own measurements).
+% ============================================================
+
+% ------------------------------------------------------------
+\section{TerraWatch Platform}
+
+% ============================================================
+% P1. PLATFORM OVERVIEW
+% ============================================================
+\begin{frame}{7. TerraWatch Platform: From Forecast to Field Action}
+\framesubtitle{One application for the people who see a fire, decide, and go to the place}
+\scriptsize
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.35cm,
+    box/.style={draw=amritaMaroon, fill=amritaMaroon!8, rounded corners=3pt,
+                minimum width=2.15cm, minimum height=1.0cm, align=center, font=\scriptsize},
+    arr/.style={-{Stealth[length=2mm]}, thick, amritaMaroon}
+]
+\node[box] (a) {Satellite signal\\ \textit{VIIRS}};
+\node[box, right=of a] (b) {Citizen\\ report};
+\node[box, right=of b] (c) {Control Room\\ verifies};
+\node[box, right=of c] (d) {Range Officer\\ responds};
+\node[box, right=of d] (e) {Closed with\\ a reason};
+\draw[arr] (a) -- (b); \draw[arr] (b) -- (c); \draw[arr] (c) -- (d); \draw[arr] (d) -- (e);
+\node[box, fill=white, below=0.55cm of c] (f) {Official notice\\ (second person approves)};
+\node[box, fill=white, below=0.55cm of e] (g) {Public map\\ coarse, delayed};
+\draw[arr] (c) -- (f); \draw[arr] (e) -- (g);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.1cm}
+\begin{columns}[T,onlytextwidth]
+    \column{0.32\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Three roles}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Citizen
+        \item Control Room
+        \item Range Officer
+    \end{itemize}
+    \column{0.34\textwidth}
+    \textbf{\textcolor{amritaMaroon}{One product}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item One sign-in, one colour system, one logo
+        \item English, \textit{हिन्दी}, \textit{ଓଡ଼ିଆ}
+        \item Light, dark and system themes
+    \end{itemize}
+    \column{0.32\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Principle}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item A claim climbs a ladder of certainty
+        \item Only people move it up
+        \item Nothing is merged, verified or announced automatically
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P2. CONFIDENCE LADDER
+% ============================================================
+\begin{frame}{8. The Confidence Ladder}
+\framesubtitle{Six rungs; every rung has its own shape, colour and word, so meaning never depends on colour alone}
+\scriptsize
+\renewcommand{\arraystretch}{1.3}
+\begin{center}
+\begin{tabular}{p{0.11\textwidth} p{0.40\textwidth} p{0.30\textwidth}}
+\toprule
+\textbf{Rung} & \textbf{Meaning} & \textbf{Who moves it here} \\
+\midrule
+Signal & A satellite sensor sees heat. No person has looked. & Automatic ingestion \\
+Report & A person says there is a fire. Not checked. & Citizen, or staff logging a phone or radio call \\
+Verified & Staff checked the evidence and agree it is real. & Control Room \\
+Responding & An officer is on the way or on site. & Control Room, after the officer accepts \\
+Contained & Under control. & Control Room \\
+Closed & Finished and kept for the record. & Control Room, with a reason \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.1cm}
+\begin{center}
+\fcolorbox{amritaMaroon}{white}{\parbox{0.9\textwidth}{\centering
+Closing always carries a reason: \textbf{resolved, false alarm, duplicate, could not be verified, or other (with a note)}. The reporter sees the reason.}}
+\end{center}
+\end{frame}
+
+% ============================================================
+% P3. ROLES AND VISIBILITY
+% ============================================================
+\begin{frame}{9. Three Roles, Three Views of the Same Fire}
+\framesubtitle{What each role can see is decided by role and enforced on the server}
+\scriptsize
+\renewcommand{\arraystretch}{1.3}
+\begin{center}
+\begin{tabular}{p{0.2\textwidth} p{0.22\textwidth} p{0.24\textwidth} p{0.18\textwidth}}
+\toprule
+ & \textbf{Citizen} & \textbf{Range Officer} & \textbf{Control Room} \\
+\midrule
+Verified incidents & Coarse hexagon, delayed & Exact, assigned and in scope & Exact, in scope \\
+Unchecked reports & Own only, private & Own task only & All in scope \\
+Satellite signals & Never & Near the task, ``not confirmed'' & All in scope \\
+Weather & Summary & Wind now & Wind, with its age \\
+Scenario planner & Never & Never & Per incident \\
+Offline & Last view & Saved regional map & -- \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.1cm}
+\textbf{Why officers get no scenario:} a drawn spread outline can be read as safe ground.
+\textbf{Why citizens get no signals:} an unchecked claim shown publicly causes panic or false reassurance.
+\end{frame}
+
+% ============================================================
+% P4. SYSTEM ARCHITECTURE
+% ============================================================
+\begin{frame}{10. System Architecture}
+\framesubtitle{Web application, API, database, and data feeds}
+\scriptsize
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={draw=amritaMaroon, rounded corners=3pt, align=center, font=\scriptsize, minimum height=0.95cm},
+    arr/.style={-{Stealth[length=2mm]}, thick, amritaMaroon}
+]
+\node[box, fill=amritaMaroon!8, minimum width=9.2cm] (web) at (0,2.2)
+  {\textbf{Installable web app} (React 19, Vite, Tailwind, MapLibre GL, TanStack Query)\\
+   Citizen \quad | \quad Range Officer \quad | \quad Control Room};
+\node[box, fill=amritaMaroon!8, minimum width=9.2cm] (api) at (0,0.7)
+  {\textbf{FastAPI service}\\
+   auth \; citizen \; workflow \; operations \; community \; notices \; admin \; scenarios \; public map};
+\node[box, fill=white, minimum width=2.6cm] (db) at (-3.2,-0.9) {\textbf{PostgreSQL}\\ reports, incidents, audit};
+\node[box, fill=white, minimum width=2.6cm] (feeds) at (0,-0.9) {\textbf{Feeds}\\ NASA FIRMS, weather};
+\node[box, fill=white, minimum width=2.6cm] (ml) at (3.2,-0.9) {\textbf{Evidence assessor}\\ advisory photo check};
+\draw[arr] (web) -- node[right,font=\tiny]{HTTPS, bearer token + CSRF} (api);
+\draw[arr] (api) -- (db); \draw[arr] (api) -- (feeds); \draw[arr] (api) -- (ml);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{itemize}\setlength\itemsep{1pt}
+        \item Staff are scoped to states; every staff query is scoped.
+        \item Idempotency keys on reports and observations.
+    \end{itemize}
+    \column{0.48\textwidth}
+    \begin{itemize}\setlength\itemsep{1pt}
+        \item Self-hosted PMTiles basemap, fonts and icons: no third-party map calls.
+        \item Audit log of sign-ins, status changes, reviews and administration.
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P5. CITIZEN APP
+% ============================================================
+\begin{frame}{11. Citizen App}
+\framesubtitle{Report in a few taps, follow every step, stay informed}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.24\textwidth}\centering
+    \includegraphics[height=5.2cm]{citizen-near-me.png}\\[1pt]\textbf{Near me}
+    \column{0.24\textwidth}\centering
+    \includegraphics[height=5.2cm]{citizen-report.png}\\[1pt]\textbf{Report a fire}
+    \column{0.24\textwidth}\centering
+    \includegraphics[height=5.2cm]{citizen-report-detail.png}\\[1pt]\textbf{Report timeline}
+    \column{0.26\textwidth}
+    \vspace{0.6cm}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Map pin or coordinates, photos, time seen
+        \item Works offline for the text; sent when the connection returns
+        \item Closing reason shown to the reporter
+        \item Community: notices, discussion, regional chat (moderated)
+        \item Download or delete personal data
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P6. CONTROL ROOM
+% ============================================================
+\begin{frame}{12. Control Room: Queue and Map}
+\framesubtitle{Triage the oldest decision first; suggestions never merge or verify by themselves}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}\centering
+    \includegraphics[width=\linewidth]{ops-queue.png}\\[1pt]\textbf{Queue}
+    \column{0.5\textwidth}\centering
+    \includegraphics[width=\linewidth]{ops-map.png}\\[1pt]\textbf{Map with role profile}
+\end{columns}
+\vspace{0.1cm}
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Corroboration aid groups nearby reports and signals in space and time as a \emph{suggestion}.
+    \item Source chips show the age of satellite and weather data; old data turns grey and says \emph{stale}.
+\end{itemize}
+\end{frame}
+
+% ============================================================
+% P7. INCIDENT + SCENARIO
+% ============================================================
+\begin{frame}{13. Incident Workflow and Scenario Planner}
+\framesubtitle{Evidence, field observations, assignment and a planning aid with uncertainty drawn, not hidden}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.40\textwidth}\centering
+    \includegraphics[width=\linewidth]{ops-incident.png}\\[1pt]\textbf{Incident: summary, evidence, field, timeline}
+    \column{0.26\textwidth}\centering
+    \includegraphics[height=5.6cm]{ops-scenario.png}\\[1pt]\textbf{Scenario tab}
+    \column{0.30\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Scenario planner}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Every input starts empty; the rate of spread is typed by the planner
+        \item Inner, typed and outer bands per hour
+        \item Reality check against satellite signals
+        \item Marked \emph{outdated} when an input or the wind reading changes
+        \item Saved to the timeline as a note; changes nothing, notifies no one
+        \item Banner: \emph{not validated, a planning aid, not a forecast}
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P8. SCENARIO ENGINE MATHS
+% ============================================================
+\begin{frame}{14. Scenario Engine: Elliptical Fire Growth}
+\framesubtitle{Anderson length-to-breadth ratio with a Richards ellipse; ignition at the rear focus}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    With $U$ the mid-flame wind speed in m/s ($U = $ km/h $/\,3.6$):
+    \[
+    LB = 0.936\,e^{0.2566\,U} + 0.461\,e^{-0.1548\,U} - 0.397,\qquad LB \ge 1
+    \]
+    \[
+    e = \frac{\sqrt{LB^{2}-1}}{LB},\qquad
+    \text{head} = R\,t,\qquad
+    \text{back} = \text{head}\,\frac{1-e}{1+e}
+    \]
+    \[
+    a = \frac{\text{head}+\text{back}}{2},\qquad
+    b = \frac{a}{LB},\qquad
+    r(\varphi)=\frac{a(1-e^{2})}{1-e\cos\varphi}
+    \]
+    $R$ is the head-fire rate of spread (typed by the planner), $t$ the elapsed time, $\varphi$ the angle from the head direction (downwind).
+
+    \column{0.46\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Uncertainty bands}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Wind speed $\pm$, direction $\pm$ and rate $\pm$ as fractions or degrees
+        \item Outer band: radial maximum over the eight $\pm$ corners and the nominal
+        \item Inner band: all-minus corner
+        \item Exposure: earliest hour a place falls inside the outer / inner band
+    \end{itemize}
+    \textbf{\textcolor{amritaMaroon}{Not modelled}}\\
+    Slope, spotting, crowning, fuel-moisture change, barriers.
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P9. RANGER APP
+% ============================================================
+\begin{frame}{15. Range Officer App}
+\framesubtitle{Task first, map second; built for glare, gloves and weak signal}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.24\textwidth}\centering
+    \includegraphics[height=5.2cm]{field-tasks.png}\\[1pt]\textbf{Tasks}
+    \column{0.24\textwidth}\centering
+    \includegraphics[height=5.2cm]{field-map.png}\\[1pt]\textbf{Task map}
+    \column{0.50\textwidth}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Accept, or decline with a reason; distance and direction from the officer's position (straight line, stated as such)
+        \item Capture observation or photo; saved on the phone with a retry key and sent when signal returns
+        \item Satellite signals near the task are labelled \emph{not confirmed}; wind now with its age
+        \item \textbf{Save map for offline}: the whole regional basemap is kept on the phone
+        \item Position is taken only when the officer taps (battery, privacy)
+        \item Never shown a scenario outline
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P10. EVIDENCE ASSESSMENT IN THE PLATFORM
+% ============================================================
+\begin{frame}{16. Fire Evidence Assessment in the Workflow}
+\framesubtitle{Advisory output, human review, no automatic status change}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{How it is used}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Each evidence photo may carry an automated assessment
+        \item Always labelled \emph{experimental, not for operational use}
+        \item The queue never calls an assessment ``complete''
+        \item The result is shown with its status; unavailable or pending states are explicit
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Human review}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item The reviewer records a judgement of the \emph{photo}: genuine, may be fake or edited (reason required), seen with no conclusion, or cleared
+        \item A review never changes the incident's status
+        \item Inference is controlled by a server switch
+    \end{itemize}
+\end{columns}
+\vspace{0.2cm}
+\begin{center}
+\fcolorbox{amritaMaroon}{white}{\parbox{0.9\textwidth}{\centering
+\textbf{Rule:} an automated result informs a person; a person decides.}}
+\end{center}
+\end{frame}
+
+% ============================================================
+% P11. PRIVACY AND SAFETY
+% ============================================================
+\begin{frame}{17. Safety and Privacy by Design}
+\framesubtitle{Rules the product enforces, not guidelines}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Safety}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item An empty map is never presented as ``no fire''
+        \item Public map: verified incidents only, snapped to H3 cells and delayed
+        \item Official notices need a second person's approval
+        \item No emergency numbers, thresholds or retention periods are built in; they come from configuration, and a feature without its setting stays off and says so
+        \item Community posts never alert responders and always point to ``Report''
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Privacy}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Citizens can download or delete their data; deleted accounts are anonymised
+        \item Reports handed to staff stay as safety records without the name
+        \item Phone numbers, links and coordinates in community posts wait for a moderator
+        \item Evidence photos are returned with no-store caching
+        \item Secrets are never printed or committed
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P12. SECURITY
+% ============================================================
+\begin{frame}{18. Authentication and Access Control}
+\framesubtitle{One sign-in for every role}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Sessions}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Argon2 password hashes; one password policy for everyone
+        \item 15-minute access token; rotating HttpOnly refresh cookie with reuse detection
+        \item CSRF double-submit header on every state-changing call
+        \item Lockout after repeated failures
+        \item A deactivated person is refused at once
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Authorisation}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Role checks plus per-state scopes for staff
+        \item Staff invited by an administrator with a role and states; links work once
+        \item Scenario endpoints: Control Room only, behind a switch
+        \item Audit log for sign-ins, assignments, reviews, notices, moderation and administration
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P13. OFFLINE / PWA
+% ============================================================
+\begin{frame}{19. Offline-First, Installable on Phones}
+\framesubtitle{Officers work out of coverage; citizens are on mobile data}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \begin{itemize}\setlength\itemsep{3pt}
+        \item Service worker keeps the app shell and screen files ready; private pages and API answers are never stored
+        \item Reports and observations are queued on the device with retry keys
+        \item Regional PMTiles basemap saved on purpose, served in range requests
+        \item An update waits until the person taps \emph{Reload}, so nothing half-written is lost
+        \item The installed app opens a signed-in person on their own workspace
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Size budgets (gzip)}}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{lr}
+    \toprule
+    Entry script & $\approx$ 149 KB \\
+    Stylesheet & $\approx$ 17 KB \\
+    Landing page & $\approx$ 43 KB \\
+    Map code (loads with a map) & $\approx$ 294 KB \\
+    \bottomrule
+    \end{tabular}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P14. LANGUAGE + ACCESSIBILITY + DESIGN
+% ============================================================
+\begin{frame}{20. Languages, Accessibility and Design System}
+\framesubtitle{Built for stress, glare, and many literacy levels}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.26\textwidth}\centering
+    \includegraphics[height=5.0cm]{citizen-near-me-hindi.png}\\[1pt]\textbf{Hindi}
+    \column{0.40\textwidth}\centering
+    \includegraphics[width=\linewidth]{ops-map-dark.png}\\[1pt]\textbf{Dark theme}
+    \column{0.32\textwidth}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item English, Hindi, Odia; Noto Sans with Devanagari and Odia
+        \item Hand-picked, named palette checked by script for contrast and colour-blind safety
+        \item Shape + icon + word with every colour
+        \item Keyboard use, visible focus, 44\,px targets, reduced motion
+        \item Automated axe checks in light and dark on every area
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P15. TESTING
+% ============================================================
+\begin{frame}{21. Testing and Quality Checks}
+\framesubtitle{Measured on this build}
+\scriptsize
+\renewcommand{\arraystretch}{1.3}
+\begin{center}
+\begin{tabular}{p{0.28\textwidth} p{0.50\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{What is checked} \\
+\midrule
+Backend & 426 tests against a real PostgreSQL database: roles and scopes, assignment lifecycle, closing reasons, idempotency, community rules, public-map policy, administration, escalation \\
+Front-end unit & 114 tests: scenario engine golden cases, reality check and exposure, map profiles, i18n scripts and placeholders, service worker rules \\
+Browser & about 100 Playwright tests, including axe accessibility checks (light and dark) and offline behaviour on the production build \\
+Build gates & type check, size budgets, translation coverage report \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.1cm}
+{\tiny One known failing test (Cell2Fire runner manifest) also fails on the original code.}
+\end{frame}
+
+% ============================================================
+% P16. FIELD SENSOR PROTOTYPE  (supply your own results)
+% ============================================================
+\begin{frame}{22. Field Sensor Prototype}
+\framesubtitle{PMS5003 particulate-matter sensor and BME680 environmental sensor}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Measurements}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item PMS5003: PM1.0, PM2.5, PM10 particle concentrations
+        \item BME680: temperature, humidity, pressure, gas resistance
+        \item Supplements satellite and weather inputs with local readings
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Prototype}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item \todo{microcontroller and power}
+        \item \todo{communication link and sampling interval}
+        \item \todo{photo of the assembled unit}
+    \end{itemize}
+\end{columns}
+\vspace{0.2cm}
+\begin{center}\todo{add your measured readings or bench test here}\end{center}
+\end{frame}
+
+% ============================================================
+% P17. FIRE SPREAD SIMULATION  (supply your own results)
+% ============================================================
+\begin{frame}{23. Physics-Based Fire-Spread Simulation}
+\framesubtitle{From predicted ignition scenarios to spread over 48 hours}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Method}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Ignition scenarios drawn from the forecast probability map
+        \item Cell-based spread simulation with fuel, terrain and weather inputs
+        \item Several scenarios per forecast to show the range, not one line
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Evaluation}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Compared with independent observations such as burned-area products
+        \item Sensitivity to ignition location and to wind
+        \item \todo{add your simulation figures and scores}
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P18. LIMITATIONS AND FUTURE WORK
+% ============================================================
+\begin{frame}{24. Limitations and Future Work}
+\scriptsize
+\begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Limitations}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Forecast average precision is moderate in absolute terms; report it beside the event base rate
+        \item Satellite detection time and place differ from the actual ignition
+        \item The elliptical scenario model ignores slope, spotting and crowning, and is not validated against closed incidents yet
+        \item Hindi and Odia text need native-speaker review
+    \end{itemize}
+    \column{0.5\textwidth}
+    \textbf{\textcolor{amritaMaroon}{Future work}}
+    \begin{itemize}\setlength\itemsep{2pt}
+        \item Validation page comparing saved scenarios with the final observed extent
+        \item Link the occurrence forecast and the spread simulation to the Control Room screens
+        \item Officer position sharing and lone-worker check-in, agreed with the department
+        \item Field testing of the sensor units with Range Officers
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% P19. CONCLUSION
+% ============================================================
+\begin{frame}{25. Conclusion}
+\scriptsize
+\begin{itemize}\setlength\itemsep{5pt}
+    \item \textbf{Forecasting:} a multimodal model that ranks forest cells by ignition risk and outperforms four baselines on both rolling-origin folds.
+    \item \textbf{Platform:} one application where citizens report, the Control Room verifies and informs, and Range Officers respond, even offline.
+    \item \textbf{Trust by design:} a confidence ladder, human decisions at every step, advisory-only automation, and server-enforced privacy.
+    \item \textbf{Planning aid:} a scenario planner that draws uncertainty and never says what will burn.
+    \item \textbf{Field data:} low-cost sensors to supplement satellite and weather inputs.
+\end{itemize}
+\vspace{0.3cm}
+\begin{center}
+\Large\textcolor{amritaMaroon}{\textbf{Thank you}}\\[2pt]
+\footnotesize Questions?
+\end{center}
+\end{frame}

@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 // A 1x1 PNG, so the photo really loads in the browser.
@@ -5,14 +6,14 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
 const incident = { id: 17, source: 'citizen', size: 'small', notes: 'Smoke near the ridge', status: 'reported', state: 'OD', created_at: '2026-10-16T08:00:00Z', updated_at: '2026-10-16T08:00:00Z', image_assessment_status: 'UNAVAILABLE' };
 const image = (over: object = {}) => ({ id: 5, original_filename: 'ridge.png', assessment_status: 'UNAVAILABLE', assessment: { error_code: 'MODEL_INFERENCE_DISABLED' }, authenticity_status: null, human_review_status: 'NOT_REVIEWED', human_review_note: null, human_reviewed_by: null, human_reviewed_at: null, ...over });
 
-async function setup(page: Page, opts: { imageStatus?: number } = {}) {
+async function setup(page: Page, opts: { imageStatus?: number; image?: object } = {}) {
   await page.addInitScript(() => {
     localStorage.setItem('resq_token', 'control-room-browser-token');
     localStorage.setItem('resq_user', JSON.stringify({ id: 12, name: 'Control fixture', email: 'control@example.test', role: 'control_room_operator' }));
   });
   const calls: string[] = [];
   const reviewBodies: unknown[] = [];
-  await page.route('**/api/incidents/17', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...incident, images: [image()] }) }));
+  await page.route('**/api/incidents/17', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...incident, images: [image(opts.image)] }) }));
   await page.route('**/api/incidents/17/history', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ history: [] }) }));
   await page.route('**/api/control-room/incidents/17/assignments', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ assignments: [], verifications: [] }) }));
   await page.route('**/api/control-room/rangers', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) }));
@@ -86,4 +87,127 @@ test('the review form uses real radio controls, labels and a live region', async
   await card.getByLabel(/Seen, no conclusion/).focus();
   await page.keyboard.press('Space');
   await expect(card.getByLabel(/Seen, no conclusion/)).toBeChecked();
+});
+
+const approved = (over: object = {}) => ({
+  assessment_status: 'COMPLETED',
+  assessment: {
+    assessment_status: 'COMPLETED', artifact_status: 'APPROVED', model_version: 'v1', error_code: null,
+    scores: { flames_visible: 0.874, smoke_visible: 0.31 }, derived_label: 'ACTIVE_FIRE', decision: 'REQUIRES_REVIEW', review_required: true, review_priority: 'HIGH',
+    quality_flags: ['BLURRY'], ood_flag: true,
+    authenticity: { status: 'NOT_ASSESSED', signals: [] }, media_integrity: { status: 'POSSIBLE_EDITED', note: 'n', advisory: true, affects_incident: false }, indications: { synthetic: 'POSSIBLE', edited: 'POSSIBLE', reused: 'POSSIBLE' }, limitations: [],
+    ...over,
+  },
+});
+
+test('an approved result is shown as advisory with human review required, scores, quality and OOD, with media integrity kept separate', async ({ page }) => {
+  const { calls } = await setup(page, { image: approved() });
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  const box = page.getByTestId('assessment-box');
+  await expect(box).toHaveAttribute('data-tone', 'review_required');
+  await expect(page.getByTestId('review-required')).toContainText('Human review required');
+  await expect(page.getByTestId('image-assessment')).toContainText('Uncertain');                 // out of distribution: not a fire call
+  await expect(page.getByTestId('assessment-scores')).toContainText('87%');
+  await expect(page.getByTestId('assessment-scores')).toContainText('31%');
+  await expect(page.getByTestId('assessment-scores')).toContainText('Model estimate, advisory');
+  await expect(page.getByTestId('assessment-ood')).toContainText('outside what the model was tested on');
+  await expect(page.getByTestId('assessment-quality')).toContainText('blurry');
+  // media integrity is its own section, outside the fire/smoke box, and does not touch it
+  const mi = page.getByTestId('media-integrity');
+  await expect(mi).toContainText('Media integrity (advisory)');
+  await expect(mi).toContainText('Possible edited image');
+  await expect(mi.getByTestId('media-integrity-advisory')).toHaveText('Advisory only. This does not verify or reject the report and does not change its priority, status or visibility. A person decides.');
+  await expect(box.getByTestId('media-integrity')).toHaveCount(0);
+  expect(await box.innerText()).not.toMatch(/synthetic|edited|manipulated|reused|AI-generated|genuine/i);
+  // the review controls and disclaimer are unchanged
+  await expect(page.getByText("It does not change the incident's status.")).toBeVisible();
+  await page.getByTestId('evidence-card').getByLabel(/Seen, no conclusion/).check();
+  await page.getByRole('button', { name: 'Save review' }).click();
+  await expect(page.getByTestId('current-review')).toContainText('Seen, no conclusion');
+  expect(calls.filter(c => c.startsWith('PATCH status'))).toEqual([]);
+  const body = await page.locator('body').innerText();
+  expect(body).not.toMatch(/\bverified\b|\bconfirmed\b|dispatch/i);
+});
+
+test('scores and labels are not shown when the artifact is not approved, and a no-fire label carries its caveat', async ({ page }) => {
+  await setup(page, { image: approved({ artifact_status: 'NOT_APPROVED' }) });
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByTestId('image-assessment')).toContainText('Assessment unavailable');
+  await expect(page.getByTestId('assessment-scores')).toHaveCount(0);
+  await expect(page.getByTestId('review-required')).toContainText('Human review required');
+  expect(await page.locator('body').innerText()).not.toMatch(/87%|active fire/i);
+});
+
+test('an unavailable assessment says it is not a negative result', async ({ page }) => {
+  await setup(page);
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByTestId('assessment-box')).toContainText('not a negative result');
+  await expect(page.getByTestId('review-required')).toHaveCount(0);
+});
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`the assessment box has no serious accessibility violations (${scheme})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await setup(page, { image: approved() });
+    await page.goto('/ops/incidents/17');
+    await page.getByRole('tab', { name: /Evidence/ }).click();
+    await expect(page.getByTestId('assessment-box')).toBeVisible();
+    const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    expect(result.violations.filter(v => v.impact === 'serious' || v.impact === 'critical').map(v => `${v.id}: ${v.nodes[0]?.html.slice(0, 100)}`)).toEqual([]);
+  });
+}
+
+test('a SHADOW row shows only the shadow notice and keeps the review controls', async ({ page }) => {
+  await setup(page, { image: { assessment_status: 'SHADOW', assessment: { assessment_status: 'SHADOW', model_version: 'v2', review_required: false, scores: null, derived_label: null, limitations: [] } } });
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByTestId('assessment-box')).toHaveAttribute('data-tone', 'shadow');
+  await expect(page.getByTestId('image-assessment')).toContainText('Shadow mode');
+  await expect(page.getByTestId('assessment-box')).toContainText('recorded for evaluation only');
+  await expect(page.getByTestId('review-required')).toHaveCount(0);
+  await expect(page.getByTestId('assessment-scores')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Save review' })).toBeVisible();
+});
+
+const MI_CASES: Array<[string, string, string?]> = [
+  ['NO_CONCERN_DETECTED', 'No concern detected Not proof the photo is genuine.'],
+  ['POSSIBLE_SYNTHETIC', 'Possible AI-generated or synthetic image'],
+  ['POSSIBLE_EDITED', 'Possible edited image'],
+  ['POSSIBLE_REUSED', 'Possible reused image'],
+  ['INCONCLUSIVE', 'Inconclusive'],
+  ['NOT_ASSESSED', 'Not assessed'],
+  ['UNAVAILABLE', 'Assessment unavailable (not a clean result)'],
+];
+for (const [status, text] of MI_CASES) {
+  test(`media integrity ${status} is shown cautiously and leaves the fire/smoke assessment and review controls alone`, async ({ page }) => {
+    await setup(page, { image: approved({ media_integrity: { status, note: 'n', advisory: true, affects_incident: false } }) });
+    await page.goto('/ops/incidents/17');
+    await page.getByRole('tab', { name: /Evidence/ }).click();
+    const mi = page.getByTestId('media-integrity');
+    await expect(mi.getByTestId('media-integrity-label')).toHaveText(text);
+    await expect(mi.getByTestId('media-integrity-advisory')).toContainText('Advisory only.');
+    await expect(page.getByTestId('assessment-box')).toHaveAttribute('data-tone', 'review_required');
+    await expect(page.getByTestId('assessment-scores')).toContainText('87%');
+    await expect(page.getByText("It does not change the incident's status.")).toBeVisible();
+    await page.getByTestId('evidence-card').getByLabel(/Seen, no conclusion/).check();
+    await expect(page.getByRole('button', { name: 'Save review' })).toBeEnabled();
+    expect(await mi.innerText()).not.toMatch(/\b(fake|forged|authentic\w*)\b/i);
+  });
+}
+
+test('missing media integrity reads as Not assessed, and an unavailable row says unavailable', async ({ page }) => {
+  await setup(page, { image: approved({ media_integrity: undefined }) });
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByTestId('media-integrity-label')).toHaveText('Not assessed');
+});
+
+test('an unavailable fire/smoke row shows media integrity as unavailable', async ({ page }) => {
+  await setup(page, {});
+  await page.goto('/ops/incidents/17');
+  await page.getByRole('tab', { name: /Evidence/ }).click();
+  await expect(page.getByTestId('media-integrity-label')).toContainText('Assessment unavailable');
 });

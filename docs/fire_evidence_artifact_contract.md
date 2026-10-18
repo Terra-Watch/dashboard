@@ -24,6 +24,40 @@ artifact.json is produced by fire_assessor.artifact.ModelArtifact.save() and mus
 
 The loader verifies every declared SHA-256 before returning the artifact. The TerraWatch adapter also rejects a version mismatch, missing weights, missing configuration, import failure, or any model-construction failure. Uploads remain persisted with assessment_status=UNAVAILABLE.
 
+## Keys the website adapter reads (stdlib pre-flight, `image_assessment.preflight_artifact`)
+
+The pre-flight runs before any model code and returns a specific `MODEL_ARTIFACT_*` code. It reads exactly these keys of `artifact.json`; anything else is ignored:
+
+| Key | Requirement |
+|---|---|
+| `schema_version` | exactly `fire-assessor-artifact/1` (this is the key name; not `artifact_format`) |
+| `model_version` | equals `FIRE_EVIDENCE_MODEL_VERSION` |
+| `files` | maps `weights.pt` and `arrays.npz` (no paths, no hidden names) to SHA-256 hex; the bundle may contain no undeclared file |
+| `checkpoint.sha256` | equals `files["weights.pt"]` |
+| `outputs` | `names == ["flames_visible","smoke_visible"]`, `label_mapping == {"0":"flames_visible","1":"smoke_visible"}` |
+| `calibration`, `ood`, `authenticity` | each with an allowed `status` (`calibration: PROVIDED`; `ood: PROVIDED` with a numeric `cutoff`, or `DISABLED_BY_POLICY` with a `reason`; `authenticity: PROVIDED`, or `EXCLUDED_BY_POLICY` with a `reason`) |
+| `thresholds{flames,smoke}`, `temperatures{flames,smoke}>0`, `uncertainty_margin` | numeric |
+| `calibration.policy{alpha,delta}`, `calibration.source{partition:"cal", export_sha256, identity_status}` | present; `identity_status` is `PATH_PRESERVED` or `CONTENT_VERIFIED` |
+| `provenance{source,initialization,training_manifest}`, `limitations`, `architecture` | present |
+| `approval.record{approver,approved_at,scope,evidence[],artifact_binding_sha256}` | strings/list non-empty; `artifact_binding_sha256` equals SHA-256 of canonical JSON of `artifact.json` without `approval` and `artifact_status` |
+| `approval.signature{algorithm:"Ed25519",key_id,value}` | **optional**: verified only when `FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY` is set |
+
+`artifact_status` in the file is never trusted; the status is derived (the assessor's loader re-derives it).
+
+### Signature (Ed25519): what is and is not enforced
+`FIRE_EVIDENCE_TRUSTED_PUBLIC_KEY` and `FIRE_EVIDENCE_TRUSTED_KEY_ID` were documented earlier as if they were required. They are enforced **only when the public key variable is set**; when it is unset the signature is
+not checked at all (known limitation: the content-digest binding alone does not stop someone with write access to the artifact directory from re-approving a modified bundle). When set, the signed message is the
+canonical JSON (sorted keys, separators `(",", ":")`, ASCII) of the entire `artifact.json` with `approval.signature` removed, the signature is base64 Ed25519, and `key_id` must match
+`FIRE_EVIDENCE_TRUSTED_KEY_ID` if that is set. Failure is `MODEL_ARTIFACT_SIGNATURE_INVALID`. The assessor repository does not sign or verify (no signing module at HEAD `7ddb717`), so whoever approves a bundle must produce
+the signature with a private key held outside this repository and the artifact bucket. See `docs/fire_evidence_integration.md`.
+
+## Output the adapter produces from an approved artifact
+
+Calibrated probabilities only: `scores.flames_visible/smoke_visible = sigmoid(logit / temperature)` using the artifact's temperatures, each within [0, 1] (anything else, including raw logits, is rejected as
+`MODEL_RESULT_INVALID`). `derived_label` is the assessor's policy outcome from the artifact's thresholds and uncertainty margin (`ACTIVE_FIRE`, `SMOKE_ONLY`, `NO_VISIBLE_FIRE`, `UNCERTAIN`), the decision is always
+`REQUIRES_REVIEW`, and `review_required` is always true. Scores, label and priority are absent unless the artifact is `APPROVED`. Authenticity is reported as `NOT_ASSESSED` when the artifact excludes it by policy.
+The full staff-facing JSON, the `indications` mapping and the UNAVAILABLE semantics are in `docs/fire_evidence_integration.md`.
+
 ## Runtime compatibility
 
 The assessor expects the separate repository at FIRE_EVIDENCE_REPO, imported from its src directory. The model path requires:
