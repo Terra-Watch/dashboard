@@ -21,3 +21,9 @@ data/osm/geofabrik/*.osm.pbf.part.aria2
 frontend/.playwright-output/
 .vercel
 .env*
+
+# large data / generated results
+results/
+data/
+frontend/public/tiles/*.pmtiles
+backend/tests/fixtures/**/weights.pt
