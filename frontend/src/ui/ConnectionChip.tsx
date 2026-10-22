@@ -16,7 +16,7 @@ export function ConnectionChip({ pending = 0 }: { pending?: number }) {
   return (
     <span role="status" className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm ${online ? 'border-line text-ink-muted' : 'border-warn bg-warn-tint font-semibold text-warn'}`}>
       <Icon aria-hidden="true" size={16} strokeWidth={1.75} />
-      {text}
+      <span className={online && !pending ? 'sr-only sm:not-sr-only' : ''}>{text}</span>
     </span>
   );
 }

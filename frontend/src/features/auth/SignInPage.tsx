@@ -7,6 +7,7 @@ import { TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { productRole } from '../../ui/nav';
 import { AuthLayout } from './AuthLayout';
+import { HowItWorksAside } from './HowItWorksAside';
 import { PasswordField } from './PasswordField';
 import { safeNext } from './rules';
 
@@ -33,18 +34,21 @@ export function SignInPage() {
   }
 
   return (
-    <AuthLayout title={t('auth.title')} subtitle={t('auth.subtitle')} aside={<p className="max-w-sm text-2xl font-bold leading-snug">Report a fire. Staff check it. Responders act. You see every step.</p>}>
+    <AuthLayout title={t('auth.title')} subtitle={t('auth.subtitle')} aside={<HowItWorksAside />}>
       <form onSubmit={event => void submit(event)} noValidate className="space-y-4">
         {problem && <Notice kind="danger">{problem}</Notice>}
         <TextField label={t('auth.email')} type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={event => setEmail(event.target.value)} />
         <PasswordField label={t('auth.password')} autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} />
         <Button type="submit" block loading={busy}>{t('auth.submit')}</Button>
       </form>
-      <div className="mt-6 space-y-2 border-t border-line pt-4 text-sm">
-        <p><Link to="/forgot" className="font-semibold underline">{t('auth.forgot_link')}</Link></p>
-        <p><Link to="/register" className="font-semibold underline">{t('auth.create')}</Link></p>
-        <p><Link to="/request-access" className="font-semibold underline">{t('auth.access.link', 'Ask for staff access')}</Link></p>
-        <p className="text-ink-muted">{t('auth.staffnote')}</p>
+      <div className="mt-6 space-y-3 border-t border-line pt-5">
+        <Link to="/register" className="flex min-h-12 w-full items-center justify-center rounded-rq border border-control bg-surface px-4 text-base font-semibold text-ink hover:bg-surface-2">{t('auth.create')}</Link>
+        <p className="text-center"><Link to="/forgot" className="inline-flex min-h-11 items-center font-semibold underline">{t('auth.forgot_link')}</Link></p>
+        <details className="text-sm text-ink-muted">
+          <summary className="min-h-11 cursor-pointer py-2 font-semibold text-ink">{t('citizen.v2.staff_summary', 'Are you staff?')}</summary>
+          <p className="py-1">{t('auth.staffnote')}</p>
+          <p><Link to="/request-access" className="inline-flex min-h-11 items-center font-semibold underline">{t('auth.access.link', 'Ask for staff access')}</Link></p>
+        </details>
       </div>
     </AuthLayout>
   );

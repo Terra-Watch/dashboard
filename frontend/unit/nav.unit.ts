@@ -23,7 +23,7 @@ test('each role has at most five destinations, unique ids and paths, and at most
 
 test('home path per role and incident pages stay inside the Queue destination', () => {
   const all = { citizen: true, control_room: true, field: true };
-  assert.equal(homePath('citizen', all), '/citizen/near-me');
+  assert.equal(homePath('citizen', all), '/citizen');
   assert.equal(homePath('control_room', all), '/ops/queue');
   assert.equal(homePath('field', all), '/field/tasks');
   assert.equal(homePath(null), '/login');

@@ -21,6 +21,7 @@ export function AuthLayout({ title, subtitle, children, aside }: { title: string
           {subtitle && <p className="mt-2 text-ink-muted">{subtitle}</p>}
           <div className="mt-6">{children}</div>
         </section>
+        {aside && <div className="md:hidden">{aside}</div>}
       </main>
     </div>
   );

@@ -44,7 +44,7 @@ export function RegisterPage() {
         <PasswordField label={t('auth.password')} autoComplete="new-password" hint={t('auth.register.rules')} value={password} onChange={event => setPassword(event.target.value)} />
         {password && (
           <ul className="space-y-1 text-sm" aria-live="polite">
-            <Rule ok={check.lengthOk} text="10+ characters" /><Rule ok={check.notCommon} text="Not a common password" /><Rule ok={check.notEmail} text="Does not contain your email" />
+            <Rule ok={check.lengthOk} text={t('citizen.v2.rule_len', '10 or more characters')} /><Rule ok={check.notCommon} text={t('citizen.v2.rule_common', 'Not a common password')} /><Rule ok={check.notEmail} text={t('citizen.v2.rule_email', 'Does not contain your email')} />
           </ul>
         )}
         <label className="flex items-start gap-3 text-sm">

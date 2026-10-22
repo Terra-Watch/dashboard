@@ -9,14 +9,14 @@ import { NoticesTab } from './community/NoticesTab';
 
 export function CommunityPage() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState('notices');
+  const [tab, setTab] = useState('discussion');
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <PageTitle title={t('nav.community')} subtitle={t('citizen.community.subtitle', 'Ask, share and help each other. Official notices come first.')} />
+      <PageTitle title={t('nav.community')} subtitle={t('citizen.v2.community_sub', 'Ask a question, share a local tip, help a neighbour. Official notices are on Home and Near me.')} />
       <Notice kind="info">{t('citizen.community.rule', 'Posts here never notify responders. Seeing a fire? Use Report.')}</Notice>
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List aria-label={t('nav.community')} className="flex gap-1 border-b border-line">
-          {[['notices', t('citizen.community.notices', 'Official notices')], ['discussion', t('citizen.community.discussion', 'Discussion')], ['chat', t('citizen.community.chat', 'Chat')]].map(([value, label]) => (
+          {[['discussion', t('citizen.community.discussion', 'Discussion')], ['chat', t('citizen.community.chat', 'Chat')], ['notices', t('citizen.community.notices', 'Official notices')]].map(([value, label]) => (
             <Tabs.Trigger key={value} value={value} className="min-h-12 border-b-4 border-transparent px-4 text-base font-semibold data-[state=active]:border-action hover:bg-surface-2">{label}</Tabs.Trigger>))}
         </Tabs.List>
         <Tabs.Content value="notices" className="pt-4 outline-none"><NoticesTab /></Tabs.Content>

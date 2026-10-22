@@ -22,6 +22,7 @@ const AccountPage = lazy(() => import('../features/citizen/AccountPage').then(m 
 const CitizenLayout = lazy(() => import('../features/citizen/CitizenLayout').then(m => ({ default: m.CitizenLayout })));
 const CommunityPage = lazy(() => import('../features/citizen/CommunityPage').then(m => ({ default: m.CommunityPage })));
 const MyReportsPage = lazy(() => import('../features/citizen/MyReportsPage').then(m => ({ default: m.MyReportsPage })));
+const CitizenHome = lazy(() => import('../features/citizen/CitizenHome').then(m => ({ default: m.CitizenHome })));
 const NearMePage = lazy(() => import('../features/citizen/NearMePage').then(m => ({ default: m.NearMePage })));
 const ReportDetailPage = lazy(() => import('../features/citizen/ReportDetailPage').then(m => ({ default: m.ReportDetailPage })));
 const ReportPage = lazy(() => import('../features/citizen/ReportPage').then(m => ({ default: m.ReportPage })));
@@ -70,7 +71,7 @@ export function Root() {
         <Route path="/invite/:token" element={<AcceptInvitePage />} />
         <Route path="/request-access" element={<RequestAccessPage />} />
         <Route path="/citizen" element={<CitizenLayout />}>
-          <Route index element={<Navigate to="near-me" replace />} />
+          <Route index element={<CitizenHome />} />
           <Route path="near-me" element={<NearMePage />} />
           <Route path="report" element={<ReportPage />} />
           <Route path="community" element={<CommunityPage />} />

@@ -1,6 +1,6 @@
 /** Navigation per product role (docs/design/D3-clean-sheet-design.md, section 3). Pure data so it can be tested without a browser. */
 export type ProductRole = 'citizen' | 'control_room' | 'field';
-export type IconId = 'map-pin' | 'plus' | 'clipboard-list' | 'users' | 'user' | 'inbox' | 'map' | 'radio' | 'megaphone' | 'clipboard-check' | 'list-todo' | 'camera' | 'flame';
+export type IconId = 'map-pin' | 'plus' | 'clipboard-list' | 'users' | 'user' | 'inbox' | 'map' | 'radio' | 'megaphone' | 'clipboard-check' | 'list-todo' | 'camera' | 'flame' | 'home';
 export type NavItem = { id: string; path: string; icon: IconId; labelKey: string; primary?: boolean };
 /** Destinations that exist only when an ops setting is on. They are not in NAV, which stays at five fixed items. */
 export type Gate = 'scenario';
@@ -19,9 +19,9 @@ export function productRole(stored: string | null | undefined): ProductRole | nu
 
 export const NAV: Record<ProductRole, NavItem[]> = {
   citizen: [
+    { id: 'home', path: '/citizen', icon: 'home', labelKey: 'nav.home' },
     { id: 'near-me', path: '/citizen/near-me', icon: 'map-pin', labelKey: 'nav.near_me' },
-    { id: 'my-reports', path: '/citizen/reports', icon: 'clipboard-list', labelKey: 'nav.my_reports' },
-    { id: 'report', path: '/citizen/report', icon: 'plus', labelKey: 'nav.report', primary: true },
+        { id: 'report', path: '/citizen/report', icon: 'plus', labelKey: 'nav.report', primary: true },
     { id: 'community', path: '/citizen/community', icon: 'users', labelKey: 'nav.community' },
     { id: 'account', path: '/citizen/account', icon: 'user', labelKey: 'nav.account' },
   ],
@@ -57,7 +57,7 @@ export function navFor(role: ProductRole, enabled: Partial<Record<Gate, boolean>
 /** Which roles already have their new screens. Until a role is built, people land on its existing screens. Remove with the old screens. */
 export const BUILT: Record<ProductRole, boolean> = { citizen: true, control_room: true, field: true };
 const LEGACY_HOME: Record<ProductRole, string> = { citizen: '/citizen', control_room: '/control-room', field: '/ranger' };
-const NEW_HOME: Record<ProductRole, string> = { citizen: '/citizen/near-me', control_room: '/ops/queue', field: '/field/tasks' };
+const NEW_HOME: Record<ProductRole, string> = { citizen: '/citizen', control_room: '/ops/queue', field: '/field/tasks' };
 
 export function homePath(role: ProductRole | null, built: Record<ProductRole, boolean> = BUILT): string {
   return role ? (built[role] ? NEW_HOME[role] : LEGACY_HOME[role]) : '/login';
@@ -69,8 +69,10 @@ export function roleOfPath(path: string): ProductRole | null {
 
 /** The nav item that owns this path (a path under /ops/incidents/12 belongs to the queue). */
 export function activeItem(role: ProductRole, path: string): NavItem | undefined {
-  const own = [...NAV[role], ...GATED_NAV[role]].find(item => path === item.path || path.startsWith(item.path + '/'));
+  const items = [...NAV[role], ...GATED_NAV[role]];
+  const own = items.find(item => path === item.path) ?? items.find(item => item.id !== 'home' && path.startsWith(item.path + '/'));   // the citizen home is /citizen itself, so it matches only exactly
   if (own) return own;
+  if (role === 'citizen' && path.startsWith('/citizen/reports')) return NAV.citizen[0];                                                 // a citizen's own reports are reached from the home screen
   if (role === 'control_room' && path.startsWith('/ops/incidents')) return NAV.control_room[0];
   if (role === 'field' && path.startsWith('/field/tasks')) return NAV.field[0];
   return undefined;

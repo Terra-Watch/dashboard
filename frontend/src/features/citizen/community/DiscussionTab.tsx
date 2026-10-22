@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ThumbsUp } from 'lucide-react';
+import { MessageSquarePlus, ThumbsUp } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -24,10 +24,13 @@ export function DiscussionTab() {
   const [topic, setTopic] = useState('');
   const posts = useQuery({ queryKey: [...POSTS_KEY, topic], queryFn: () => api<{ items: Post[] }>(`/api/community/posts${topic ? `?topic=${topic}` : ''}`), refetchInterval: 30_000 });
   const [notice, setNotice] = useState<{ kind: 'success' | 'danger' | 'info'; text: string } | null>(null);
+  const [writing, setWriting] = useState(false);
 
   return (
     <div className="space-y-4">
-      <Composer onDone={message => { setNotice(message); void posts.refetch(); }} />
+      {writing
+        ? <Composer onDone={message => { setNotice(message); if (message.kind !== 'danger') setWriting(false); void posts.refetch(); }} />
+        : <button type="button" onClick={() => setWriting(true)} className="flex min-h-16 w-full items-center gap-3 rounded-xl border-2 border-action bg-action-tint px-4 text-left text-lg font-semibold text-ink hover:bg-surface-2"><MessageSquarePlus aria-hidden="true" className="shrink-0 text-action" size={26} />{t('citizen.v2.ask', 'Ask a question or share a local tip')}</button>}
       {notice && <Notice kind={notice.kind}>{notice.text}</Notice>}
       <SelectField label={t('citizen.community.filter', 'Show')} value={topic} onChange={event => setTopic(event.target.value)}>
         <option value="">{t('citizen.community.all_topics', 'All posts')}</option>
@@ -80,7 +83,7 @@ function PostCard({ post, userId, onChanged, onNotice }: { post: Post; userId?: 
   if (post.removed) return <p className="rounded-panel border border-dashed border-control bg-surface p-4 text-ink-muted">{removalText(post.removed)}</p>;
   return (
     <article className="rounded-panel border border-line bg-surface p-4">
-      <p className="text-sm font-bold uppercase tracking-wide text-ink-muted">{t(`citizen.topic.${post.topic}`, post.topic)}{post.region ? ` · ${post.region}` : ''}{post.topic === 'information' ? ` · ${t('citizen.community.unverified', 'not verified')}` : ''}{post.status === 'held' ? ` · ${t('citizen.community.waiting', 'waiting for a moderator')}` : ''}</p>
+      <p className="inline-flex flex-wrap items-center gap-x-1 rounded-full bg-surface-2 px-3 py-1 text-sm font-semibold text-ink-muted">{t(`citizen.topic.${post.topic}`, post.topic)}{post.region ? ` · ${post.region}` : ''}{post.topic === 'information' ? ` · ${t('citizen.community.unverified', 'not verified')}` : ''}{post.status === 'held' ? ` · ${t('citizen.community.waiting', 'waiting for a moderator')}` : ''}</p>
       {editing ? (
         <form className="mt-2 space-y-2" onSubmit={event => { event.preventDefault(); void run(async () => { await api(`/api/community/posts/${post.id}`, { method: 'PATCH', json: { content: draft.trim() } }); setEditing(false); }, t('citizen.community.updated', 'Post updated.')); }}>
           <TextArea label={t('citizen.community.edit', 'Edit post')} rows={3} value={draft} onChange={event => setDraft(event.target.value)} />

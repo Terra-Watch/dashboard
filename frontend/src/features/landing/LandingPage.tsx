@@ -9,12 +9,14 @@ import { Brand } from '../../components/Brand';
 import { Button } from '../../ui/Button';
 import { LanguageMenu } from '../../ui/LanguageMenu';
 import { Notice } from '../../ui/Notice';
+import { EmergencyStrip } from '../../ui/EmergencyStrip';
 import { ThemeMenu } from '../../ui/ThemeMenu';
 import { DataAnswers } from './DataAnswers';
-import { HowItWorks } from './HowItWorks';
+import { Capabilities } from './Capabilities';
+import { Features, Principles } from './Features';
+import { Flagship } from './Flagship';
 import { LadderPlayer } from './LadderPlayer';
 import { PrivacyMap } from './PrivacyMap';
-import { RoleExplorer } from './RoleExplorer';
 
 /** The public status line is read from the server. If the feed is off or unapproved it says so; it never shows invented numbers. */
 function StatusLine() {
@@ -43,7 +45,7 @@ export function LandingPage() {
           <Link to="/" aria-label={t('app.name')} className="shrink-0"><Brand /></Link>
           <nav aria-label={t('app.menu')} className="ml-8 hidden md:block">
             <div className="flex items-center gap-8 text-base">
-              <a href="#features" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.features')}</a>
+              <a href="#flagship" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.features')}</a>
               <a href="#how" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.how')}</a>
               <a href="#privacy" className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">{t('landing.nav.privacy')}</a>
             </div>
@@ -54,18 +56,20 @@ export function LandingPage() {
 
       <main id="main" className="mx-auto max-w-6xl space-y-16 px-4 pb-20 pt-10 md:px-8 md:pt-16">
         <section aria-labelledby="hero-title" className="max-w-3xl">
-          <motion.h1 id="hero-title" initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-4xl leading-tight md:text-6xl">{t('landing.hero.title')}</motion.h1>
-          <p className="mt-5 text-lg leading-relaxed text-ink-muted md:text-xl">{t('landing.hero.body')}</p>
+          <motion.h1 id="hero-title" initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-4xl leading-tight md:text-6xl">{t('landing.v2.hero_title', 'Report a forest fire in a minute. Staff check it. You see every step.')}</motion.h1>
+          <p className="mt-5 text-lg leading-relaxed text-ink-muted md:text-xl">{t('landing.v2.hero_body', 'TerraWatch connects people who see smoke with the forest staff who check it and send help. Every claim shows how sure we are, and only a person can raise it.')}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/login?next=/citizen/report" className="inline-flex min-h-12 items-center rounded-rq bg-action px-6 text-lg font-bold text-on-action hover:bg-action-strong">{t('landing.hero.report')}</Link>
             <Link to="/login" className="inline-flex min-h-12 items-center rounded-rq border border-control px-6 text-lg font-semibold text-ink hover:bg-surface-2">{t('landing.hero.signin')}</Link>
           </div>
-          <div className="mt-6 space-y-3"><Notice kind="warning">{t('landing.hero.emergency')}</Notice><StatusLine /></div>
+          <div className="mt-6 space-y-3"><EmergencyStrip /><StatusLine /></div>
         </section>
 
-        <LadderPlayer />
-        <div id="features" className="scroll-mt-20"><RoleExplorer /></div>
-        <HowItWorks />
+        <div id="how" className="scroll-mt-20"><LadderPlayer /></div>
+        <Capabilities />
+        <Flagship />
+        <Features />
+        <Principles />
         <PrivacyMap />
         <DataAnswers />
       </main>
