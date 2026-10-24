@@ -1,9 +1,12 @@
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -11,11 +14,7 @@ from .config import RESQ_SECRET_KEY
 
 bearer = HTTPBearer(auto_error=False)
 
-try:
-    from argon2 import PasswordHasher
-    _argon2 = PasswordHasher()
-except ImportError:
-    _argon2 = None
+_argon2 = PasswordHasher()
 
 
 def _configured_secret() -> str:
@@ -50,23 +49,23 @@ def _confirm_active(identity: dict[str, object]) -> dict[str, object]:
     return {'id': identity['id'], 'role': row[0]}
 
 
-def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
-    if not credentials:
-        raise HTTPException(status_code=401, detail='Authentication required')
+def _decode(token: str, allowed_typ: set[str | None]) -> dict[str, object]:
+    """Verify a signed token whose 'typ' claim is one of allowed_typ (None = legacy token without the claim), then confirm the account."""
     key = _configured_secret()
     try:
-        payload = jwt.decode(
-            credentials.credentials,
-            key,
-            algorithms=['HS256'],
-            options={'require': ['exp']},
-        )
-        if 'typ' in payload:
+        payload = jwt.decode(token, key, algorithms=['HS256'], options={'require': ['exp']})
+        if payload.get('typ') not in allowed_typ:
             raise ValueError('unexpected token type')
         identity = {'id': int(payload['sub']), 'role': payload['role']}
     except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=401, detail='Session expired') from exc
     return _confirm_active(identity)
+
+
+def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
+    if not credentials:
+        raise HTTPException(status_code=401, detail='Authentication required')
+    return _decode(credentials.credentials, {None})
 
 
 WRITE_ROLES = {'admin', 'officer', 'control_room_operator', 'incident_commander'}
@@ -97,20 +96,7 @@ def make_access_token(user_id: int, role: str) -> str:
 
 
 def decode_access_token(token: str) -> dict[str, object]:
-    key = _configured_secret()
-    try:
-        payload = jwt.decode(
-            token,
-            key,
-            algorithms=['HS256'],
-            options={'require': ['exp']},
-        )
-        if payload.get('typ') != 'access':
-            raise ValueError('wrong token type')
-        identity = {'id': int(payload['sub']), 'role': payload['role']}
-    except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
-        raise HTTPException(status_code=401, detail='Session expired') from exc
-    return _confirm_active(identity)
+    return _decode(token, {'access'})
 
 
 def current_redesign_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict[str, object]:
@@ -132,20 +118,7 @@ def current_risk_user(credentials: HTTPAuthorizationCredentials | None = Depends
     """
     if not credentials:
         raise HTTPException(status_code=401, detail='Authentication required')
-    key = _configured_secret()
-    try:
-        payload = jwt.decode(
-            credentials.credentials,
-            key,
-            algorithms=['HS256'],
-            options={'require': ['exp']},
-        )
-        if 'typ' in payload and payload['typ'] != 'access':
-            raise ValueError('wrong token type')
-        identity = {'id': int(payload['sub']), 'role': payload['role']}
-    except (jwt.PyJWTError, KeyError, TypeError, ValueError) as exc:
-        raise HTTPException(status_code=401, detail='Session expired') from exc
-    return _confirm_active(identity)
+    return _decode(credentials.credentials, {None, 'access'})
 
 
 def require_staff_write(user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
@@ -209,9 +182,7 @@ def hash_token(raw_token: str) -> str:
 # ---------- password hashing: bcrypt or argon2 ----------
 
 def hash_password_argon2(password: str) -> str:
-    if _argon2 is not None:
-        return _argon2.hash(password)
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return _argon2.hash(password)
 
 
 def hash_password(password: str) -> str:
@@ -219,20 +190,29 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str, algo: str = 'bcrypt') -> bool:
-    # Defensive check: if hash looks like argon2 but algo is wrong, fix it
-    if password_hash.startswith('$argon2'):
-        algo = 'argon2'
-    
-    if algo == 'argon2':
-        if _argon2 is None:
-            raise HTTPException(status_code=500, detail='argon2 not available but required for this account')
+    if algo == 'argon2' or password_hash.startswith('$argon2'):
         try:
-            # argon2.verify takes (hash, password) - reverse order from most functions
-            _argon2.verify(password_hash, password)
-            return True
-        except Exception as e:
-            # If argon2 verification fails, return False (wrong password), don't fall through to bcrypt
-            return False
-    
-    # Only use bcrypt for actual bcrypt hashes
+            return _argon2.verify(password_hash, password)
+        except VerifyMismatchError:
+            return False  # a broken hash or library fault is not "wrong password": let it raise
     return bcrypt.checkpw(password.encode(), password_hash.encode())
+
+
+_DUMMY_HASH = _argon2.hash('not-a-real-password')
+
+
+def check_login(user, password: str) -> bool:
+    """verify_password for a row that may be missing; a missing row costs the same time, so response time does not reveal which emails exist."""
+    if not user:
+        verify_password(password, _DUMMY_HASH, 'argon2')
+        return False
+    return verify_password(password, user['password_hash'], user.get('password_algo', 'bcrypt'))
+
+
+def client_ip(request: Request) -> str:
+    """The caller's address. On Vercel request.client is the proxy, so use the first x-forwarded-for entry the platform sets."""
+    if os.getenv('VERCEL'):
+        forwarded = request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+        if forwarded:
+            return forwarded
+    return request.client.host if request.client else 'unknown'

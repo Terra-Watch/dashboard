@@ -93,6 +93,11 @@ def init_db() -> None:
                     expires_at TIMESTAMPTZ NOT NULL,
                     used_at TIMESTAMPTZ
                 )""",
+                """CREATE TABLE IF NOT EXISTS resq_public_hits (
+                    ip VARCHAR(64) NOT NULL,
+                    hit_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                )""",
+                "CREATE INDEX IF NOT EXISTS resq_public_hits_ip_idx ON resq_public_hits (ip, hit_at)",
                 """CREATE TABLE IF NOT EXISTS resq_login_attempts (
                     id BIGSERIAL PRIMARY KEY,
                     email VARCHAR(255) NOT NULL,

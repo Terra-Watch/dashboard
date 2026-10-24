@@ -27,3 +27,7 @@ results/
 data/
 frontend/public/tiles/*.pmtiles
 backend/tests/fixtures/**/weights.pt
+
+# generated simulation diagnostics and local cookie jars
+docs/sim_diagnosis/
+*cookies.txt

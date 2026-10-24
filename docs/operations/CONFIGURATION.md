@@ -6,7 +6,7 @@ Everything below is read from the server's environment. Values that describe pol
 
 | Variable | Meaning |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection (psycopg3), e.g. `postgresql+psycopg://user:pass@host:5432/db` |
+| `DATABASE_URL` | PostgreSQL connection (psycopg3), e.g. `postgresql+psycopg://user:pass@host:5432/db`. Required when `VERCEL` or `RESQ_ENV=production` is set; otherwise falls back to the local dev database |
 | `RESQ_SECRET_KEY` | Signing key, at least 32 bytes. The server refuses to start without it. |
 | `RESQ_ENV` | Set to `production` in production. Development accounts are never created then. |
 
@@ -18,7 +18,7 @@ First administrator: `python -m scripts.create_admin` (reads `RESQ_ADMIN_PASSWOR
 |---|---|---|
 | `EMERGENCY_CONTACTS` | Emergency numbers on the citizen Near me page and the Range Officer Me page | JSON list of `{label, number, region?}` the department supplies. No numbers are ever invented. |
 | `PUBLIC_MAP_ENABLED`, `PUBLIC_MAP_H3_RESOLUTION`, `PUBLIC_MAP_DELAY_MINUTES` | Verified areas on the citizen map | All three are required together. Areas are coarsened to the H3 cell and delayed. Unchecked reports and satellite signals are never public. |
-| `PUBLIC_RATE_LIMIT_PER_MINUTE` | Rate limit on public read endpoints, per address and per worker | Unset means no limit is applied. |
+| `PUBLIC_RATE_LIMIT_PER_MINUTE` | Rate limit on public read endpoints, per address, shared by all workers (counted in Postgres) | Unset means no limit is applied. |
 | `CORROBORATION_RADIUS_KM`, `CORROBORATION_WINDOW_MINUTES` | "Possibly the same event" suggestions in the queue | Suggestions only. Nothing is merged automatically. |
 | `EXPOSURE_RADII_KM` | Distances shown beside the scenario planner (comma list) | |
 | `SCENARIO_PLANNER_ENABLED=true` | Scenario tab for the Control Room | Never shown to citizens or Range Officers. Not validated; the banner says so. |

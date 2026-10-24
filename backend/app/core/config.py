@@ -19,7 +19,10 @@ def normalize_database_url(value: str) -> str:
 
 # The production provider names this variable DATABASE_URL_DATABASE_URL; keep DATABASE_URL
 # as the local/backward-compatible fallback used by the development setup.
-DATABASE_URL = normalize_database_url(os.getenv('DATABASE_URL_DATABASE_URL') or os.getenv('DATABASE_URL', 'postgresql+psycopg://resq:resq@localhost:55432/resq'))
+_db_url = os.getenv('DATABASE_URL_DATABASE_URL') or os.getenv('DATABASE_URL')
+if not _db_url and (os.getenv('VERCEL') or os.getenv('RESQ_ENV', '').lower() == 'production'):
+    raise RuntimeError('DATABASE_URL is not set; refusing to fall back to the local development database')
+DATABASE_URL = normalize_database_url(_db_url or 'postgresql+psycopg://resq:resq@localhost:55432/resq')
 RESQ_SECRET_KEY = os.getenv('RESQ_SECRET_KEY')
 _LOCAL_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173']
 API_ORIGINS = [origin.strip().rstrip('/') for origin in os.getenv('API_ORIGINS', ','.join(_LOCAL_ORIGINS)).split(',') if origin.strip()]

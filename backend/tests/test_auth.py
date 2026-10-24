@@ -1,6 +1,7 @@
 """Step 1a auth: permission matrix per role, rate limiting/lockout, CSRF, refresh-token
 rotation/reuse detection, invite/reset single-use tokens, scope enforcement, audit log.
 """
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -95,6 +96,22 @@ class LoginTests(SetUpDB):
         self.assertEqual(locked.status_code, 429)
         still_locked = login(client, email)
         self.assertEqual(still_locked.status_code, 429)
+
+
+    def test_legacy_login_route_is_gone(self):
+        resp = fresh_client().post('/api/auth/login', json={'email': 'admin@resq.local', 'password': 'resq-demo'})
+        self.assertEqual(resp.status_code, 404)
+
+    def test_client_ip_uses_forwarded_header_only_on_vercel(self):
+        from unittest import mock
+        from starlette.requests import Request
+        from app.core.security import client_ip
+        scope = {'type': 'http', 'headers': [(b'x-forwarded-for', b'203.0.113.9, 10.0.0.1')], 'client': ('10.0.0.1', 1)}
+        with mock.patch.dict('os.environ', {'VERCEL': '1'}):
+            self.assertEqual(client_ip(Request(scope)), '203.0.113.9')
+        with mock.patch.dict('os.environ', {}, clear=False):
+            os.environ.pop('VERCEL', None)
+            self.assertEqual(client_ip(Request(scope)), '10.0.0.1')
 
 
 class RefreshRotationTests(SetUpDB):
@@ -357,7 +374,6 @@ def _collect_dependency_calls(dependant) -> set:
 
 class RouteCoverageTests(SetUpDB):
     ALLOWLIST = {
-        ('POST', '/api/auth/login'),
         ('POST', '/api/auth/access-requests'),
         ('POST', '/api/auth/password-reset/request'),
         ('POST', '/api/auth/redesign/login'),

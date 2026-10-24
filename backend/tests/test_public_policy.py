@@ -20,9 +20,7 @@ ENV = ("PUBLIC_MAP_ENABLED", "PUBLIC_MAP_H3_RESOLUTION", "PUBLIC_MAP_DELAY_MINUT
 def clean_env(monkeypatch):
     for name in ENV:
         monkeypatch.delenv(name, raising=False)
-    public.reset_rate_limit_for_tests()
     yield
-    public.reset_rate_limit_for_tests()
 
 
 @pytest.fixture
@@ -161,8 +159,9 @@ def test_public_endpoints_are_get_only_and_unauthenticated(monkeypatch):
 def test_rate_limit_applies_only_when_configured(monkeypatch):
     client = fresh_client()
     assert all(client.get("/api/public/status").status_code == 200 for _ in range(5))
+    with engine.begin() as db:
+        db.execute(text("DELETE FROM resq_public_hits"))
     monkeypatch.setenv("PUBLIC_RATE_LIMIT_PER_MINUTE", "3")
-    public.reset_rate_limit_for_tests()
     codes = [client.get("/api/public/status").status_code for _ in range(5)]
     assert codes == [200, 200, 200, 429, 429]
 

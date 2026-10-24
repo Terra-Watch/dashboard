@@ -2,11 +2,6 @@ from datetime import date, datetime
 from pydantic import BaseModel, Field, model_validator
 
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
 class PasswordResetRequest(BaseModel):
     email: str
 

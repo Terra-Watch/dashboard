@@ -16,7 +16,7 @@ from sqlalchemy import text
 from ..contracts.account import AccountDeleteRequest
 from ..contracts.schemas import CitizenReportRequest, IncidentImageReviewRequest
 from ..core.permissions import SUPPORTED_STATES
-from ..core.security import current_redesign_user, hash_password_argon2, new_raw_token, require_csrf, verify_password
+from ..core.security import check_login, current_redesign_user, hash_password_argon2, new_raw_token, require_csrf
 from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
 from ..services.recipients import incident_staff_recipients
@@ -174,7 +174,7 @@ def delete_account(payload: AccountDeleteRequest, user: dict = Depends(citizen_u
     """Closes the account. Sign-in details and community writing are removed; reports already handed to staff stay as safety records without a name."""
     with engine.begin() as db:
         row = db.execute(text('SELECT password_hash,password_algo FROM resq_users WHERE id=:id AND deleted_at IS NULL FOR UPDATE'), {'id': user['id']}).mappings().first()
-        if not row or not verify_password(payload.password, row['password_hash'], row.get('password_algo', 'bcrypt')):
+        if not check_login(row, payload.password):
             raise HTTPException(status_code=403, detail='That password is not right')
         db.execute(text("UPDATE resq_users SET name='Deleted member', email=:e, password_hash=:h, password_algo='argon2', deleted_at=now() WHERE id=:id"),
                    {'e': f"deleted-{user['id']}@deleted.invalid", 'h': hash_password_argon2(new_raw_token()), 'id': user['id']})

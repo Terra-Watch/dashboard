@@ -336,7 +336,7 @@ Look for these debug messages:
 
 ```bash
 # Connect to database
-psql postgresql+psycopg://resq:CePcuepkCinrPKWr8sfDv-KH7Czz8mEGYPHxhkrypgRnPXCpcaZj7UNkr3EsBYsA@127.0.0.1:5432/resq
+psql postgresql+psycopg://resq:<redacted>@127.0.0.1:5432/resq
 
 # Check for forecast runs on 2024-03-10
 SELECT id, forecast_date, mode, issued_at FROM forecast_runs 

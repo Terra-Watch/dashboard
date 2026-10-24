@@ -8,12 +8,12 @@ from sqlalchemy.exc import IntegrityError
 
 from ..contracts.schemas import (
     AccessRequest, AdminPasswordResetRequest, InviteAcceptRequest, InviteCreateRequest,
-    CitizenPasswordResetRequest, CitizenRegistrationRequest, LoginRequest, PasswordResetCompleteRequest, PasswordResetRequest, RedesignLoginRequest,
+    CitizenPasswordResetRequest, CitizenRegistrationRequest, PasswordResetCompleteRequest, PasswordResetRequest, RedesignLoginRequest,
 )
 from ..core.security import (
-    CSRF_COOKIE, REFRESH_TOKEN_DAYS, RESQ_ROLES, current_redesign_user, hash_password_argon2,
-    hash_token, make_access_token, make_csrf_token, make_token, new_raw_token, require_csrf,
-    require_roles, verify_password,
+    CSRF_COOKIE, REFRESH_TOKEN_DAYS, RESQ_ROLES, check_login, client_ip, current_redesign_user, hash_password_argon2,
+    hash_token, make_access_token, make_csrf_token, new_raw_token, require_csrf,
+    require_roles,
 )
 from ..database.session import engine
 from ..services.audit_log import write_audit_log
@@ -27,24 +27,6 @@ LOCKOUT_WINDOW_MINUTES = 15
 GENERIC_LOGIN_ERROR = "Invalid email or password."
 GENERIC_LOCKOUT_ERROR = "Too many attempts. Try again in a few minutes."
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-
-
-# ---------- legacy (/app/*) login ----------
-
-@router.post("/login")
-def login(payload: LoginRequest) -> dict[str, object]:
-    with engine.connect() as db:
-        user = db.execute(
-            text("SELECT id,email,name,password_hash,role,password_algo FROM resq_users WHERE email=:email AND deactivated_at IS NULL"),
-            {"email": payload.email.strip().lower()},
-        ).mappings().first()
-    if not user or not verify_password(payload.password, user["password_hash"], user.get("password_algo", "bcrypt")):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {
-        "access_token": make_token(user["id"], user["role"]),
-        "token_type": "bearer",
-        "user": {"email": user["email"], "name": user["name"], "role": user["role"]},
-    }
 
 
 @router.post("/access-requests", status_code=202)
@@ -66,10 +48,6 @@ def request_password_reset(payload: PasswordResetRequest) -> dict[str, str]:
 
 
 # ---------- redesign (/redesign/*) login & session lifecycle ----------
-
-def _client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
-
 
 def _recent_failed_attempts(db, email: str, ip: str) -> int:
     return db.execute(
@@ -109,14 +87,14 @@ def _issue_session(response: Response, user_id: int, role: str, device_id: str |
 @router.post("/redesign/login")
 def redesign_login(payload: RedesignLoginRequest, request: Request, response: Response) -> dict[str, object]:
     email = payload.email.strip().lower()
-    ip = _client_ip(request)
+    ip = client_ip(request)
     with engine.begin() as db:
         locked_out = _recent_failed_attempts(db, email, ip) >= MAX_FAILED_ATTEMPTS
         user = None if locked_out else db.execute(
             text("SELECT id,email,name,password_hash,password_algo,role,home_state FROM resq_users WHERE email=:email AND deactivated_at IS NULL"),
             {'email': email},
         ).mappings().first()
-        valid = bool(user) and user['role'] in (RESQ_ROLES | {'citizen'}) and verify_password(payload.password, user['password_hash'], user.get('password_algo', 'bcrypt'))
+        valid = not locked_out and check_login(user, payload.password) and user['role'] in (RESQ_ROLES | {'citizen'})
         if not locked_out:
             _record_attempt(db, email, ip, valid)
 
@@ -163,14 +141,14 @@ def citizen_register(payload: CitizenRegistrationRequest, request: Request, resp
 @router.post("/citizen/login")
 def citizen_login(payload: RedesignLoginRequest, request: Request, response: Response) -> dict[str, object]:
     email = payload.email.strip().lower()
-    ip = _client_ip(request)
+    ip = client_ip(request)
     with engine.begin() as db:
         locked_out = _recent_failed_attempts(db, email, ip) >= MAX_FAILED_ATTEMPTS
         user = None if locked_out else db.execute(
             text("SELECT id,email,name,password_hash,password_algo,role FROM resq_users WHERE email=:email AND role='citizen' AND deactivated_at IS NULL"),
             {'email': email},
         ).mappings().first()
-        valid = bool(user) and verify_password(payload.password, user['password_hash'], user.get('password_algo', 'bcrypt'))
+        valid = not locked_out and check_login(user, payload.password)
         if not locked_out:
             _record_attempt(db, email, ip, valid)
     if locked_out:

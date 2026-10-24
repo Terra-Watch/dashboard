@@ -5,7 +5,7 @@ Environment (no defaults anywhere):
   PUBLIC_MAP_ENABLED            must be "true".
   PUBLIC_MAP_H3_RESOLUTION      integer 3..9.
   PUBLIC_MAP_DELAY_MINUTES      integer >= 0.
-  PUBLIC_RATE_LIMIT_PER_MINUTE  positive integer, per client IP, in-process (per worker). Unset or invalid -> no limit is applied.
+  PUBLIC_RATE_LIMIT_PER_MINUTE  positive integer, per client IP, counted in Postgres so every worker shares it. Unset or invalid -> no limit is applied.
 Verified time: resq_incidents.updated_at is used as the time the incident reached its current public status (conservative:
 any later status change restarts the delay). Never exposes coordinates, ids, notes or reporter data.
 """
@@ -13,42 +13,32 @@ import json
 import logging
 import os
 import re
-import threading
-import time
-from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
 
+from ..core.security import client_ip
 from ..database.session import engine
 from ..services.h3_coarsen import to_cell
 
 logger = logging.getLogger(__name__)
 NUMBER_RE = re.compile(r'^[+0-9][0-9 ()-]{2,20}$')
 SEVERITY = {'verified': 3, 'responding': 2, 'contained': 1}
-_hits: dict[str, deque] = defaultdict(deque)
-_lock = threading.Lock()
 
 
 def _rate_limit(request: Request) -> None:
     raw = os.environ.get('PUBLIC_RATE_LIMIT_PER_MINUTE', '').strip()
     if not raw.isdigit() or int(raw) < 1:
         return
-    limit, now = int(raw), time.monotonic()
-    ip = request.client.host if request.client else 'unknown'
-    with _lock:
-        window = _hits[ip]
-        while window and now - window[0] > 60:
-            window.popleft()
-        if len(window) >= limit:
-            raise HTTPException(status_code=429, detail='Too many requests', headers={'Retry-After': '60'})
-        window.append(now)
-
-
-def reset_rate_limit_for_tests() -> None:
-    with _lock:
-        _hits.clear()
+    ip = client_ip(request)
+    with engine.begin() as db:
+        db.execute(text("DELETE FROM resq_public_hits WHERE hit_at < now() - interval '1 minute'"))
+        over = db.execute(text('SELECT count(*) FROM resq_public_hits WHERE ip=:ip'), {'ip': ip}).scalar() >= int(raw)
+        if not over:
+            db.execute(text('INSERT INTO resq_public_hits (ip) VALUES (:ip)'), {'ip': ip})
+    if over:
+        raise HTTPException(status_code=429, detail='Too many requests', headers={'Retry-After': '60'})
 
 
 router = APIRouter(prefix='/api/public', tags=['public'], dependencies=[Depends(_rate_limit)])
