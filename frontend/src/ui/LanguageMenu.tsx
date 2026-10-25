@@ -8,7 +8,7 @@ export function LanguageMenu() {
   const current = (i18n.resolvedLanguage || 'en').slice(0, 2);
   return (
     <Menu.Root>
-      <Menu.Trigger aria-label={t('app.language')} className="inline-flex min-h-11 items-center gap-1.5 rounded-rq border border-control bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-2 active:scale-[0.98]">
+      <Menu.Trigger aria-label={t('app.language')} className="inline-flex min-h-11 items-center gap-1.5 rounded-rq border border-control bg-surface px-3 text-sm font-semibold text-ink transition duration-200 hover:bg-surface-2 active:scale-95">
         <Languages aria-hidden="true" size={18} strokeWidth={1.75} />
         <span className="hidden sm:inline">{LANGUAGES.find(language => language.code === current)?.label ?? 'English'}</span>
       </Menu.Trigger>

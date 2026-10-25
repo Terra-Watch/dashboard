@@ -39,7 +39,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-rq focus:bg-action focus:px-4 focus:py-2 focus:text-on-action">{t('app.skip')}</a>
       <header className="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b border-line bg-surface px-4">
         {rail && <button type="button" onClick={() => setRailOpen(value => !value)} aria-expanded={railExpanded} aria-controls="control-room-sidebar" aria-label={railExpanded ? t('app.close_menu', 'Close menu') : t('app.open_menu', 'Open menu')} className="inline-flex size-11 shrink-0 items-center justify-center rounded-rq border border-control bg-surface hover:bg-surface-2 active:scale-95"><Menu aria-hidden="true" size={20} /></button>}
-        <Link to={homePath(role)} aria-label={t('app.name')} className="shrink-0"><Brand /></Link>
+        <Link to={homePath(role)} aria-label={t('app.name')} className="inline-flex min-h-11 shrink-0 items-center transition-opacity duration-200 hover:opacity-80 active:scale-95"><Brand /></Link>
         {!rail && <DesktopNav items={items} currentId={current?.id} label={t('app.menu')} />}
         <div className="ml-auto flex items-center gap-2">
           {topSlot}
@@ -47,7 +47,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
           <Inbox role={role} />
           <span className="hidden sm:inline-flex"><LanguageMenu /></span>
           <ThemeMenu />
-          <button type="button" onClick={onSignOut} className="inline-flex min-h-11 items-center gap-1.5 rounded-rq border border-control bg-surface px-3 text-sm font-semibold hover:bg-surface-2 active:scale-[0.98]" title={userName}>
+          <button type="button" onClick={onSignOut} className="inline-flex min-h-11 items-center gap-1.5 rounded-rq border border-control bg-surface px-3 text-sm font-semibold transition duration-200 hover:bg-surface-2 active:scale-95" title={userName}>
             <LogOut aria-hidden="true" size={18} strokeWidth={1.75} /><span className="hidden md:inline">{t('app.signout')}</span>
           </button>
         </div>
@@ -64,7 +64,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
                 <li key={item.id}>
                   <Link to={item.path} aria-current={current?.id === item.id ? 'page' : undefined}
                     title={railExpanded ? undefined : t(item.labelKey)}
-                    className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-semibold leading-none ${railExpanded ? '' : 'justify-center px-0'} ${current?.id === item.id ? 'bg-action-tint text-action' : 'text-ink hover:bg-surface-2'}`}>
+                    className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-base font-semibold leading-none transition duration-200 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none ${railExpanded ? '' : 'justify-center px-0'} ${current?.id === item.id ? 'bg-action-tint text-action' : 'text-ink hover:bg-surface-2'}`}>
                     <span className="flex w-6 shrink-0 items-center justify-center"><NavIcon id={item.icon} size={20} /></span><span className={`truncate overflow-hidden transition-[opacity,width] duration-[250ms] ${railExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t(item.labelKey)}</span>
                   </Link>
                 </li>
@@ -77,13 +77,13 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
 
       {mobileOverflow.length > 0 && <div aria-hidden={!mobileMoreOpen} inert={!mobileMoreOpen} data-open={mobileMoreOpen ? 'true' : 'false'} className={`rq-popover fixed inset-x-3 bottom-20 z-40 rounded-xl border border-line bg-surface p-2 shadow-[0_12px_32px_rgb(15_23_42/0.12)] md:hidden ${mobileMoreOpen ? 'rq-popover-open' : 'rq-popover-closed pointer-events-none'}`}>
         <ul className="grid gap-1">
-          {mobileOverflow.map(item => <li key={item.id}><Link to={item.path} onClick={() => setMobileMoreOpen(false)} aria-current={current?.id === item.id ? 'page' : undefined} className={`flex min-h-11 items-center gap-3 rounded-rq px-3 font-semibold ${current?.id === item.id ? 'bg-action-tint text-action' : 'hover:bg-surface-2'}`}><NavIcon id={item.icon} size={20} />{t(item.labelKey)}</Link></li>)}
+          {mobileOverflow.map(item => <li key={item.id}><Link to={item.path} onClick={() => setMobileMoreOpen(false)} aria-current={current?.id === item.id ? 'page' : undefined} className={`flex min-h-11 items-center gap-3 rounded-rq px-3 font-semibold transition duration-200 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none ${current?.id === item.id ? 'bg-action-tint text-action' : 'hover:bg-surface-2'}`}><NavIcon id={item.icon} size={20} />{t(item.labelKey)}</Link></li>)}
         </ul>
       </div>}
       <nav aria-label={t('app.menu')} className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
         <ul className="mx-auto grid max-w-xl items-end" style={{ gridTemplateColumns: `repeat(${mobileItems.length + (mobileOverflow.length ? 1 : 0)}, minmax(0, 1fr))` }}>
           {mobileItems.map(item => <li key={item.id}><BottomItem item={item} active={current?.id === item.id} label={t(item.labelKey)} /></li>)}
-          {mobileOverflow.length > 0 && <li><button type="button" aria-expanded={mobileMoreOpen} onClick={() => setMobileMoreOpen(value => !value)} className={`flex min-h-16 w-full flex-col items-center justify-center gap-0.5 text-sm ${mobileMoreActive || mobileMoreOpen ? 'font-bold text-ink' : 'text-ink-muted'}`}><span className={`flex h-8 w-14 items-center justify-center rounded-full ${mobileMoreActive || mobileMoreOpen ? 'bg-action-tint' : ''}`}><MoreHorizontal aria-hidden="true" /></span>{t('app.more', 'More')}</button></li>}
+          {mobileOverflow.length > 0 && <li><button type="button" aria-expanded={mobileMoreOpen} onClick={() => setMobileMoreOpen(value => !value)} className={`group flex min-h-16 w-full flex-col items-center justify-end gap-0.5 pb-1.5 text-sm transition-colors duration-200 ${mobileMoreActive || mobileMoreOpen ? 'font-bold text-ink' : 'text-ink-muted'}`}><span className={`flex h-8 w-14 items-center justify-center rounded-full transition duration-200 group-active:scale-90 ${mobileMoreActive || mobileMoreOpen ? 'bg-action-tint' : ''}`}><MoreHorizontal aria-hidden="true" /></span>{t('app.more', 'More')}</button></li>}
         </ul>
       </nav>
     </div>
@@ -93,15 +93,15 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
 function BottomItem({ item, active, label }: { item: NavItem; active: boolean; label: string }) {
   if (item.primary) {
     return (
-      <Link to={item.path} aria-current={active ? 'page' : undefined} className="relative -mt-5 flex min-h-16 flex-col items-center justify-end gap-0.5 pb-1.5 text-sm font-semibold text-ink">
-        <span className="flex size-14 items-center justify-center rounded-full border-4 border-surface bg-action text-on-action shadow-md"><NavIcon id={item.icon} size={26} /></span>
+      <Link to={item.path} aria-current={active ? 'page' : undefined} className="group relative -mt-5 flex min-h-16 flex-col items-center justify-end gap-0.5 pb-1.5 text-sm font-semibold text-ink">
+        <span className="flex size-14 items-center justify-center rounded-full border-4 border-surface bg-action text-on-action shadow-md transition duration-200 group-hover:scale-105 group-active:scale-90"><NavIcon id={item.icon} size={26} /></span>
         {label}
       </Link>
     );
   }
   return (
-    <Link to={item.path} aria-current={active ? 'page' : undefined} className={`flex min-h-16 flex-col items-center justify-center gap-0.5 text-sm ${active ? 'font-bold text-ink' : 'text-ink-muted'}`}>
-      <span className={`flex h-8 w-14 items-center justify-center rounded-full ${active ? 'bg-action-tint' : ''}`}><NavIcon id={item.icon} /></span>
+    <Link to={item.path} aria-current={active ? 'page' : undefined} className={`group flex min-h-16 flex-col items-center justify-end gap-0.5 pb-1.5 text-sm transition-colors duration-200 ${active ? 'font-bold text-ink' : 'text-ink-muted'}`}>
+      <span className={`flex h-8 w-14 items-center justify-center rounded-full transition duration-200 group-active:scale-90 ${active ? 'bg-action-tint' : 'group-hover:bg-surface-2'}`}><NavIcon id={item.icon} /></span>
       {label}
     </Link>
   );
@@ -115,7 +115,7 @@ function DesktopNav({ items, currentId, label }: { items: NavItem[]; currentId?:
         {items.map(item => (
           <li key={item.id}>
             <Link to={item.path} aria-current={currentId === item.id ? 'page' : undefined}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-rq px-3 text-base font-semibold ${currentId === item.id ? 'bg-action-tint text-action' : item.primary ? 'border border-control text-ink hover:bg-surface-2' : 'text-ink hover:bg-surface-2'}`}>
+              className={`inline-flex min-h-11 items-center gap-2 rounded-rq px-3 text-base font-semibold transition duration-200 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none ${currentId === item.id ? 'bg-action-tint text-action' : item.primary ? 'border border-control text-ink hover:bg-surface-2' : 'text-ink hover:bg-surface-2'}`}>
               <NavIcon id={item.icon} size={18} />{t(item.labelKey)}
             </Link>
           </li>

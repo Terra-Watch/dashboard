@@ -1,13 +1,21 @@
-import { ClipboardList, Languages, ListTodo, Map as MapIcon, MapPin, Megaphone, MessagesSquare, UserCheck, WifiOff, Camera, Route, Inbox, type LucideIcon } from 'lucide-react';
+import { CalendarClock, ClipboardList, FileText, FlaskConical, Languages, ListTodo, Map as MapIcon, MapPin, Megaphone, MessagesSquare, ScanSearch, SatelliteDish, Layers, UserCheck, WifiOff, Camera, Route, Inbox, type LucideIcon } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
+import { StatusChip, type Status } from './StatusChip';
 
-type Item = { id: string; Icon: LucideIcon };
-const GROUPS: Array<{ id: 'people' | 'room' | 'field'; items: Item[] }> = [
+type Item = { id: string; Icon: LucideIcon; status?: Status };
+type GroupId = 'fc' | 'people' | 'room' | 'field';
+const GROUPS: Array<{ id: GroupId; items: Item[] }> = [
+  { id: 'fc', items: [{ id: 'map', Icon: Layers }, { id: 'bands', Icon: MapIcon }, { id: 'inputs', Icon: SatelliteDish }, { id: 'daily', Icon: CalendarClock, status: 'soon' }] },
   { id: 'people', items: [{ id: 'report', Icon: Camera }, { id: 'follow', Icon: Route }, { id: 'near', Icon: MapPin }, { id: 'community', Icon: MessagesSquare }, { id: 'languages', Icon: Languages }] },
-  { id: 'room', items: [{ id: 'queue', Icon: Inbox }, { id: 'map', Icon: MapIcon }, { id: 'assign', Icon: UserCheck }, { id: 'notices', Icon: Megaphone }] },
+  { id: 'room', items: [{ id: 'queue', Icon: Inbox }, { id: 'map', Icon: MapIcon }, { id: 'photo', Icon: ScanSearch }, { id: 'whatif', Icon: FlaskConical }, { id: 'assign', Icon: UserCheck }, { id: 'notices', Icon: Megaphone }, { id: 'briefing', Icon: FileText, status: 'soon' }] },
   { id: 'field', items: [{ id: 'tasks', Icon: ListTodo }, { id: 'offline', Icon: WifiOff }, { id: 'record', Icon: ClipboardList }] },
 ];
 const DEFAULTS: Record<string, string> = {
+  'fc.map': 'Daily risk map|Every forest cell on the Control Room map, shaded by how likely fire is the next day. Works on archived days today.',
+  'fc.bands': 'Ranked, never promised|Cells are shown as bands (top 1%, 5% and 15%), not as a raw score. It tells staff where to look first. A person decides what to do.',
+  'fc.inputs': 'Fresh data, with its age|NASA satellite detections and weather feed the forecast. Every data chip shows how old it is, and a stale source says so.',
+  'fc.daily': 'Daily forecast every morning|A fresh ranking each morning from the latest satellite and weather data.',
   'people.report': 'Report in about a minute|Take a photo, tap what you see, and your place is found for you. With no signal, the report waits on your phone and is sent later.',
   'people.follow': 'Follow your report|See it move from received to checked, responding and closed, and read the reason it was closed.',
   'people.near': 'Know what is official near you|Official notices, verified fire areas (coarse and delayed, to protect people) and emergency contacts.',
@@ -18,7 +26,6 @@ const DEFAULTS: Record<string, string> = {
   'room.photo': 'A second look at every photo|A model reads each photo for visible fire or smoke and for signs of editing or AI generation. It only advises. A person decides.',
   'room.assign': 'Assign and track officers|See who accepted or declined and what each officer recorded.',
   'room.notices': 'Notices with a second approver|Public notices go out only after another person approves them. Community posts are moderated here.',
-  'room.forecast': 'Next-day wildfire forecast|Forest areas ranked from low to high chance of fire tomorrow, from satellite detections and weather. Shown as bands, never as a promise. A person decides what to do.',
   'room.briefing': 'AI incident briefing|A short plain-language summary of each incident: what was reported, what the photo check found, what officers recorded. Use it at handover. A person reviews it.',
   'room.whatif': 'What-if fire spread|Sketch how a fire might spread with the wind and terrain. A planning aid, labelled as an estimate.',
   'field.tasks': 'Today’s tasks|Place, priority and status for every assignment.',
@@ -26,10 +33,13 @@ const DEFAULTS: Record<string, string> = {
   'field.record': 'Record what you find|Observations and photos go straight onto the incident timeline.',
 };
 
-/** What the product does, stated plainly and grouped by who uses it. Every line is something the app does today. */
+const GROUP_TITLE: Record<GroupId, string> = { fc: 'Wildfire forecasting', people: 'For people near a fire', room: 'For the Control Room', field: 'For Range Officers' };
+
+/** What the product does and what is coming, grouped by who uses it. Unmarked lines work today; the rest carry a status chip. */
 export function Features() {
   const { t } = useTranslation();
-  const line = (group: string, id: string) => {
+  const reduce = useReducedMotion();
+  const line = (group: GroupId, id: string) => {
     const [title, body] = DEFAULTS[`${group}.${id}`].split('|');
     return { title: t(`landing.v2.${group}.${id}.title`, title), body: t(`landing.v2.${group}.${id}.body`, body) };
   };
@@ -37,20 +47,20 @@ export function Features() {
     <section id="features" aria-labelledby="features-title" className="scroll-mt-20 space-y-8">
       <div className="max-w-2xl">
         <h2 id="features-title" className="text-3xl md:text-4xl">{t('landing.v2.features_title', 'What TerraWatch does')}</h2>
-        <p className="mt-2 text-lg text-ink-muted">{t('landing.v2.features_sub', 'Three groups of people use it, each with their own screens.')}</p>
+        <p className="mt-2 text-lg text-ink-muted">{t('landing.v2.features_sub', 'Forecasting comes first. Then the tools for people who report, decide and go to the place. Features marked “Coming soon” are still being built.')}</p>
       </div>
-      <div className="grid gap-10 lg:grid-cols-3">
+      <div className="grid gap-10 lg:grid-cols-2">
         {GROUPS.map(group => (
           <div key={group.id} className="min-w-0">
-            <h3 className="border-b-4 border-ink pb-2 text-2xl">{t(`landing.v2.group.${group.id}`, group.id === 'people' ? 'For people near a fire' : group.id === 'room' ? 'For the Control Room' : 'For Range Officers')}</h3>
+            <h3 className="border-b-4 border-ink pb-2 text-2xl">{t(`landing.v2.group.${group.id}`, GROUP_TITLE[group.id])}</h3>
             <ul className="divide-y divide-line">
-              {group.items.map(({ id, Icon }) => {
+              {group.items.map(({ id, Icon, status }, index) => {
                 const { title, body } = line(group.id, id);
                 return (
-                  <li key={id} className="flex gap-4 py-4">
-                    <Icon aria-hidden="true" className="mt-1 shrink-0 text-action" size={26} strokeWidth={1.75} />
-                    <div className="min-w-0"><p className="text-lg font-bold leading-snug">{title}</p><p className="mt-1 text-ink-muted">{body}</p></div>
-                  </li>
+                  <motion.li key={id} initial={reduce ? false : { opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.4, delay: index * 0.06, ease: 'easeOut' }} className="group flex gap-4 py-4">
+                    <Icon aria-hidden="true" className="mt-1 shrink-0 text-action transition-transform duration-200 group-hover:scale-110" size={26} strokeWidth={1.75} />
+                    <div className="min-w-0"><p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-bold leading-snug">{title}{status === 'soon' && <StatusChip status={status} />}</p><p className="mt-1 text-ink-muted">{body}</p></div>
+                  </motion.li>
                 );
               })}
             </ul>

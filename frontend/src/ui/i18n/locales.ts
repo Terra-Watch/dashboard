@@ -17,7 +17,7 @@ export const resources = {
     landing: {
       nav: { features: 'What it does', how: 'How it works', privacy: 'Your data' },
       hero: { title: 'See fires early. Check them fast. Respond together.', body: 'TerraWatch helps communities report forest fires and helps forest staff verify them and send the right people. Every claim shows how sure we are, and only a person can raise it.', report: 'Report a fire', signin: 'Sign in', status_none: 'Public map data is not available yet.', emergency: 'If anyone is in danger, call emergency services first.' },
-      ladder: { title: 'Follow a report', intro: 'A fire claim moves up a ladder of certainty. Only people move it up.', play: 'Play', pause: 'Pause', next: 'Next step', prev: 'Previous step', illustration: 'Illustration with sample steps, not live data.', who: 'Who acts', staff: 'What staff see', public: 'What the public sees',
+      ladder: { title: 'Follow a report', intro: 'A fire claim moves up a ladder of certainty. Only people move it up.', play: 'Play', pause: 'Pause', next: 'Next step', prev: 'Previous step', illustration: 'Illustration with sample steps, not real incidents.', who: 'Who acts', staff: 'What staff see', public: 'What the public sees',
         steps: {
           signal: { who: 'A satellite sensor sees heat. No person has looked yet.', staff: 'A violet diamond with its age and source. It can be checked, never assumed.', public: 'Nothing yet.' },
           report: { who: 'A citizen reports smoke or fire with a place, a time and optional photos.', staff: 'A violet circle in the queue for your region, oldest first.', public: 'Nothing. Unchecked reports are never public.' },

@@ -14,7 +14,7 @@ export function ThemeMenu() {
   const Current = OPTIONS.find(option => option.id === choice)!.Icon;
   return (
     <Menu.Root>
-      <Menu.Trigger aria-label={t('app.theme')} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-rq border border-control bg-surface text-ink hover:bg-surface-2 active:scale-95">
+      <Menu.Trigger aria-label={t('app.theme')} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-rq border border-control bg-surface text-ink transition duration-200 hover:bg-surface-2 active:scale-95">
         <Current aria-hidden="true" size={18} strokeWidth={1.75} />
       </Menu.Trigger>
       <Menu.Portal>

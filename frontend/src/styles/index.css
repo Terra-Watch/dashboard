@@ -58,3 +58,6 @@
   }
 }
 }
+
+/* Anchor links glide to their section; the reduced-motion rule in tokens.css turns this off. */
+html { scroll-behavior: smooth; }

@@ -6,8 +6,8 @@ import { Button } from '../../ui/Button';
 import { TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { productRole } from '../../ui/nav';
+import { SignInAside } from './SignInAside';
 import { AuthLayout } from './AuthLayout';
-import { HowItWorksAside } from './HowItWorksAside';
 import { PasswordField } from './PasswordField';
 import { safeNext } from './rules';
 
@@ -34,7 +34,7 @@ export function SignInPage() {
   }
 
   return (
-    <AuthLayout title={t('auth.title')} subtitle={t('auth.subtitle')} aside={<HowItWorksAside />}>
+    <AuthLayout title={t('auth.title')} subtitle={t('auth.subtitle')} aside={<SignInAside />}>
       <form onSubmit={event => void submit(event)} noValidate className="space-y-4">
         {problem && <Notice kind="danger">{problem}</Notice>}
         <TextField label={t('auth.email')} type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={event => setEmail(event.target.value)} />

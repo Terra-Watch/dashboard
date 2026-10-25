@@ -14,14 +14,14 @@ export function AuthLayout({ title, subtitle, children, aside }: { title: string
         <Link to="/" aria-label={t('app.name')}><Brand /></Link>
         <div className="flex items-center gap-2"><LanguageMenu /><ThemeMenu /></div>
       </header>
-      <main id="main" className="mx-auto grid max-w-5xl gap-10 px-4 pb-16 pt-6 md:grid-cols-[1fr_26rem] md:px-8 md:pt-16">
-        <div className="hidden md:block">{aside}</div>
+      <main id="main" className={`mx-auto grid gap-10 px-4 pb-16 pt-6 md:px-8 md:pt-16 ${aside ? 'max-w-5xl md:grid-cols-[1fr_26rem]' : 'max-w-md'}`}>
+        {aside && <div className="hidden md:block">{aside}</div>}
         <section aria-labelledby="auth-title" className="rounded-panel border border-line bg-surface p-5 sm:p-7">
           <h1 id="auth-title" className="text-3xl">{title}</h1>
           {subtitle && <p className="mt-2 text-ink-muted">{subtitle}</p>}
           <div className="mt-6">{children}</div>
         </section>
-        {aside && <div className="md:hidden">{aside}</div>}
+        
       </main>
     </div>
   );
