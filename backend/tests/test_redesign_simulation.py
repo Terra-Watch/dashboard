@@ -17,6 +17,8 @@ TEST_KEY = "test-only-signing-secret-with-over-32-bytes"
 class RedesignSimulationTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        # the role comes from the token here; the test must not depend on which accounts exist in the local database
+        patcher = mock.patch("app.core.security._confirm_active", side_effect=lambda identity: identity); patcher.start(); self.addCleanup(patcher.stop)
         with mock.patch("app.core.security.RESQ_SECRET_KEY", TEST_KEY):
             self.officer_token = make_access_token(10, "range_officer")
             self.field_token = make_access_token(11, "field_crew")

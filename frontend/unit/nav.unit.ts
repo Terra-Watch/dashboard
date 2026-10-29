@@ -38,3 +38,17 @@ test('every navigation label exists in every language', () => {
   const labels = Object.values(NAV).flat().map(item => item.labelKey.split('.')[1]);
   for (const [code, bundle] of Object.entries(resources)) for (const label of labels) assert.ok((bundle.translation.nav as Record<string, string>)[label], `${code} is missing nav.${label}`);
 });
+
+test('the raised primary button sits in the middle of the bottom bar, and every role has one account page', async () => {
+  const { profilePath } = await import('../src/ui/nav.ts');
+  for (const [role, items] of Object.entries(NAV)) {
+    const at = items.findIndex(item => item.primary);
+    if (at >= 0) assert.equal(at, (items.length - 1) / 2, `${role}: the primary action must be the middle item of an odd-sized bar`);
+  }
+  assert.deepEqual(NAV.field.map(item => item.id), ['tasks', 'map', 'capture', 'notices', 'me']);
+  assert.equal(profilePath('citizen'), '/citizen/account');
+  assert.equal(profilePath('field'), '/field/me');
+  assert.equal(profilePath('control_room'), '/ops/me');
+  assert.equal(profilePath(null), '/login');
+  assert.equal(roleOfPath(profilePath('control_room')), 'control_room');
+});

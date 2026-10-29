@@ -47,7 +47,7 @@ export function ObservationForm({ assignmentId, onSaved }: { assignmentId: numbe
   );
 }
 
-export function PhotoButton({ assignmentId, onDone }: { assignmentId: number; onDone: () => void }) {
+export function PhotoButton({ assignmentId, uploadPath, onDone }: { assignmentId?: number; uploadPath?: string; onDone: () => void }) {
   const { t } = useTranslation();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -55,7 +55,7 @@ export function PhotoButton({ assignmentId, onDone }: { assignmentId: number; on
   async function upload(file: File | undefined) {
     if (!file) return;
     setBusy(true); setMessage(null);
-    try { const form = new FormData(); form.append('image', file); await api(`/api/ranger/assignments/${assignmentId}/evidence`, { method: 'POST', form }); setMessage({ kind: 'success', text: t('field.photo.saved', 'Photo sent.') }); onDone(); }
+    try { const form = new FormData(); form.append('image', file); await api(uploadPath ?? `/api/ranger/assignments/${assignmentId}/evidence`, { method: 'POST', form }); setMessage({ kind: 'success', text: t('field.photo.saved', 'Photo sent.') }); onDone(); }
     catch (reason) { setMessage({ kind: 'danger', text: reason instanceof ApiError ? reason.detail : t('field.photo.failed', 'The photo was not sent. Photos need signal; try again.') }); }
     finally { setBusy(false); if (input.current) input.current.value = ''; }
   }

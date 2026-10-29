@@ -547,7 +547,7 @@ def test_the_community_media_module_cannot_reach_incident_alert_or_dispatch_code
     mods = imported_modules(tree)
     assert not [m for m in mods if any(p in m.split(":")[0].lower() for p in FORBIDDEN_MODULE_PARTS)]
     app_imports = [m for m in mods if m.startswith(".")]
-    assert sorted(app_imports) == [".:image_assessment"], app_imports        # the only project code it uses is the shared model adapter
+    assert sorted(app_imports) == [".:blob_storage", ".:image_assessment"], app_imports        # the only project code it uses is the shared model adapter and the shared file storage
 
 
 def test_the_community_schema_extension_has_no_incident_references():

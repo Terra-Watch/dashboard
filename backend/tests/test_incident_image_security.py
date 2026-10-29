@@ -1,4 +1,5 @@
 """Focused security regressions for private incident-image handling."""
+import asyncio
 
 import hashlib
 import sys
@@ -85,7 +86,7 @@ def test_private_image_rejects_database_storage_key_escape(tmp_path):
         mock.patch.object(operations, "require_scope"),
     ):
         with pytest.raises(HTTPException) as caught:
-            operations.get_incident_image(4, 9, {"id": 7, "role": "control_room_operator"})
+            asyncio.run(operations.get_incident_image(4, 9, {"id": 7, "role": "control_room_operator"}))
 
     assert caught.value.status_code == 404
     assert outside.read_bytes() == b"private"
@@ -106,7 +107,7 @@ def test_private_image_rejects_modified_file(tmp_path):
         mock.patch.object(operations, "require_scope"),
     ):
         with pytest.raises(HTTPException) as caught:
-            operations.get_incident_image(4, 9, {"id": 7, "role": "control_room_operator"})
+            asyncio.run(operations.get_incident_image(4, 9, {"id": 7, "role": "control_room_operator"}))
 
     assert caught.value.status_code == 404
 

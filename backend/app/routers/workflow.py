@@ -6,6 +6,7 @@ import json
 import re
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from ..contracts.field import FieldObservationRequest
@@ -235,6 +236,43 @@ def complete_assignment(assignment_id: int, user: dict = Depends(require_roles('
     return {'assignment': dict(updated)}
 
 
+async def _persist_ranger_image(incident_id: int, image: UploadFile, user: dict, audit_extra: dict) -> dict:
+    """Validate, store and assess one ranger photo for an incident. Shared by the task route and the untasked report route."""
+    data = await image.read(MAX_IMAGE_BYTES + 1)
+    if not data or len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413 if len(data) > MAX_IMAGE_BYTES else 422, detail='Image must be present and 10 MB or smaller')
+    try:
+        from PIL import Image
+        with Image.open(BytesIO(data)) as decoded: decoded.verify()
+        with Image.open(BytesIO(data)) as decoded: detected_format = (decoded.format or '').upper()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail='The uploaded file is not a readable image') from exc
+    detected_type = {'JPEG': 'image/jpeg', 'PNG': 'image/png', 'WEBP': 'image/webp'}.get(detected_format)
+    if detected_type != image.content_type:
+        raise HTTPException(status_code=415, detail='The declared image type does not match the decoded image')
+    digest = hashlib.sha256(data).hexdigest(); extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}[detected_type]
+    key = f'{incident_id}/{digest}.{extension}'
+    path = _stored_image_path(key); existed = path.is_file()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        created_file = await blob_storage.write_or_local(key, path, data, detected_type)
+        if not created_file and not blob_storage.enabled(): _assert_stored_image_integrity(path, digest)
+        assessment = await assess_image_async(data, f'{incident_id}/{digest}.{extension}')
+        with engine.begin() as db:
+            row = db.execute(text('''INSERT INTO resq_incident_images
+                (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,uploaded_by,assessed_at)
+                VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,:uploaded_by,now())
+                ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status,
+                model_version=EXCLUDED.model_version, authenticity_status=EXCLUDED.authenticity_status,
+                assessment=EXCLUDED.assessment, assessment_error=EXCLUDED.assessment_error
+                RETURNING id,original_filename,content_type,size_bytes,sha256,assessment_status,created_at'''), {'incident_id': incident_id, 'storage_key': f'{incident_id}/{digest}.{extension}', 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120], 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, **persistence_fields(assessment), 'uploaded_by': user['id']}).mappings().one()
+            audit_log.write_audit_log(action='ranger_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': incident_id, **audit_extra}, connection=db)
+    except Exception as exc:
+        await blob_storage.delete_or_local(key, path)
+        raise HTTPException(status_code=503, detail='Evidence could not be stored. No upload was confirmed.') from exc
+    return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}
+
+
 @router.get('/ranger/assignments/{assignment_id}/evidence')
 def list_ranger_evidence(assignment_id: int, user: dict = Depends(require_roles('field_crew'))) -> dict:
     with engine.connect() as db:
@@ -255,35 +293,57 @@ async def upload_ranger_evidence(assignment_id: int, image: UploadFile = File(..
         raise HTTPException(status_code=404, detail='Assignment not found')
     if assignment['status'] not in {'assigned', 'accepted', 'in_progress'}:
         raise HTTPException(status_code=409, detail='Assignment is not accepting evidence')
-    data = await image.read(MAX_IMAGE_BYTES + 1)
-    if not data or len(data) > MAX_IMAGE_BYTES:
-        raise HTTPException(status_code=413 if len(data) > MAX_IMAGE_BYTES else 422, detail='Image must be present and 10 MB or smaller')
-    try:
-        from PIL import Image
-        with Image.open(BytesIO(data)) as decoded: decoded.verify()
-        with Image.open(BytesIO(data)) as decoded: detected_format = (decoded.format or '').upper()
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail='The uploaded file is not a readable image') from exc
-    detected_type = {'JPEG': 'image/jpeg', 'PNG': 'image/png', 'WEBP': 'image/webp'}.get(detected_format)
-    if detected_type != image.content_type:
-        raise HTTPException(status_code=415, detail='The declared image type does not match the decoded image')
-    digest = hashlib.sha256(data).hexdigest(); extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}[detected_type]
-    path = _stored_image_path(f'{assignment["incident_id"]}/{digest}.{extension}'); existed = path.is_file()
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        created_file = await blob_storage.write_or_local(key, path, data, detected_type)
-        if not created_file and not blob_storage.enabled(): _assert_stored_image_integrity(path, digest)
-        assessment = await assess_image_async(data, f'{assignment["incident_id"]}/{digest}.{extension}')
-        with engine.begin() as db:
-            row = db.execute(text('''INSERT INTO resq_incident_images
-                (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,uploaded_by,assessed_at)
-                VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,:uploaded_by,now())
-                ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status,
-                model_version=EXCLUDED.model_version, authenticity_status=EXCLUDED.authenticity_status,
-                assessment=EXCLUDED.assessment, assessment_error=EXCLUDED.assessment_error
-                RETURNING id,original_filename,content_type,size_bytes,sha256,assessment_status,created_at'''), {'incident_id': assignment['incident_id'], 'storage_key': f'{assignment["incident_id"]}/{digest}.{extension}', 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120], 'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, **persistence_fields(assessment), 'uploaded_by': user['id']}).mappings().one()
-            audit_log.write_audit_log(action='ranger_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': assignment['incident_id'], 'assignment_id': assignment_id}, connection=db)
-    except Exception as exc:
-        await blob_storage.delete_or_local(key, path)
-        raise HTTPException(status_code=503, detail='Evidence could not be stored. No upload was confirmed.') from exc
-    return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}
+    return await _persist_ranger_image(assignment['incident_id'], image, user, {'assignment_id': assignment_id})
+
+
+class RangerReportRequest(BaseModel):
+    """Something a Range Officer found while out, with no task behind it. The key lets a phone that lost its connection retry without saving it twice."""
+    client_key: str = Field(min_length=8, max_length=120)
+    notes: str = Field(default='', max_length=2000)
+    size: str = Field(default='unknown', max_length=40)
+    state: str | None = Field(default=None, max_length=8)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    observed_at: datetime | None = None
+
+
+@router.post('/ranger/reports', status_code=201, dependencies=[Depends(require_csrf)])
+def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(require_roles('field_crew'))) -> dict:
+    """An untasked observation. It lands in the Control Room queue as a report that nobody has checked yet; only the Control Room changes the incident."""
+    state = payload.state
+    if not state:
+        scopes = user_scopes(int(user['id']))
+        if len(scopes) != 1:
+            raise HTTPException(status_code=422, detail='Say which state this is in')
+        state = next(iter(scopes))
+    require_scope(user, state, entity_type='incident', entity_id=payload.client_key)
+    with engine.begin() as db:
+        row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
+            VALUES (:reporter_id,:client_key,'patrol',:size,:notes,:state,:latitude,:longitude,:observed_at)
+            ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
+            RETURNING id,source,size,notes,status,state,latitude,longitude,observed_at,created_at"""),
+            {'reporter_id': user['id'], 'client_key': payload.client_key, 'size': payload.size, 'notes': payload.notes, 'state': state,
+             'latitude': payload.latitude, 'longitude': payload.longitude, 'observed_at': payload.observed_at}).mappings().first()
+        created = row is not None
+        if not created:
+            row = db.execute(text("SELECT id,reporter_id,source,size,notes,status,state,latitude,longitude,observed_at,created_at FROM resq_incidents WHERE client_key=:k"), {'k': payload.client_key}).mappings().first()
+            if row is None or row['reporter_id'] != user['id']:
+                raise HTTPException(status_code=409, detail='This report key is already used')
+        out = {k: v for k, v in dict(row).items() if k != 'reporter_id'}
+        if created:
+            audit_log.write_audit_log(action='ranger_report_created', entity_type='incident', entity_id=str(out['id']), user_id=int(user['id']), metadata={'state': state, 'size': payload.size}, connection=db)
+    return out
+
+
+@router.post('/ranger/reports/{incident_id}/evidence', status_code=201, dependencies=[Depends(require_csrf)])
+async def upload_ranger_report_photo(incident_id: int, image: UploadFile = File(...), user: dict = Depends(require_roles('field_crew'))) -> dict:
+    """A photo for a report this officer made themselves."""
+    if image.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=415, detail='Upload a JPEG, PNG, or WebP image')
+    with engine.connect() as db:
+        incident = db.execute(text("SELECT id,status FROM resq_incidents WHERE id=:id AND reporter_id=:uid AND source='patrol'"), {'id': incident_id, 'uid': user['id']}).mappings().first()
+    if not incident:
+        raise HTTPException(status_code=404, detail='Report not found')
+    if incident['status'] == 'closed':
+        raise HTTPException(status_code=409, detail='This report is closed')
+    return await _persist_ranger_image(incident_id, image, user, {'report': True})

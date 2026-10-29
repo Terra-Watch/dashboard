@@ -1,4 +1,5 @@
 """Control Room read models: incident list fields, all open assignments, handover notes (real PostgreSQL)."""
+from datetime import datetime, timezone
 import uuid
 
 from tests.test_fire_evidence_routes import actor, citizen_report, database, db_scalar, isolated  # noqa: F401
@@ -48,11 +49,11 @@ def test_ops_settings_come_only_from_configuration(monkeypatch):
     ops, oh, _ = actor("control_room_operator", scopes=["OD"])
     for name in ("CORROBORATION_RADIUS_KM", "CORROBORATION_WINDOW_MINUTES", "EXPOSURE_RADII_KM", "SCENARIO_PLANNER_ENABLED", "FEED_STALE_MINUTES"):
         monkeypatch.delenv(name, raising=False)
-    off = ops.get("/api/ops/settings", headers=oh).json()
+    off = {k: v for k, v in ops.get("/api/ops/settings", headers=oh).json().items() if not k.startswith("risk_forecast")}   # the risk-forecast switch has its own test
     assert off == {"corroboration": None, "exposure_radii_km": None, "feed_stale_minutes": None, "scenario_enabled": False}
     monkeypatch.setenv("CORROBORATION_RADIUS_KM", "2"); monkeypatch.setenv("CORROBORATION_WINDOW_MINUTES", "40")
     monkeypatch.setenv("EXPOSURE_RADII_KM", "5, 1, 3"); monkeypatch.setenv("SCENARIO_PLANNER_ENABLED", "true"); monkeypatch.setenv("FEED_STALE_MINUTES", "90")
-    on = ops.get("/api/ops/settings", headers=oh).json()
+    on = {k: v for k, v in ops.get("/api/ops/settings", headers=oh).json().items() if not k.startswith("risk_forecast")}
     assert on == {"corroboration": {"radius_km": 2.0, "window_minutes": 40.0}, "exposure_radii_km": [1.0, 3.0, 5.0], "feed_stale_minutes": 90.0, "scenario_enabled": True}
     monkeypatch.setenv("CORROBORATION_RADIUS_KM", "-1")
     assert ops.get("/api/ops/settings", headers=oh).json()["corroboration"] is None
@@ -124,7 +125,7 @@ def test_staff_can_log_a_report_with_a_place_and_patrol_planning_stays_off(monke
     made = ops.post("/api/incidents", headers=oh, json=body)
     assert made.status_code == 201, made.text
     listed = {i["id"]: i for i in ops.get("/api/incidents", headers=oh).json()}[made.json()["id"]]
-    assert listed["latitude"] == 20.31 and listed["longitude"] == 85.82 and listed["observed_at"].startswith("2026-10-16T05:30")
+    assert listed["latitude"] == 20.31 and listed["longitude"] == 85.82 and datetime.fromisoformat(listed["observed_at"].replace("Z", "+00:00")) == datetime(2026, 10, 16, 5, 30, tzinfo=timezone.utc)   # same instant, whatever offset the database writes
     assert ops.post("/api/incidents", headers=oh, json={**body, "client_key": key + "x", "longitude": None}).status_code == 422   # a place needs both numbers
     assert ops.post("/api/incidents", headers=oh, json={**body, "client_key": key + "y", "latitude": 95}).status_code == 422
     monkeypatch.delenv("FEATURE_PATROL_PLANNING", raising=False)

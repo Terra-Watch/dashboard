@@ -1,13 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router';
 import '../ui/i18n';
 import { applyTheme, readTheme } from '../ui/theme';
 import { UpdatePrompt } from '../ui/UpdatePrompt';
 import { PositionProvider } from '../features/field/Position';
 import { StatusPage } from '../features/system/StatusPage';
 import { Brand } from '../components/Brand';
+import { useSession } from './session';
+import { homePath } from '../ui/nav';
 import { LogoLoader } from '../ui/Loading';
 
 // Every screen is loaded when it is first opened, so the landing page and sign-in stay small and the map code only loads with a map.
@@ -42,6 +44,8 @@ const QueuePage = lazy(() => import('../features/ops/QueuePage').then(m => ({ de
 const CapturePage = lazy(() => import('../features/field/CapturePage').then(m => ({ default: m.CapturePage })));
 const FieldLayout = lazy(() => import('../features/field/FieldLayout').then(m => ({ default: m.FieldLayout })));
 const FieldMapPage = lazy(() => import('../features/field/MapPage').then(m => ({ default: m.FieldMapPage })));
+const OpsMePage = lazy(() => import('../features/ops/MePage').then(m => ({ default: m.OpsMePage })));
+const FieldNoticesPage = lazy(() => import('../features/field/NoticesPage').then(m => ({ default: m.FieldNoticesPage })));
 const MePage = lazy(() => import('../features/field/MePage').then(m => ({ default: m.MePage })));
 const TaskDetailPage = lazy(() => import('../features/field/TaskDetailPage').then(m => ({ default: m.TaskDetailPage })));
 const TasksPage = lazy(() => import('../features/field/TasksPage').then(m => ({ default: m.TasksPage })));
@@ -49,6 +53,13 @@ const TasksPage = lazy(() => import('../features/field/TasksPage').then(m => ({ 
 function Waiting() {
   const { t } = useTranslation();
   return <div data-rq-app className="min-h-screen bg-canvas text-ink"><header className="flex min-h-14 items-center border-b border-line bg-surface px-4"><Brand /></header><main><LogoLoader label={t('common.loading', 'Loading…')} /></main></div>;
+}
+
+/** The installed app starts at `/?source=pwa`. A signed-in person goes straight to their own home; everyone else sees the landing page. */
+function PwaStart({ children }: { children: ReactNode }) {
+  const { role } = useSession();
+  const [params] = useSearchParams();
+  return params.get('source') === 'pwa' && role ? <Navigate to={homePath(role)} replace /> : <>{children}</>;
 }
 
 /** Patrol planning is built but off until the department agrees how it should work (see docs/design/decisions.md). */
@@ -63,7 +74,7 @@ export function Root() {
     <BrowserRouter>
       <Suspense fallback={<Waiting />}>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<PwaStart><LandingPage /></PwaStart>} />
         <Route path="/login" element={<SignInPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot" element={<ForgotPage />} />
@@ -85,6 +96,7 @@ export function Root() {
           <Route path="incidents/new" element={<LogReportPage />} />
           <Route path="incidents/:id" element={<OpsIncidentPage />} />
           <Route path="map" element={<OpsMapPage />} />
+          <Route path="me" element={<OpsMePage />} />
           <Route path="field" element={<OpsFieldPage />} />
           <Route path="notices" element={<NoticesPage />} />
           <Route path="handover" element={<HandoverPage />} />
@@ -101,6 +113,7 @@ export function Root() {
           <Route path="tasks/:id" element={<TaskDetailPage />} />
           <Route path="map" element={<FieldMapPage />} />
           <Route path="capture" element={<CapturePage />} />
+          <Route path="notices" element={<FieldNoticesPage />} />
           <Route path="me" element={<MePage />} />
         </Route>
         <Route path="/community" element={<Navigate to="/citizen/community" replace />} />

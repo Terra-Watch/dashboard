@@ -36,6 +36,7 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'tasks', path: '/field/tasks', icon: 'list-todo', labelKey: 'nav.tasks' },
     { id: 'map', path: '/field/map', icon: 'map', labelKey: 'nav.map' },
     { id: 'capture', path: '/field/capture', icon: 'camera', labelKey: 'nav.capture', primary: true },
+    { id: 'notices', path: '/field/notices', icon: 'megaphone', labelKey: 'nav.notices' },
     { id: 'me', path: '/field/me', icon: 'user', labelKey: 'nav.me' },
   ],
 };
@@ -62,6 +63,9 @@ const NEW_HOME: Record<ProductRole, string> = { citizen: '/citizen', control_roo
 export function homePath(role: ProductRole | null, built: Record<ProductRole, boolean> = BUILT): string {
   return role ? (built[role] ? NEW_HOME[role] : LEGACY_HOME[role]) : '/login';
 }
+
+/** Where each role's own account page lives. */
+export const profilePath = (role: ProductRole | null): string => role === 'citizen' ? '/citizen/account' : role === 'field' ? '/field/me' : role === 'control_room' ? '/ops/me' : '/login';
 
 export function roleOfPath(path: string): ProductRole | null {
   return path.startsWith('/citizen') ? 'citizen' : path.startsWith('/ops') || path.startsWith('/app/whatif') || path.startsWith('/control-room') ? 'control_room' : path.startsWith('/field') || path.startsWith('/ranger') ? 'field' : null;

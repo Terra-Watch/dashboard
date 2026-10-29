@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "aegis-integrity": {
+      "source": {
+        "source": "github",
+        "repo": "sunilgentyala/aegis-integrity"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "aegis-integrity@aegis-integrity": true
+  }
+}

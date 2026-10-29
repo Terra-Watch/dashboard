@@ -1,4 +1,4 @@
-import { LogOut, Menu, MoreHorizontal } from 'lucide-react';
+import { LogOut, Menu, MoreHorizontal, User } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
@@ -9,7 +9,7 @@ import { NavIcon } from './Icon';
 import { LanguageMenu } from './LanguageMenu';
 import { ThemeMenu } from './ThemeMenu';
 import { useOpsSettings } from '../features/ops/useOps';
-import { navFor, activeItem, homePath, type NavItem, type ProductRole } from './nav';
+import { navFor, activeItem, homePath, profilePath, type NavItem, type ProductRole } from './nav';
 
 type Props = { role: ProductRole; userName?: string; pending?: number; onSignOut: () => void; topSlot?: ReactNode; children: ReactNode };
 
@@ -47,6 +47,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
           <Inbox role={role} />
           <span className="hidden sm:inline-flex"><LanguageMenu /></span>
           <ThemeMenu />
+          <Link to={profilePath(role)} aria-label={t('profile.open', 'My account')} title={userName} className="inline-flex size-11 items-center justify-center rounded-rq border border-control bg-surface transition duration-200 hover:bg-surface-2 active:scale-95"><User aria-hidden="true" size={18} strokeWidth={1.75} /></Link>
           <button type="button" onClick={onSignOut} className="inline-flex min-h-11 items-center gap-1.5 rounded-rq border border-control bg-surface px-3 text-sm font-semibold transition duration-200 hover:bg-surface-2 active:scale-95" title={userName}>
             <LogOut aria-hidden="true" size={18} strokeWidth={1.75} /><span className="hidden md:inline">{t('app.signout')}</span>
           </button>

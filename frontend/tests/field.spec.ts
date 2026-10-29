@@ -26,7 +26,7 @@ test.describe('Range Officer', () => {
     await expect(page.getByRole('heading', { name: 'This area is for Range Officers.' })).toBeVisible();
   });
 
-  test('tasks are grouped, navigation has four destinations with Capture as the primary action', async ({ page, context }) => {
+  test('tasks are grouped, navigation has five destinations with Capture raised in the middle', async ({ page, context }) => {
     await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: TASKS })));
     await context.grantPermissions(['geolocation']); await context.setGeolocation({ latitude: 20.3, longitude: 85.8 });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -34,7 +34,8 @@ test.describe('Range Officer', () => {
     await expect(page.getByRole('heading', { name: 'Waiting for your answer' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Your active tasks' })).toBeVisible();
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    await expect(nav.getByRole('link')).toHaveCount(4);
+    await expect(nav.getByRole('link')).toHaveCount(5);
+    await expect(nav.getByRole('link').nth(2)).toHaveText(/Capture/);          // the raised button is the middle of five
     await expect(nav.getByRole('link', { name: 'Tasks' })).toHaveAttribute('aria-current', 'page');
     await expect(nav.getByRole('link', { name: 'Capture' })).toBeVisible();
     await page.getByRole('button', { name: 'Show distance from me' }).click();
@@ -111,12 +112,61 @@ test.describe('Range Officer', () => {
     expect(queued[0].path).toBe('/api/ranger/assignments/12/verification');
   });
 
-  test('Me shows what is waiting to send and the notices the public was given', async ({ page }) => {
+  test('Me shows who you are and what is waiting to send; the notices have their own tab', async ({ page }) => {
     await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: [] })));
-    await page.route('**/api/notices**', route => route.fulfill(json({ items: [{ id: 1, title: 'Smoke advisory', body: 'Avoid the ridge road.', severity: 'advisory', expires_at: '2030-01-01T00:00:00Z', published_at: '2026-10-16T08:00:00Z' }] })));
+    await page.route('**/api/auth/me', route => route.fulfill(json({ id: 7, name: 'Officer Rao', email: 'person@example.test', role: 'field_crew', home_state: 'OD', scopes: ['OD'] })));
+    await page.route('**/api/notices**', route => route.fulfill(json({ items: [{ id: 1, title: 'Smoke advisory', body: 'Avoid the ridge road.', severity: 'advisory', expires_at: '2030-01-01T00:00:00Z', published_at: '2026-10-16T05:30:00Z' }] })));
     await page.goto('/field/me');
     await expect(page.getByText('Everything has been sent.')).toBeVisible();
+    await expect(page.getByText('person@example.test')).toBeVisible();
+    await expect(page.getByText('Range Officer', { exact: true })).toBeVisible();
+    await expect(page.getByText('Odisha')).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await page.goto('/field/notices');
     await expect(page.getByText('Avoid the ridge road.')).toBeVisible();
+  });
+
+  test('Capture works without a task: a report with a place goes to the Control Room', async ({ page, context }) => {
+    const sent: Array<Record<string, unknown>> = [];
+    await context.grantPermissions(['geolocation']); await context.setGeolocation({ latitude: 20.3, longitude: 85.8 });
+    await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/ranger/reports', route => { sent.push(JSON.parse(route.request().postData() ?? '{}')); return route.fulfill(json({ id: 77, status: 'reported' }, 201)); });
+    await page.route('**/api/ranger/reports/77/evidence', route => route.fulfill(json({ evidence: { id: 1 } }, 201)));
+    await page.goto('/field/capture');
+    await expect(page.getByText('Report something you found. It does not need a task.')).toBeVisible();
+    const send = page.getByRole('button', { name: 'Send to the Control Room' });
+    await page.getByLabel('What you saw').fill('Smoke rising behind the ridge');
+    await expect(send).toBeDisabled();                                        // no place yet
+    await page.getByRole('button', { name: 'Show distance from me' }).click();
+    await expect(send).toBeEnabled();
+    await send.click();
+    await expect(page.getByText('Sent to the Control Room. They will check it.')).toBeVisible();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ notes: 'Smoke rising behind the ridge', size: 'unknown', latitude: 20.3, longitude: 85.8 });
+    expect(String(sent[0].client_key).length).toBeGreaterThanOrEqual(8);
+    await expect(page.getByRole('button', { name: 'Take or choose a photo' })).toBeVisible();   // a photo can now be added to this report
+  });
+
+  test('with a task, Capture offers both: for my task, or a new report', async ({ page }) => {
+    await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: TASKS })));
+    await page.route('**/api/ranger/assignments/12/verifications', route => route.fulfill(json({ items: [] })));
+    await page.goto('/field/capture');
+    await expect(page.getByRole('heading', { name: 'Record what you find' })).toBeVisible();
+    await page.getByRole('tab', { name: 'New report' }).click();
+    await expect(page.getByRole('button', { name: 'Send to the Control Room' })).toBeVisible();
+    await page.getByRole('tab', { name: 'For my task' }).click();
+    await expect(page.getByRole('heading', { name: 'Record what you find' })).toBeVisible();
+  });
+
+  test('on a phone the bar is on screen and the raised Capture button is exactly in the middle', async ({ page }) => {
+    await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: [] })));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/field/tasks');
+    const nav = page.getByRole('navigation', { name: 'Main navigation' });
+    await expect(nav).toBeVisible();
+    const box = await nav.getByRole('link', { name: 'Capture' }).boundingBox();
+    expect(box).not.toBeNull();
+    expect(Math.abs(box!.x + box!.width / 2 - 390 / 2)).toBeLessThan(2);
   });
 
   for (const scheme of ['light', 'dark'] as const) {

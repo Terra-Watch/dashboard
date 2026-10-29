@@ -751,8 +751,11 @@ def reset_for_tests() -> None:
 # ----------------------------------------------------------------------------------------------------------------------------
 def _authenticity_provided(assessor: Any) -> bool:
     """False when the loaded artifact excludes (or does not provide) authenticity: the result must then say NOT_ASSESSED, not INCONCLUSIVE."""
-    auth = getattr(getattr(assessor, "artifact", None), "authenticity", None)
-    return auth.get("status") == "PROVIDED" if isinstance(auth, dict) else True
+    artifact = getattr(assessor, "artifact", None)
+    auth = getattr(artifact, "authenticity", None)
+    if isinstance(auth, dict): return auth.get("status") == "PROVIDED"
+    if hasattr(artifact, "auth_head"): return artifact.auth_head is not None      # the real model artifact: provided only when it carries an authenticity head
+    return True                                                                    # a test double that models neither
 
 
 def assess_image(data: bytes, image_id: str, config: str = REPORT) -> dict[str, Any]:
