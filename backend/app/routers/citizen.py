@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from ..contracts.account import AccountDeleteRequest
 from ..contracts.schemas import CitizenReportRequest, IncidentImageReviewRequest
-from ..core.permissions import SUPPORTED_STATES
+from ..core.regions import state_at
 from ..core.security import check_login, current_redesign_user, hash_password_argon2, new_raw_token, require_csrf
 from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
@@ -50,8 +50,9 @@ def _safe_report(row: dict) -> dict:
 
 @router.post('/reports', status_code=201, dependencies=[Depends(require_csrf)])
 def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_user)) -> dict:
-    if payload.state.upper() not in SUPPORTED_STATES:
-        raise HTTPException(status_code=422, detail='Unsupported report state')
+    state = state_at(payload.latitude, payload.longitude)
+    if state is None:
+        raise HTTPException(status_code=422, detail='This position is outside the supported states')
     observed_at = _parse_observed(payload.observed_at)
     description = payload.description.strip()
     with engine.begin() as db:
@@ -61,7 +62,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
             ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
             RETURNING id,reporter_id,status,state,latitude,longitude,observed_at,created_at,updated_at'''), {
                 'reporter_id': user['id'], 'client_key': payload.client_key.strip(), 'notes': description,
-                'state': payload.state.upper(), 'latitude': payload.latitude, 'longitude': payload.longitude,
+                'state': state, 'latitude': payload.latitude, 'longitude': payload.longitude,
                 'observed_at': observed_at,
             }).mappings().first()
         created = result is not None

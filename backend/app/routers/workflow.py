@@ -12,6 +12,7 @@ from sqlalchemy import text
 from ..contracts.field import FieldObservationRequest
 from ..contracts.schemas import AssignmentDecisionRequest, AssignmentReassignmentRequest, IncidentAssignmentRequest, VerificationRequest
 from ..core.permissions import require_scope, user_scopes
+from ..core.regions import state_at
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
@@ -310,12 +311,9 @@ class RangerReportRequest(BaseModel):
 @router.post('/ranger/reports', status_code=201, dependencies=[Depends(require_csrf)])
 def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(require_roles('field_crew'))) -> dict:
     """An untasked observation. It lands in the Control Room queue as a report that nobody has checked yet; only the Control Room changes the incident."""
-    state = payload.state
-    if not state:
-        scopes = user_scopes(int(user['id']))
-        if len(scopes) != 1:
-            raise HTTPException(status_code=422, detail='Say which state this is in')
-        state = next(iter(scopes))
+    state = state_at(payload.latitude, payload.longitude)
+    if state is None:
+        raise HTTPException(status_code=422, detail='This position is outside the supported states')
     require_scope(user, state, entity_type='incident', entity_id=payload.client_key)
     with engine.begin() as db:
         row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)

@@ -9,7 +9,7 @@ import { Notice } from '../../ui/Notice';
 import { EmergencyStrip } from '../../ui/EmergencyStrip';
 import { PageTitle } from '../../ui/Page';
 import { MapView } from '../map/MapView';
-import { STATES, STATE_BOUNDS, parseCoordinates, stateName } from './format';
+import { STATE_BOUNDS, parseCoordinates, stateName } from './format';
 
 const MAX_PHOTOS = 4;
 type Fix = { lat: number; lon: number; accuracy?: number };
@@ -38,7 +38,6 @@ export function ReportPage() {
   const [coords, setCoords] = useState('');
   const [fix, setFix] = useState<Fix | null>(null);
   const [locating, setLocating] = useState(false);
-  const [state, setState] = useState(() => { try { return localStorage.getItem('tw_region') ?? ''; } catch { return ''; } });
   const [seen, setSeen] = useState<(typeof SEEN)[number]['id'] | ''>('');
   const [note, setNote] = useState('');
   const [when, setWhen] = useState<'now' | 'earlier'>('now');
@@ -53,6 +52,7 @@ export function ReportPage() {
   useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
 
   const place = fix ?? parseCoordinates(coords);
+  const state = place ? stateAt(place.lat, place.lon) : '';                 // the server decides the same way; a remembered or chosen state is never used
   const box = state ? STATE_BOUNDS[state] : null;
   const coordsError = coords.trim() && !fix && !parseCoordinates(coords) ? t('citizen.report.coords_bad', 'Write coordinates like 20.31, 85.82, or use your location.') : null;
   const choice = SEEN.find(item => item.id === seen);
@@ -66,7 +66,6 @@ export function ReportPage() {
       position => {
         const next = { lat: position.coords.latitude, lon: position.coords.longitude, accuracy: position.coords.accuracy };
         setFix(next); setCoords(''); setLocating(false);
-        const found = stateAt(next.lat, next.lon); if (found) setState(found);
       },
       () => { setLocating(false); setManual(true); setProblem(t('citizen.report.gps_failed', 'Could not get your location. Allow location access, or type the coordinates.')); },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
@@ -161,15 +160,11 @@ export function ReportPage() {
         <button type="button" onClick={() => setManual(value => !value)} aria-expanded={manual} className="inline-flex min-h-11 items-center font-semibold text-action underline">{manual ? t('citizen.v2.hide_manual', 'Hide the map') : t('citizen.v2.show_manual', 'The fire is somewhere else: choose on the map')}</button>
         {manual && (
           <div className="space-y-3">
-            <MapView label={t('citizen.report.pick', 'Tap the map to place the pin')} points={place ? [{ id: 'pin', lat: place.lat, lon: place.lon, symbol: 'me' }] : []} bounds={place ? [[place.lon - 0.02, place.lat - 0.02], [place.lon + 0.02, place.lat + 0.02]] : box ? [[box[0], box[1]], [box[2], box[3]]] : null} onMapClick={(lat, lon) => { setFix(null); setCoords(`${lat.toFixed(5)}, ${lon.toFixed(5)}`); const found = stateAt(lat, lon); if (found) setState(found); }} className="h-64" />
+            <MapView label={t('citizen.report.pick', 'Tap the map to place the pin')} points={place ? [{ id: 'pin', lat: place.lat, lon: place.lon, symbol: 'me' }] : []} bounds={place ? [[place.lon - 0.02, place.lat - 0.02], [place.lon + 0.02, place.lat + 0.02]] : box ? [[box[0], box[1]], [box[2], box[3]]] : null} onMapClick={(lat, lon) => { setFix(null); setCoords(`${lat.toFixed(5)}, ${lon.toFixed(5)}`); }} className="h-64" />
             <TextField label={t('citizen.report.coords', 'Or type the coordinates')} inputMode="decimal" placeholder="20.31, 85.82" value={coords} onChange={event => { setCoords(event.target.value); setFix(null); }} error={coordsError} />
           </div>
         )}
-        {(manual || (place && !state)) && (
-          <SelectField label={t('citizen.report.state', 'State')} value={state} onChange={event => setState(event.target.value)}>
-            <option value="">{t('citizen.report.choose', 'Choose')}</option>{STATES.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
-          </SelectField>
-        )}
+        {place && !state && <p role="alert" className="text-sm text-danger">{t('citizen.report.outside', 'This position is outside the states TerraWatch covers. Move the pin, or call your local emergency number.')}</p>}
       </section>
 
       <div className="sticky bottom-20 z-20 -mx-4 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur md:bottom-0 md:mx-0 md:rounded-xl md:border">

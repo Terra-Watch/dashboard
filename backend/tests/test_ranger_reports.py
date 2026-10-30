@@ -26,12 +26,13 @@ def test_ranger_report_reaches_the_queue_and_a_retry_does_not_duplicate_it():
     assert db_scalar("SELECT count(*) FROM resq_audit_log WHERE action='ranger_report_created' AND entity_id=:i", i=str(made.json()["id"])) == 1
 
 
-def test_ranger_report_needs_a_state_inside_the_officers_scope():
+def test_ranger_report_state_comes_from_the_position_and_must_be_in_scope():
     ranger, rh, _ = actor("field_crew", scopes=["OD"])
-    assert ranger.post("/api/ranger/reports", headers=rh, json=body(state="CG")).status_code == 403          # outside scope
+    assert ranger.post("/api/ranger/reports", headers=rh, json=body(latitude=21.0, longitude=82.0)).status_code == 403   # position is in CG: outside scope
+    assert ranger.post("/api/ranger/reports", headers=rh, json=body(state="CG")).json()["state"] == "OD"                   # a state sent by the client is ignored
+    assert ranger.post("/api/ranger/reports", headers=rh, json=body(latitude=13.6, longitude=79.4)).status_code == 422    # outside every supported state
     two, th, _ = actor("field_crew", scopes=["OD", "CG"])
-    assert two.post("/api/ranger/reports", headers=th, json=body()).status_code == 422                       # two states: they must say which
-    assert two.post("/api/ranger/reports", headers=th, json=body(state="CG")).status_code == 201
+    assert two.post("/api/ranger/reports", headers=th, json=body()).status_code == 201                                      # two states: the position decides
 
 
 def test_only_range_officers_can_use_it_and_csrf_is_required():

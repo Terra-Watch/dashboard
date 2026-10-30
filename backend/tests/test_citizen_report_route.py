@@ -118,10 +118,17 @@ def test_creation_requires_authentication_csrf_and_the_citizen_role():
 
 def test_invalid_input_is_rejected_without_creating_a_row():
     client, headers, _ = citizen()
-    for over in ({"state": "ZZ"}, {"observed_at": "2026-10-16T08:00:00"}, {"latitude": 123.0}):
+    for over in ({"latitude": 13.6, "longitude": 79.4}, {"observed_at": "2026-10-16T08:00:00"}, {"latitude": 123.0}):
         payload = body(**over)
         assert client.post("/api/citizen/reports", headers=headers, json=payload).status_code == 422
         assert count_by_key(payload["client_key"]) == 0
+
+
+def test_the_state_is_taken_from_the_position_not_from_the_client():
+    client, headers, _ = citizen()
+    payload = body(state="MH")                                  # position 20.3, 85.8 is in Odisha
+    rid = client.post("/api/citizen/reports", headers=headers, json=payload).json()["report"]["id"]
+    assert row(rid)["state"] == "OD"
 
 
 def test_a_new_report_waits_for_human_review_no_assignment_and_no_status_progress():
