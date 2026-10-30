@@ -207,6 +207,31 @@ def model_version_for(config: str = REPORT) -> str:
     return _env(_CONFIGS[config]["version"], EXPECTED_MODEL_VERSION) if config in _CONFIGS else EXPECTED_MODEL_VERSION
 
 
+def remote_url() -> str:
+    return _env("FIRE_EVIDENCE_REMOTE_URL").rstrip("/")
+
+
+def _assess_remote(data: bytes, image_id: str, config: str) -> dict[str, Any]:
+    """POST the image to the model host. The host runs this same module (assess_image), so its answer is already in the contract shape; it is re-checked here
+    and anything odd becomes UNAVAILABLE. Network, auth and timeout failures all end as UNAVAILABLE, never as a clean result."""
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+    req = urllib.request.Request(f"{remote_url()}/assess?" + urllib.parse.urlencode({"config": config, "image_id": image_id[:64]}), data=data, method="POST",
+                                 headers={"Content-Type": "application/octet-stream", "X-Service-Token": _env("FIRE_EVIDENCE_REMOTE_TOKEN")})
+    try:
+        with urllib.request.urlopen(req, timeout=_float_env("FIRE_EVIDENCE_TIMEOUT_S", 20.0, 0.05, 120.0)) as r:
+            result = json.loads(r.read(1_000_000))
+    except (urllib.error.URLError, OSError, ValueError):
+        return unavailable(INFERENCE_FAILED)
+    if not isinstance(result, dict) or result.get("assessment_status") not in ("COMPLETED", "UNAVAILABLE"):
+        return unavailable(RESULT_INVALID)
+    if result["assessment_status"] == "COMPLETED" and (result.get("artifact_status") != "APPROVED" or result.get("model_version") != model_version_for(config)
+                                                       or result.get("decision") != "REQUIRES_REVIEW" or result.get("review_required") is not True):
+        return unavailable(RESULT_INVALID)
+    return result
+
+
 def configuration_error(config: str = REPORT) -> Optional[str]:
     """Cheap, I/O-free checks. A non-None result means UNAVAILABLE without touching the filesystem or a worker thread.
 
@@ -214,7 +239,10 @@ def configuration_error(config: str = REPORT) -> Optional[str]:
     development-only experimental path."""
     if config == REPORT and experimental_requested():
         return _experimental_configuration_error()
-    if not _env("FIRE_EVIDENCE_REPO") or not artifact_dir_for(config):
+    if remote_url():  # the model runs on a separate host (FIRE_EVIDENCE_REMOTE_URL); local repo and artifact paths are not needed here
+        if not _env("FIRE_EVIDENCE_REMOTE_TOKEN"):
+            return NOT_CONFIGURED
+    elif not _env("FIRE_EVIDENCE_REPO") or not artifact_dir_for(config):
         return NOT_CONFIGURED
     if not inference_enabled():
         return INFERENCE_DISABLED
@@ -836,6 +864,8 @@ def _process_request(data: bytes, image_id: str, config: str = REPORT) -> dict[s
     # subprocess boundary below.
     if _scorer_factory is not None:
         return assess_image(data, image_id, config)
+    if remote_url():
+        return _assess_remote(data, image_id, config)
     with _process_lock:
         if _process_worker is None or not _process_worker.is_alive():
             if _process_conn is not None:
