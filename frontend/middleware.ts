@@ -8,7 +8,7 @@ export default function middleware(request: Request) {
   headers.delete('x-resq-client-ip');            // anything the visitor sent under these names is dropped
   headers.delete('x-resq-proxy-secret');
   const ip = ipAddress(request);
-  const secret = process.env.RESQ_PROXY_SECRET;
+  const secret = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.RESQ_PROXY_SECRET;
   if (ip && secret) { headers.set('x-resq-client-ip', ip); headers.set('x-resq-proxy-secret', secret); }
-  return next({ request: { headers } });
+  return next({ request: { headers }, headers: { 'x-resq-forwarded': ip && secret ? 'yes' : ip ? 'no-secret' : 'no-ip' } });
 }
