@@ -1,4 +1,5 @@
 import hashlib
+import ipaddress
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -210,7 +211,14 @@ def check_login(user, password: str) -> bool:
 
 
 def client_ip(request: Request) -> str:
-    """The caller's address. On Vercel request.client is the proxy, so use the first x-forwarded-for entry the platform sets."""
+    """The caller's address. The frontend site forwards visitors' requests and sends their address in x-resq-client-ip together with the shared
+    RESQ_PROXY_SECRET; that header is believed only when the secret matches. Otherwise, on Vercel request.client is the proxy, so use the first x-forwarded-for entry the platform sets."""
+    secret = os.getenv('RESQ_PROXY_SECRET', '')
+    if secret and secrets.compare_digest(request.headers.get('x-resq-proxy-secret', '').encode(), secret.encode()):
+        try:
+            return str(ipaddress.ip_address(request.headers.get('x-resq-client-ip', '').strip()))
+        except ValueError:
+            pass
     if os.getenv('VERCEL'):
         forwarded = request.headers.get('x-forwarded-for', '').split(',')[0].strip()
         if forwarded:
