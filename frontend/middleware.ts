@@ -21,5 +21,6 @@ export default async function middleware(request: Request) {
   const out = new Headers(upstream.headers);
   out.delete('content-encoding'); out.delete('content-length'); out.delete('transfer-encoding');
   out.set('x-resq-forwarded', ip && secret ? 'yes' : ip ? 'no-secret' : 'no-ip');
+  out.set('x-resq-seen-ip', ip ?? '');                                                       // TEMPORARY: the visitor's own address, to check what the platform reports
   return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: out });
 }
