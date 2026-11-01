@@ -164,7 +164,7 @@ export function OpsMapPage() {
           {selectedIncident && (
             <section aria-label={t('map.selected', 'Selected')} data-testid="selected" className="absolute inset-x-2 bottom-2 z-10 max-h-[85%] overflow-auto rounded-panel border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:left-3 md:w-[26rem]">
               <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
-              <IncidentPreview incidentId={selectedIncident.id} />
+              <IncidentPreview basic={selectedIncident} />
             </section>)}
         </div>
         <div className="space-y-3">

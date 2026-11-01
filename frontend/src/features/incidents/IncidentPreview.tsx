@@ -19,12 +19,13 @@ function Thumb({ incidentId, image }: { incidentId: number; image: EvidenceImage
 }
 
 /** What staff need at a glance when they pick a report on the map: the photos, the words, and what the evidence check says. The check is advisory; a person decides. */
-export function IncidentPreview({ incidentId }: { incidentId: number }) {
+type Basic = { id: number; source: string; notes: string | null; status: string; state: string | null; created_at: string; observed_at: string | null };
+
+export function IncidentPreview({ basic }: { basic: Basic }) {
+  const incidentId = basic.id;
   const { t } = useTranslation();
   const query = useQuery({ queryKey: ['incident-preview', incidentId], queryFn: () => api<Detail>(`/api/incidents/${incidentId}`), refetchInterval: 20_000 });
-  const item = query.data;
-  if (query.isLoading) return <p className="text-ink-muted">{t('ops.preview.loading_report', 'Loading report…')}</p>;
-  if (!item) return <p role="alert" className="text-danger">{t('ops.preview.failed', 'The report could not be loaded.')}</p>;
+  const item = { ...basic, ...(query.data ?? {}), images: query.data?.images ?? [] };
   const first = item.images[0];
   const assessment = first ? presentAssessment(first, t) : null;
   const integrity = first ? presentMediaIntegrity(first, t) : null;
@@ -32,7 +33,9 @@ export function IncidentPreview({ incidentId }: { incidentId: number }) {
     <div className="space-y-3">
       <h2 className="text-xl">#{item.id} <RungBadge rung={rungOfStatus(item.status)} age={ageText(item.created_at)} /></h2>
       {item.images.length > 0 && <div className="flex flex-wrap gap-2">{item.images.slice(0, 3).map(image => <Thumb key={image.id} incidentId={item.id} image={image} />)}</div>}
-      {item.images.length === 0 && <p className="text-sm text-ink-muted">{t('ops.preview.no_photo', 'No photo with this report.')}</p>}
+      {query.isLoading && <p className="text-sm text-ink-muted">{t('ops.preview.loading_report', 'Loading photos and evidence check…')}</p>}
+      {query.isError && <p role="alert" className="text-sm text-danger">{t('ops.preview.failed', 'Photos and the evidence check could not be loaded. Open the incident to see them.')}</p>}
+      {query.data && item.images.length === 0 && <p className="text-sm text-ink-muted">{t('ops.preview.no_photo', 'No photo with this report.')}</p>}
       <p className="whitespace-pre-wrap">{item.notes || '—'}</p>
       <p className="text-sm text-ink-muted">{stateName(item.state)} · {t(`ops.preview.source_${item.source}`, item.source)} · {formatWhen(item.observed_at ?? item.created_at)}</p>
       {assessment && (
