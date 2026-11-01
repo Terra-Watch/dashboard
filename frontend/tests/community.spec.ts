@@ -8,6 +8,7 @@ test.describe('Community (citizen)', () => {
   test.beforeEach(async ({ page }) => {
     await signedInAs(page, 'citizen', 'Asha Rao');
     await page.route('**/api/notices**', route => route.fulfill(json({ items: [{ id: 3, title: 'Smoke advisory', body: 'Avoid the ridge road until noon.', severity: 'advisory', expires_at: '2030-01-01T00:00:00Z', published_at: '2026-10-16T08:00:00Z' }] })));
+    await page.route('**/api/community/mine', route => route.fulfill(json({ community: { slug: 'bolampatti', name: 'Bolampatti forest community', forest_name: 'Bolampatti Block I Reserved Forest', area: 'Coimbatore South, Tamil Nadu' } })));
     await page.route('**/api/community/chat**', route => route.fulfill(json({ items: [], has_more: false, room: { region: 'default', slow_mode_seconds: 0, frozen: false } })));
   });
 

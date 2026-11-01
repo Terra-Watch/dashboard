@@ -12,7 +12,7 @@ import { Notice } from './Notice';
 import { Card, Skeleton } from './Page';
 import { ThemeMenu } from './ThemeMenu';
 
-type Me = { id: number; email: string; name: string; role: string; home_state: string | null; scopes: string[] };
+type Me = { id: number; email: string; name: string; role: string; home_state: string | null; scopes: string[]; community?: { slug: string; name: string } | null };
 const ROLE_LABELS: Record<string, string> = {
   field_crew: 'Range Officer', range_officer: 'Range Officer', control_room_operator: 'Control Room operator', incident_commander: 'Incident commander', officer: 'Control Room officer', admin: 'Administrator', citizen: 'Citizen',
 };
@@ -33,6 +33,7 @@ export function ProfileCard() {
             {field(t('auth.email', 'Email'), me.data.email)}
             {field(t('profile.role', 'Role'), t(`profile.role_${me.data.role}`, ROLE_LABELS[me.data.role] ?? me.data.role))}
             {field(t('profile.areas', 'Areas you cover'), me.data.scopes.length ? me.data.scopes.map(stateName).join(', ') : me.data.home_state ? stateName(me.data.home_state) : t('profile.all_areas', 'All areas'))}
+            {me.data.community && field(t('profile.community', 'Forest community'), me.data.community.name)}
           </dl>) : <Notice kind="danger">{t('citizen.account.error', 'Your account details could not be loaded.')}</Notice>}
       </Card>
       <Card title={t('citizen.account.display', 'Language and theme')}><div className="flex flex-wrap items-center gap-3"><LanguageMenu /><ThemeMenu /></div></Card>

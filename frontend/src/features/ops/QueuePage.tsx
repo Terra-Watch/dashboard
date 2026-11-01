@@ -96,7 +96,7 @@ function Row({ item, focused }: { item: Incident; focused: boolean }) {
     <li><Link to={`/ops/incidents/${item.id}`} className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-panel border bg-surface p-3 text-ink hover:bg-surface-2 ${focused ? 'border-action ring-2 ring-action' : 'border-line'}`}>
       <span className="text-lg font-bold">#{item.id}</span>
       <RungBadge rung={rungOfStatus(item.status)} age={ageText(item.created_at)} />
-      <span className="text-ink-muted">{stateName(item.state)}</span>
+      <span className="text-ink-muted">{item.community ?? stateName(item.state)}</span>
       {item.notes && <span className="min-w-0 flex-1 truncate text-ink-muted">{item.notes}</span>}
       {item.image_assessment_status && <span className="text-sm text-ink-muted">{listStatusText(item.image_assessment_status)}{item.image_assessment_status === 'COMPLETED' && mediaCheckSuffix(item.image_media_integrity_status, t) ? ` · ${mediaCheckSuffix(item.image_media_integrity_status, t)}` : ''}</span>}
       {item.status === 'closed' && item.close_reason && <span className="text-sm">{t(`ops.close.${item.close_reason}`, item.close_reason)}</span>}

@@ -18,6 +18,7 @@ from ..contracts.schemas import (
 )
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
+from ..services import communities
 from ..services import alert_service, audit_log
 from ..services import blob_storage, public_photo
 from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment, attach_media_integrity_status, displayed_authenticity_status, mask_authenticity_status
@@ -154,6 +155,7 @@ def list_incidents(
     user: dict[str, object] = Depends(current_risk_user),
 ) -> list[dict[str, object]]:
     query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,
+        (SELECT c.name FROM resq_communities c WHERE c.id=i.community_id) AS community,
         (SELECT assessment_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS image_assessment_status,
         (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status,
         (SELECT assessment FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS _image_assessment,
@@ -190,8 +192,8 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
     created_new = False
     with engine.begin() as db:
         result = db.execute(
-            text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
-                VALUES (:reporter_id,:client_key,:source,:size,:notes,:state,:latitude,:longitude,:observed_at)
+            text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at,community_id)
+                VALUES (:reporter_id,:client_key,:source,:size,:notes,:state,:latitude,:longitude,:observed_at,:community_id)
                 ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
                 RETURNING id,reporter_id,source,size,notes,status,state,latitude,longitude,observed_at,created_at,updated_at"""),
             {
@@ -204,6 +206,7 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
                 "latitude": payload.latitude,
                 "longitude": payload.longitude,
                 "observed_at": payload.observed_at,
+                "community_id": communities.at_point(db, payload.latitude, payload.longitude),
             },
         ).mappings().first()
         if result is not None:
@@ -259,7 +262,7 @@ async def get_incident_image(incident_id: int, image_id: int, user: dict[str, ob
 def get_incident(incident_id: int, user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
     with engine.connect() as db:
         row = db.execute(
-            text('SELECT id,source,size,notes,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at FROM resq_incidents WHERE id=:id'),
+            text('SELECT i.id,i.source,i.size,i.notes,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,(SELECT c.name FROM resq_communities c WHERE c.id=i.community_id) AS community FROM resq_incidents i WHERE i.id=:id'),
             {'id': incident_id},
         ).mappings().first()
     if not row:

@@ -15,6 +15,7 @@ from ..core.permissions import require_scope, user_scopes
 from ..core.regions import state_at
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
+from ..services import communities
 from ..services import audit_log
 from ..services import blob_storage, public_photo
 from ..services.recipients import incident_staff_recipients
@@ -51,7 +52,7 @@ def _notify_users(*, user_ids: list[int], kind: str, message: str, state: str | 
 @router.get('/control-room/rangers')
 def eligible_rangers(user: dict = Depends(_control_user)) -> dict:
     with engine.connect() as db:
-        rows = db.execute(text("SELECT id,name,email,home_state FROM resq_users WHERE role='field_crew' ORDER BY name")).mappings().all()
+        rows = db.execute(text("SELECT u.id,u.name,u.email,u.home_state,(SELECT c.name FROM resq_communities c WHERE c.id=u.community_id) AS community FROM resq_users u WHERE u.role='field_crew' ORDER BY u.name")).mappings().all()
     scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']), include_uncovered=True)
     items = [dict(row) for row in rows if scopes is None or row['home_state'] in scopes or row['home_state'] is None]
     return {'items': items}
@@ -318,12 +319,13 @@ def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(requ
         raise HTTPException(status_code=422, detail='This position is outside India')
     require_scope(user, state, entity_type='incident', entity_id=payload.client_key)
     with engine.begin() as db:
-        row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
-            VALUES (:reporter_id,:client_key,'patrol',:size,:notes,:state,:latitude,:longitude,:observed_at)
+        row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at,community_id)
+            VALUES (:reporter_id,:client_key,'patrol',:size,:notes,:state,:latitude,:longitude,:observed_at,:community_id)
             ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
             RETURNING id,source,size,notes,status,state,latitude,longitude,observed_at,created_at"""),
             {'reporter_id': user['id'], 'client_key': payload.client_key, 'size': payload.size, 'notes': payload.notes, 'state': state,
-             'latitude': payload.latitude, 'longitude': payload.longitude, 'observed_at': payload.observed_at}).mappings().first()
+             'latitude': payload.latitude, 'longitude': payload.longitude, 'observed_at': payload.observed_at,
+             'community_id': communities.at_point(db, payload.latitude, payload.longitude)}).mappings().first()
         created = row is not None
         if not created:
             row = db.execute(text("SELECT id,reporter_id,source,size,notes,status,state,latitude,longitude,observed_at,created_at FROM resq_incidents WHERE client_key=:k"), {'k': payload.client_key}).mappings().first()

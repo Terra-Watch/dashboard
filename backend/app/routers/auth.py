@@ -17,6 +17,7 @@ from ..core.security import (
     require_roles,
 )
 from ..database.session import engine
+from ..services import communities
 from ..services.audit_log import write_audit_log
 from ..services.mailer import email_configured, public_base_url, send_email
 from ..services.password_policy import password_problem
@@ -236,10 +237,11 @@ def logout(request: Request, response: Response, user: dict = Depends(current_re
 def me(user: dict = Depends(current_redesign_user)) -> dict[str, object]:
     with engine.connect() as db:
         row = db.execute(text("SELECT id,email,name,role,home_state FROM resq_users WHERE id=:id"), {'id': user['id']}).mappings().first()
+        community = communities.of_user(db, int(user['id']))
         scopes = db.execute(text("SELECT state FROM resq_user_scopes WHERE user_id=:id"), {'id': user['id']}).scalars().all()
     if not row:
         raise HTTPException(status_code=401, detail='Session expired')
-    return {**dict(row), 'scopes': list(scopes)}
+    return {**dict(row), 'scopes': list(scopes), 'community': community and {'slug': community['slug'], 'name': community['name']}}
 
 
 # ---------- invites (admin-only) ----------

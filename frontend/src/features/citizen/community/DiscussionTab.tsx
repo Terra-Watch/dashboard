@@ -49,7 +49,7 @@ export function DiscussionTab() {
 
 function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind: 'success' | 'danger' | 'info'; text: string }) => void }) {
   const { t } = useTranslation();
-  const [body, setBody] = useState(''); const [topic, setTopic] = useState('question'); const [language, setLanguage] = useState('en'); const [region, setRegion] = useState('');
+  const [body, setBody] = useState(''); const [topic, setTopic] = useState('question'); const [language, setLanguage] = useState('en');
   const [busy, setBusy] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null); const picker = useRef<HTMLInputElement>(null);
   const hints = usePhotoHints(photo ? [photo] : [])[0] ?? [];
@@ -58,7 +58,7 @@ function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind
   async function submit(event: FormEvent) {
     event.preventDefault(); if (problem || busy) return; setBusy(true);
     try {
-      const result = await api<{ post: { id: number; status: string }; message?: string }>('/api/community/posts', { method: 'POST', json: { content: body.trim(), topic, post_type: topic, language, region: region.trim() || undefined } });
+      const result = await api<{ post: { id: number; status: string }; message?: string }>('/api/community/posts', { method: 'POST', json: { content: body.trim(), topic, post_type: topic, language, } });
       let held = result.post.status === 'held'; let message = result.message; let photoProblem = '';
       if (photo) {
         try {
@@ -67,7 +67,7 @@ function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind
           held = held || sent.post_status === 'held'; message = sent.message ?? message;
         } catch (reason) { photoProblem = reason instanceof ApiError ? reason.detail : t('citizen.community.photo_failed', 'The photo was not added.'); }
       }
-      setBody(''); setRegion(''); setPhoto(null);
+      setBody(''); setPhoto(null);
       onDone(photoProblem ? { kind: 'info', text: `${t('citizen.community.posted_no_photo', 'Your post is up, but')} ${photoProblem}` }
         : held ? { kind: 'info', text: message ?? t('citizen.community.held', 'A moderator will look at this before it appears.') } : { kind: 'success', text: t('citizen.community.published', 'Posted. Only signed-in members can see it.') });
     } catch (reason) { onDone({ kind: 'danger', text: reason instanceof ApiError ? reason.detail : t('citizen.community.post_failed', 'Your post was not published.') }); }
@@ -79,7 +79,6 @@ function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind
       <div className="grid gap-3 sm:grid-cols-3">
         <SelectField label={t('citizen.community.type', 'Type')} value={topic} onChange={event => setTopic(event.target.value)}>{TOPICS.map(item => <option key={item.value} value={item.value}>{t(`citizen.topic.${item.value}`, item.label)}</option>)}</SelectField>
         <SelectField label={t('citizen.community.language', 'Post language')} value={language} onChange={event => setLanguage(event.target.value)}>{LANGUAGES_FOR_POSTS.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</SelectField>
-        <TextField label={t('citizen.community.area', 'Area (district)')} maxLength={80} value={region} onChange={event => setRegion(event.target.value)} />
       </div>
       <TextArea label={t('citizen.community.post', 'Your post')} rows={4} value={body} onChange={event => setBody(event.target.value)} hint={t('citizen.community.no_contact', 'Do not share phone numbers, links or exact locations; such posts wait for a moderator.')} />
       {images && (

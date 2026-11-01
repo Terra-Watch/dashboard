@@ -8,6 +8,7 @@ test.describe('Community posts with a photo', () => {
   test.beforeEach(async ({ page }) => {
     await signedInAs(page, 'citizen', 'Asha Rao');
     await page.route('**/api/notices**', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/community/mine', route => route.fulfill(json({ community: { slug: 'bolampatti', name: 'Bolampatti forest community', forest_name: 'Bolampatti Block I Reserved Forest', area: 'Coimbatore South, Tamil Nadu' } })));
     await page.route('**/api/community/chat**', route => route.fulfill(json({ items: [], has_more: false, room: { region: 'default', slow_mode_seconds: 0, frozen: false } })));
     await page.route('**/api/community/posts/*/image', route => route.fulfill({ status: 200, contentType: 'image/jpeg', body: JPEG }));
   });

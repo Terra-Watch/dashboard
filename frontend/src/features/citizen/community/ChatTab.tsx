@@ -4,19 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ApiError, api } from '../../../app/http';
 import { Button } from '../../../ui/Button';
-import { SelectField, TextField } from '../../../ui/Field';
+import { TextField } from '../../../ui/Field';
 import { Notice } from '../../../ui/Notice';
 import { Skeleton } from '../../../ui/Page';
 import { CHAT_MAX, looksLikeEmergency, nextPollDelay } from '../../community/communityLogic';
-import { STATES, formatWhen } from '../format';
+import { formatWhen } from '../format';
 
 type Message = { id: number; content: string; status: string; created_at: string; badge?: string | null; author: { id?: number; name?: string } };
 type Room = { region: string; slow_mode_seconds: number; frozen: boolean };
 
-export function ChatTab() {
+export function ChatTab({ room }: { room: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [room, setRoom] = useState(() => { try { return localStorage.getItem('tw_region') || 'default'; } catch { return 'default'; } });
   const [text, setText] = useState('');
   const [problem, setProblem] = useState('');
   const [info, setInfo] = useState('');
@@ -58,9 +57,6 @@ export function ChatTab() {
 
   return (
     <div className="space-y-3">
-      <SelectField label={t('citizen.chat.room', 'Room')} value={room} onChange={event => { setRoom(event.target.value); lastSeen.current = 0; setNewCount(0); }}>
-        <option value="default">{t('citizen.chat.everyone', 'Everyone')}</option>{STATES.map(state => <option key={state.code} value={state.code}>{state.name}</option>)}
-      </SelectField>
       {settings?.frozen && <Notice kind="warning">{t('citizen.chat.frozen', 'This room is paused by moderators. You can read it but not post.')}</Notice>}
       {settings && settings.slow_mode_seconds > 0 && !settings.frozen && <Notice kind="info">{t('citizen.chat.slow', { seconds: settings.slow_mode_seconds, defaultValue: 'Slow mode: one message every {{seconds}} seconds.' })}</Notice>}
       {failures > 0 && <Notice kind="warning">{t('citizen.chat.stale', 'Chat could not refresh. Showing the last messages; trying again.')}</Notice>}

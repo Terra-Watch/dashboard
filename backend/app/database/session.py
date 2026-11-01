@@ -5,6 +5,7 @@ import bcrypt
 from sqlalchemy import create_engine, text
 from ..core.config import DATABASE_URL
 from ..core.security import hash_password_argon2
+from ..services import communities
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
@@ -323,6 +324,7 @@ def init_db() -> None:
             ))
             db.execute(text("ALTER TABLE resq_users ADD COLUMN IF NOT EXISTS password_algo VARCHAR(10) NOT NULL DEFAULT 'bcrypt'"))
             db.execute(text("ALTER TABLE resq_users ADD COLUMN IF NOT EXISTS home_state VARCHAR(2)"))
+            communities.ensure(db)
 
             db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS client_key VARCHAR(120)'))
             db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS state VARCHAR(2)'))

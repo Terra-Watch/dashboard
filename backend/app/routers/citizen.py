@@ -20,6 +20,7 @@ from ..core.regions import state_at
 from ..core.security import check_login, current_redesign_user, hash_password_argon2, new_raw_token, require_csrf
 from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
+from ..services import communities
 from ..services.recipients import incident_staff_recipients
 from ..services import audit_log
 from ..services import blob_storage, public_photo
@@ -57,14 +58,16 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
     observed_at = _parse_observed(payload.observed_at)
     description = payload.description.strip()
     with engine.begin() as db:
+        community_id = communities.at_point(db, payload.latitude, payload.longitude)
+        communities.join_if_none(db, int(user['id']), community_id)
         result = db.execute(text('''INSERT INTO resq_incidents
-            (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)
-            VALUES (:reporter_id,:client_key,'citizen','unknown',:notes,:state,:latitude,:longitude,:observed_at)
+            (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at,community_id)
+            VALUES (:reporter_id,:client_key,'citizen','unknown',:notes,:state,:latitude,:longitude,:observed_at,:community_id)
             ON CONFLICT (client_key) WHERE client_key IS NOT NULL DO NOTHING
             RETURNING id,reporter_id,status,state,latitude,longitude,observed_at,created_at,updated_at'''), {
                 'reporter_id': user['id'], 'client_key': payload.client_key.strip(), 'notes': description,
                 'state': state, 'latitude': payload.latitude, 'longitude': payload.longitude,
-                'observed_at': observed_at,
+                'observed_at': observed_at, 'community_id': community_id,
             }).mappings().first()
         created = result is not None
         if not result:

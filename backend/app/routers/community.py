@@ -11,6 +11,7 @@ from ..contracts.schemas import (CommunityCommentRequest, CommunityEditRequest, 
                                  CommunitySanctionRequest)
 from ..core.security import current_redesign_user, optional_user, require_csrf
 from ..database.session import engine
+from ..services import communities
 from ..services import alert_service, audit_log
 from ..services import community_image_assessment as media
 from ..services.community_rules import STAFF_ROLES, badge_for, emergency_hint, held_reason, public_name
@@ -172,9 +173,11 @@ def create_post(payload: CommunityPostRequest, user: dict = Depends(community_us
     with engine.begin() as db:
         _assert_not_muted(db, int(user['id']))
         _rate_limit(db, 'resq_community_posts', int(user['id']), role=user.get('role'))
+        mine = communities.of_user(db, int(user['id']))
+        region = mine['name'] if mine else (payload.region or '').strip() or None   # a post belongs to the poster's forest community
         row = db.execute(text('''INSERT INTO resq_community_posts (author_id,content,post_type,region,language) VALUES (:author_id,:content,:post_type,:region,:language)
             RETURNING id,content,archived,post_type,post_type AS topic,language,region,status,created_at,updated_at'''),
-            {'author_id': user['id'], 'content': content, 'post_type': topic, 'region': (payload.region or '').strip() or None, 'language': payload.language}).mappings().one()
+            {'author_id': user['id'], 'content': content, 'post_type': topic, 'region': region, 'language': payload.language}).mappings().one()
         held = _hold_if_needed(db, 'post', row['id'], content)
         name = db.execute(text('SELECT name FROM resq_users WHERE id=:id'), {'id': user['id']}).scalar()
     post_row = {**dict(row), 'status': 'held' if held else 'published'}
@@ -231,6 +234,13 @@ def _room_settings(row) -> dict:
 
 def _room_name(room: str | None) -> str:
     return (room or '').strip() or 'default'
+
+
+@router.get('/mine')
+def my_community(user: dict = Depends(community_user)) -> dict:
+    """The forest community this person belongs to (None until they report from inside one, or a coordinator assigns them)."""
+    with engine.connect() as db:
+        return {'community': communities.of_user(db, int(user['id']))}
 
 
 @router.get('/rooms')

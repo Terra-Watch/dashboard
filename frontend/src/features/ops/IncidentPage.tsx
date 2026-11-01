@@ -36,7 +36,7 @@ export function OpsIncidentPage() {
   const field = useQuery({ queryKey: ['ops-field', incidentId], queryFn: () => api<{ assignments: Assignment[]; verifications: Observation[] }>(`/api/control-room/incidents/${incidentId}/assignments`) });
   const settings = useOpsSettings();
   const history = useQuery({ queryKey: ['ops-history', incidentId], queryFn: () => api<{ history: HistoryEntry[] }>(`/api/incidents/${incidentId}/history`) });
-  const rangers = useQuery({ queryKey: ['ops-rangers'], queryFn: () => api<{ items: Array<{ id: number; name: string; home_state: string | null }> }>('/api/control-room/rangers'), staleTime: 60_000 });
+  const rangers = useQuery({ queryKey: ['ops-rangers'], queryFn: () => api<{ items: Array<{ id: number; name: string; home_state: string | null; community?: string | null }> }>('/api/control-room/rangers'), staleTime: 60_000 });
   const [problem, setProblem] = useState(''); const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false); const [closing, setClosing] = useState(false); const [ranger, setRanger] = useState('');
 
@@ -55,7 +55,7 @@ export function OpsIncidentPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
-      <PageTitle title={`${t('ops.incident', 'Incident')} #${item.id}`} subtitle={`${stateName(item.state)} · ${t('ops.reported', 'reported')} ${ageText(item.created_at)}`} actions={<RungBadge rung={rungOfStatus(item.status)} />} />
+      <PageTitle title={`${t('ops.incident', 'Incident')} #${item.id}`} subtitle={`${item.community ? `${item.community} · ` : ''}${stateName(item.state)} · ${t('ops.reported', 'reported')} ${ageText(item.created_at)}`} actions={<RungBadge rung={rungOfStatus(item.status)} />} />
       {message && <Notice kind="success">{message}</Notice>}
       {problem && <Notice kind="danger">{problem}</Notice>}
       {item.status === 'closed' && <Notice kind="info" title={t('ops.closed_title', 'Closed')}>{closeReasonLabel(item.close_reason) || t('ops.closed_no_reason', 'No reason was recorded.')}</Notice>}
@@ -85,7 +85,7 @@ export function OpsIncidentPage() {
             <Card title={t('ops.assign', 'Field officer')}>
               {active ? <p><strong>{active.ranger_name}</strong> · {t(`field.status.${active.status}`, active.status)} · {ageText(active.updated_at)}</p> : <p className="text-ink-muted">{t('ops.no_officer', 'No officer is assigned.')}</p>}
               <div className="mt-3 flex flex-wrap items-end gap-3">
-                <div className="min-w-56 flex-1"><SelectField label={active ? t('ops.change_officer', 'Change officer') : t('ops.choose_officer', 'Assign an officer')} value={ranger} onChange={event => setRanger(event.target.value)}><option value="">{t('citizen.report.choose', 'Choose')}</option>{rangers.data?.items.map(r => <option key={r.id} value={r.id}>{r.name}{r.home_state ? ` (${r.home_state})` : ''}</option>)}</SelectField></div>
+                <div className="min-w-56 flex-1"><SelectField label={active ? t('ops.change_officer', 'Change officer') : t('ops.choose_officer', 'Assign an officer')} value={ranger} onChange={event => setRanger(event.target.value)}><option value="">{t('citizen.report.choose', 'Choose')}</option>{rangers.data?.items.map(r => <option key={r.id} value={r.id}>{r.name}{r.community ? ` · ${r.community}` : r.home_state ? ` (${r.home_state})` : ''}</option>)}</SelectField></div>
                 <Button variant="secondary" loading={busy} disabled={!ranger} onClick={() => void run(() => active ? api(`/api/control-room/incidents/${incidentId}/assignments/${active.id}`, { method: 'PATCH', json: { ranger_id: Number(ranger) } }) : api(`/api/control-room/incidents/${incidentId}/assignments`, { method: 'POST', json: { ranger_id: Number(ranger) } }), t('ops.assigned', 'Officer notified.')).then(() => setRanger(''))}>{active ? t('ops.reassign', 'Reassign') : t('ops.assign_button', 'Assign')}</Button>
               </div>
             </Card>)}
