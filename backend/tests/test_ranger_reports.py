@@ -30,7 +30,7 @@ def test_ranger_report_state_comes_from_the_position_and_must_be_in_scope():
     ranger, rh, _ = actor("field_crew", scopes=["OD"])
     assert ranger.post("/api/ranger/reports", headers=rh, json=body(latitude=21.0, longitude=82.0)).status_code == 403   # position is in CG: outside scope
     assert ranger.post("/api/ranger/reports", headers=rh, json=body(state="CG")).json()["state"] == "OD"                   # a state sent by the client is ignored
-    assert ranger.post("/api/ranger/reports", headers=rh, json=body(latitude=13.6, longitude=79.4)).status_code == 422    # outside every supported state
+    assert ranger.post("/api/ranger/reports", headers=rh, json=body(latitude=7.8, longitude=80.7)).status_code == 422    # outside India
     two, th, _ = actor("field_crew", scopes=["OD", "CG"])
     assert two.post("/api/ranger/reports", headers=th, json=body()).status_code == 201                                      # two states: the position decides
 

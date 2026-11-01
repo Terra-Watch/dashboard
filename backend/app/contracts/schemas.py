@@ -26,7 +26,7 @@ class CitizenReportRequest(BaseModel):
     client_key: str = Field(min_length=1, max_length=120)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
-    state: str = Field(min_length=2, max_length=2)
+    state: str | None = Field(default=None, max_length=2)  # ignored: the server works the state out from the position
     description: str = Field(default='', max_length=5000)
     observed_at: str = Field(min_length=1, max_length=80)
 

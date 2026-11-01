@@ -118,10 +118,17 @@ def test_creation_requires_authentication_csrf_and_the_citizen_role():
 
 def test_invalid_input_is_rejected_without_creating_a_row():
     client, headers, _ = citizen()
-    for over in ({"latitude": 13.6, "longitude": 79.4}, {"observed_at": "2026-10-16T08:00:00"}, {"latitude": 123.0}):
+    for over in ({"latitude": 7.8, "longitude": 80.7}, {"observed_at": "2026-10-16T08:00:00"}, {"latitude": 123.0}):
         payload = body(**over)
         assert client.post("/api/citizen/reports", headers=headers, json=payload).status_code == 422
         assert count_by_key(payload["client_key"]) == 0
+
+
+def test_a_report_from_any_state_is_accepted_and_filed_under_that_state():
+    client, headers, _ = citizen()
+    for lat, lon, code in ((13.6154, 79.4122, "AP"), (28.61, 77.21, "DL"), (12.97, 77.59, "KA"), (11.62, 92.73, "AN")):
+        rid = client.post("/api/citizen/reports", headers=headers, json=body(latitude=lat, longitude=lon)).json()["report"]["id"]
+        assert row(rid)["state"] == code
 
 
 def test_the_state_is_taken_from_the_position_not_from_the_client():

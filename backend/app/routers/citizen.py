@@ -52,7 +52,7 @@ def _safe_report(row: dict) -> dict:
 def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_user)) -> dict:
     state = state_at(payload.latitude, payload.longitude)
     if state is None:
-        raise HTTPException(status_code=422, detail='This position is outside the supported states')
+        raise HTTPException(status_code=422, detail='This position is outside India')
     observed_at = _parse_observed(payload.observed_at)
     description = payload.description.strip()
     with engine.begin() as db:

@@ -315,7 +315,7 @@ def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(requ
     """An untasked observation. It lands in the Control Room queue as a report that nobody has checked yet; only the Control Room changes the incident."""
     state = state_at(payload.latitude, payload.longitude)
     if state is None:
-        raise HTTPException(status_code=422, detail='This position is outside the supported states')
+        raise HTTPException(status_code=422, detail='This position is outside India')
     require_scope(user, state, entity_type='incident', entity_id=payload.client_key)
     with engine.begin() as db:
         row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at)

@@ -1,0 +1,38 @@
+"""Builds app/data/india_states.json (state and union-territory outlines for deciding which state a point is in) from a geoBoundaries India ADM1 file.
+
+usage: python scripts/build_india_states.py PATH/geoBoundaries_IND_ADM1.geojson [--tolerance 0.01]
+The outlines are simplified (default 0.01 degree, about 1 km) so the file stays small; state_at() allows a few km of slack at coasts.
+Codes follow ISO 3166-2:IN except the three the app already used: OD (Odisha), TS (Telangana), UK (Uttarakhand), and CG for Chhattisgarh.
+"""
+import argparse, json, sys
+from pathlib import Path
+from shapely.geometry import mapping, shape
+
+KEEP = {"IN-OR": "OD", "IN-TG": "TS", "IN-UT": "UK", "IN-CT": "CG"}
+
+
+def clean(name: str) -> str:
+    import unicodedata
+    return unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(); ap.add_argument("source"); ap.add_argument("--tolerance", type=float, default=0.01); a = ap.parse_args()
+    out = []
+    for feature in json.load(open(a.source))["features"]:
+        iso = feature["properties"]["shapeISO"]
+        code = KEEP.get(iso, iso.removeprefix("IN-"))
+        geom = shape(feature["geometry"]).simplify(a.tolerance, preserve_topology=True)
+        data = json.loads(json.dumps(mapping(geom)))
+        def rnd(c):
+            return [round(c[0], 4), round(c[1], 4)] if isinstance(c[0], (int, float)) else [rnd(x) for x in c]
+        data["coordinates"] = rnd(data["coordinates"])
+        out.append({"code": code, "name": clean(feature["properties"]["shapeName"]), "bounds": [round(v, 3) for v in geom.bounds], "geometry": data})
+    out.sort(key=lambda x: x["code"])
+    path = Path(__file__).resolve().parents[1] / "app" / "data" / "india_states.json"
+    path.write_text(json.dumps(out, separators=(",", ":")))
+    print(f"{len(out)} states, {path.stat().st_size // 1024} KB", file=sys.stderr)
+    print(", ".join(f"{x['code']}={x['name']}" for x in out))
+
+
+main()

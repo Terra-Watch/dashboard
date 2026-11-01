@@ -160,7 +160,7 @@ export function ReportPage() {
             <TextField label={t('citizen.report.coords', 'Or type the coordinates')} inputMode="decimal" placeholder="20.31, 85.82" value={coords} onChange={event => { setCoords(event.target.value); setFix(null); }} error={coordsError} />
           </div>
         )}
-        {place && !state && <p role="alert" className="text-sm text-danger">{t('citizen.report.outside', 'This position is outside the states TerraWatch covers. Move the pin, or call your local emergency number.')}</p>}
+        {place && !state && <p role="alert" className="text-sm text-danger">{t('citizen.report.outside', 'This position is outside India. Move the pin, or call your local emergency number.')}</p>}
       </section>
 
       <div className="sticky bottom-20 z-20 -mx-4 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur md:bottom-0 md:mx-0 md:rounded-xl md:border">

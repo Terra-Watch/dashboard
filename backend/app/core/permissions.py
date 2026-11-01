@@ -16,7 +16,6 @@ from ..services.audit_log import write_audit_log
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_STATES = {"OD", "CG", "TS", "MP", "MH", "JH"}
 
 
 def user_scopes(user_id: int) -> set[str]:
