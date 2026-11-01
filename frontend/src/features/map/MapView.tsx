@@ -164,7 +164,6 @@ export type MapViewProps = {
 
 /** The one map. MapLibre GL, self-hosted PMTiles basemap, fonts and icons from this site (no third-party requests). */
 export function MapView({ label, points = [], polygons = [], riskCells = [], selectedId = null, onSelect, onMapClick, bounds, center = [84.5, 21], zoom = 6, className = 'h-[60vh] min-h-80', children, basemapStyle: externalBasemapStyle, imageOverlay = null, lines, onMapReady, onMapDoubleClick, doubleClickZoom = true, terrainOverlay = null, colorsOverride }: MapViewProps) {
-  console.log('[DEBUG MapView] Received props:', { pointsCount: points.length, polygonsCount: polygons.length, riskCellsCount: riskCells.length });
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);

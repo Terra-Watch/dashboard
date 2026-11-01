@@ -54,3 +54,10 @@ export function riskCellsToGeoJson(cells: readonly RiskCell[]): FeatureCollectio
     })),
   };
 }
+
+/** Risk cells come as points (archived replay) or as small squares (live runs); the map draws a marker at the centre either way. */
+export function cellCentre(g: { type: string; coordinates: any }): { lat: number; lon: number } {
+  if (g.type === 'Point') return { lat: g.coordinates[1], lon: g.coordinates[0] };
+  const ring: Array<[number, number]> = g.coordinates[0].slice(0, -1);
+  return { lat: ring.reduce((a, c) => a + c[1], 0) / ring.length, lon: ring.reduce((a, c) => a + c[0], 0) / ring.length };
+}
