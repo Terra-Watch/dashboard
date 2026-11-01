@@ -5,10 +5,11 @@ export type WindGrid = {
   code?: Array<Array<number | null>>; temp?: Array<Array<number | null>>; precip?: Array<Array<number | null>>; is_day?: number[][];
 };
 
-/** Bilinear wind at a point, or null outside the grid. */
-export function sampleWind(g: WindGrid, lat: number, lon: number): { u: number; v: number } | null {
+/** Bilinear wind at a point. Outside the grid there is no wind (null), or with `extend` the wind of the nearest edge, so the flow has no hard border. */
+export function sampleWind(g: WindGrid, lat: number, lon: number, extend = false): { u: number; v: number } | null {
   const { lats, lons } = g;
-  if (lat < lats[0] || lat > lats[lats.length - 1] || lon < lons[0] || lon > lons[lons.length - 1]) return null;
+  if (extend) { lat = Math.min(Math.max(lat, lats[0]), lats[lats.length - 1]); lon = Math.min(Math.max(lon, lons[0]), lons[lons.length - 1]); }
+  else if (lat < lats[0] || lat > lats[lats.length - 1] || lon < lons[0] || lon > lons[lons.length - 1]) return null;
   const find = (axis: number[], x: number) => { let i = 0; while (i < axis.length - 2 && x > axis[i + 1]) i++; return i; };
   const i = find(lats, lat), j = find(lons, lon);
   const ty = (lat - lats[i]) / (lats[i + 1] - lats[i]), tx = (lon - lons[j]) / (lons[j + 1] - lons[j]);

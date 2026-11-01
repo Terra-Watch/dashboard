@@ -202,3 +202,39 @@ The same data sources as the dataset release apply (fire detections, reanalysis,
 | 6 | Optional: probabilities, explanations, past-day overlay, second model alongside | each approved separately |
 
 Not in scope: new model training, changing the label, neighbour features, anything for the hardware nodes, and showing the forecast to the public.
+
+## 12. Who uses this, and what to build next (2026-11-01)
+
+Status first. Built and deployed or in review: the live scoring job (daily, in the cloud), the forecast layer with its status line, satellite detections stored every 3 hours, a Satellite page with cluster alerts, animated wind and weather icons on the map. What is missing is the link between these pieces: each layer answers a question nobody asked in that form.
+
+### 12.1 Users and their decisions
+
+| User | Decision they make | What they need from the forecast |
+|---|---|---|
+| Control Room operator | Which signal or report to look at first; whom to assign | Which signals are probably real; where to worry first today |
+| Incident commander | Where to put people and what to warn on a fire that is burning | Where it will spread in 12 to 24 hours: wind, risk, people and roads downwind |
+| Ranger / field crew | Where to go first; what to expect | A short ranked list for their area; works with poor signal |
+| Citizen / community member | Whether to be careful today; where to report | One plain word for their place and what to do |
+| Admin / department lead | Staffing, budget, whether to trust the tool | Whether yesterday's forecast was right; season trends |
+| Public demo audience | Understand the project | A clear story, not operations detail |
+
+What the model is good for (state it in the product): about 98 % of next-day fire cells already have a detection in a neighbouring cell in the past week, and skill in quiet areas is modest. The forecast says where active fire is likely to continue or spread, not where a fire will start.
+
+### 12.2 Proposed order of work
+
+| # | Feature | For | Why now | Done when |
+|---|---|---|---|---|
+| 1 | Daily briefing per state (also sent to the alert feed): top 10 risk areas, new satellite clusters, risk cells downwind of an active fire, expected rain and wind shifts | Operators, commanders | Replaces opening five layers to answer one question | A briefing exists for each state with staff, built from the day's run and detections |
+| 2 | Satellite cluster to incident in one step: create a report, assign the nearest ranger, mark the signal handled | Operators | Detections cannot be acted on from where they appear | One click from a cluster creates an incident with the cluster's position |
+| 3 | Spread watch on an open incident: wind, risk cells 10 to 20 km downwind, nearest communities | Commanders | The spread planner has the pieces; it is not connected to the live data | The incident page shows downwind risk with the current wind |
+| 4 | "Did it work?" panel: yesterday's forecast against what burned (data already collected daily in verification.csv) | Admins; trust for everyone | The only honest answer to "is it any good" | A page shows recall in the top 1, 5 and 10 % of cells per day and per week |
+| 5 | Ranger patrol list: ranked cells to visit tomorrow in their area, opens on the map, cached offline | Rangers | The field app has no use of the forecast | The list is available with no signal after one sync |
+| 6 | Plain fire-danger word for a place (Low, Moderate, High, Very high) from the risk rank and weather | Citizens | Citizens cannot read ranks | One word and one sentence on the citizen home page; never a probability |
+
+Not recommended: more map layers (humidity, lightning and so on). They add clutter without changing a decision.
+
+### 12.3 Notes on what was just built
+
+- The wind animation and weather icons come from one cached request for all of India (a 12 by 12 grid, 30 minute cache). An earlier version followed the selected region, which left most of the country without wind and drew a visible rectangle; the flow now extends past the grid edge so it has no border. Spacing is about 2.8 degrees, so small features such as a local wind shift are not shown.
+- The Satellite page lists forest-cell detections by default; crop-stubble fires outside forest land dominate the feed in autumn.
+- Cluster alerts: 5 or more detections in one 0.1 degree forest cell within 6 hours, once per cluster per day, to the staff of that cell's state. Raise `CLUSTER_MIN` if a fire season floods people.

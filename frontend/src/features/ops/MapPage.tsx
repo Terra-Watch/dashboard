@@ -127,10 +127,12 @@ export function OpsMapPage() {
   const box = chosen ? communityBox(chosen) : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
   const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
+  // always the whole of India, not the current region: a grid that follows the region leaves most of the country without wind and draws a visible rectangle
   const windGrid = useQuery({
-    queryKey: ['map-wind-grid', box.map(v => Math.round(v * 2) / 2).join()], retry: false, staleTime: 25 * 60 * 1000, refetchInterval: 30 * 60 * 1000, enabled: showWind || showWeather,
-    queryFn: () => api<WindGrid & { freshness: Freshness }>(`/api/weather/wind-grid?min_lon=${box[0] - 1}&min_lat=${box[1] - 1}&max_lon=${box[2] + 1}&max_lat=${box[3] + 1}&n=10`),
+    queryKey: ['map-wind-grid', 'india'], retry: false, staleTime: 25 * 60 * 1000, refetchInterval: 30 * 60 * 1000, enabled: showWind || showWeather,
+    queryFn: () => api<WindGrid & { freshness: Freshness }>('/api/weather/wind-grid?min_lon=66&min_lat=5&max_lon=100&max_lat=38&n=12'),
   });
+
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
   
   const riskEnabled = settings.data?.risk_forecast_enabled === true;
