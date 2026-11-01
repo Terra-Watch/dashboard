@@ -100,7 +100,7 @@ def _states(regions) -> set[str]:
 def _require_region_scope(user: dict, regions) -> None:
     if user['role'] == 'admin':
         return
-    outside = _states(regions) - user_scopes(int(user['id']))
+    outside = _states(regions) - user_scopes(int(user['id']), include_uncovered=True)
     if outside:
         raise HTTPException(status_code=403, detail="This is outside your division's scope")
 
@@ -249,7 +249,7 @@ def _visible_clause(user: dict, region: str | None) -> tuple[str, dict]:
         return 'TRUE', {}
     if user['role'] in STAFF_ROLES:
         return ("EXISTS (SELECT 1 FROM unnest(regions) r WHERE split_part(r,'-',1) = ANY(CAST(:states AS text[])))",
-                {'states': sorted(user_scopes(int(user['id'])))})
+                {'states': sorted(user_scopes(int(user['id']), include_uncovered=True))})
     clause = "status='published' AND starts_at<=now() AND expires_at>now()"
     params: dict = {}
     if region:

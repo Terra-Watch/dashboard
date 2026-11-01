@@ -165,7 +165,7 @@ def list_incidents(
         clauses.append("state=:state")
         params["state"] = state
     if user.get("role") != "admin":
-        scopes = user_scopes(int(user["id"]))
+        scopes = user_scopes(int(user["id"]), include_uncovered=True)
         if not scopes:
             return []
         clauses.append("state = ANY(:scopes)")

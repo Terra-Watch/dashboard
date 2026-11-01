@@ -18,13 +18,26 @@ logger = logging.getLogger(__name__)
 
 
 
-def user_scopes(user_id: int) -> set[str]:
+CATCH_ALL_ROLES = ("control_room_operator", "incident_commander")
+
+
+def uncovered_states() -> set[str]:
+    """States that no active Control Room operator or commander has in their scope. Nothing reported there should sit unseen."""
+    from .regions import state_names
     with engine.connect() as db:
-        rows = db.execute(
-            text("SELECT state FROM resq_user_scopes WHERE user_id=:uid"),
-            {"uid": user_id},
-        ).scalars().all()
-    return set(rows)
+        covered = set(db.execute(
+            text("SELECT DISTINCT s.state FROM resq_user_scopes s JOIN resq_users u ON u.id=s.user_id WHERE u.role = ANY(:roles) AND u.deactivated_at IS NULL"),
+            {"roles": list(CATCH_ALL_ROLES)},
+        ).scalars().all())
+    return set(state_names()) - covered
+
+
+def user_scopes(user_id: int, include_uncovered: bool = False) -> set[str]:
+    """The states a person may work in: their own scopes. With include_uncovered, Control Room operators and commanders also get every state nobody in those roles covers yet (used for incidents, field work and alerts, so no report sits unseen)."""
+    with engine.connect() as db:
+        rows = set(db.execute(text("SELECT state FROM resq_user_scopes WHERE user_id=:uid"), {"uid": user_id}).scalars().all())
+        role = db.execute(text("SELECT role FROM resq_users WHERE id=:uid"), {"uid": user_id}).scalar()
+    return rows | uncovered_states() if include_uncovered and role in CATCH_ALL_ROLES else rows
 
 
 def require_scope(user: dict[str, object], state: str | None, *, entity_type: str, entity_id: str) -> None:
@@ -51,7 +64,7 @@ def require_scope(user: dict[str, object], state: str | None, *, entity_type: st
             ) from exc
         raise HTTPException(status_code=403, detail="Resource has no authoritative state to establish scope")
 
-    if state in user_scopes(int(user["id"])):
+    if state in user_scopes(int(user["id"]), include_uncovered=str(entity_type).startswith("incident")):
         return
 
     # Attempt to write audit log for out-of-division access denial

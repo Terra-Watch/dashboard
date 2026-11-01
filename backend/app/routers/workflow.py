@@ -52,7 +52,7 @@ def _notify_users(*, user_ids: list[int], kind: str, message: str, state: str | 
 def eligible_rangers(user: dict = Depends(_control_user)) -> dict:
     with engine.connect() as db:
         rows = db.execute(text("SELECT id,name,email,home_state FROM resq_users WHERE role='field_crew' ORDER BY name")).mappings().all()
-    scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']))
+    scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']), include_uncovered=True)
     items = [dict(row) for row in rows if scopes is None or row['home_state'] in scopes or row['home_state'] is None]
     return {'items': items}
 
@@ -63,7 +63,7 @@ def all_active_assignments(user: dict = Depends(_control_user)) -> dict:
     params: dict = {}
     scope_clause = ''
     if user.get('role') != 'admin':
-        scopes = user_scopes(int(user['id']))
+        scopes = user_scopes(int(user['id']), include_uncovered=True)
         if not scopes:
             return {'items': []}
         scope_clause = 'AND i.state = ANY(:scopes)'
