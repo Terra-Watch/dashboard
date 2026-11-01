@@ -26,6 +26,8 @@ frontend/.playwright-output/
 results/
 data/
 frontend/public/tiles/*.pmtiles
+# the one basemap file the deployed site needs (India, zoom 0 to 9, from a Protomaps build; rebuild with: pmtiles extract <build>.pmtiles resq-basemap.pmtiles --bbox=68.1,6.7,97.4,35.7 --maxzoom=9)
+!frontend/public/tiles/resq-basemap.pmtiles
 backend/tests/fixtures/**/weights.pt
 
 # generated simulation diagnostics and local cookie jars
