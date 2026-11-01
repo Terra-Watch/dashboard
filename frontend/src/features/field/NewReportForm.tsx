@@ -2,6 +2,8 @@ import { Camera, MapPin, X } from 'lucide-react';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, OfflineError } from '../../app/http';
+import { usePhotoHints } from '../../lib/usePhotoHints';
+import { PhotoHint } from '../../ui/PhotoHint';
 import { retryable, submitReport } from '../../lib/outbox';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea } from '../../ui/Field';
@@ -26,6 +28,7 @@ export function NewReportForm() {
   const [later, setLater] = useState(0);
   const [photoSummary, setPhotoSummary] = useState<{ total: number; left: number; rejected: number } | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const photoHints = usePhotoHints(photos);
   const previews = useMemo(() => photos.map(photo => URL.createObjectURL(photo)), [photos]);
   const ready = notes.trim().length >= 3 && position !== null;
 
@@ -77,6 +80,7 @@ export function NewReportForm() {
         {previews.length > 0 && <ul className="mb-3 grid grid-cols-4 gap-2">{previews.map((url, index) => (
           <li key={url} className="relative overflow-hidden rounded-lg border border-line"><img src={url} alt={t('field.photo.alt', { n: index + 1, defaultValue: 'Photo {{n}}' })} className="aspect-square w-full object-cover" />
             <button type="button" onClick={() => setPhotos(current => current.filter((_, i) => i !== index))} aria-label={t('field.photo.remove', 'Remove this photo')} className="absolute right-1 top-1 flex size-8 items-center justify-center rounded-full bg-surface/90 shadow"><X aria-hidden="true" size={16} /></button></li>))}</ul>}
+        {photoHints.map((found, index) => found.length ? <div key={index} className="mb-2"><p className="text-sm font-semibold">{t('field.photo.alt', { n: index + 1, defaultValue: 'Photo {{n}}' })}</p><PhotoHint hints={found} /></div> : null)}
         {photos.length < 4 && <Button type="button" variant="secondary" block onClick={() => input.current?.click()} icon={<Camera aria-hidden="true" size={18} />}>{t('field.photo.take', 'Take or choose a photo')}</Button>}
       </Card>
       <Button type="submit" block loading={busy} disabled={!ready}>{t('field.new.send', 'Send to the Control Room')}</Button>

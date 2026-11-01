@@ -177,6 +177,12 @@ def init_db() -> None:
                     assessed_at TIMESTAMPTZ,
                     UNIQUE (incident_id, sha256)
                 )""",
+                """CREATE TABLE IF NOT EXISTS resq_photo_flags (
+                    image_id BIGINT NOT NULL REFERENCES resq_incident_images(id) ON DELETE CASCADE,
+                    user_id INTEGER NOT NULL REFERENCES resq_users(id) ON DELETE CASCADE,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    PRIMARY KEY (image_id, user_id)
+                )""",
                 """CREATE TABLE IF NOT EXISTS resq_field_reports (
                     idempotency_key VARCHAR(120) PRIMARY KEY,
                     task_id TEXT NOT NULL,

@@ -1,8 +1,12 @@
 import { Camera, Check, LocateFixed, MapPin, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
+import { api } from '../../app/http';
 import { ApiError, OfflineError } from '../../app/http';
+import { usePhotoHints } from '../../lib/usePhotoHints';
+import { PhotoHint } from '../../ui/PhotoHint';
 import { flushOutbox, retryable, submitReport, type Progress } from '../../lib/outbox';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
@@ -51,11 +55,14 @@ export function ReportPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [manual, setManual] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const photoHints = usePhotoHints(photos);
   const previews = useMemo(() => photos.map(photo => URL.createObjectURL(photo)), [photos]);
   useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
 
   const place = fix ?? parseCoordinates(coords);
   const state = place ? stateAt(place.lat, place.lon) : '';                 // the server decides the same way; a remembered or chosen state is never used
+  const nearby = useQuery({ queryKey: ['nearby-reports', place?.lat.toFixed(2), place?.lon.toFixed(2)], enabled: Boolean(place && state), retry: false, staleTime: 60_000,
+    queryFn: () => api<{ count: number; latest_minutes_ago: number | null; nearest_km: number | null }>(`/api/citizen/reports/nearby?lat=${place!.lat}&lon=${place!.lon}`) });
   const box = state ? STATE_BOUNDS[state] : null;
   const coordsError = coords.trim() && !fix && !parseCoordinates(coords) ? t('citizen.report.coords_bad', 'Write coordinates like 20.31, 85.82, or use your location.') : null;
   const choice = SEEN.find(item => item.id === seen);
@@ -127,6 +134,8 @@ export function ReportPage() {
               <button type="button" onClick={() => setPhotos(current => current.filter((_, i) => i !== index))} aria-label={t('citizen.v2.remove_photo', 'Remove this photo')} className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink shadow"><X aria-hidden="true" size={18} /></button>
             </li>))}</ul>
         )}
+        {photoHints.map((found, index) => found.length ? <div key={index}><p className="text-sm font-semibold">{t('citizen.v2.photo_alt', { n: index + 1, defaultValue: 'Photo {{n}}' })}</p><PhotoHint hints={found} /></div> : null)}
+        {photos.length === 0 && <p className="text-sm text-ink-muted">{t('citizen.v2.capture_tip', 'Tip: take one wide photo that includes the horizon, then one closer with something recognisable in it, like a road or a building. Stay safe and do not go closer to the fire.')}</p>}
         {photos.length < MAX_PHOTOS && (
           <button type="button" onClick={() => fileInput.current?.click()} className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-control bg-surface p-5 text-lg font-semibold text-ink hover:bg-surface-2">
             <Camera aria-hidden="true" size={28} />{photos.length ? t('citizen.v2.add_more', 'Add another photo') : t('citizen.v2.open_camera', 'Open the camera')}
@@ -154,6 +163,8 @@ export function ReportPage() {
         </div>
         {when === 'earlier' && <TextField label={t('citizen.report.when', 'When did you see it?')} type="datetime-local" max={new Date().toISOString().slice(0, 16)} value={earlier} onChange={event => setEarlier(event.target.value)} />}
       </section>
+
+      {nearby.data && nearby.data.count > 0 && <Notice kind="info">{t('citizen.v2.nearby', { count: nearby.data.count, minutes: nearby.data.latest_minutes_ago, km: nearby.data.nearest_km, defaultValue: 'Someone nearby has already reported this ({{count}} report(s), the latest {{minutes}} min ago, about {{km}} km away). Send yours too: more reports help officials confirm it faster.' })}</Notice>}
 
       <section aria-labelledby="rp-place" className="space-y-3">
         <h2 id="rp-place" className="text-lg">{t('citizen.v2.place_title', 'Where is it?')}</h2>

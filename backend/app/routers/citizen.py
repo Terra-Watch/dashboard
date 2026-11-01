@@ -4,8 +4,9 @@ Citizen responses intentionally expose only the citizen's own report state and
 safe evidence status; operational notes, reviewer identity, and staff audit
 metadata remain staff-only.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
+import math
 import json
 import re
 from io import BytesIO
@@ -90,13 +91,37 @@ def list_reports(user: dict = Depends(citizen_user)) -> dict:
     return {'items': [{**_safe_report(dict(row)), 'photo_count': row['photo_count'], 'first_photo_id': row['first_photo_id']} for row in rows]}
 
 
+@router.get('/reports/nearby')
+def nearby_reports(lat: float, lon: float, km: float = 2.0, hours: float = 3.0, user: dict = Depends(citizen_user)) -> dict:
+    """"Has someone nearby already reported this?" Only a count, how recent, and the rounded distance of the closest; no ids, text or photos of anyone else's report."""
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise HTTPException(status_code=422, detail='Position is not valid')
+    km, hours = min(max(km, 0.5), 10.0), min(max(hours, 0.5), 12.0)
+    dlat = km / 111.0; dlon = km / (111.0 * max(0.2, math.cos(math.radians(lat))))
+    with engine.connect() as db:
+        rows = db.execute(text("""SELECT latitude,longitude,created_at FROM resq_incidents
+            WHERE reporter_id<>:me AND status IN ('reported','verified','responding') AND created_at > now() - make_interval(secs => :secs)
+              AND latitude BETWEEN :la0 AND :la1 AND longitude BETWEEN :lo0 AND :lo1"""),
+            {'me': user['id'], 'secs': int(hours * 3600), 'la0': lat - dlat, 'la1': lat + dlat, 'lo0': lon - dlon, 'lo1': lon + dlon}).mappings().all()
+    def distance(row) -> float:
+        p = math.pi / 180
+        a = math.sin((row['latitude'] - lat) * p / 2) ** 2 + math.cos(lat * p) * math.cos(row['latitude'] * p) * math.sin((row['longitude'] - lon) * p / 2) ** 2
+        return 12742 * math.asin(math.sqrt(a))
+    near = [(distance(row), row['created_at']) for row in rows]
+    near = [item for item in near if item[0] <= km]
+    if not near:
+        return {'count': 0, 'latest_minutes_ago': None, 'nearest_km': None}
+    newest = max(created for _, created in near)
+    return {'count': len(near), 'latest_minutes_ago': max(0, int((datetime.now(timezone.utc) - newest).total_seconds() // 60)), 'nearest_km': round(min(d for d, _ in near))}
+
+
 @router.get('/reports/{report_id}')
 def get_report(report_id: int, user: dict = Depends(citizen_user)) -> dict:
     with engine.connect() as db:
         row = db.execute(text('''SELECT id,reporter_id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
             FROM resq_incidents WHERE id=:id AND reporter_id=:reporter_id'''), {'id': report_id, 'reporter_id': user['id']}).mappings().first()
-        images = db.execute(text('''SELECT id,original_filename,size_bytes,assessment_status,created_at
-            FROM resq_incident_images WHERE incident_id=:id ORDER BY created_at DESC'''), {'id': report_id}).mappings().all()
+        images = db.execute(text('''SELECT id,original_filename,size_bytes,assessment_status,created_at, (public_state='held') AS waiting_for_check
+            FROM resq_incident_images WHERE incident_id=:id ORDER BY created_at DESC'''), {'id': report_id}).mappings().all()   # the reason for a hold is never returned
     if not row:
         raise HTTPException(status_code=404, detail='Report not found')
     report = _safe_report(dict(row))
@@ -239,3 +264,25 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
         raise HTTPException(status_code=503, detail='Evidence could not be stored. The report remains persisted.') from exc
     await public_photo.publish_copy(report_id, int(row['id']), data, assessment)
     return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}
+
+
+FLAGS_TO_HOLD = 3
+
+
+@router.post('/public-photos/{incident_id}/{image_id}/flag', dependencies=[Depends(require_csrf)])
+def flag_public_photo(incident_id: int, image_id: int, user: dict = Depends(citizen_user)) -> dict:
+    """"Report this photo": a signed-in citizen says a public photo looks wrong. Three different accounts pull it from the public view and put it in the staff queue."""
+    with engine.begin() as db:
+        row = db.execute(text("""SELECT g.public_state,i.reporter_id FROM resq_incident_images g JOIN resq_incidents i ON i.id=g.incident_id
+            WHERE g.id=:g AND g.incident_id=:i FOR UPDATE OF g"""), {'g': image_id, 'i': incident_id}).mappings().first()
+        if not row or row['public_state'] != 'visible':
+            raise HTTPException(status_code=404, detail='Photo not found')
+        if row['reporter_id'] == user['id']:
+            raise HTTPException(status_code=409, detail='This is your own photo')
+        db.execute(text('INSERT INTO resq_photo_flags (image_id,user_id) VALUES (:g,:u) ON CONFLICT DO NOTHING'), {'g': image_id, 'u': user['id']})
+        count = db.execute(text('SELECT count(*) FROM resq_photo_flags WHERE image_id=:g'), {'g': image_id}).scalar()
+        held = count >= FLAGS_TO_HOLD
+        if held:
+            db.execute(text("UPDATE resq_incident_images SET public_state='held', public_hold_reason=:r WHERE id=:g"), {'g': image_id, 'r': f'citizens reported this photo ({count})'})
+        audit_log.write_audit_log(action='public_photo_flagged', entity_type='incident_image', entity_id=str(image_id), user_id=int(user['id']), metadata={'incident_id': incident_id, 'flags': int(count), 'held': held}, connection=db)
+    return {'thanks': True}

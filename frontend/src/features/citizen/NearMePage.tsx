@@ -27,6 +27,14 @@ type PublicIncidents = { enabled: boolean; items: Array<{ cell: string; count: n
 const REGION_KEY = 'tw_region';
 const rememberedRegion = () => { try { return localStorage.getItem(REGION_KEY) ?? ''; } catch { return ''; } };
 
+function FlagPhoto({ incidentId, src }: { incidentId: number; src: string }) {
+  const { t } = useTranslation();
+  const [done, setDone] = useState(false);
+  const imageId = src.split('/').pop();
+  if (done) return <span className="text-sm text-ink-muted">{t('citizen.near.flag_thanks', 'Thank you. Officials will look at it.')}</span>;
+  return <button type="button" onClick={() => void api(`/api/citizen/public-photos/${incidentId}/${imageId}/flag`, { method: 'POST' }).then(() => setDone(true)).catch(() => setDone(true))} className="min-h-11 text-sm font-semibold underline">{t('citizen.near.flag', 'Report this photo')}</button>;
+}
+
 function ReportCard({ item }: { item: PublicReport }) {
   const { t } = useTranslation();
   return (
@@ -34,7 +42,7 @@ function ReportCard({ item }: { item: PublicReport }) {
                 <p className="text-sm font-bold uppercase tracking-wide">{item.label === 'confirmed' ? t('citizen.near.confirmed', 'Confirmed by officials') : t('citizen.near.unverified', 'Unverified')}</p>
                 <p className="mt-1">{item.label === 'confirmed' ? t('citizen.near.confirmed_text', 'Fire reported and confirmed by officials.') : t('citizen.near.unverified_text', 'Reported by a citizen. Not checked by officials.')}</p>
                 {item.note && <p className="mt-1 italic">“{item.note}”</p>}
-                {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <img key={src} src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" />)}</div>}
+                {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <figure key={src} className="max-w-full"><img src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" /><figcaption><FlagPhoto incidentId={item.id} src={src} /></figcaption></figure>)}</div>}
                 <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.reported_at)}{item.distance_km !== null ? ` · ${t('citizen.near.km_away', { count: item.distance_km, defaultValue: 'about {{count}} km away' })}` : ''}{` · ${t('citizen.near.area_only', 'area only, not the exact place')}`}</p>
               </div>
   );

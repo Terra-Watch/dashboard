@@ -121,3 +121,36 @@ def test_a_citizen_can_see_their_own_photo_and_the_list_counts_it(monkeypatch):
     assert shown.status_code == 200 and shown.headers["content-type"] == "image/jpeg" and len(shown.content) > 100
     mine = [i for i in client.get("/api/citizen/reports", headers=headers).json()["items"] if i["id"] == rid][0]
     assert mine["photo_count"] == 1 and mine["first_photo_id"] == image_id
+
+
+def test_nearby_hint_counts_other_peoples_reports_only():
+    first, _, rid, _ = report_with_photo()                    # a report near 20.3, 85.8
+    other, headers, _ = citizen()
+    found = other.get("/api/citizen/reports/nearby", params={"lat": 20.31, "lon": 85.81}, headers=headers).json()
+    assert found["count"] >= 1 and found["latest_minutes_ago"] <= 2 and found["nearest_km"] <= 3
+    assert set(found) == {"count", "latest_minutes_ago", "nearest_km"}                        # nothing identifying
+    far = other.get("/api/citizen/reports/nearby", params={"lat": 12.0, "lon": 77.0}, headers=headers).json()
+    assert far["count"] == 0
+
+
+def test_three_different_citizens_reporting_a_photo_takes_it_down_and_holds_it():
+    owner, _, rid, image_id = report_with_photo()
+    url = f"/api/citizen/public-photos/{rid}/{image_id}/flag"
+    own = owner.post(url, headers=_headers_of(owner, rid))
+    watchers = [citizen() for _ in range(3)]
+    for index, (client, headers, _) in enumerate(watchers):
+        assert client.post(url, headers=headers).status_code == 200
+        shown = [i for i in client.get("/api/public/reports").json()["items"] if i["id"] == rid]
+        assert bool(shown) == (index < 2)                                                      # gone after the third
+    state, reason = engine.connect().execute(text("SELECT public_state,public_hold_reason FROM resq_incident_images WHERE id=:i"), {"i": image_id}).one()
+    assert state == "held" and "citizens reported" in reason
+
+
+def test_a_citizen_sees_that_a_photo_is_waiting_but_not_why():
+    client, headers, rid, image_id = report_with_photo(note="Call me on 98765 43210")
+    evidence = client.get(f"/api/citizen/reports/{rid}", headers=headers).json()["report"]["evidence"][0]
+    assert evidence["waiting_for_check"] is True and "hold" not in str(evidence).lower() and "phone" not in str(evidence).lower()
+
+
+def _headers_of(client, rid):
+    return {"x-resq-csrf": client.cookies.get("resq_csrf") or ""}
