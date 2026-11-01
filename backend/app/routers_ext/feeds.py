@@ -3,14 +3,17 @@ import math
 import os
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+import hmac
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from ..core.permissions import user_scopes
 from ..core.security import current_redesign_user, require_csrf, require_roles
 from ..database.session import engine
-from ..services import audit_log
+from .. import risk_settings
+from ..services import audit_log, hotspot_alerts
 from ..services.feeds import SATELLITE_LABEL, FeedError, freshness
 from ..services.feeds import firms, weather
 
@@ -19,7 +22,7 @@ STAFF_ROLES = ('control_room_operator', 'incident_commander', 'officer')
 MAX_ROWS = 5000
 ACTIVE = ('assigned', 'accepted', 'in_progress')
 
-_COLS = 'id,satellite,acq_datetime,latitude,longitude,frp,confidence,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes'
+_COLS = 'id,satellite,acq_datetime,latitude,longitude,frp,confidence,(SELECT c.state FROM cells c WHERE c.id = round(latitude*10)::bigint*1000 + round(longitude*10)::bigint) AS forest_state,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes'
 
 
 def _items(rows) -> list[dict]:
@@ -110,6 +113,23 @@ def wind_grid(min_lat: float = Query(..., ge=-90, le=90), min_lon: float = Query
     except FeedError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from None
     return {**grid, 'valid_time': grid['valid_time'].isoformat(), 'freshness': freshness(grid['source'], grid['valid_time'])}
+
+
+@router.post('/feeds/hotspots/csv')
+async def ingest_hotspots(request: Request, satellite: str = Query(..., pattern='^VIIRS_(SNPP|NOAA20)_(NRT|SP)$'), x_ingest_token: str | None = Header(None)) -> dict:
+    """The scheduled job posts a FIRMS CSV here; the server stores the new detections and announces new clusters. Authenticated by the shared secret, not by a user."""
+    expected = risk_settings.ingest_token()
+    if not expected:
+        raise HTTPException(status_code=404, detail='Not found')
+    if not x_ingest_token or not hmac.compare_digest(x_ingest_token.encode(), expected.encode()):
+        raise HTTPException(status_code=403, detail='Not allowed')
+    body = (await request.body()).decode('utf-8', errors='replace')
+    try:
+        rows = firms.parse(body, satellite)
+    except FeedError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    inserted = firms.upsert(rows)
+    return {'received': len(rows), 'inserted': inserted, **hotspot_alerts.alert_clusters(engine)}
 
 
 class RefreshRequest(BaseModel):

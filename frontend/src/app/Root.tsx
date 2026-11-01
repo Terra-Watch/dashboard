@@ -33,6 +33,7 @@ const LogReportPage = lazy(() => import('../features/ops/LogReportPage').then(m 
 const PlanListPage = lazy(() => import('../features/operations').then(m => ({ default: m.PlanListPage })));
 const PlanPage = lazy(() => import('../features/operations').then(m => ({ default: m.PlanPage })));
 const AdminPage = lazy(() => import('../features/ops/AdminPage').then(m => ({ default: m.AdminPage })));
+const SatellitePage = lazy(() => import('../features/ops/SatellitePage').then(m => ({ default: m.SatellitePage })));
 const OpsMapPage = lazy(() => import('../features/ops/MapPage').then(m => ({ default: m.OpsMapPage })));
 const HandoverPage = lazy(() => import('../features/ops/HandoverPage').then(m => ({ default: m.HandoverPage })));
 const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({ default: m.OpsFieldPage })));
@@ -96,6 +97,7 @@ export function Root() {
           <Route path="incidents/new" element={<LogReportPage />} />
           <Route path="incidents/:id" element={<OpsIncidentPage />} />
           <Route path="map" element={<OpsMapPage />} />
+          <Route path="satellite" element={<SatellitePage />} />
           <Route path="me" element={<OpsMePage />} />
           <Route path="field" element={<OpsFieldPage />} />
           <Route path="notices" element={<NoticesPage />} />

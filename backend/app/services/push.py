@@ -82,6 +82,7 @@ PERSONAL = {
     'assignment_created': ('You have a new task', '/field/tasks'),
     'assignment_reassigned': ('A task was changed', '/field/tasks'),
     'assignment_completed': ('A task was completed', '/ops/incidents/{id}'),
+    'satellite_cluster': ('Satellite heat detected', '/ops/satellite'),
     'report_question': ('Officials have a question about your report', '/citizen/reports/{id}'),
 }
 

@@ -109,7 +109,7 @@ def test_hotspots_role_matrix_scope_and_bbox():
     ids = {i["id"] for i in body["items"]}
     assert {inside, nowhere, far} <= ids and other_state not in ids
     assert body["label"] == "Satellite signal, not confirmed by a person"
-    assert set(body["items"][0]) == {"id", "satellite", "acq_datetime", "latitude", "longitude", "frp", "confidence", "age_minutes"}
+    assert set(body["items"][0]) == {"id", "satellite", "acq_datetime", "latitude", "longitude", "frp", "confidence", "forest_state", "age_minutes"}
     boxed = op.get("/api/hotspots", headers=oh, params={"min_lat": 20, "min_lon": 85, "max_lat": 21, "max_lon": 86}).json()
     assert {i["id"] for i in boxed["items"]} == {inside, nowhere}
     assert op.get("/api/hotspots", headers=oh, params={"min_lat": 20}).status_code == 422
