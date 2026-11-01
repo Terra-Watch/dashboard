@@ -16,6 +16,14 @@ test.describe('Control Room map', () => {
     await page.route('**/api/notices**', route => route.fulfill(json({ items: [] })));
   });
 
+  test('the satellite chip says what is true: layer off in the Field view, not "not connected"', async ({ page }) => {
+    await page.goto('/ops/map');
+    await expect(page.getByText(/Satellite · 10 min/)).toBeVisible();
+    await page.getByRole('button', { name: 'Field', exact: true }).click();
+    await expect(page.getByText('Satellite · layer off')).toBeVisible();
+    await expect(page.getByText(/not connected/)).toHaveCount(0);
+  });
+
   test('shows only what belongs: closed incidents and old ones stay off, the window widens on request', async ({ page }) => {
     await page.goto('/ops/map');
     const map = page.getByTestId('map');

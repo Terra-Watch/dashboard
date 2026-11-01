@@ -52,11 +52,15 @@ function RiskRunChip({ run, status, error }: { run?: RiskRun; status?: RiskStatu
   return <p role="status" className={`rounded-rq border px-3 py-2 text-sm sm:col-span-2 xl:col-span-4 ${latest.stale && !replay ? 'border-warn' : 'border-line'}`}>{bad && latest.stale && !replay ? '⚠ ' : ''}{text}{notes.length > 0 && <span className="block text-ink-muted">{notes.join(' ')}</span>}</p>;
 }
 
-function Chip({ label, freshness }: { label: string; freshness?: Freshness }) {
+function Chip({ label, freshness, status = 'ok' }: { label: string; freshness?: Freshness; status?: 'ok' | 'off' | 'loading' | 'error' }) {
   const { t } = useTranslation();
-  const age = freshness ? Math.max(0, Math.round(freshness.age_seconds / 60)) : null;
-  const stale = freshness?.stale === true;
-  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-sm ${stale ? 'border-warn bg-warn-tint font-semibold' : 'border-line text-ink-muted'}`}>{label}{age !== null ? ` · ${age < 60 ? `${age} min` : `${Math.round(age / 60)} h`}` : ` · ${t('map.not_connected', 'not connected')}`}{stale ? ` · ${t('map.stale', 'stale')}` : ''}</span>;
+  const hasAge = status === 'ok' && freshness != null && typeof freshness.age_seconds === 'number';
+  const age = hasAge ? Math.max(0, Math.round(freshness!.age_seconds / 60)) : null;
+  const stale = status === 'ok' && freshness?.stale === true;
+  // say what is true: a layer that is switched off is not "not connected", and a feed with no rows yet is not "0 min" old
+  const state = status === 'off' ? t('map.layer_off', 'layer off') : status === 'loading' ? t('map.chip_loading', 'loading') : status === 'error' ? t('map.not_available', 'not available')
+    : age !== null ? (age < 60 ? `${age} min` : `${Math.round(age / 60)} h`) : t('map.no_data_yet', 'no data yet');
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-sm ${stale ? 'border-warn bg-warn-tint font-semibold' : 'border-line text-ink-muted'}`}>{label} · {state}{stale ? ` · ${t('map.stale', 'stale')}` : ''}</span>;
 }
 
 export function OpsMapPage() {
@@ -194,7 +198,7 @@ export function OpsMapPage() {
           </label>
         )}
         {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
-        <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Link to="/ops/satellite" className="text-sm font-semibold underline">{t('map.satellite_list', 'All satellite detections')}</Link><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
+        <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} status={!layers.has('signals') ? 'off' : signals.isError ? 'error' : signals.isLoading ? 'loading' : 'ok'} /><Link to="/ops/satellite" className="text-sm font-semibold underline">{t('map.satellite_list', 'All satellite detections')}</Link><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} status={wind.isError ? 'error' : wind.isLoading ? 'loading' : 'ok'} /></div>
       </div>
       {showWind && <WindLayer map={mapInstance} grid={windGrid.data} onSatellite={basemapType === 'satellite'} />}
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
