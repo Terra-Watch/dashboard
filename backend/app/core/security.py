@@ -215,8 +215,7 @@ def client_ip(request: Request) -> str:
     """The caller's address. The frontend site forwards visitors' requests and sends their address in x-resq-client-ip together with the shared
     RESQ_PROXY_SECRET; that header is believed only when the secret matches. Otherwise, on Vercel request.client is the proxy, so use the first x-forwarded-for entry the platform sets."""
     secret = os.getenv('RESQ_PROXY_SECRET', '')
-    if secret:
-        logging.getLogger('uvicorn.error').info('client_ip: proxy header present=%s secret_ok=%s', 'x-resq-client-ip' in request.headers, secrets.compare_digest(request.headers.get('x-resq-proxy-secret', '').encode(), secret.encode()))
+    logging.getLogger('uvicorn.error').warning('client_ip: secret_configured=%s header_present=%s', bool(secret), 'x-resq-client-ip' in request.headers)
     if secret and secrets.compare_digest(request.headers.get('x-resq-proxy-secret', '').encode(), secret.encode()):
         try:
             return str(ipaddress.ip_address(request.headers.get('x-resq-client-ip', '').strip()))
