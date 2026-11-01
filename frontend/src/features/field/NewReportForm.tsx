@@ -2,7 +2,7 @@ import { Camera, MapPin, X } from 'lucide-react';
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, OfflineError } from '../../app/http';
-import { submitReport } from '../../lib/outbox';
+import { retryable, submitReport } from '../../lib/outbox';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
@@ -24,6 +24,7 @@ export function NewReportForm() {
   const [sent, setSent] = useState<number | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [later, setLater] = useState(0);
+  const [photoSummary, setPhotoSummary] = useState<{ total: number; left: number; rejected: number } | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => photos.map(photo => URL.createObjectURL(photo)), [photos]);
   const ready = notes.trim().length >= 3 && position !== null;
@@ -34,9 +35,9 @@ export function NewReportForm() {
     setBusy(true); setMessage(null);
     try {
       const made = await submitReport('ranger', { client_key: key, notes: notes.trim(), size, latitude: position.lat, longitude: position.lon, observed_at: new Date().toISOString() }, photos);
-      setLater(made.photosLeft); setSent(made.id);
+      setLater(made.photosLeft); setPhotoSummary({ total: made.photosTotal, left: made.photosLeft, rejected: made.photosRejected }); setSent(made.id);
     } catch (reason) {
-      if (reason instanceof OfflineError && reason.queued) { setMessage({ kind: 'info', text: t('field.new.queued', 'Saved on this phone. It will be sent when you have signal. Your photos are saved with it.') }); setNotes(''); setKey(crypto.randomUUID()); }
+      if (retryable(reason)) { setMessage({ kind: 'info', text: t('field.new.queued', 'NOT received yet. Saved on this phone with your photos; it will send when you have signal.') + (reason instanceof ApiError ? ` ${reason.detail}` : '') }); }
       else setMessage({ kind: 'danger', text: reason instanceof ApiError ? reason.detail : t('field.new.failed', 'Not sent. Your text is still here; try again.') });
     } finally { setBusy(false); }
   }
@@ -46,7 +47,7 @@ export function NewReportForm() {
   if (sent !== null) {
     return (
       <div className="space-y-4">
-        <Notice kind="success">{t('field.new.sent', 'Sent to the Control Room. They will check it.')}</Notice>
+        <Notice kind="success" title={t('field.new.sent_title', { id: sent, defaultValue: 'Received by the Control Room. Reference #{{id}}' })}>{t('field.new.sent', 'They will check it.')} {photoSummary?.total ? t('field.new.photos_up', { ok: photoSummary.total - photoSummary.left - photoSummary.rejected, total: photoSummary.total, defaultValue: '{{ok}} of {{total}} photo(s) uploaded.' }) : t('field.new.no_photo', 'No photo was sent.')}{photoSummary?.rejected ? ` ${t('field.new.photos_refused', { count: photoSummary.rejected, defaultValue: '{{count}} photo(s) were not accepted.' })}` : ''}</Notice>
         {later > 0 && <Notice kind="info">{t('field.new.photos_later', { count: later, defaultValue: '{{count}} photo(s) are saved on this phone and will send when you have signal.' })}</Notice>}
         <Card title={t('field.photo.title', 'Photo')}><PhotoButton uploadPath={`/api/ranger/reports/${sent}/evidence`} onDone={() => undefined} /></Card>
         <Button variant="secondary" block onClick={again}>{t('field.new.another', 'Report something else')}</Button>

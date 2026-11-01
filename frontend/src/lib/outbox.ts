@@ -5,7 +5,8 @@ import { shrinkPhoto } from './photo';
 /** A report and its photos, kept on the phone until both have reached the server. The same client key makes every retry safe: the server returns the original report. */
 type Kind = 'citizen' | 'ranger';
 type Item = { key: string; owner: string | null; kind: Kind; report: Record<string, unknown>; photos: Blob[]; reportId?: number; created: number };
-export type Outcome = { id: number; photosLeft: number; photosRejected: number };
+export type Outcome = { id: number; photosTotal: number; photosLeft: number; photosRejected: number };
+export type Progress = { step: 'saved' | 'sending' | 'photo'; photo?: number; of?: number };
 
 const KINDS: Record<Kind, { reportPath: string; evidencePath: (id: number) => string; idOf: (response: never) => number }> = {
   citizen: { reportPath: '/api/citizen/reports', evidencePath: id => `/api/citizen/reports/${id}/evidence`, idOf: (r: { report: { id: number } }) => r.report.id },
@@ -47,26 +48,29 @@ async function uploadWithRetry(path: string, photo: Blob): Promise<void> {
 }
 
 /** Send what is left of one item. Throws only if the report itself could not be created. */
-async function send(item: Item): Promise<Outcome> {
+async function send(item: Item, onProgress?: (p: Progress) => void): Promise<Outcome> {
   const kind = KINDS[item.kind];
+  onProgress?.({ step: 'sending' });
   try {
     if (item.reportId === undefined) { item.reportId = kind.idOf(await api(kind.reportPath, { method: 'POST', json: item.report }) as never); await put(item); }
   } catch (reason) { if (!retryable(reason)) await remove(item.key); throw reason; }
   const left: Blob[] = []; let rejected = 0;
-  for (const photo of item.photos) {
+  for (const [index, photo] of item.photos.entries()) {
+    onProgress?.({ step: 'photo', photo: index + 1, of: item.photos.length });
     try { await uploadWithRetry(kind.evidencePath(item.reportId), photo); }
     catch (reason) { if (retryable(reason)) left.push(photo); else rejected += 1; }
   }
   if (left.length) await put({ ...item, photos: left }); else await remove(item.key);
-  return { id: item.reportId, photosLeft: left.length, photosRejected: rejected };
+  return { id: item.reportId, photosTotal: item.photos.length, photosLeft: left.length, photosRejected: rejected };
 }
 
 /** Save the report and its (shrunk) photos on the phone first, then try to send. If there is no signal it stays saved and goes later; the caller sees the OfflineError. */
-export async function submitReport(kind: Kind, report: Record<string, unknown> & { client_key: string }, files: File[]): Promise<Outcome> {
+export async function submitReport(kind: Kind, report: Record<string, unknown> & { client_key: string }, files: File[], onProgress?: (p: Progress) => void): Promise<Outcome> {
   const photos = await Promise.all(files.map(shrinkPhoto));
   const item: Item = { key: report.client_key, owner: authenticatedActorId(), kind, report, photos, created: Date.now() };
   try { await put(item); } catch { /* storage refused (private window): send straight away without a saved copy */ }
-  return send(item);
+  onProgress?.({ step: 'saved' });
+  return send(item, onProgress);
 }
 
 /** Retry everything saved by the signed-in account. Called when the app opens and when the connection returns. */

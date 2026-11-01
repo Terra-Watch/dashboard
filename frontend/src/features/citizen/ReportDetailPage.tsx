@@ -25,7 +25,7 @@ export function ReportDetailPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [problem, setProblem] = useState('');
-  const state = (location.state ?? {}) as { sent?: boolean; photosFailed?: number };
+  const state = (location.state ?? {}) as { sent?: boolean; photosTotal?: number; photosLeft?: number; photosRejected?: number };
   const report = useQuery({ queryKey: ['my-report', id], queryFn: () => api<{ report: Report }>(`/api/citizen/reports/${id}`) });
   const timeline = useQuery({ queryKey: ['my-report-timeline', id], queryFn: () => api<{ items: Event[] }>(`/api/citizen/reports/${id}/timeline`) });
 
@@ -45,7 +45,16 @@ export function ReportDetailPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle title={t('citizen.reports.number', { id: item.id, defaultValue: 'Report {{id}}' })} subtitle={`${stateName(item.state)} · ${formatWhen(item.created_at)}`} actions={<RungBadge rung={rung} />} />
-      {state.sent && <Notice kind="success">{t('citizen.detail.sent', 'Your report was sent. Staff will check it. You will see each step here.')}{state.photosFailed ? ` ${t('citizen.detail.some_photos', { count: state.photosFailed, defaultValue: '{{count}} photo(s) could not be added; add them below.' })}` : ''}</Notice>}
+      {state.sent && (
+        <Notice kind="success" title={t('citizen.detail.received_title', { id: item.id, defaultValue: 'Report received. Reference #{{id}}' })}>
+          {t('citizen.detail.sent', 'Staff will check it. You will see each step here.')}
+          {' '}
+          {!state.photosTotal ? t('citizen.detail.no_photos_sent', 'You sent no photo.')
+            : t('citizen.detail.photos_up', { ok: item.evidence.length, total: state.photosTotal, defaultValue: '{{ok}} of {{total}} photo(s) uploaded.' })}
+          {state.photosLeft ? ` ${t('citizen.detail.photos_waiting', { count: state.photosLeft, defaultValue: '{{count}} photo(s) are saved on your phone and will upload when you have signal.' })}` : ''}
+          {state.photosRejected ? ` ${t('citizen.detail.photos_refused', { count: state.photosRejected, defaultValue: '{{count}} photo(s) were not accepted (wrong type or too large). Add them again below.' })}` : ''}
+        </Notice>
+      )}
       {item.status === 'closed' && <Notice kind="info" title={t('citizen.detail.closed', 'This report is closed')}>{REASONS[item.close_reason ?? 'other']}</Notice>}
       {problem && <Notice kind="danger">{problem}</Notice>}
 

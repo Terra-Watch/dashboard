@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { ApiError, OfflineError } from '../../app/http';
-import { submitReport } from '../../lib/outbox';
+import { flushOutbox, retryable, submitReport, type Progress } from '../../lib/outbox';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
@@ -46,7 +46,9 @@ export function ReportPage() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<'offline' | 'server' | null>(null);
+  const [savedDetail, setSavedDetail] = useState('');
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [manual, setManual] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => photos.map(photo => URL.createObjectURL(photo)), [photos]);
@@ -81,19 +83,29 @@ export function ReportPage() {
     setBusy(true); setProblem('');
     const observedAt = when === 'now' ? new Date().toISOString() : new Date(earlier).toISOString();
     try {
-      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos);
-      navigate(`/citizen/reports/${sent.id}`, { replace: true, state: { sent: true, photosFailed: sent.photosLeft + sent.photosRejected } });
+      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos, setProgress);
+      navigate(`/citizen/reports/${sent.id}`, { replace: true, state: { sent: true, photosTotal: sent.photosTotal, photosLeft: sent.photosLeft, photosRejected: sent.photosRejected } });
     } catch (reason) {
-      if (reason instanceof OfflineError) { if (reason.queued) setSaved(true); else setProblem(t('citizen.report.offline', 'You are offline. Check your connection and try again.')); }
+      if (retryable(reason)) { setSaved(reason instanceof OfflineError ? 'offline' : 'server'); setSavedDetail(reason instanceof ApiError ? reason.detail : ''); }   // kept on the phone; it will be sent again
       else setProblem(reason instanceof ApiError ? reason.detail : t('citizen.report.failed', 'The report was not sent. Nothing was lost; try again.'));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setProgress(null); }
   }
+
+  async function tryAgain() { setBusy(true); try { await flushOutbox(); } finally { setBusy(false); } navigate('/citizen/reports'); }
 
   if (saved) return (
     <div className="mx-auto max-w-xl space-y-4">
-      <PageTitle title={t('citizen.report.saved_title', 'Saved on this phone')} />
-      <Notice kind="info">{t('citizen.report.saved', 'You are offline, so your report is saved here and will be sent when the connection returns. Your photos are saved with it.')}</Notice>
-      <Link to="/citizen/reports" className="inline-flex min-h-11 items-center font-semibold underline">{t('nav.my_reports')}</Link>
+      <PageTitle title={t('citizen.report.saved_title', 'Not sent yet, but saved')} />
+      <Notice kind="warning" title={t('citizen.report.not_sent', 'Staff have NOT received your report yet')}>
+        {saved === 'offline' ? t('citizen.report.saved', 'You have no signal, so your report and photos are saved on this phone. They will be sent automatically when the connection returns.')
+          : t('citizen.report.saved_server', 'We could not reach the service just now. Your report and photos are saved on this phone and we will keep trying.')}
+        {savedDetail ? ` ${savedDetail}` : ''}
+      </Notice>
+      <p className="text-ink-muted">{t('citizen.report.if_danger', 'If anyone is in danger, do not wait: call the emergency number now.')}</p>
+      <div className="flex flex-wrap gap-3">
+        <Button onClick={() => void tryAgain()} loading={busy}>{t('citizen.report.try_now', 'Try again now')}</Button>
+        <Link to="/citizen/reports" className="inline-flex min-h-11 items-center font-semibold underline">{t('nav.my_reports')}</Link>
+      </div>
     </div>
   );
 
@@ -164,6 +176,9 @@ export function ReportPage() {
       </section>
 
       <div className="sticky bottom-20 z-20 -mx-4 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur md:bottom-0 md:mx-0 md:rounded-xl md:border">
+        {progress && <p role="status" aria-live="polite" className="mb-2 text-center font-semibold">{progress.step === 'saved' ? t('citizen.progress.saved', 'Saved on this phone. Sending…')
+          : progress.step === 'sending' ? t('citizen.progress.sending', 'Sending your report…')
+          : t('citizen.progress.photo', { n: progress.photo, of: progress.of, defaultValue: 'Uploading photo {{n}} of {{of}}…' })}</p>}
         <Button type="submit" block loading={busy} disabled={!ready} className="min-h-14 text-lg">{t('citizen.report.send', 'Send report')}</Button>
         {!ready && missing.length > 0 && <p className="mt-2 text-sm text-ink-muted">{t('citizen.v2.still_need', { items: missing.join(', '), defaultValue: 'Still needed: {{items}}.' })}</p>}
       </div>
