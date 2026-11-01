@@ -3,6 +3,7 @@ import hashlib
 import math
 import os
 
+from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 
@@ -15,6 +16,11 @@ from ..services import communities
 from ..services import alert_service, audit_log
 from ..services import community_image_assessment as media
 from ..services.community_rules import STAFF_ROLES, badge_for, emergency_hint, held_reason, public_name
+
+class LocatePayload(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
 
 router = APIRouter(prefix='/api/community', tags=['community'])
 MODERATOR_ROLES = set(STAFF_ROLES)
@@ -237,10 +243,17 @@ def _room_name(room: str | None) -> str:
 
 
 @router.get('/mine')
-def my_community(user: dict = Depends(community_user)) -> dict:
+def my_community(user: dict = Depends(current_redesign_user)) -> dict:
     """The forest community this person belongs to (None until they report from inside one, or a coordinator assigns them)."""
     with engine.connect() as db:
         return {'community': communities.of_user(db, int(user['id']))}
+
+
+@router.post('/locate', dependencies=[Depends(require_csrf)])
+def locate(payload: LocatePayload, user: dict = Depends(current_redesign_user)) -> dict:
+    """The app sends the device position when it has one; the software, not a person, decides which community it falls in."""
+    with engine.begin() as db:
+        return {'community': communities.place(db, int(user['id']), payload.latitude, payload.longitude)}
 
 
 @router.get('/rooms')

@@ -23,3 +23,13 @@ def test_report_inside_a_community_is_tagged_and_the_reporter_joins_it():
     listed = ops.get("/api/incidents", headers=oh).json()
     assert next(i for i in listed if i["id"] == r.json()["report"]["id"])["community"] == "Bolampatti forest community"
     assert c.get("/api/community/mine", headers=h).json()["community"]["slug"] == "bolampatti"
+
+
+def test_device_position_places_the_person_by_software():
+    c, h, _ = actor("field_crew")
+    assert c.get("/api/community/mine", headers=h).json()["community"] is None
+    inside = c.post("/api/community/locate", headers=h, json={"latitude": 10.9642, "longitude": 76.7010}).json()["community"]
+    assert inside["slug"] == "bolampatti-west"
+    moved_out = c.post("/api/community/locate", headers=h, json={"latitude": 10.9, "longitude": 76.5}).json()["community"]
+    assert moved_out["slug"] == "bolampatti-west"          # outside every circle: stays where they were
+    assert c.post("/api/community/locate", headers=h, json={"latitude": 10.90158, "longitude": 76.90577}).json()["community"]["slug"] == "bolampatti"

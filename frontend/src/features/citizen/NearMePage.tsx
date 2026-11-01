@@ -1,3 +1,4 @@
+import { reportPosition } from '../../lib/community';
 import { useQuery } from '@tanstack/react-query';
 import { Phone, Plus, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -82,7 +83,7 @@ export function NearMePage() {
   const hasNearby = nearbyCount > 0;
   const box = region ? STATE_BOUNDS[region] : null;
   const bounds = me ? boundsOf([me]) : polygons.length || points.length ? boundsOf([...polygons.flatMap(p => p.ring.map(([lon, lat]) => ({ lat, lon }))), ...points]) : box ? [[box[0], box[1]], [box[2], box[3]]] as [[number, number], [number, number]] : null;
-  const locate = () => navigator.geolocation?.getCurrentPosition(position => setMe({ lat: position.coords.latitude, lon: position.coords.longitude }), () => undefined, { enableHighAccuracy: true, timeout: 15000 });
+  const locate = () => navigator.geolocation?.getCurrentPosition(position => { reportPosition(position.coords.latitude, position.coords.longitude); setMe({ lat: position.coords.latitude, lon: position.coords.longitude }); }, () => undefined, { enableHighAccuracy: true, timeout: 15000 });
 
   // A person opening this screen wants to know about their own surroundings: ask for the place straight away.
   useEffect(() => { locate(); }, []); // eslint-disable-line react-hooks/exhaustive-deps

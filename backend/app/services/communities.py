@@ -51,3 +51,11 @@ def join_if_none(db, user_id: int, community_id: int | None) -> None:
     """A person who reports from inside a community and has none yet becomes a member of it."""
     if community_id:
         db.execute(text('UPDATE resq_users SET community_id=:c WHERE id=:u AND community_id IS NULL'), {'c': community_id, 'u': user_id})
+
+
+def place(db, user_id: int, lat: float, lon: float) -> dict | None:
+    """Put a person in the community their device position is inside; outside every circle leaves them where they were."""
+    community_id = at_point(db, lat, lon)
+    if community_id:
+        db.execute(text('UPDATE resq_users SET community_id=:c WHERE id=:u AND community_id IS DISTINCT FROM :c'), {'c': community_id, 'u': user_id})
+    return of_user(db, user_id)

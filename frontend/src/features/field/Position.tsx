@@ -1,3 +1,4 @@
+import { reportPosition } from '../../lib/community';
 import { LocateFixed } from 'lucide-react';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +18,7 @@ export function PositionProvider({ children }: { children: ReactNode }) {
     if (!navigator.geolocation) { setProblem(t('field.no_gps', 'This device cannot share its location.')); return; }
     setBusy(true); setProblem('');
     navigator.geolocation.getCurrentPosition(
-      result => { setPosition({ lat: result.coords.latitude, lon: result.coords.longitude, accuracy: result.coords.accuracy, at: Date.now() }); setBusy(false); },
+      result => { reportPosition(result.coords.latitude, result.coords.longitude); setPosition({ lat: result.coords.latitude, lon: result.coords.longitude, accuracy: result.coords.accuracy, at: Date.now() }); setBusy(false); },
       () => { setBusy(false); setProblem(t('field.gps_failed', 'Could not get your position. Check location access.')); },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 },
     );
