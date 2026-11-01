@@ -1,4 +1,5 @@
 import re
+from ..core.regions import state_names
 from datetime import datetime, timezone
 
 import bcrypt
@@ -251,8 +252,8 @@ def create_invite(payload: InviteCreateRequest, admin: dict = Depends(require_ro
     if not re.match(EMAIL_PATTERN, email):
         raise HTTPException(status_code=422, detail='Enter a valid email address')
     scopes = sorted({s.strip().upper() for s in payload.scopes})
-    if any(not re.fullmatch(r'[A-Z]{2}', s) for s in scopes):
-        raise HTTPException(status_code=422, detail='Scopes are two-letter state codes')
+    if any(s not in state_names() for s in scopes):
+        raise HTTPException(status_code=422, detail='Scopes must be Indian state or union-territory codes')
     if payload.role != 'admin' and not scopes:
         raise HTTPException(status_code=422, detail='Choose at least one state for this person')
     raw = new_raw_token()

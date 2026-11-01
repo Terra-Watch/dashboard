@@ -1,6 +1,7 @@
 """Administrator tools: who has access, which states they cover, invitations, access requests. Administrators only."""
 import re
 
+from ..core.regions import state_names
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
@@ -63,8 +64,8 @@ def reactivate(user_id: int, admin: dict = Depends(require_roles())) -> dict:
 @router.put('/people/{user_id}/scopes', dependencies=[Depends(require_csrf)])
 def set_scopes(user_id: int, payload: ScopesRequest, admin: dict = Depends(require_roles())) -> dict:
     states = sorted({s.strip().upper() for s in payload.states})
-    if any(not re.fullmatch(r'[A-Z]{2}', s) for s in states):
-        raise HTTPException(status_code=422, detail='Scopes are two-letter state codes')
+    if any(s not in state_names() for s in states):
+        raise HTTPException(status_code=422, detail='Scopes must be Indian state or union-territory codes')
     with engine.begin() as db:
         target = db.execute(text('SELECT id,role FROM resq_users WHERE id=:i FOR UPDATE'), {'i': user_id}).mappings().first()
         if not target or target['role'] not in RESQ_ROLES:

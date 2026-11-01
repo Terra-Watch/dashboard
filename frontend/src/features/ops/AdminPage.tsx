@@ -23,6 +23,10 @@ const KEY = ['admin-people'] as const;
 function States({ value, onChange, label }: { value: string[]; onChange: (next: string[]) => void; label: string }) {
   return (
     <fieldset className="min-w-0"><legend className="text-sm font-semibold">{label}</legend>
+      <div className="mt-1 flex gap-3 text-sm">
+        <button type="button" onClick={() => onChange(STATES.map(s => s.code))} className="min-h-11 font-semibold underline">All states</button>
+        <button type="button" onClick={() => onChange([])} className="min-h-11 font-semibold underline">Clear</button>
+      </div>
       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">{STATES.map(s => <label key={s.code} className="inline-flex min-h-11 items-center gap-2"><input type="checkbox" className="size-5" checked={value.includes(s.code)} onChange={event => onChange(event.target.checked ? [...value, s.code] : value.filter(c => c !== s.code))} />{s.name}</label>)}</div>
     </fieldset>
   );
