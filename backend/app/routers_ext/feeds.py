@@ -98,6 +98,20 @@ def weather_context(lat: float = Query(..., ge=-90, le=90), lon: float = Query(.
     return out
 
 
+@router.get('/weather/wind-grid')
+def wind_grid(min_lat: float = Query(..., ge=-90, le=90), min_lon: float = Query(..., ge=-180, le=180),
+              max_lat: float = Query(..., ge=-90, le=90), max_lon: float = Query(..., ge=-180, le=180), n: int = Query(10, ge=2, le=weather.MAX_GRID),
+              user: dict = Depends(require_roles(*STAFF_ROLES, 'field_crew', 'range_officer'))) -> dict:
+    """Wind on a coarse grid for the animated wind layer. Same roles as the single-point wind; the box is capped so it stays one cheap request."""
+    if (max_lat - min_lat) > 40 or (max_lon - min_lon) > 40:
+        raise HTTPException(status_code=422, detail='The box is too large')
+    try:
+        grid = weather.fetch_wind_grid(min_lat, min_lon, max_lat, max_lon, n)
+    except FeedError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from None
+    return {**grid, 'valid_time': grid['valid_time'].isoformat(), 'freshness': freshness(grid['source'], grid['valid_time'])}
+
+
 class RefreshRequest(BaseModel):
     bbox: list[float] = Field(min_length=4, max_length=4)
     days: int = Field(1, ge=1, le=5)
