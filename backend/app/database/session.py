@@ -16,7 +16,7 @@ def _schema_fingerprint(has_postgis: bool) -> str:
     from pathlib import Path
     here = Path(__file__).resolve()
     digest = hashlib.sha256(b'postgis' if has_postgis else b'plain')
-    for path in [here, *sorted((here.parent.parent / 'schemas_ext').glob('*.py'))]:
+    for path in [here, here.parent.parent / 'services' / 'communities.py', *sorted((here.parent.parent / 'schemas_ext').glob('*.py'))]:
         digest.update(path.name.encode()); digest.update(path.read_bytes())
     return digest.hexdigest()
 

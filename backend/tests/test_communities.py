@@ -9,7 +9,9 @@ def test_point_inside_and_outside():
     init_db()
     with engine.connect() as db:
         assert communities.at_point(db, 10.90158, 76.90577) is not None   # the seeded Bolampatti community
-        assert communities.at_point(db, 10.9, 76.7) is None               # ~22 km west, outside the 10 km circle
+        assert communities.at_point(db, 10.9, 76.5) is None               # well outside every circle
+        ids = {communities.at_point(db, *p) for p in [(10.90158, 76.90577), (10.9642, 76.7010), (11.0338, 76.8188)]}
+        assert len(ids) == 3 and None not in ids                          # each centre falls in its own community
         assert communities.at_point(db, None, None) is None
 
 

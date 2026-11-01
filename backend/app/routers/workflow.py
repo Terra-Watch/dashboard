@@ -327,6 +327,8 @@ def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(requ
              'latitude': payload.latitude, 'longitude': payload.longitude, 'observed_at': payload.observed_at,
              'community_id': communities.at_point(db, payload.latitude, payload.longitude)}).mappings().first()
         created = row is not None
+        if created:
+            communities.join_if_none(db, int(user['id']), communities.at_point(db, payload.latitude, payload.longitude))   # a ranger who patrols inside a community belongs to it
         if not created:
             row = db.execute(text("SELECT id,reporter_id,source,size,notes,status,state,latitude,longitude,observed_at,created_at FROM resq_incidents WHERE client_key=:k"), {'k': payload.client_key}).mappings().first()
             if row is None or row['reporter_id'] != user['id']:

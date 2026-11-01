@@ -1,13 +1,17 @@
 """Forest communities: the people around one forest area. Reports, rangers and the community spaces are tied to one by place.
 
-There is one community for now. A report belongs to the nearest community whose circle contains its position, otherwise to none.
+A report belongs to the nearest community whose circle contains its position, otherwise to none.
 shortcut: a circle around a centre point, not the forest boundary itself; switch to the beat/range polygons (docs/FOREST_BOUNDARY_LAYERS_PLAN.md, P3) when more communities are added.
 """
 import math
 
 from sqlalchemy import text
 
-SEED = ('bolampatti', 'Bolampatti forest community', 'Bolampatti Block I Reserved Forest', 'Coimbatore South, Tamil Nadu', 'TN', 10.90158, 76.90577, 10.0)
+SEEDS = (  # centres are the forest blocks' middle points from the Survey of India forest layer, radius in km
+    ('bolampatti', 'Bolampatti forest community', 'Bolampatti Block I Reserved Forest', 'Coimbatore South, Tamil Nadu', 'TN', 10.90158, 76.90577, 10.0),
+    ('bolampatti-west', 'Bolampatti West forest community', 'Bolampatti Block II Reserved Forest', 'Coimbatore, Tamil Nadu', 'TN', 10.9642, 76.7010, 8.0),
+    ('bolampatti-north', 'Bolampatti North forest community', 'Bolampatti Block III Reserved Forest', 'Coimbatore North, Tamil Nadu', 'TN', 11.0338, 76.8188, 6.0),
+)
 
 
 def ensure(db) -> None:
@@ -17,8 +21,9 @@ def ensure(db) -> None:
         radius_km DOUBLE PRECISION NOT NULL CHECK (radius_km > 0), created_at TIMESTAMPTZ NOT NULL DEFAULT now())'''))
     db.execute(text('ALTER TABLE resq_users ADD COLUMN IF NOT EXISTS community_id INTEGER REFERENCES resq_communities(id) ON DELETE SET NULL'))
     db.execute(text('ALTER TABLE resq_incidents ADD COLUMN IF NOT EXISTS community_id INTEGER REFERENCES resq_communities(id) ON DELETE SET NULL'))
-    db.execute(text('INSERT INTO resq_communities (slug,name,forest_name,area,state,latitude,longitude,radius_km) VALUES (:a,:b,:c,:d,:e,:f,:g,:h) ON CONFLICT (slug) DO NOTHING'),
-               dict(zip('abcdefgh', SEED)))
+    for seed in SEEDS:
+        db.execute(text('INSERT INTO resq_communities (slug,name,forest_name,area,state,latitude,longitude,radius_km) VALUES (:a,:b,:c,:d,:e,:f,:g,:h) ON CONFLICT (slug) DO NOTHING'),
+                   dict(zip('abcdefgh', seed)))
 
 
 def _km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
