@@ -50,7 +50,7 @@ export function Legend({ kinds, showRisk = false }: { kinds: SymbolKind[]; showR
         {showRisk && (
           <li className="flex flex-col gap-1 border-t border-line pt-2">
             <span className="font-semibold">{t('map.risk_outlook', 'Ignition-risk ranking')}</span>
-            <span className="block text-ink-muted text-xs">{t('map.risk_outlook_hint', 'Model output, not observed fire. Relative likelihood based on archived validation data.')}</span>
+            <span className="block text-ink-muted text-xs">{t('map.risk_outlook_hint', 'Model output, not observed fire. Relative ranking of forest cells for the forecast date.')}</span>
             <ul className="mt-1 space-y-1">
               {RISK_BANDS.map(item => (
                 <li key={item.band} className="flex items-center gap-2">

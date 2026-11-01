@@ -1,0 +1,46 @@
+name: daily-forecast
+# Scores every forest cell for tomorrow once a day and loads the run into the dashboard database.
+# Needs these repository secrets: RISK_INGEST_URL (https://<backend>/api/risk/runs), RISK_INGEST_TOKEN (same value as the backend's RISK_INGEST_TOKEN), FIRMS_MAP_KEY, RISK_BUNDLE_PUBLIC_KEY.
+# State (model bundle, weather and fire stores, past runs) is kept in the release "forecast-state" so nothing depends on a personal computer.
+on:
+  schedule:
+    - cron: "40 11 * * *"      # 11:40 UTC, after the 06 UTC GFS run is out
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "Forecast issue day YYYY-MM-DD (default: today, UTC)"
+        required: false
+concurrency:
+  group: daily-forecast
+  cancel-in-progress: false
+permissions:
+  contents: write                 # to replace the state release asset
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: forecast/requirements.txt }
+      - run: sudo apt-get update && sudo apt-get install -y libeccodes-dev
+      - run: pip install -r forecast/requirements.txt
+      - name: Download state
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p forecast/state
+          gh release download forecast-state --pattern state.tar.gz --dir /tmp
+          tar -xzf /tmp/state.tar.gz -C forecast/state
+      - name: Run
+        env:
+          RISK_INGEST_URL: ${{ secrets.RISK_INGEST_URL }}
+          RISK_INGEST_TOKEN: ${{ secrets.RISK_INGEST_TOKEN }}
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          RISK_BUNDLE_PUBLIC_KEY: ${{ secrets.RISK_BUNDLE_PUBLIC_KEY }}
+        run: python forecast/live/run_daily.py ${{ github.event.inputs.day }}
+      - name: Save state          # also after a failed run, so fetched weather and fire rows are not lost
+        if: always()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          tar -czf /tmp/state.tar.gz -C forecast/state --exclude=gfs --exclude='runs/*/scores.parquet' .
+          gh release upload forecast-state /tmp/state.tar.gz --clobber

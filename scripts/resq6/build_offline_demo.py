@@ -18,7 +18,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app import barv3  # noqa: E402
+from app import risk_model, risk_settings  # noqa: E402
 from app.services import redesign_data as rd  # noqa: E402
 
 OUTPUT = ROOT / "frontend" / "public" / "demo" / "resq6-offline"
@@ -51,18 +51,23 @@ def json_bytes(value: object) -> bytes:
 def build_payloads() -> tuple[dict, dict[str, dict], dict[str, object], dict[str, str]]:
     setup_path = ROOT / "data" / "resq5" / "protocol_setup.json"
     setup = json.loads(setup_path.read_text())
-    forecast_archive, forecast_centers = barv3._paths(FORECAST_DATE.year) or (None, None)
-    if forecast_archive is None or forecast_centers is None or not forecast_archive.is_file() or not forecast_centers.is_file():
-        raise FileNotFoundError("Archived Bar v3 forecast bundle or cell centers are unavailable")
-    forecast = barv3.daily_geojson(FORECAST_DATE)
+    bundle = risk_settings.bundle_dir()
+    meta = risk_model.manifest()
+    if not bundle or meta is None:
+        raise FileNotFoundError("Risk-model bundle (manifest.json) is unavailable")
+    forecast_archive = Path(bundle) / meta["replay_files"][-1]
+    forecast_centers = Path(bundle) / "cell_centers.csv"
+    if not forecast_archive.is_file() or not forecast_centers.is_file():
+        raise FileNotFoundError("Archived forecast file or cell centers are unavailable")
+    forecast = risk_model.daily_geojson(FORECAST_DATE)
     if not forecast.get("features"):
-        raise ValueError(f"No archived Bar v3 features exist for {FORECAST_DATE}; refusing to fabricate a forecast")
+        raise ValueError(f"No archived forecast features exist for {FORECAST_DATE}; refusing to fabricate a forecast")
 
     sources: dict[str, str] = {
         "forecast_archive": str(forecast_archive.relative_to(ROOT)),
         "forecast_cell_centers": str(forecast_centers.relative_to(ROOT)),
         "protocol_setup": str(setup_path.relative_to(ROOT)),
-        "forecast_adapter": str((ROOT / "backend" / "app" / "barv3.py").relative_to(ROOT)),
+        "forecast_adapter": str((ROOT / "backend" / "app" / "risk_model.py").relative_to(ROOT)),
         "scenario_adapter": str((ROOT / "backend" / "app" / "services" / "redesign_data.py").relative_to(ROOT)),
         "bundle_builder": str(Path(__file__).resolve().relative_to(ROOT)),
     }
@@ -119,7 +124,7 @@ def build_payloads() -> tuple[dict, dict[str, dict], dict[str, object], dict[str
             "artifact_status": "precomputed",
             "simulation_start_utc": iso_utc(str(protocol["t0_utc"])),
             "ignition": {"lat": float(lat), "lon": float(lon)},
-            "ignition_origin": "Exact prescribed initial coordinate in data/resq5/protocol_setup.json; not derived from the Bar v3 forecast.",
+            "ignition_origin": "Exact prescribed initial coordinate in data/resq5/protocol_setup.json; not derived from the forecast.",
             "ensemble_members": members,
             "wind_source": PRIMARY_WIND_SOURCE,
             "source_artifacts": scenario_sources,
@@ -143,7 +148,7 @@ def build_payloads() -> tuple[dict, dict[str, dict], dict[str, object], dict[str
         "schema_version": 1,
         "demo_kind": "offline_precomputed_forecast_and_conditional_spread",
         "forecast": {
-            "model": "Bar v3",
+            "model": meta["model_id"],
             "date": FORECAST_DATE.isoformat(),
             "artifact_status": "archived_validation_replay",
             "coverage_complete": False,
@@ -184,7 +189,7 @@ def write_bundle(output: Path = OUTPUT) -> list[Path]:
         input_hashes = {key: sha256(ROOT / relative) for key, relative in sorted(sources.items())}
         provenance = {
             "generator": str(Path(__file__).resolve().relative_to(ROOT)),
-            "generation_method": "Local deterministic serialization of existing Bar v3 and RESQ-5 artifacts; no acquisition, prediction, scoring, or Cell2Fire run.",
+            "generation_method": "Local deterministic serialization of existing archived-forecast and RESQ-5 artifacts; no acquisition, prediction, scoring, or Cell2Fire run.",
             "inputs": {key: {"path": sources[key], "sha256": input_hashes[key]} for key in sorted(sources)},
             "generated_data_files_sha256": generated,
         }

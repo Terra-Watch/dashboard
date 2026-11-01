@@ -8,6 +8,7 @@ import { PageTitle, LoadError } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { formatWhen } from '../citizen/format';
+import { cellCentre } from '../map/geojson';
 import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
@@ -27,6 +28,27 @@ const PRESETS: Array<{ id: string; label: string; layers: LayerId[] }> = [
   { id: 'situation', label: 'Situation', layers: ['incidents', 'reports', 'signals', 'advisories', 'risk_forecast'] },
   { id: 'field', label: 'Field', layers: ['incidents', 'advisories'] },
 ];
+
+type RiskRun = { model_id: string | null; model_version?: string; date: string; mode: 'live' | 'replay'; status: string; issued_at?: string; coverage?: { cells_scored: number; cells_in_grid: number | null; complete: boolean; missing_states: string[] }; degraded?: string[] };
+type RiskStatus = { max_age_hours: number; runs: Partial<Record<'live' | 'replay', { forecast_date: string; age_hours: number; stale: boolean; status: string; mode: string; issued_at: string; degraded: string[] }>> };
+
+function RiskRunChip({ run, status, error }: { run?: RiskRun; status?: RiskStatus; error: boolean }) {
+  const { t } = useTranslation();
+  const latest = status?.runs.live ?? status?.runs.replay;
+  if (error) return <Notice kind="warning">{t('map.risk_status_off', 'The forecast status could not be read.')}</Notice>;
+  if (!latest) return <p role="status" className="text-sm text-ink-muted sm:col-span-2 xl:col-span-4">{t('map.risk_none', 'No forecast has been issued yet.')}</p>;
+  const replay = (run?.mode ?? latest.mode) === 'replay';
+  const text = replay
+    ? t('map.risk_replay', { date: run?.date ?? latest.forecast_date, defaultValue: 'Archived replay for {{date}}, not a live forecast.' })
+    : t('map.risk_live', { date: latest.forecast_date, when: formatWhen(latest.issued_at), defaultValue: 'Forecast for {{date}}, issued {{when}}.' });
+  const notes = [
+    latest.stale && !replay ? t('map.risk_stale', { hours: latest.age_hours, defaultValue: 'Stale: the last run is {{hours}} hours old.' }) : '',
+    latest.status === 'partial' ? t('map.risk_partial', 'Partial: some cells could not be scored.') : '',
+    ...(run?.degraded ?? latest.degraded ?? []).map(d => d === 'gfs_missing' ? t('map.risk_gfs', 'Weather-forecast input was missing.') : d === 'ndvi_climatology' ? t('map.risk_ndvi', 'Vegetation uses a seasonal average.') : ''),
+  ].filter(Boolean);
+  const bad = (latest.stale && !replay) || latest.status === 'partial' || notes.length > 0;
+  return <p role="status" className={`rounded-rq border px-3 py-2 text-sm sm:col-span-2 xl:col-span-4 ${latest.stale && !replay ? 'border-warn' : 'border-line'}`}>{bad && latest.stale && !replay ? '⚠ ' : ''}{text}{notes.length > 0 && <span className="block text-ink-muted">{notes.join(' ')}</span>}</p>;
+}
 
 function Chip({ label, freshness }: { label: string; freshness?: Freshness }) {
   const { t } = useTranslation();
@@ -102,13 +124,20 @@ export function OpsMapPage() {
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
   
   const riskEnabled = settings.data?.risk_forecast_enabled === true;
-  const riskDate = settings.data?.risk_forecast_date || new Date().toISOString().slice(0, 10);
+  const riskStatus = useQuery({
+    queryKey: ['risk-status'], retry: false, refetchInterval: 10 * 60 * 1000,
+    enabled: layers.has('risk_forecast') && riskEnabled,
+    queryFn: () => api<RiskStatus>('/api/risk/status'),
+  });
+  const latestRun = riskStatus.data?.runs.live ?? riskStatus.data?.runs.replay;
+  // an operator pin wins; otherwise show the newest run the server has, not "today" (a run may not exist yet)
+  const riskDate = settings.data?.risk_forecast_date || latestRun?.forecast_date || new Date().toISOString().slice(0, 10);
   
   const riskForecast = useQuery({
     queryKey: ['risk-forecast', riskDate, riskHighOnly],
     retry: false,
     enabled: layers.has('risk_forecast') && riskEnabled,
-    queryFn: () => api<{ type: string; features: Array<{ type: string; geometry: { type: string; coordinates: [number, number] }; properties: { cell_id: number; state: string; rank_percentile: number; band: string } }> }>(`/api/risk/geojson?target=${riskDate}${riskHighOnly ? '&risk_band=high' : ''}`),
+    queryFn: () => api<{ type: string; run?: RiskRun; features: Array<{ type: string; geometry: { type: string; coordinates: any }; properties: { cell_id: number; state: string; rank_percentile: number; band: string } }> }>(`/api/risk/geojson?target=${riskDate}${riskHighOnly ? '&risk_band=high' : ''}`),
   });
 
   const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.community_slug === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
@@ -120,8 +149,7 @@ export function OpsMapPage() {
     if (!layers.has('risk_forecast') || !riskEnabled || !riskForecast.data?.features) return [];
     return riskForecast.data.features.map(f => ({
       id: f.properties.cell_id,
-      lat: f.geometry.coordinates[1],
-      lon: f.geometry.coordinates[0],
+      ...cellCentre(f.geometry),
       rank_percentile: f.properties.rank_percentile,
       band: f.properties.band,
       state: f.properties.state,
@@ -151,6 +179,7 @@ export function OpsMapPage() {
             <span>{t('map.risk_high_only', 'High risk only')}</span>
           </label>
         )}
+        {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
         <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
       </div>
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}

@@ -394,6 +394,8 @@ def init_db() -> None:
                 db.execute(text('CREATE INDEX IF NOT EXISTS cells_geom_gist ON cells USING GIST (geom)'))
             db.execute(text('CREATE INDEX IF NOT EXISTS cell_scores_run_band ON cell_scores (run_id, band)'))
             db.execute(text('CREATE INDEX IF NOT EXISTS cell_scores_run_rank ON cell_scores (run_id, rank)'))
+            for column in ("model_id VARCHAR(120)", "bundle_sha256 VARCHAR(64)", "coverage JSONB", "bands JSONB", "degraded JSONB"):
+                db.execute(text(f"ALTER TABLE forecast_runs ADD COLUMN IF NOT EXISTS {column}"))
 
             from ..schemas_ext import apply as apply_schema_extensions
             apply_schema_extensions(db)

@@ -1,8 +1,8 @@
-"""Regression tests for the Bar v3 archived-replay path in /api/risk/geojson.
+"""Regression tests for the archived-replay path in /api/risk/geojson.
 
 The RESQ10 audit (docs/ranking/00_audit.md) identified that the endpoint
 served an empty FeatureCollection when the replay bundle was absent.  The
-bundle has since been generated and is present in backend/models/barv3/.
+bundle has since been generated and is present in backend/models/risk/.
 These tests verify:
 
   1. daily_geojson returns a non-empty FeatureCollection for the hardcoded
@@ -18,8 +18,8 @@ These tests verify:
      present, confirming the graceful-degradation path still works.
 
 Design: a synthetic fixture bundle is created in a temporary directory.
-RESQ_MODEL_BUNDLE_DIR is set to point at it so the production code resolves
-the correct path without touching the real backend/models/barv3/ files.
+RISK_MODEL_BUNDLE is set to point at it so the production code resolves
+the correct path without touching the real backend/models/risk/ files.
 The lru_cache on _load and _centers is cleared before each test that changes
 the bundle, preventing stale cache entries from confusing test isolation.
 
@@ -28,6 +28,7 @@ Run with: backend/.venv/bin/python -m pytest backend/tests/test_risk_replay.py -
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -52,7 +53,7 @@ DEMO_DAY_NUMBER = (DEMO_DATE - date(1970, 1, 1)).days  # 19792
 
 # Cells must be present in both the npz (cell column) and cell_centers.csv.
 FIXTURE_CELLS = [0, 1, 2, 3, 4]
-FIXTURE_STATE = "OD"  # one of STATES in barv3.py
+FIXTURE_STATE = "XX"  # must match the fixture manifest; no state list lives in application code
 
 
 def _write_synthetic_bundle(directory: str) -> None:
@@ -68,13 +69,17 @@ def _write_synthetic_bundle(directory: str) -> None:
     p_bagged = np.array([0.9, 0.7, 0.5, 0.3, 0.1], dtype=np.float32)
 
     np.savez(
-        Path(directory) / "bar3_replay_2024.npz",
+        Path(directory) / "replay_2024.npz",
         cell=cells,
         day=day_numbers,
         state=states,
         p_bagged=p_bagged,
     )
 
+    (Path(directory) / "manifest.json").write_text(json.dumps({
+        "model_id": "fixture", "model_version": "t1", "states": [FIXTURE_STATE],
+        "bands": [{"name": "Very high", "top_share": 0.2}, {"name": "High", "top_share": 0.4}, {"name": "Moderate", "top_share": 0.8}, {"name": "Low", "top_share": 1.0}],
+        "replay_files": ["replay_2024.npz"], "score_column": "p_bagged"}))
     pd.DataFrame({
         "cell": FIXTURE_CELLS,
         "cx": [1e6 + i * 1000 for i in FIXTURE_CELLS],
@@ -85,13 +90,12 @@ def _write_synthetic_bundle(directory: str) -> None:
     }).to_csv(Path(directory) / "cell_centers.csv", index=False)
 
 
-def _clear_barv3_cache() -> None:
+def _clear_cache() -> None:
     """Clear the lru_cache entries on _load and _centers so bundle-path
     changes take effect immediately.  Safe to call even if the functions have
     never been called yet."""
-    import app.barv3 as barv3
-    barv3._load.cache_clear()
-    barv3._centers.cache_clear()
+    import app.risk_model as risk_model
+    risk_model.clear_caches()
 
 
 # ---------------------------------------------------------------------------
@@ -99,27 +103,27 @@ def _clear_barv3_cache() -> None:
 # ---------------------------------------------------------------------------
 
 class DailyGeojsonBundleTests(unittest.TestCase):
-    """Tests for barv3.daily_geojson using a synthetic fixture bundle."""
+    """Tests for daily_geojson using a synthetic fixture bundle."""
 
     def setUp(self):
         self._tmpdir = tempfile.mkdtemp(prefix="resq_test_bundle_")
         _write_synthetic_bundle(self._tmpdir)
         # Point the production code at our synthetic bundle
         self._env_patcher = mock.patch.dict(
-            os.environ, {"RESQ_MODEL_BUNDLE_DIR": self._tmpdir}
+            os.environ, {"RISK_MODEL_BUNDLE": self._tmpdir}
         )
         self._env_patcher.start()
-        _clear_barv3_cache()
+        _clear_cache()
 
     def tearDown(self):
         self._env_patcher.stop()
-        _clear_barv3_cache()
+        _clear_cache()
         # Clean up temp files
         import shutil
         shutil.rmtree(self._tmpdir, ignore_errors=True)
 
     def test_returns_feature_collection_type(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         self.assertEqual(result["type"], "FeatureCollection",
                          "response must have type=FeatureCollection")
@@ -127,7 +131,7 @@ class DailyGeojsonBundleTests(unittest.TestCase):
     def test_returns_nonempty_features_for_demo_date(self):
         """Core regression: the endpoint must NOT return an empty list for the
         hardcoded demo date when a valid bundle is available."""
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         self.assertGreater(
             len(result["features"]), 0,
@@ -136,7 +140,7 @@ class DailyGeojsonBundleTests(unittest.TestCase):
         )
 
     def test_returns_five_features_matching_fixture(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         self.assertEqual(
             len(result["features"]), len(FIXTURE_CELLS),
@@ -144,7 +148,7 @@ class DailyGeojsonBundleTests(unittest.TestCase):
         )
 
     def test_each_feature_has_point_geometry(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         for i, feature in enumerate(result["features"]):
             with self.subTest(i=i):
@@ -159,7 +163,7 @@ class DailyGeojsonBundleTests(unittest.TestCase):
                 self.assertIsInstance(coords[1], float)
 
     def test_each_feature_properties_contain_required_fields(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         for i, feature in enumerate(result["features"]):
             with self.subTest(i=i):
@@ -173,7 +177,7 @@ class DailyGeojsonBundleTests(unittest.TestCase):
                               "band must be one of the four documented values")
 
     def test_returns_empty_for_date_not_in_fixture(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         other_date = date(2024, 1, 1)
         result = daily_geojson(other_date)
         self.assertEqual(result["type"], "FeatureCollection")
@@ -182,16 +186,15 @@ class DailyGeojsonBundleTests(unittest.TestCase):
 
     def test_returns_empty_when_no_bundle(self):
         """Graceful degradation: missing bundle must return empty FeatureCollection."""
-        import app.barv3 as barv3
-        with mock.patch.object(barv3, "_bundle_dir", return_value=None):
-            _clear_barv3_cache()
-            from app.barv3 import daily_geojson
+        with mock.patch("app.risk_model.bundle_dir", return_value=None):
+            _clear_cache()
+            from app.risk_model import daily_geojson
             result = daily_geojson(DEMO_DATE)
         self.assertEqual(result["type"], "FeatureCollection")
         self.assertEqual(result["features"], [])
 
     def test_rank_percentile_values_are_in_valid_range(self):
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
         for feature in result["features"]:
             rp = feature["properties"]["rank_percentile"]
@@ -238,14 +241,14 @@ class RiskGeojsonEndpointTests(unittest.TestCase):
         self._tmpdir = tempfile.mkdtemp(prefix="resq_test_bundle_")
         _write_synthetic_bundle(self._tmpdir)
         self._env_patcher = mock.patch.dict(
-            os.environ, {"RESQ_MODEL_BUNDLE_DIR": self._tmpdir}
+            os.environ, {"RISK_MODEL_BUNDLE": self._tmpdir}
         )
         self._env_patcher.start()
-        _clear_barv3_cache()
+        _clear_cache()
 
     def tearDown(self):
         self._env_patcher.stop()
-        _clear_barv3_cache()
+        _clear_cache()
         import shutil
         shutil.rmtree(self._tmpdir, ignore_errors=True)
 
@@ -285,7 +288,7 @@ class RiskGeojsonEndpointTests(unittest.TestCase):
         We test this at the daily_geojson() level (not through the HTTP endpoint)
         because the endpoint's Postgres fallback would be reached for empty-feature
         dates and Postgres is not available in this test environment."""
-        from app.barv3 import daily_geojson
+        from app.risk_model import daily_geojson
         other_date = date(2024, 1, 1)  # not in the synthetic fixture
         result = daily_geojson(other_date)
         self.assertEqual(result["type"], "FeatureCollection")
@@ -294,21 +297,35 @@ class RiskGeojsonEndpointTests(unittest.TestCase):
 
     def test_production_bundle_serves_data_for_demo_date(self):
         """Verify the production bundle (not fixture) serves data for the
-        hardcoded demo date.  Uses the real backend/models/barv3/ bundle.
+        hardcoded demo date.  Uses the real backend/models/risk/ bundle.
         Skips if the bundle is absent (no data on this machine)."""
-        prod_bundle = BACKEND / "models" / "barv3"
+        prod_bundle = BACKEND / "models" / "risk"
         if not prod_bundle.exists():
             self.skipTest("Production bundle absent on this machine")
         with mock.patch.dict(os.environ,
-                             {"RESQ_MODEL_BUNDLE_DIR": str(prod_bundle)}):
-            _clear_barv3_cache()
+                             {"RISK_MODEL_BUNDLE": str(prod_bundle)}):
+            _clear_cache()
             resp = self.client.get("/api/risk/geojson",
                                    params={"target": "2024-03-10"})
-        _clear_barv3_cache()
+        _clear_cache()
         self.assertEqual(resp.status_code, 200)
         features = resp.json()["features"]
         self.assertGreater(len(features), 0,
                            "Production bundle must serve data for 2024-03-10")
+
+
+class BandTests(unittest.TestCase):
+    def test_bands_follow_manifest_cutoffs(self):
+        from app.risk_model import assign_bands
+        bands = [{"name": "A", "top_share": 0.1}, {"name": "B", "top_share": 1.0}]
+        self.assertEqual(assign_bands(20, bands), ["A"] * 2 + ["B"] * 18)
+
+    def test_bad_manifest_is_rejected(self):
+        from app.risk_model import BundleError, _manifest
+        d = tempfile.mkdtemp()
+        (Path(d) / "manifest.json").write_text(json.dumps({"model_id": "x"}))
+        with self.assertRaises(BundleError):
+            _manifest(d)
 
 
 if __name__ == "__main__":
