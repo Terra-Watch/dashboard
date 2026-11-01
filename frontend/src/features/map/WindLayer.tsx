@@ -31,7 +31,7 @@ export function WindLayer({ map, grid, onSatellite = false }: { map: MapInstance
       ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,0.07)'; ctx.fillRect(0, 0, w, h);
       ctx.globalCompositeOperation = 'source-over'; ctx.lineWidth = 1.6;
       for (const p of parts) {
-        const ll = map.unproject([p.x, p.y]); const wind = sampleWind(grid, ll.lat, ll.lng);
+        const ll = map.unproject([p.x, p.y]); const wind = sampleWind(grid, ll.lat, ll.lng, true);
         if (!wind || ++p.age > LIFE) { spawn(p); p.age = 0; continue; }
         const speed = Math.hypot(wind.u, wind.v), nx = p.x + wind.u * SPEED_PX, ny = p.y - wind.v * SPEED_PX;   // screen y grows downward
         const a = Math.min(0.95, 0.4 + speed / 10);   // dark blue on the light map, white on satellite imagery, so the flow reads on both

@@ -18,3 +18,8 @@ test('outside the grid there is no wind', () => {
   assert.equal(sampleWind(grid, 25, 75), null);
   assert.equal(sampleWind(grid, 15, 60), null);
 });
+
+test('with extend, outside the grid the nearest edge wind is used', () => {
+  assert.deepEqual(sampleWind(grid, 25, 75, true), sampleWind(grid, 20, 75));
+  assert.deepEqual(sampleWind(grid, 5, 60, true), { u: 0, v: 0 });
+});
