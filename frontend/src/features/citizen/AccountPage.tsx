@@ -54,7 +54,7 @@ export function AccountPage() {
             <div><dt className="text-sm font-bold text-ink-muted">{t('auth.email')}</dt><dd className="break-all">{account.data.account.email}</dd></div>
             <div><dt className="text-sm font-bold text-ink-muted">{t('citizen.account.joined', 'Joined')}</dt><dd>{formatWhen(account.data.account.created_at)}</dd></div>
             <div><dt className="text-sm font-bold text-ink-muted">{t('citizen.account.consent', 'Privacy notice accepted')}</dt><dd>{formatWhen(account.data.account.consented_at) || '—'}</dd></div>
-          </dl>) : <Notice kind="danger">{t('citizen.account.error', 'Your account details could not be loaded.')}</Notice>}
+          </dl>) : <Notice kind="danger">{t('citizen.account.error', 'Your account details could not be loaded.')}{' '}<button type="button" className="font-semibold underline" onClick={() => void signOut().then(() => navigate('/login', { replace: true }))}>{t('auth.sign_in_again', 'Sign out and sign in again')}</button></Notice>}
       </Card>
 
       <Card title={t('citizen.account.display', 'Language and theme')}>

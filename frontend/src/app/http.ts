@@ -1,6 +1,7 @@
 import { API } from './config';
 import { addCsrfHeader, clearExpiredToken, getAuthToken } from '../lib/sessionAuth';
 import { queueRequest } from '../lib/offlineQueue';
+import { endSession, refreshSession } from './session';
 
 /** A failed request with the server's own words, so screens can say what actually went wrong. */
 export class ApiError extends Error {
@@ -21,7 +22,7 @@ function detailOf(body: unknown, status: number): string {
 }
 
 /** JSON in, JSON out. Adds the bearer token and CSRF header. Optionally saves a POST for later when the device is offline. */
-export async function api<T = unknown>(path: string, { method = 'GET', json, form, signal, queueIfOffline }: Options = {}): Promise<T> {
+async function send<T>(path: string, { method = 'GET', json, form, signal, queueIfOffline }: Options = {}): Promise<T> {
   const headers = new Headers();
   if (json !== undefined) headers.set('Content-Type', 'application/json');
   addCsrfHeader(headers, method);
@@ -38,4 +39,16 @@ export async function api<T = unknown>(path: string, { method = 'GET', json, for
   const body = await response.json().catch(() => null);
   if (!response.ok) { clearExpiredToken(response.status); throw new ApiError(response.status, detailOf(body, response.status)); }
   return body as T;
+}
+
+
+/** JSON in, JSON out. A 401 on a signed-in device first tries to renew the 15-minute access token from the refresh cookie and repeats the request once; if that fails the sign-in is ended so the person is asked to sign in again. */
+export async function api<T = unknown>(path: string, options: Options = {}): Promise<T> {
+  try { return await send<T>(path, options); }
+  catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401 || path.startsWith('/api/auth/') || !localStorage.getItem('resq_user')) throw error;
+    if (await refreshSession()) return send<T>(path, options);
+    endSession();
+    throw error;
+  }
 }

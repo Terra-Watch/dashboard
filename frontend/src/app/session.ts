@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { API } from './config';
 import { getCsrfToken } from '../lib/sessionAuth';
+import { renewToken } from '../lib/tokenRefresh';
 import { productRole, type ProductRole } from '../ui/nav';
 
 export type SessionUser = { id: number; email: string; name: string; role: string; home_state?: string | null };
@@ -69,3 +70,10 @@ export async function signOut(): Promise<void> {
   catch { /* the device is signed out even if the network is not there */ }
   finally { localStorage.removeItem('resq_token'); localStorage.removeItem('resq_user'); refresh(); }
 }
+
+/** Clears the sign-in on this device without calling the server (the server session is already gone). Screens then send the person to sign in. */
+export function endSession(): void {
+  localStorage.removeItem('resq_token'); localStorage.removeItem('resq_user'); refresh();
+}
+
+export const refreshSession = () => renewToken(API);
