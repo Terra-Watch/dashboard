@@ -219,3 +219,20 @@ def test_routers_use_the_model_only_through_persistence_and_presentation_helpers
         tree = ast.parse((ROUTERS / name).read_text())
         used = {n.attr if isinstance(n, ast.Attribute) else n.id for n in ast.walk(tree) if isinstance(n, (ast.Name, ast.Attribute))}
         assert not {"sanitize_assessment", "indications_for", "sanitize_experimental", "unavailable"} & used, name
+
+
+def test_staff_can_run_the_check_again_and_only_that_photos_result_changes():
+    from tests.test_fire_evidence_routes import actor, files, citizen_report, jpeg_bytes
+    from sqlalchemy import text as sql
+    from app.database.session import engine as db_engine
+    citizen_client, ch, cid = actor("citizen")
+    rid = citizen_report(cid)
+    up = citizen_client.post(f"/api/citizen/reports/{rid}/evidence", headers=ch, files=files(jpeg_bytes()))
+    assert up.status_code == 201
+    image_id = up.json()["evidence"]["id"]
+    staff, sh, _ = actor("control_room_operator", scopes=["OD"])
+    again = staff.post(f"/api/incidents/{rid}/images/{image_id}/reassess", headers=sh)
+    assert again.status_code == 200 and again.json()["image"]["id"] == image_id
+    assert citizen_client.post(f"/api/incidents/{rid}/images/{image_id}/reassess", headers=ch).status_code == 403
+    with db_engine.connect() as db:
+        assert db.execute(sql("SELECT count(*) FROM resq_audit_log WHERE action='incident_image_reassessed' AND entity_id=:i"), {"i": str(image_id)}).scalar() >= 1

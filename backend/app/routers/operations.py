@@ -688,3 +688,25 @@ async def set_public_photo(incident_id: int, image_id: int, payload: PublicPhoto
     with engine.connect() as db:
         state = db.execute(text('SELECT public_state FROM resq_incident_images WHERE id=:g'), {'g': image_id}).scalar()
     return {'image_id': image_id, 'public_state': state}
+
+
+@router.post('/incidents/{incident_id}/images/{image_id}/reassess', dependencies=[Depends(require_csrf)])
+async def reassess_image(incident_id: int, image_id: int, user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
+    """Run the evidence check again on a stored photo, for example one whose first check was unavailable. Replaces that photo's automated result only; nothing else changes."""
+    if user.get('role') not in {'admin', 'officer', 'control_room_operator', 'incident_commander', 'range_officer'}:
+        raise HTTPException(status_code=403, detail='Authorized staff only')
+    with engine.connect() as db:
+        row = db.execute(text('SELECT g.storage_key,g.sha256,i.state FROM resq_incident_images g JOIN resq_incidents i ON i.id=g.incident_id WHERE g.id=:g AND g.incident_id=:i'),
+                         {'g': image_id, 'i': incident_id}).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail='Image not found')
+    require_scope(user, row['state'], entity_type='incident', entity_id=str(incident_id))
+    data = await blob_storage.read_or_local(row['storage_key'], _stored_image_path(row['storage_key']), row['sha256'])
+    if data is None:
+        raise HTTPException(status_code=404, detail='The stored photo is not available')
+    fields = persistence_fields(await assess_image_async(data, row['storage_key']))
+    with engine.begin() as db:
+        updated = db.execute(text('UPDATE resq_incident_images SET assessment_status=:status,model_version=:version,authenticity_status=:auth,assessment=:assessment,'
+                                  'assessment_error=:error,assessed_at=now() WHERE id=:g RETURNING *'), {**fields, 'g': image_id}).mappings().one()
+        audit_log.write_audit_log(action='incident_image_reassessed', entity_type='incident_image', entity_id=str(image_id), user_id=int(user['id']), metadata={'incident_id': incident_id}, connection=db)
+    return {'image': _image_row(dict(updated))}

@@ -41,7 +41,15 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
   const integrity = presentMediaIntegrity(image, t);
   const problem = validateReview(choice, note);
   const [publicBusy, setPublicBusy] = useState(false);
+  const [rerunning, setRerunning] = useState(false);
   const publicState = image.public_state ?? 'none';
+
+  async function rerun() {
+    setRerunning(true); setError('');
+    try { const result = await api<{ image: EvidenceImage }>(`/api/incidents/${incidentId}/images/${image.id}/reassess`, { method: 'POST' }); onUpdated({ ...image, ...result.image }); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'The check could not be run again. Try again.'); }
+    finally { setRerunning(false); }
+  }
 
   async function setPublic(action: 'publish' | 'release' | 'withdraw') {
     setPublicBusy(true); setError('');
@@ -106,6 +114,7 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
         <p className="mt-1 text-xs text-ink-muted">{assessment.advisoryNote}</p>
       </div>
 
+      <div className="mt-3"><button type="button" disabled={rerunning} onClick={() => void rerun()} className="min-h-11 rounded-rq border border-control bg-surface px-4 font-semibold disabled:opacity-50">{rerunning ? t('ops.ev.rerunning', 'Running the check…') : t('ops.ev.rerun', 'Run the automated check again')}</button></div>
       <section className="mt-3 rounded-rq border border-control bg-canvas p-3" aria-label={integrity.title} data-testid="media-integrity" data-state={integrity.state}>
         <h4 className="font-semibold">{integrity.title}</h4>
         <p className="mt-1" data-testid="media-integrity-label">{integrity.label}{integrity.caveat ? ` ${integrity.caveat}` : ''}</p>
