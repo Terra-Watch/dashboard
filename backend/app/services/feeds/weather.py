@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+import time
 import os
 from datetime import datetime, timezone
 
@@ -45,6 +46,58 @@ def fetch_open_meteo(lat: float, lon: float, client: httpx.Client | None = None)
     finally:
         if owns:
             client.close()
+
+
+_GRID_CACHE: dict[tuple, tuple[float, dict]] = {}
+GRID_TTL_S = 30 * 60
+MAX_GRID = 12
+
+
+def fetch_wind_grid(min_lat: float, min_lon: float, max_lat: float, max_lon: float, n: int = 10, client: httpx.Client | None = None) -> dict:
+    """Current 10 m wind on an n x n grid over the box, in ONE Open-Meteo request, for the animated wind on the map.
+    Returns lats (south to north), lons (west to east), u and v (m/s, east and north) as n x n lists indexed [lat][lon]. Cached 30 minutes per box."""
+    n = max(2, min(int(n), MAX_GRID))
+    if not (min_lat < max_lat and min_lon < max_lon):
+        raise FeedError("The box must run south to north and west to east")
+    key = (round(min_lat, 1), round(min_lon, 1), round(max_lat, 1), round(max_lon, 1), n)
+    hit = _GRID_CACHE.get(key)
+    if hit and time.time() - hit[0] < GRID_TTL_S:
+        return hit[1]
+    lats = [round(min_lat + (max_lat - min_lat) * i / (n - 1), 4) for i in range(n)]
+    lons = [round(min_lon + (max_lon - min_lon) * j / (n - 1), 4) for j in range(n)]
+    pts = [(la, lo) for la in lats for lo in lons]
+    params = {"latitude": ",".join(str(p[0]) for p in pts), "longitude": ",".join(str(p[1]) for p in pts), "wind_speed_unit": "ms", "timezone": "GMT",
+              "current": "wind_speed_10m,wind_direction_10m"}
+    owns = client is None
+    client = client or _feeds.http_client()
+    try:
+        response = client.get(OPEN_METEO_URL, params=params)
+        if response.status_code != 200:
+            raise FeedError(f"Weather feed returned HTTP {response.status_code}")
+        body = response.json()
+        body = body if isinstance(body, list) else [body]
+        if len(body) != len(pts):
+            raise FeedError("Weather feed returned an unexpected response")
+        u = [[0.0] * n for _ in range(n)]
+        v = [[0.0] * n for _ in range(n)]
+        valid = None
+        for k, item in enumerate(body):
+            cur = item["current"]
+            speed, direction = float(cur["wind_speed_10m"]), math.radians(float(cur["wind_direction_10m"]))
+            u[k // n][k % n], v[k // n][k % n] = round(-speed * math.sin(direction), 3), round(-speed * math.cos(direction), 3)  # the wind blows TOWARD direction+180
+            valid = valid or cur["time"]
+        out = {"lats": lats, "lons": lons, "u": u, "v": v, "valid_time": datetime.fromisoformat(valid).replace(tzinfo=timezone.utc), "source": "open-meteo"}
+    except httpx.TimeoutException:
+        raise FeedError("Weather feed timed out") from None
+    except httpx.HTTPError as exc:
+        raise FeedError(f"Weather feed request failed ({type(exc).__name__})") from None
+    except (KeyError, TypeError, ValueError):
+        raise FeedError("Weather feed returned an unexpected response") from None
+    finally:
+        if owns:
+            client.close()
+    _GRID_CACHE[key] = (time.time(), out)
+    return out
 
 
 def uv_to_wind(u: float, v: float) -> tuple[float, float]:

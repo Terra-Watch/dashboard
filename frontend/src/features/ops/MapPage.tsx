@@ -9,6 +9,8 @@ import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { formatWhen } from '../citizen/format';
 import { cellCentre } from '../map/geojson';
+import { WindLayer, type MapInstance } from '../map/WindLayer';
+import type { WindGrid } from '../map/windField';
 import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
@@ -68,6 +70,8 @@ export function OpsMapPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<'map' | 'list'>('map');
   const [riskHighOnly, setRiskHighOnly] = useState(false);
+  const [showWind, setShowWind] = useState(true);
+  const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
   // Satellite basemap toggle
@@ -121,6 +125,10 @@ export function OpsMapPage() {
   const box = chosen ? communityBox(chosen) : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
   const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
+  const windGrid = useQuery({
+    queryKey: ['map-wind-grid', box.map(v => Math.round(v * 2) / 2).join()], retry: false, staleTime: 25 * 60 * 1000, refetchInterval: 30 * 60 * 1000, enabled: showWind,
+    queryFn: () => api<WindGrid & { freshness: Freshness }>(`/api/weather/wind-grid?min_lon=${box[0] - 1}&min_lat=${box[1] - 1}&max_lon=${box[2] + 1}&max_lat=${box[3] + 1}&n=10`),
+  });
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
   
   const riskEnabled = settings.data?.risk_forecast_enabled === true;
@@ -173,6 +181,10 @@ export function OpsMapPage() {
             <button key="satellite" type="button" role="radio" aria-checked={basemapType === 'satellite'} onClick={() => setBasemapType('satellite')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'satellite' ? 'bg-action text-on-action' : ''}`}>{t('basemap.satellite', 'Satellite')}</button>
           </div></div>
         )}
+        <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+          <input type="checkbox" checked={showWind} onChange={(e) => setShowWind(e.target.checked)} className="h-4 w-4" />
+          <span>{t('map.wind_flow', 'Animated wind')}</span>
+        </label>
         {layers.has('risk_forecast') && riskEnabled && (
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
             <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />
@@ -180,8 +192,9 @@ export function OpsMapPage() {
           </label>
         )}
         {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
-        <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
+        <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Link to="/ops/satellite" className="text-sm font-semibold underline">{t('map.satellite_list', 'All satellite detections')}</Link><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
       </div>
+      {showWind && <WindLayer map={mapInstance} grid={windGrid.data} onSatellite={basemapType === 'satellite'} />}
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
       {wind.isLoading && <p role="status" className="text-sm text-ink-muted">{t('map.loading_weather', 'Updating weather…')}</p>}
       {wind.isError && <Notice kind="warning">{t('map.weather_off', 'Weather is not available right now.')}</Notice>}
@@ -192,7 +205,7 @@ export function OpsMapPage() {
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
         <div className={`relative ${view === 'list' ? 'hidden lg:block' : ''}`}>
-          <MapView label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
+          <MapView onMapReady={setMapInstance} label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
           {selectedIncident && (
             <section aria-label={t('map.selected', 'Selected')} data-testid="selected" className="absolute inset-x-2 bottom-2 z-10 max-h-[85%] overflow-auto rounded-panel border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:left-3 md:w-[26rem]">
               <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>

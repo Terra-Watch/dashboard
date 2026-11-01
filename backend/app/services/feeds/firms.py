@@ -94,16 +94,15 @@ _UPSERT = text("""INSERT INTO resq_hotspots (satellite,acq_datetime,latitude,lon
 
 
 def upsert(rows: list[dict], engine=None) -> int:
-    """Insert new rows; existing ones are left untouched. Returns the number newly inserted."""
+    """Insert new rows in one batch; existing ones are left untouched. Returns the number newly inserted."""
     if not rows:
         return 0
     if engine is None:
         from ...database.session import engine
-    inserted = 0
     with engine.begin() as db:
-        for row in rows:
-            inserted += db.execute(_UPSERT, row).rowcount or 0
-    return inserted
+        before = db.execute(text("SELECT count(*) FROM resq_hotspots")).scalar()
+        db.execute(_UPSERT, rows)   # one batched statement: row by row is too slow for a serverless request
+        return db.execute(text("SELECT count(*) FROM resq_hotspots")).scalar() - before
 
 
 def fetch_area(bbox, days: int = 1, satellites: Iterable[str] | None = None,
