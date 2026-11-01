@@ -10,6 +10,7 @@ import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { STATES, formatWhen } from '../citizen/format';
 import type { CommunityImageAssessment } from '../../lib/assessmentPresentation';
+import { PhotoLibrary } from './PhotoLibrary';
 import { ModerationMedia, type ModerationImage } from './ModerationMedia';
 
 type NoticeRow = { urgent?: boolean; reviewed_at?: string | null; review_decision?: string | null; review_note?: string | null; incident_id?: number | null; id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; regions: string[]; status: 'draft' | 'pending_approval' | 'published' | 'withdrawn'; author_id: number; starts_at: string; expires_at: string; return_reason: string | null; expired: boolean };
@@ -25,10 +26,11 @@ export function NoticesPage() {
       <PageTitle title={t('nav.notices')} subtitle={t('ops.notices.subtitle', 'Official notices for the public, and the community.')} />
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List aria-label={t('nav.notices')} className="flex flex-wrap gap-1 border-b border-line">
-          {[['notices', t('ops.notices.tab', 'Notices')], ['moderation', `${t('ops.moderation.tab', 'Moderation')}${queue.data?.items.length ? ` (${queue.data.items.length})` : ''}`], ['rooms', t('ops.rooms.tab', 'Chat rooms')]].map(([value, label]) => <Tabs.Trigger key={value} value={value} className="min-h-12 border-b-4 border-transparent px-4 font-semibold data-[state=active]:border-action hover:bg-surface-2">{label}</Tabs.Trigger>)}
+          {[['notices', t('ops.notices.tab', 'Notices')], ['moderation', `${t('ops.moderation.tab', 'Moderation')}${queue.data?.items.length ? ` (${queue.data.items.length})` : ''}`], ['library', t('ops.library.tab', 'Photo library')], ['rooms', t('ops.rooms.tab', 'Chat rooms')]].map(([value, label]) => <Tabs.Trigger key={value} value={value} className="min-h-12 border-b-4 border-transparent px-4 font-semibold data-[state=active]:border-action hover:bg-surface-2">{label}</Tabs.Trigger>)}
         </Tabs.List>
         <Tabs.Content value="notices" className="pt-4 outline-none"><NoticeAdmin /></Tabs.Content>
         <Tabs.Content value="moderation" className="pt-4 outline-none"><Moderation queue={queue.data?.items} loading={queue.isLoading} error={queue.isError} reload={() => void queue.refetch()} /></Tabs.Content>
+        <Tabs.Content value="library" className="pt-4 outline-none"><PhotoLibrary /></Tabs.Content>
         <Tabs.Content value="rooms" className="pt-4 outline-none"><Rooms /></Tabs.Content>
       </Tabs.Root>
     </div>

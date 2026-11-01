@@ -49,7 +49,7 @@ def send_for_notice(notice_id: int, state: str, title: str) -> dict:
         return {"sent": 0, "skipped": "push is not configured"}
     try:
         with engine.connect() as db:
-            rows = db.execute(text("""SELECT s.id,s.endpoint,s.p256dh,s.auth FROM resq_push_subscriptions s
+            rows = db.execute(text("""SELECT s.id,s.endpoint,s.p256dh,s.auth FROM resq_push_subscriptions s JOIN resq_users u ON u.id=s.user_id AND u.role='citizen'
                 WHERE s.state=:st AND NOT EXISTS (SELECT 1 FROM resq_push_log l WHERE l.notice_id=:n AND l.subscription_id=s.id) ORDER BY s.id LIMIT :cap"""),
                               {"st": state, "n": notice_id, "cap": MAX_PER_ALERT}).mappings().all()
         payload = json.dumps({"title": title, "body": "Open TerraWatch for details.", "url": "/citizen/near-me", "tag": f"alert-{notice_id}"})
@@ -72,3 +72,40 @@ def send_for_notice(notice_id: int, state: str, title: str) -> dict:
     except Exception:
         logger.exception("push for notice %s failed", notice_id)
         return {"sent": 0, "skipped": "error"}
+
+
+# What a person's own alert says when it is also pushed: fixed words only, never anything a citizen wrote. kind -> (title, where tapping it goes)
+PERSONAL = {
+    'citizen_report_received': ('New citizen report to review', '/ops/incidents/{id}'),
+    'report_unattended': ('A report is still waiting for a decision', '/ops/incidents/{id}'),
+    'verification_submitted': ('A field check has come in', '/ops/incidents/{id}'),
+    'assignment_created': ('You have a new task', '/field/tasks'),
+    'assignment_reassigned': ('A task was changed', '/field/tasks'),
+    'assignment_completed': ('A task was completed', '/ops/incidents/{id}'),
+    'report_question': ('Officials have a question about your report', '/citizen/reports/{id}'),
+}
+
+
+def send_to_user(user_id: int, kind: str, entity_id: str | None, alert_id: int | None = None) -> int:
+    """Push one person's own alert to their phones or computers. Returns how many were delivered. Never raises; does nothing when push is off or the kind is not listed."""
+    if not enabled() or kind not in PERSONAL:
+        return 0
+    title, url = PERSONAL[kind]
+    try:
+        with engine.connect() as db:
+            rows = db.execute(text('SELECT id,endpoint,p256dh,auth FROM resq_push_subscriptions WHERE user_id=:u ORDER BY id LIMIT 10'), {'u': user_id}).mappings().all()
+        payload = json.dumps({'title': title, 'body': 'Open TerraWatch for details.', 'url': url.replace('{id}', str(entity_id or '')), 'tag': f'alert-{alert_id or kind}'})
+        sent, gone = 0, []
+        for row in rows:
+            status = _send_one(dict(row), payload)
+            if status == 201:
+                sent += 1
+            elif status in (404, 410):
+                gone.append(row['id'])
+        if gone:
+            with engine.begin() as db:
+                db.execute(text('DELETE FROM resq_push_subscriptions WHERE id = ANY(:ids)'), {'ids': gone})
+        return sent
+    except Exception:
+        logger.exception('personal push for user %s failed', user_id)
+        return 0

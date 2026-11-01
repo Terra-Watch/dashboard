@@ -14,7 +14,7 @@ import { OwnPhoto } from './OwnPhoto';
 import { TextArea } from '../../ui/Field';
 import { formatWhen, stateName } from './format';
 
-type Report = { id: number; status: string; close_reason: string | null; state: string; latitude: number; longitude: number; observed_at: string; created_at: string; evidence: Array<{ id: number; original_filename: string; waiting_for_check?: boolean }> };
+type Report = { id: number; status: string; close_reason: string | null; state: string; latitude: number; longitude: number; observed_at: string; created_at: string; evidence: Array<{ id: number; original_filename: string; waiting_for_check?: boolean; shared_for_research?: boolean }> };
 type Event = { kind: string; at: string; close_reason?: string | null };
 
 const REASONS: Record<string, string> = { resolved: 'The fire was dealt with.', false_alarm: 'It turned out not to be a fire.', duplicate: 'Another report already covered it.', unable_to_verify: 'Staff could not confirm it.', other: 'Closed by staff.' };
@@ -85,7 +85,7 @@ export function ReportDetailPage() {
       </Card>
 
       <Card title={t('citizen.detail.photos', 'Photos')}>
-        {item.evidence.length ? <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{item.evidence.map(photo => <li key={photo.id}><OwnPhoto reportId={item.id} imageId={photo.id} className="aspect-square w-full" />{photo.waiting_for_check && <p className="mt-1 text-sm text-ink-muted">{t('citizen.photo.waiting', 'Officials will check this photo before others can see it.')}</p>}</li>)}</ul> : <p className="text-ink-muted">{t('citizen.detail.no_photos', 'No photos added.')}</p>}
+        {item.evidence.length ? <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{item.evidence.map(photo => <li key={photo.id}><OwnPhoto reportId={item.id} imageId={photo.id} className="aspect-square w-full" />{photo.shared_for_research && <p className="mt-1 text-sm text-ink-muted">{t('citizen.photo.shared', 'You agreed to let TerraWatch keep this photo to improve its photo check.')} <button type="button" className="font-semibold underline" onClick={() => void api(`/api/citizen/photos/${photo.id}/research`, { method: 'PUT', json: { allow: false } }).then(() => queryClient.invalidateQueries({ queryKey: ['my-report', id] }))}>{t('citizen.photo.take_back', 'Take this back')}</button></p>}{photo.waiting_for_check && <p className="mt-1 text-sm text-ink-muted">{t('citizen.photo.waiting', 'Officials will check this photo before others can see it.')}</p>}</li>)}</ul> : <p className="text-ink-muted">{t('citizen.detail.no_photos', 'No photos added.')}</p>}
         {item.status !== 'closed' && <><input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={event => void addPhoto(event.target.files?.[0])} />
           <Button className="mt-3" variant="secondary" loading={uploading} onClick={() => fileInput.current?.click()} icon={<Camera aria-hidden="true" size={18} />}>{t('citizen.report.add_photo', 'Add a photo')}</Button></>}
       </Card>

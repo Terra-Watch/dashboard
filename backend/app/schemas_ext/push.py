@@ -13,6 +13,7 @@ def ensure(db) -> None:
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         last_ok_at TIMESTAMPTZ
     )'''))
+    db.execute(text('ALTER TABLE resq_push_subscriptions ALTER COLUMN state DROP NOT NULL'))   # staff are reached by who they are, not by a state
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_push_subscriptions_state_idx ON resq_push_subscriptions (state)'))
     db.execute(text('''CREATE TABLE IF NOT EXISTS resq_push_log (
         notice_id BIGINT NOT NULL REFERENCES resq_notices(id) ON DELETE CASCADE,

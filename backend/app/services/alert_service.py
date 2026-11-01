@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from sqlalchemy import text
 
 from ..database.session import engine
+from . import push
 from .audit_log import write_audit_log
 
 DEDUP_WINDOW_MINUTES = 15
@@ -91,6 +92,8 @@ def generate_alert(
             metadata={"kind": kind, "severity": severity, "state": state, "entity_type": entity_type, "entity_id": entity_id},
             connection=db,
         )
+    if user_id is not None:  # the same alert also reaches their phone, when they turned that on
+        push.send_to_user(int(user_id), kind, entity_id, alert_dict['id'])
     return alert_dict, True
 
 

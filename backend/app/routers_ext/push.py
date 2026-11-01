@@ -19,7 +19,7 @@ class Keys(BaseModel):
 class Subscribe(BaseModel):
     endpoint: str = Field(min_length=20, max_length=1000, pattern=r'^https://')
     keys: Keys
-    state: str = Field(min_length=2, max_length=2)
+    state: str | None = Field(default=None, max_length=2)   # citizens choose one; staff are reached by who they are
 
 
 class Unsubscribe(BaseModel):
@@ -35,9 +35,11 @@ def config(user: dict = Depends(current_redesign_user)) -> dict:
 def subscribe(payload: Subscribe, user: dict = Depends(current_redesign_user)) -> dict:
     if not push.enabled():
         raise HTTPException(status_code=503, detail='Alerts on this phone are not switched on yet')
-    state = payload.state.upper()
-    if state not in state_names():
+    state = payload.state.upper() if payload.state else None
+    if user.get('role') == 'citizen' and state not in state_names():
         raise HTTPException(status_code=422, detail='Choose a state')
+    if state is not None and state not in state_names():
+        state = None
     with engine.begin() as db:
         db.execute(text('''INSERT INTO resq_push_subscriptions (user_id,endpoint,p256dh,auth,state) VALUES (:u,:e,:p,:a,:s)
             ON CONFLICT (endpoint) DO UPDATE SET user_id=EXCLUDED.user_id,p256dh=EXCLUDED.p256dh,auth=EXCLUDED.auth,state=EXCLUDED.state'''),

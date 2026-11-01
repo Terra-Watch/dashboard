@@ -57,6 +57,38 @@ How to read it:
 - The edits were made by me with simple pasting, like the ones the check was trained on, so the catch rates are probably optimistic for real-world edits.
 - Nothing here used real phone photos.
 
+## 4b. Second test: AI-generated images, and what a different alarm level would do (2026-11-01)
+
+The generated images and the fixed-camera frames come from the cloud store of the earlier experiments, so this test covers what the first one could not. Same code path as a community post. Raw numbers: `docs/data/authenticity_sets_test_2026-11-01.json` and `docs/data/authenticity_threshold_table_2026-11-01.json`; scripts: `backend/scripts/eval_authenticity_sets.py` and `fire-evidence-assessor/scripts/auth_threshold_analysis.py`.
+
+| Group | Photos | Held | Wanted | Verdict |
+|---|---|---|---|---|
+| AI-generated, from a tool the check was trained on | 100 | 100% | held | meets the target |
+| AI-generated, from two tools it never saw (PixArt, Kolors) | 200 | 100% | held | meets the target |
+| Real D-Fire photos (reduced to 512 px) | 100 | 29% | published | too many held; 19 of 29 are "inconclusive" (too small or too soft to judge) |
+| Real fixed-camera frames | 100 | 25% | published | too many held; 24 of 25 are "inconclusive" |
+
+What it shows:
+- The core call, "possibly generated", works: 99 to 100% of generated images flagged, including from tools it had never seen, and only about 5% of real D-Fire photos and 0.3% of fixed-camera frames wrongly flagged.
+- Most wrongly held real photos are not "generated" calls. They are "inconclusive" because of the quality gate (size and softness). The test pictures were 512 px, so a normal phone photo, which is much larger, would trip it less often. Hazy smoke photos are soft by nature, so some will still be held as inconclusive. That gate is a policy to revisit with real phone photos.
+- The weak spot is professional web photos of look-alikes (Wikimedia, 1,437 photos): 57% flagged as generated at the current alarm level. A higher level helps, at a cost (share of look-alike photos wrongly flagged versus share of generated images still caught):
+
+| Alarm level | Look-alikes wrongly flagged | Generated caught (seen / PixArt / Kolors) |
+|---|---|---|
+| now (0.15) | 57% | 100% / 99% / 100% |
+| 0.50 | 24% | 96% / 89% / 98% |
+| 0.65 | 15% | 92% / 81% / 96% |
+| 0.80 | 8% | 81% / 68% / 90% |
+
+I did not change the alarm level. Those look-alike photos are not what citizens send, and the best level depends on real phone photos. Retuning now would trade away catches for a population we have not measured.
+
+## 4c. Collecting the phone photos (built)
+
+- **Opt-in at the source:** when a citizen adds photos to a report, an unticked box reads "Optional: let TerraWatch keep these photos to test and improve its photo check. No one else sees them, and no name or location is kept with them." On their report page they can take it back at any time, and the labels go with it.
+- **Labelling:** Control Room, Notices page, "Photo library" tab. Staff in scope see photos whose owner agreed and say what is in each (flames, smoke, both, a look-alike, nothing) and where it comes from (a genuine camera photo, edited, made by an AI tool, a screenshot). A counter shows progress toward 200.
+- **Export:** `backend/scripts/export_photo_library.py OUT` writes labelled photos with all hidden data removed, in the format the test script reads.
+- **Then:** run `eval_authenticity_sets.py OUT/manifest.csv --root OUT` and `auth_threshold_analysis.py --folder OUT/img:phone ...`. If the numbers miss the targets in section 5, retune or refit the head, build a new bundle version and ask for its approval. A new bundle is a new approval decision for the owner.
+
 ## 5. What is needed before the AI touches the citizen experience
 
 1. **A phone-photo test set.** 200 or more real photos from phones (fire, smoke, look-alikes, dusk, haze, long distance, sent through a messaging app), labelled by Control Room staff. This is the same missing gate as before.

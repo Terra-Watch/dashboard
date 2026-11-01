@@ -53,6 +53,7 @@ export function ReportPage() {
   const [saved, setSaved] = useState<'offline' | 'server' | null>(null);
   const [savedDetail, setSavedDetail] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [research, setResearch] = useState(false);
   const [manual, setManual] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const photoHints = usePhotoHints(photos);
@@ -90,7 +91,7 @@ export function ReportPage() {
     setBusy(true); setProblem('');
     const observedAt = when === 'now' ? new Date().toISOString() : new Date(earlier).toISOString();
     try {
-      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos, setProgress);
+      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos, setProgress, research);
       navigate(`/citizen/reports/${sent.id}`, { replace: true, state: { sent: true, photosTotal: sent.photosTotal, photosLeft: sent.photosLeft, photosRejected: sent.photosRejected } });
     } catch (reason) {
       if (retryable(reason)) { setSaved(reason instanceof OfflineError ? 'offline' : 'server'); setSavedDetail(reason instanceof ApiError ? reason.detail : ''); }   // kept on the phone; it will be sent again
@@ -136,6 +137,7 @@ export function ReportPage() {
         )}
         {photoHints.map((found, index) => found.length ? <div key={index}><p className="text-sm font-semibold">{t('citizen.v2.photo_alt', { n: index + 1, defaultValue: 'Photo {{n}}' })}</p><PhotoHint hints={found} /></div> : null)}
         {photos.length === 0 && <p className="text-sm text-ink-muted">{t('citizen.v2.capture_tip', 'Tip: take one wide photo that includes the horizon, then one closer with something recognisable in it, like a road or a building. Stay safe and do not go closer to the fire.')}</p>}
+        {photos.length > 0 && <label className="flex min-h-11 items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-5" checked={research} onChange={event => setResearch(event.target.checked)} /><span>{t('citizen.v2.research', 'Optional: let TerraWatch keep these photos to test and improve its photo check. No one else sees them, and no name or location is kept with them. You can take this back later from your report.')}</span></label>}
         {photos.length < MAX_PHOTOS && (
           <button type="button" onClick={() => fileInput.current?.click()} className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-control bg-surface p-5 text-lg font-semibold text-ink hover:bg-surface-2">
             <Camera aria-hidden="true" size={28} />{photos.length ? t('citizen.v2.add_more', 'Add another photo') : t('citizen.v2.open_camera', 'Open the camera')}

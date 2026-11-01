@@ -11,7 +11,7 @@ import json
 import re
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy import text
 
 from ..contracts.account import AccountDeleteRequest
@@ -120,7 +120,7 @@ def get_report(report_id: int, user: dict = Depends(citizen_user)) -> dict:
     with engine.connect() as db:
         row = db.execute(text('''SELECT id,reporter_id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
             FROM resq_incidents WHERE id=:id AND reporter_id=:reporter_id'''), {'id': report_id, 'reporter_id': user['id']}).mappings().first()
-        images = db.execute(text('''SELECT id,original_filename,size_bytes,assessment_status,created_at, (public_state='held') AS waiting_for_check
+        images = db.execute(text('''SELECT id,original_filename,size_bytes,assessment_status,created_at, (public_state='held') AS waiting_for_check, research_consent AS shared_for_research
             FROM resq_incident_images WHERE incident_id=:id ORDER BY created_at DESC'''), {'id': report_id}).mappings().all()   # the reason for a hold is never returned
     if not row:
         raise HTTPException(status_code=404, detail='Report not found')
@@ -213,7 +213,7 @@ def delete_account(payload: AccountDeleteRequest, user: dict = Depends(citizen_u
 
 
 @router.post('/reports/{report_id}/evidence', status_code=201, dependencies=[Depends(require_csrf)])
-async def upload_report_evidence(report_id: int, image: UploadFile = File(...), user: dict = Depends(citizen_user)) -> dict:
+async def upload_report_evidence(report_id: int, image: UploadFile = File(...), research: str = Form(''), user: dict = Depends(citizen_user)) -> dict:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail='Upload a JPEG, PNG, or WebP image')
     with engine.connect() as db:
@@ -246,14 +246,14 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
         assessment = await assess_image_async(data, key)
         with engine.begin() as db:
             row = db.execute(text('''INSERT INTO resq_incident_images
-                (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,assessed_at)
-                VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,now())
+                (incident_id,storage_key,original_filename,content_type,size_bytes,sha256,assessment_status,model_version,authenticity_status,assessment,assessment_error,assessed_at,research_consent)
+                VALUES (:incident_id,:storage_key,:filename,:content_type,:size_bytes,:sha256,:status,:version,:auth,:assessment,:error,now(),:research)
                 ON CONFLICT (incident_id, sha256) DO UPDATE SET assessed_at=now(), assessment_status=EXCLUDED.assessment_status,
                 model_version=EXCLUDED.model_version, authenticity_status=EXCLUDED.authenticity_status,
                 assessment=EXCLUDED.assessment, assessment_error=EXCLUDED.assessment_error
                 RETURNING id,original_filename,size_bytes,assessment_status,created_at'''), {
                 'incident_id': report_id, 'storage_key': key, 'filename': re.sub(r'[^A-Za-z0-9._-]+', '_', image.filename or 'evidence')[:120],
-                'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest,
+                'content_type': detected_type, 'size_bytes': len(data), 'sha256': digest, 'research': research == '1',
                 **persistence_fields(assessment),
             }).mappings().one()
             audit_log.write_audit_log(action='citizen_evidence_uploaded', entity_type='incident_image', entity_id=str(row['id']), user_id=int(user['id']), metadata={'incident_id': report_id}, connection=db)

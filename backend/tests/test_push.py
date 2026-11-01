@@ -83,3 +83,28 @@ def test_unsubscribe_removes_only_your_own_phone(configured):
     a.post("/api/push/unsubscribe", headers=ah, json={"endpoint": url["endpoint"]})
     with engine.connect() as db:
         assert db.execute(text("SELECT count(*) FROM resq_push_subscriptions WHERE endpoint=:e"), {"e": url["endpoint"]}).scalar() == 0
+
+
+def test_staff_and_rangers_get_their_own_alerts_on_their_phones(configured):
+    """A citizen report reaches the Control Room operator, a new task reaches the ranger, and a question reaches the citizen; only that person's phones."""
+    tag = __import__("uuid").uuid4().hex[:8]
+    staff, sh, _ = actor("control_room_operator", scopes=["OD"]); bystander, bh, _ = actor("control_room_operator", scopes=["MH"])
+    assert staff.post("/api/push/subscribe", headers=sh, json={**sub(f"ops-{tag}"), "state": None}).status_code == 201
+    assert bystander.post("/api/push/subscribe", headers=bh, json={**sub(f"other-{tag}"), "state": None}).status_code == 201
+    reporter, rh, _ = citizen()
+    reporter.post("/api/citizen/reports", headers=rh, json=body(latitude=20.3, longitude=85.8))
+    titles = [(e, p) for e, p in configured if tag in e]
+    assert [e for e, _ in titles] == [f"https://push.example/ops-{tag}"]                              # the one covering Odisha, not the Maharashtra one
+    assert "New citizen report to review" in titles[0][1] and '"url": "/ops/incidents/' in titles[0][1]
+    assert "Cooking" not in titles[0][1] and "Smoke" not in titles[0][1]                              # no report text in the push
+
+
+def test_a_citizen_is_pushed_when_officials_ask_a_question(configured):
+    client, headers, _ = citizen()
+    rid = client.post("/api/citizen/reports", headers=headers, json=body(latitude=20.3, longitude=85.8)).json()["report"]["id"]
+    tag = __import__("uuid").uuid4().hex[:8]
+    client.post("/api/push/subscribe", headers=headers, json=sub(f"me-{tag}"))
+    staff, sh, _ = actor("control_room_operator", scopes=["OD"])
+    staff.post(f"/api/incidents/{rid}/question", headers=sh, json={"question": "Which side of the river is it on?"})
+    mine = [p for e, p in configured if tag in e]
+    assert mine and "Officials have a question about your report" in mine[0] and f'"url": "/citizen/reports/{rid}"' in mine[0]

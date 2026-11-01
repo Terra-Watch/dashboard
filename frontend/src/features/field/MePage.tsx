@@ -1,3 +1,4 @@
+import { PushToggle } from '../citizen/PushToggle';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ export function MePage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle title={t('nav.me')} subtitle={user?.name} />
       <ProfileCard />
+      <Card title={t('staff.push.title', 'Alerts on this device')}><PushToggle staff /></Card>
       <Card title={t('field.me.sync', 'Waiting to send')}>
         {queue.length === 0 ? <p>{t('field.me.synced', 'Everything has been sent.')}</p> : (
           <>
