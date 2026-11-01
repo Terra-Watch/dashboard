@@ -21,11 +21,14 @@ def escalation_minutes() -> float | None:
     return value if value > 0 else None
 
 
-def lead_recipients(state: str | None) -> list[int]:
+def lead_recipients(state: str | None, community_id: int | None = None) -> list[int]:
     with engine.connect() as db:
         admins = db.execute(text("SELECT id FROM resq_users WHERE role='admin' AND deactivated_at IS NULL")).scalars().all()
-        leads = db.execute(text('''SELECT u.id FROM resq_users u JOIN resq_user_scopes s ON s.user_id=u.id
-            WHERE u.role='incident_commander' AND u.deactivated_at IS NULL AND s.state=:state'''), {'state': state}).scalars().all() if state else []
+        leads = db.execute(text('''SELECT u.id FROM resq_users u WHERE u.role='incident_commander' AND u.deactivated_at IS NULL AND (
+              EXISTS (SELECT 1 FROM resq_user_community_scopes x WHERE x.user_id=u.id AND x.community_id=CAST(:cid AS int))
+              OR (CAST(:cid AS int) IS NULL AND EXISTS (SELECT 1 FROM resq_user_scopes s WHERE s.user_id=u.id AND s.state=:state))
+              OR (NOT EXISTS (SELECT 1 FROM resq_user_community_scopes x WHERE x.user_id=u.id)
+                  AND EXISTS (SELECT 1 FROM resq_user_scopes s WHERE s.user_id=u.id AND s.state=:state)))'''), {'state': state, 'cid': community_id}).scalars().all() if state else []
     return sorted({int(i) for i in [*admins, *leads]})
 
 
@@ -35,14 +38,14 @@ def escalate_unattended() -> list[int]:
     if minutes is None:
         return []
     with engine.connect() as db:
-        rows = db.execute(text('''SELECT i.id,i.state FROM resq_incidents i
+        rows = db.execute(text('''SELECT i.id,i.state,i.community_id FROM resq_incidents i
             WHERE i.status='reported' AND i.created_at < now() - make_interval(secs => :secs)
               AND NOT EXISTS (SELECT 1 FROM resq_incident_assignments a WHERE a.incident_id=i.id AND a.status<>'cancelled')
               AND NOT EXISTS (SELECT 1 FROM resq_audit_log l WHERE l.entity_type='incident' AND l.entity_id=i.id::text AND l.action='report_escalated')
             ORDER BY i.created_at'''), {'secs': minutes * 60}).mappings().all()
     done: list[int] = []
     for row in rows:
-        for recipient in lead_recipients(row['state']):
+        for recipient in lead_recipients(row['state'], row['community_id']):
             generate_alert(kind='report_unattended', severity='warning', state=row['state'], entity_type='incident', entity_id=str(row['id']), user_id=recipient,
                            message=f'Report #{row["id"]} has had no officer assigned for {int(minutes)} minutes.')
         audit_log.write_audit_log(action='report_escalated', entity_type='incident', entity_id=str(row['id']), metadata={'after_minutes': minutes})

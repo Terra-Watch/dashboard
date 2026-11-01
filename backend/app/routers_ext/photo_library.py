@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from ..core.permissions import user_scopes
+from ..core.permissions import scope_clause
 from ..core.security import current_redesign_user, require_csrf
 from ..database.session import engine
 from ..services import audit_log
@@ -31,9 +31,7 @@ def _staff(user: dict) -> None:
 
 
 def _scope_sql(user: dict) -> tuple[str, dict]:
-    if user.get('role') == 'admin':
-        return 'TRUE', {}
-    return 'i.state = ANY(CAST(:states AS text[]))', {'states': sorted(user_scopes(int(user['id'])))}
+    return scope_clause(user, 'i.state', 'i.community_id')
 
 
 @router.get('/photo-library')

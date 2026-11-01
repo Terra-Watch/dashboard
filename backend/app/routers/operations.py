@@ -16,7 +16,7 @@ from ..contracts.schemas import (
     AlertRuleRequest, IncidentRequest, IncidentStatusUpdate,
     IncidentImageReviewRequest, OperationalAlertCreateRequest, PlanRequest, SettingsUpdate, SpreadRequest,
 )
-from ..core.permissions import require_scope, user_scopes
+from ..core.permissions import require_scope, scope_clause, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
 from ..services import communities
 from ..services import alert_service, audit_log
@@ -168,17 +168,20 @@ def list_incidents(
         clauses.append("state=:state")
         params["state"] = state
     if user.get("role") != "admin":
-        scopes = user_scopes(int(user["id"]), include_uncovered=True)
-        if not scopes:
-            return []
-        clauses.append("state = ANY(:scopes)")
-        params["scopes"] = list(scopes)
+        clause, scope_params = scope_clause(user, "i.state", "i.community_id", include_uncovered=True)
+        clauses.append(clause)
+        params.update(scope_params)
     if clauses:
         query += f" WHERE {' AND '.join(clauses)}"
     query += " ORDER BY created_at DESC"
     with engine.connect() as db:
         rows = [dict(row) for row in db.execute(text(query), params).mappings().all()]
     return mask_authenticity_status(attach_media_integrity_status(rows))
+
+
+def _community_at(lat: float | None, lon: float | None) -> int | None:
+    with engine.connect() as db:
+        return communities.at_point(db, lat, lon)
 
 
 @router.post("/incidents", status_code=201, dependencies=[Depends(require_csrf)])
@@ -188,7 +191,7 @@ def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(
 
     # Scope check: scoped officer must have authoritative state within scope
     if user.get("role") != "admin":
-        require_scope(user, payload.state, entity_type="incident", entity_id=payload.client_key)
+        require_scope(user, payload.state, entity_type="incident", entity_id=payload.client_key, community_id=_community_at(payload.latitude, payload.longitude))
 
     created_new = False
     with engine.begin() as db:
@@ -499,12 +502,9 @@ def list_alerts(
         clauses.append("state=:state")
         params["state"] = state
     if user.get("role") != "admin":
-        scopes = user_scopes(int(user["id"]))
-        if not scopes:
-            clauses.append("user_id=:uid")
-        else:
-            clauses.append("(user_id=:uid OR (user_id IS NULL AND state = ANY(:scopes)))")
-            params["scopes"] = list(scopes)
+        clause, scope_params = scope_clause(user, "state", "(SELECT i.community_id FROM resq_incidents i WHERE resq_alerts.entity_type='incident' AND i.id::text=resq_alerts.entity_id)")
+        clauses.append(f"(user_id=:uid OR (user_id IS NULL AND {clause}))")
+        params.update(scope_params)
     if clauses:
         query += f" WHERE {' AND '.join(clauses)}"
     query += " ORDER BY created_at DESC"

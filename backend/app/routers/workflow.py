@@ -11,7 +11,7 @@ from sqlalchemy import text
 
 from ..contracts.field import FieldObservationRequest
 from ..contracts.schemas import AssignmentDecisionRequest, AssignmentReassignmentRequest, IncidentAssignmentRequest, VerificationRequest
-from ..core.permissions import require_scope, user_scopes
+from ..core.permissions import CATCH_ALL_ROLES, community_scope, require_scope, scope_clause, uncovered_communities, user_scopes
 from ..core.regions import state_at
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
@@ -52,29 +52,35 @@ def _notify_users(*, user_ids: list[int], kind: str, message: str, state: str | 
 @router.get('/control-room/rangers')
 def eligible_rangers(user: dict = Depends(_control_user)) -> dict:
     with engine.connect() as db:
-        rows = db.execute(text("SELECT u.id,u.name,u.email,u.home_state,(SELECT c.name FROM resq_communities c WHERE c.id=u.community_id) AS community FROM resq_users u WHERE u.role='field_crew' ORDER BY u.name")).mappings().all()
+        rows = db.execute(text("SELECT u.id,u.name,u.email,u.home_state,u.community_id,(SELECT c.name FROM resq_communities c WHERE c.id=u.community_id) AS community FROM resq_users u WHERE u.role='field_crew' ORDER BY u.name")).mappings().all()
     scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']), include_uncovered=True)
-    items = [dict(row) for row in rows if scopes is None or row['home_state'] in scopes or row['home_state'] is None]
-    return {'items': items}
+    comms = None if scopes is None else community_scope(int(user['id']))
+    if comms is not None and user.get('role') in CATCH_ALL_ROLES:
+        comms = comms | uncovered_communities()
+    def visible(row) -> bool:
+        if scopes is None:
+            return True
+        if comms is not None and row['community_id'] is not None:
+            return row['community_id'] in comms   # given communities: a ranger's own community decides
+        return row['home_state'] in scopes or row['home_state'] is None
+    return {'items': [{k: v for k, v in dict(row).items() if k != 'community_id'} for row in rows if visible(row)]}
 
 
 @router.get('/control-room/assignments')
 def all_active_assignments(user: dict = Depends(_control_user)) -> dict:
     """Every open assignment in the caller's scope, with the officer and incident, for the Field screen."""
     params: dict = {}
-    scope_clause = ''
+    scope_sql = ''
     if user.get('role') != 'admin':
-        scopes = user_scopes(int(user['id']), include_uncovered=True)
-        if not scopes:
-            return {'items': []}
-        scope_clause = 'AND i.state = ANY(:scopes)'
-        params['scopes'] = list(scopes)
+        clause, scope_params = scope_clause(user, 'i.state', 'i.community_id', include_uncovered=True)
+        scope_sql = f'AND {clause}'
+        params.update(scope_params)
     with engine.connect() as db:
         rows = db.execute(text(f'''SELECT a.id,a.incident_id,a.ranger_id,a.status,a.priority,a.due_at,a.created_at,a.updated_at,
                 u.name AS ranger_name,i.state,(SELECT c.slug FROM resq_communities c WHERE c.id=i.community_id) AS community_slug,i.status AS incident_status,i.latitude,i.longitude,
                 (SELECT count(*) FROM resq_field_verifications v WHERE v.assignment_id=a.id) AS observations
             FROM resq_incident_assignments a JOIN resq_users u ON u.id=a.ranger_id JOIN resq_incidents i ON i.id=a.incident_id
-            WHERE a.status IN ('assigned','accepted','in_progress') {scope_clause} ORDER BY a.created_at ASC LIMIT 500'''), params).mappings().all()
+            WHERE a.status IN ('assigned','accepted','in_progress') {scope_sql} ORDER BY a.created_at ASC LIMIT 500'''), params).mappings().all()
     return {'items': [dict(row) for row in rows]}
 
 
@@ -176,7 +182,7 @@ def decide_assignment(assignment_id: int, payload: AssignmentDecisionRequest, us
         new_status = 'cancelled' if payload.decision == 'declined' else payload.decision
         updated = db.execute(text("UPDATE resq_incident_assignments SET status=CAST(:status_value AS varchar(20)),updated_at=now(),cancelled_at=CASE WHEN CAST(:cancelled_value AS varchar(20))='cancelled' THEN now() ELSE cancelled_at END WHERE id=:id RETURNING id,incident_id,ranger_id,status,priority,due_at,updated_at"), {'id': assignment_id, 'status_value': new_status, 'cancelled_value': new_status}).mappings().one()
         audit_log.write_audit_log(action=f'assignment_{payload.decision}', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id'], 'reason': (payload.reason or '').strip() or None}, connection=db)
-    recipients = incident_staff_recipients(row['state'])
+    recipients = incident_staff_recipients(row['state'], incident_id=row['incident_id'])
     _notify_users(user_ids=[int(item) for item in recipients], kind=f'assignment_{payload.decision}', message=f'Ranger updated assignment for incident #{row["incident_id"]}: {payload.decision}.', state=row['state'], entity_type='incident_assignment', entity_id=str(assignment_id))
     return {'assignment': dict(updated)}
 
@@ -204,7 +210,7 @@ def submit_verification(assignment_id: int, payload: FieldObservationRequest, re
             RETURNING id,assignment_id,outcome,notes,observed_at,created_at'''), {'assignment_id': assignment_id, 'ranger_id': user['id'], 'outcome': payload.outcome, 'notes': payload.notes.strip(), 'observed_at': observed_at, 'key': payload.idempotency_key}).mappings().one()
         db.execute(text("UPDATE resq_incident_assignments SET status='in_progress',updated_at=now() WHERE id=:id"), {'id': assignment_id})
         audit_log.write_audit_log(action='ranger_verification_submitted', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': assignment['incident_id'], 'outcome': payload.outcome}, connection=db)
-    recipients = incident_staff_recipients(assignment['state'])
+    recipients = incident_staff_recipients(assignment['state'], incident_id=assignment['incident_id'])
     _notify_users(user_ids=[int(item) for item in recipients], kind='verification_submitted', message=f'Field verification submitted for incident #{assignment["incident_id"]}.', state=None, entity_type='incident_assignment', entity_id=str(assignment_id))
     return {'verification': dict(row), 'message': 'Verification persisted for Control Room review.'}
 
@@ -233,7 +239,7 @@ def complete_assignment(assignment_id: int, user: dict = Depends(require_roles('
             raise HTTPException(status_code=409, detail='Record at least one observation before completing the assignment')
         updated = db.execute(text("UPDATE resq_incident_assignments SET status='completed',completed_at=now(),updated_at=now() WHERE id=:id RETURNING id,incident_id,ranger_id,status,completed_at,updated_at"), {'id': assignment_id}).mappings().one()
         audit_log.write_audit_log(action='assignment_completed', entity_type='incident_assignment', entity_id=str(assignment_id), user_id=int(user['id']), metadata={'incident_id': row['incident_id'], 'observations': int(observations)}, connection=db)
-    recipients = incident_staff_recipients(row['state'])
+    recipients = incident_staff_recipients(row['state'], incident_id=row['incident_id'])
     _notify_users(user_ids=[int(item) for item in recipients], kind='assignment_completed', message=f'Ranger completed the field assignment for incident #{row["incident_id"]}.', state=row['state'], entity_type='incident_assignment', entity_id=str(assignment_id))
     return {'assignment': dict(updated)}
 
@@ -317,7 +323,9 @@ def create_ranger_report(payload: RangerReportRequest, user: dict = Depends(requ
     state = state_at(payload.latitude, payload.longitude)
     if state is None:
         raise HTTPException(status_code=422, detail='This position is outside India')
-    require_scope(user, state, entity_type='incident', entity_id=payload.client_key)
+    with engine.connect() as probe:
+        place = communities.at_point(probe, payload.latitude, payload.longitude)
+    require_scope(user, state, entity_type='incident', entity_id=payload.client_key, community_id=place)
     with engine.begin() as db:
         row = db.execute(text("""INSERT INTO resq_incidents (reporter_id,client_key,source,size,notes,state,latitude,longitude,observed_at,community_id)
             VALUES (:reporter_id,:client_key,'patrol',:size,:notes,:state,:latitude,:longitude,:observed_at,:community_id)

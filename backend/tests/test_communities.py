@@ -42,3 +42,33 @@ def test_admin_gives_communities_and_the_person_can_work_there():
     assert ops.get("/api/auth/me", headers=oh).json()["scopes"] == ["TN"]            # worked out from the communities
     assert admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": ["nowhere"]}).status_code == 422
     assert admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": []}).status_code == 422
+
+
+def _staff_in(admin, ah, role, slug):
+    c, h, uid = actor(role, scopes=["TN"])
+    assert admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": [slug]}).status_code == 200
+    return c, h, uid
+
+
+def test_a_person_in_one_community_cannot_see_another_in_the_same_state():
+    admin, ah, _ = actor("admin")
+    a, ha, uid_a = _staff_in(admin, ah, "control_room_operator", "bolampatti")
+    b, hb, uid_b = _staff_in(admin, ah, "control_room_operator", "bolampatti-west")
+    citizen, hc, _ = actor("citizen")
+    r = citizen.post("/api/citizen/reports", headers=hc, json={"client_key": f"iso-{uuid.uuid4().hex[:8]}", "description": "Smoke on the slope above the village",
+                                                                "latitude": 10.90158, "longitude": 76.90577, "observed_at": "2026-10-16T08:00:00+00:00"})
+    rid = r.json()["report"]["id"]
+    assert a.get(f"/api/incidents/{rid}", headers=ha).status_code == 200
+    assert b.get(f"/api/incidents/{rid}", headers=hb).status_code == 403                      # same state, other community
+    assert rid in [i["id"] for i in a.get("/api/incidents", headers=ha).json()]
+    assert rid not in [i["id"] for i in b.get("/api/incidents", headers=hb).json()]
+    assert b.patch(f"/api/incidents/{rid}/status", headers=hb, json={"status": "verified", "notes": "x"}).status_code == 403
+    # a handover note for a community needs that community
+    assert b.post("/api/handover/notes", headers=hb, json={"state": "TN", "community": "bolampatti", "body": "hello"}).status_code == 403
+    assert b.post("/api/handover/notes", headers=hb, json={"state": "TN", "community": "bolampatti-west", "body": "hello"}).status_code == 201
+    notes_a = a.get("/api/handover/notes", headers=ha).json()["items"]
+    assert all(n["community"] != "Bolampatti West forest community" for n in notes_a)
+    # staff told about the report: A yes, B no
+    from app.services.recipients import incident_staff_recipients
+    told = incident_staff_recipients("TN", incident_id=rid)
+    assert uid_a in told and uid_b not in told

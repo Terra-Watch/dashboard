@@ -14,3 +14,4 @@ def ensure(db) -> None:
         acknowledged_at TIMESTAMPTZ
     )'''))
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_handover_notes_feed ON resq_handover_notes (state, created_at DESC)'))
+    db.execute(text('ALTER TABLE resq_handover_notes ADD COLUMN IF NOT EXISTS community_id INTEGER'))   # the community a note is for; null on older notes

@@ -79,7 +79,7 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
         if created:
             audit_log.write_audit_log(action='citizen_report_created', entity_type='incident', entity_id=str(row['id']), user_id=int(user['id']), metadata={'state': row['state']}, connection=db)
     if created:
-        for recipient_id in incident_staff_recipients(row['state']):
+        for recipient_id in incident_staff_recipients(row['state'], community_id=community_id):
             generate_alert(kind='citizen_report_received', message=f'Citizen report #{row["id"]} is ready for review.', state=row['state'], severity='info', entity_type='incident', entity_id=str(row['id']), user_id=recipient_id)
     return {'created': created, 'report': _safe_report(row), 'message': 'Report persisted for human review. No emergency notification is implied.'}
 
