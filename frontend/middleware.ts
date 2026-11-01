@@ -1,7 +1,8 @@
 import { ipAddress } from '@vercel/functions';
 
-/** The API is reached through this site, so on its own it would only see this site's address. This forwards /api requests itself and adds the visitor's address and a shared secret, which the API believes only when the secret matches. */
-export const config = { matcher: '/api/:path*' };
+/** The API is reached through this site, so on its own it would only see this site's address. This forwards those requests itself and adds the visitor's address and a shared secret, which the API believes only when the secret matches. */
+// Only the routes that use the visitor's address (login lockout, public rate limit). Their bodies are small; a request body through middleware fails above about 1 MB, so uploads keep using the plain rewrite in vercel.json.
+export const config = { matcher: ['/api/auth/:path*', '/api/public/:path*'] };
 
 type Env = { process?: { env?: Record<string, string | undefined> } };
 const env = (name: string) => (globalThis as Env).process?.env?.[name];
