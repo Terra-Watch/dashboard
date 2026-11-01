@@ -140,7 +140,7 @@ test.describe('Range Officer', () => {
     await page.getByRole('button', { name: 'Show distance from me' }).click();
     await expect(send).toBeEnabled();
     await send.click();
-    await expect(page.getByText('Sent to the Control Room. They will check it.')).toBeVisible();
+    await expect(page.getByText('Received by the Control Room. Reference #77')).toBeVisible();
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({ notes: 'Smoke rising behind the ridge', size: 'unknown', latitude: 20.3, longitude: 85.8 });
     expect(String(sent[0].client_key).length).toBeGreaterThanOrEqual(8);

@@ -11,6 +11,7 @@ import { Notice } from '../../ui/Notice';
 import { RungBadge } from '../../ui/RungBadge';
 import { rungOfStatus } from '../../ui/ladder';
 import { OwnPhoto } from './OwnPhoto';
+import { TextArea } from '../../ui/Field';
 import { formatWhen, stateName } from './format';
 
 type Report = { id: number; status: string; close_reason: string | null; state: string; latitude: number; longitude: number; observed_at: string; created_at: string; evidence: Array<{ id: number; original_filename: string; waiting_for_check?: boolean }> };
@@ -28,6 +29,8 @@ export function ReportDetailPage() {
   const [problem, setProblem] = useState('');
   const state = (location.state ?? {}) as { sent?: boolean; photosTotal?: number; photosLeft?: number; photosRejected?: number };
   const report = useQuery({ queryKey: ['my-report', id], queryFn: () => api<{ report: Report }>(`/api/citizen/reports/${id}`), refetchInterval: query => (query.state.data?.report.status === 'closed' ? false : 15_000) });
+  const questions = useQuery({ queryKey: ['my-report-questions', id], queryFn: () => api<{ items: Array<{ id: number; question: string; asked_at: string; answer: string | null }> }>(`/api/citizen/reports/${id}/questions`), refetchInterval: 20_000 });
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const timeline = useQuery({ queryKey: ['my-report-timeline', id], queryFn: () => api<{ items: Event[] }>(`/api/citizen/reports/${id}/timeline`) });
 
   async function addPhoto(file: File | undefined) {
@@ -58,6 +61,16 @@ export function ReportDetailPage() {
       )}
       {item.status === 'closed' && <Notice kind="info" title={t('citizen.detail.closed', 'This report is closed')}>{REASONS[item.close_reason ?? 'other']}</Notice>}
       {problem && <Notice kind="danger">{problem}</Notice>}
+
+      {questions.data?.items.length ? (
+        <Card title={t('citizen.detail.questions', 'Questions from officials')}>
+          <ul className="space-y-3">{questions.data.items.map(q => (
+            <li key={q.id}><p className="font-semibold">{q.question}</p>
+              {q.answer ? <p className="mt-1 text-ink-muted">{t('citizen.detail.you_answered', 'You answered')}: {q.answer}</p> : (
+                <div className="mt-2 space-y-2"><TextArea label={t('citizen.detail.your_answer', 'Your answer')} rows={2} maxLength={1000} value={answers[q.id] ?? ''} onChange={event => setAnswers(current => ({ ...current, [q.id]: event.target.value }))} />
+                  <Button disabled={!(answers[q.id] ?? '').trim()} onClick={() => void api(`/api/citizen/reports/${id}/questions/${q.id}/answer`, { method: 'POST', json: { answer: answers[q.id].trim() } }).then(() => queryClient.invalidateQueries({ queryKey: ['my-report-questions', id] })).catch(reason => setProblem(reason instanceof ApiError ? reason.detail : t('citizen.detail.answer_failed', 'Your answer was not sent. Try again.')))}>{t('citizen.detail.send_answer', 'Send my answer')}</Button></div>)}
+            </li>))}</ul>
+        </Card>) : null}
 
       <Card title={t('citizen.detail.what_happened', 'What has happened')}>
         {timeline.isLoading ? <Skeleton lines={3} /> : (

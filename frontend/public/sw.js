@@ -106,3 +106,21 @@ self.addEventListener('fetch', event => {
       .catch(() => caches.match(event.request).then(cached => cached || (event.request.mode === 'navigate' ? caches.match('/') : Response.error())))
   );
 });
+
+// Alerts: show what the server sent (a fixed, short text), and open Near me when it is tapped.
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { /* a plain-text push still shows the default words */ }
+  event.waitUntil(self.registration.showNotification(data.title || 'TerraWatch alert', {
+    body: data.body || 'Open TerraWatch for details.', tag: data.tag || 'terrawatch-alert', icon: '/brand/icon-192.png', badge: '/brand/icon-192.png',
+    data: { url: typeof data.url === 'string' && data.url.startsWith('/') ? data.url : '/citizen/near-me' }, requireInteraction: true,
+  }));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/citizen/near-me';
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windows => {
+    for (const client of windows) { if ('focus' in client) { client.navigate(target); return client.focus(); } }
+    return self.clients.openWindow(target);
+  }));
+});

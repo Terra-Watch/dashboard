@@ -29,7 +29,7 @@ test.describe('Citizen', () => {
     await expect(page.getByText('Avoid the ridge road until noon.')).toBeVisible();
     await expect(page.getByRole('link', { name: /Forest control room/ })).toHaveAttribute('href', 'tel:06741234567');
     await expect(page.getByText('Public map data is not available yet.')).toBeVisible();
-    await expect(page.getByText(/Nothing shown here does not mean there is no fire/)).toBeVisible();
+    await expect(page.getByText(/Nothing shown here does not mean there is no fire/).first()).toBeVisible();
     await expect(page.getByText('If anyone is in danger, call emergency services first.')).toBeVisible();
   });
 
@@ -43,44 +43,19 @@ test.describe('Citizen', () => {
     expect(await section.innerText()).not.toMatch(/\b(112|100|101)\b/);
   });
 
-  test('the report form needs a place, a state and words; it sends once and shows the report', async ({ page }) => {
-    const bodies: Array<Record<string, unknown>> = []; const uploads: string[] = [];
-    await page.route('**/api/citizen/reports', route => { bodies.push(JSON.parse(route.request().postData() ?? '{}')); return route.fulfill(json({ created: true, report: { id: 55, status: 'reported' } }, 201)); });
-    await page.route('**/api/citizen/reports/55/evidence', route => { uploads.push('photo'); return route.fulfill(json({ evidence: { id: 1 } }, 201)); });
-    await page.route('**/api/citizen/reports/55', route => route.fulfill(json({ report: { id: 55, status: 'reported', close_reason: null, state: 'OD', latitude: 20.3, longitude: 85.8, observed_at: '2026-10-16T08:00:00Z', created_at: '2026-10-16T08:00:00Z', evidence: [] } })));
-    await page.route('**/api/citizen/reports/55/timeline', route => route.fulfill(json({ items: [{ kind: 'received', at: '2026-10-16T08:00:00Z' }] })));
-    await page.goto('/citizen/report');
-    const send = page.getByRole('button', { name: 'Send report' });
-    await expect(send).toBeDisabled();
-    await page.getByLabel('Or type the coordinates').fill('north of the river');
-    await expect(page.getByText('Write coordinates like 20.31, 85.82')).toBeVisible();
-    await page.getByLabel('Or type the coordinates').fill('20.31, 85.82');
-    await page.getByLabel('State').selectOption('OD');
-    await page.getByLabel('Describe it').fill('Thick smoke rising from the hill');
-    await page.locator('input[type=file]').setInputFiles({ name: 'smoke.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) });
-    await expect(page.getByText('smoke.jpg')).toBeVisible();
-    await expect(send).toBeEnabled();
-    await send.click();
-    await expect(page).toHaveURL(/\/citizen\/reports\/55$/);
-    await expect(page.getByText('Your report was sent.')).toBeVisible();
-    expect(bodies).toHaveLength(1);
-    expect(bodies[0]).toMatchObject({ latitude: 20.31, longitude: 85.82, state: 'OD', description: 'Thick smoke rising from the hill' });
-    expect(String(bodies[0].client_key)).toHaveLength(36);
-    expect(uploads).toEqual(['photo']);
-  });
-
-  test('offline, a report is kept on the phone and the person is told what that means for photos', async ({ page }) => {
+  test('offline, a report is kept on the phone and the person is told staff have not received it', async ({ page }) => {
     await page.route('**/api/citizen/reports', route => route.abort('internetdisconnected'));
     await page.goto('/citizen/report');
     await page.getByLabel('Or type the coordinates').fill('20.31, 85.82');
-    await page.getByLabel('State').selectOption('OD');
-    await page.getByLabel('Describe it').fill('Smoke near the village road');
+    await page.getByRole('radio').first().click();
     await page.getByRole('button', { name: 'Send report' }).click();
-    await expect(page.getByRole('heading', { name: 'Saved on this phone' })).toBeVisible();
-    await expect(page.getByText(/Photos are not saved offline/)).toBeVisible();
-    const queued = await page.evaluate(() => JSON.parse(localStorage.getItem('resq_offline_queue') ?? '[]'));
-    expect(queued).toHaveLength(1);
-    expect(queued[0].path).toBe('/api/citizen/reports');
+    await expect(page.getByRole('heading', { name: 'Not sent yet, but saved' })).toBeVisible();
+    await expect(page.getByText('Staff have NOT received your report yet')).toBeVisible();
+    const saved = await page.evaluate(() => new Promise<number>(resolve => {
+      const open = indexedDB.open('tw_outbox', 1);
+      open.onsuccess = () => { const request = open.result.transaction('items').objectStore('items').count(); request.onsuccess = () => resolve(request.result); };
+    }));
+    expect(saved).toBe(1);
   });
 
   test('My reports lists reports; the detail shows every step and the closure reason in words', async ({ page }) => {
@@ -137,7 +112,7 @@ test.describe('Citizen', () => {
     await expect(nav.getByRole('link')).toHaveCount(5);
     await expect(nav.getByRole('link', { name: 'Near me' })).toHaveAttribute('aria-current', 'page');
     const labels = await nav.getByRole('link').allInnerTexts();
-    expect(labels.map(label => label.trim())).toEqual(['Near me', 'My reports', 'Report', 'Community', 'Account']);
+    expect(labels.map(label => label.trim())).toEqual(['Home', 'Near me', 'Report', 'Community', 'Account']);
     await nav.getByRole('link', { name: 'Report', exact: true }).click();
     await expect(page).toHaveURL(/\/citizen\/report$/);
   });

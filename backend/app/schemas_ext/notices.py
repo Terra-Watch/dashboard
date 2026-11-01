@@ -38,7 +38,7 @@ def ensure(db) -> None:
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         UNIQUE (notice_id, revision_no)
     )'''))
-    for ddl in ('incident_id INTEGER REFERENCES resq_incidents(id) ON DELETE SET NULL', 'image_id BIGINT', 'urgent BOOLEAN NOT NULL DEFAULT false'):
+    for ddl in ('incident_id INTEGER REFERENCES resq_incidents(id) ON DELETE SET NULL', 'image_id BIGINT', 'urgent BOOLEAN NOT NULL DEFAULT false', 'reviewed_by INTEGER REFERENCES resq_users(id)', 'reviewed_at TIMESTAMPTZ', 'review_decision VARCHAR(10)', 'review_note TEXT'):
         db.execute(text(f'ALTER TABLE resq_notices ADD COLUMN IF NOT EXISTS {ddl}'))
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_notices_incident_idx ON resq_notices (incident_id)'))
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_notices_status_idx ON resq_notices (status, expires_at)'))

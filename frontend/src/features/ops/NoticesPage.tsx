@@ -12,7 +12,7 @@ import { STATES, formatWhen } from '../citizen/format';
 import type { CommunityImageAssessment } from '../../lib/assessmentPresentation';
 import { ModerationMedia, type ModerationImage } from './ModerationMedia';
 
-type NoticeRow = { id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; regions: string[]; status: 'draft' | 'pending_approval' | 'published' | 'withdrawn'; author_id: number; starts_at: string; expires_at: string; return_reason: string | null; expired: boolean };
+type NoticeRow = { urgent?: boolean; reviewed_at?: string | null; review_decision?: string | null; review_note?: string | null; incident_id?: number | null; id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; regions: string[]; status: 'draft' | 'pending_approval' | 'published' | 'withdrawn'; author_id: number; starts_at: string; expires_at: string; return_reason: string | null; expired: boolean };
 type QueueItem = { id: number; reason: string; kind: string; held: boolean; content: string | null; author_id: number | null; author_name: string | null; author_prior_removals: number; open_reports: number; severity: 'high' | 'held' | 'normal'; image?: ModerationImage | null; community_image_assessment?: CommunityImageAssessment | null };
 type Room = { region: string; slow_mode_seconds: number; frozen: boolean; retention_days: number | null };
 
@@ -46,6 +46,8 @@ function NoticeAdmin() {
   const [reasonFor, setReasonFor] = useState<{ id: number; kind: 'return' | 'withdraw' } | null>(null); const [reason, setReason] = useState('');
   const canApprove = user?.role === 'admin' || user?.role === 'incident_commander';
   const ready = title.trim() && body.trim() && regions.length > 0 && expiresAt;
+  const urgentToReview = (list.data?.items ?? []).filter(item => item.urgent && !item.reviewed_at && item.status === 'published');
+  const [concern, setConcern] = useState<{ id: number; note: string } | null>(null);
 
   async function act(action: () => Promise<unknown>, done: string) {
     setBusy(true); setProblem(''); setMessage('');
@@ -61,6 +63,21 @@ function NoticeAdmin() {
     <div className="space-y-4">
       {message && <Notice kind="success">{message}</Notice>}
       {problem && <Notice kind="danger">{problem}</Notice>}
+      {urgentToReview.length > 0 && (
+        <Card title={t('ops.notices.urgent', 'Urgent alerts that went out without a second person')}>
+          <p className="text-sm text-ink-muted">{t('ops.notices.urgent_hint', 'These were sent at once. Look at them now: say they are fine, or say what worries you. You cannot review your own.')}</p>
+          <ul className="mt-2 space-y-3">{urgentToReview.map(item => (
+            <li key={item.id} className="rounded-rq border border-line p-3">
+              <p className="font-semibold">{item.title}</p><p className="whitespace-pre-wrap text-sm">{item.body}</p>
+              <p className="mt-1 text-sm text-ink-muted">{item.regions.join(', ')}{item.incident_id ? ` · #${item.incident_id}` : ''}</p>
+              {canApprove && item.author_id !== user?.id && (concern?.id === item.id ? (
+                <div className="mt-2 space-y-2"><TextArea label={t('ops.notices.concern', 'What is the concern?')} rows={2} maxLength={500} value={concern.note} onChange={event => setConcern({ id: item.id, note: event.target.value })} />
+                  <div className="flex gap-2"><Button disabled={busy || concern.note.trim().length < 5} onClick={() => void act(() => api(`/api/notices/${item.id}/review`, { method: 'POST', json: { decision: 'concern', note: concern.note.trim() } }), t('ops.notices.reviewed', 'Review saved.')).then(() => setConcern(null))}>{t('ops.notices.send_concern', 'Send my concern')}</Button><Button variant="secondary" onClick={() => setConcern(null)}>{t('ops.cancel', 'Cancel')}</Button></div></div>
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void act(() => api(`/api/notices/${item.id}/review`, { method: 'POST', json: { decision: 'ok' } }), t('ops.notices.reviewed', 'Review saved.'))}>{t('ops.notices.fine', 'This is fine')}</Button><Button variant="secondary" onClick={() => setConcern({ id: item.id, note: '' })}>{t('ops.notices.raise', 'I have a concern')}</Button></div>
+              ))}
+            </li>))}</ul>
+        </Card>)}
       <Card title={t('ops.notices.write', 'Write a notice')}>
         <form onSubmit={event => void create(event)} noValidate className="space-y-3">
           <TextField label={t('ops.notices.title', 'Title')} maxLength={120} value={title} onChange={event => setTitle(event.target.value)} />

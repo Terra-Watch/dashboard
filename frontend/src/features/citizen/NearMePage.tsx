@@ -12,6 +12,7 @@ import { SelectField } from '../../ui/Field';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, type Rung } from '../../ui/ladder';
 import { cellToBoundary } from 'h3-js';
+import { PushToggle } from './PushToggle';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
@@ -135,6 +136,10 @@ export function NearMePage() {
           <p className="mt-3 text-sm text-ink-muted">{t('citizen.near.reports_safety', 'Stay clear of smoke and fire. If anyone is in danger, call the emergency number.')}</p>
         </Card>
       )}
+
+      <Card title={t('citizen.push.title', 'Alerts on this phone')}>
+        <PushToggle state={region} />
+      </Card>
 
       <Card title={t('citizen.near.notices', 'Official notices')}>
         {notices.isLoading ? <Skeleton /> : notices.isError ? <Notice kind="warning">{t('citizen.near.notices_error', 'Notices could not be loaded. Try again in a moment.')}</Notice>

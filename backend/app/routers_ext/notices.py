@@ -17,7 +17,7 @@ from sqlalchemy import text
 from ..core.permissions import user_scopes
 from ..core.security import current_redesign_user, require_csrf, require_roles
 from ..database.session import engine
-from ..services import audit_log
+from ..services import audit_log, push
 from ..services.h3_coarsen import to_cell
 
 router = APIRouter(prefix='/api/notices', tags=['notices'])
@@ -26,7 +26,7 @@ APPROVER_ROLES = {'admin', 'incident_commander'}
 STAFF_ROLES = {'admin', 'control_room_operator', 'incident_commander'}
 REGION_RE = re.compile(r'^[A-Z0-9]{1,8}(-[A-Z0-9_]{1,16})?$')
 COLUMNS = ('id,title,body,severity,regions,area_geojson,starts_at,expires_at,status,author_id,approver_id,return_reason,created_at,updated_at,'
-           'published_at,withdrawn_at,withdrawn_reason,incident_id,image_id,urgent,(status=\'published\' AND expires_at<=now()) AS expired')
+           'published_at,withdrawn_at,withdrawn_reason,incident_id,image_id,urgent,reviewed_by,reviewed_at,review_decision,review_note,(status=\'published\' AND expires_at<=now()) AS expired')
 PUBLIC_FIELDS = ('id', 'title', 'body', 'severity', 'regions', 'area_geojson', 'starts_at', 'expires_at', 'published_at', 'incident_id', 'image_id')
 
 
@@ -360,4 +360,34 @@ def alert_from_incident(incident_id: int, payload: IncidentAlertRequest, user: d
         row = _fetch(db, new_id)
         _revision(db, new_id, row, int(user['id']))
         _audit(db, 'notice_published_urgent', row, user, None, {'incident_id': incident_id, 'radius_km': payload.radius_km, 'with_photo': image_id is not None})
+    push.send_for_notice(int(row['id']), inc['state'], title)   # after the alert is saved; failures never undo it
     return row
+
+
+class ReviewRequest(BaseModel):
+    decision: Literal['ok', 'concern']
+    note: str | None = Field(default=None, max_length=500)
+
+
+@router.post('/{notice_id}/review', dependencies=[Depends(require_csrf)])
+def review_urgent_notice(notice_id: int, payload: ReviewRequest, user: dict = Depends(current_redesign_user)) -> dict:
+    """The second pair of eyes on an urgent alert that went out without waiting. A different person from the author; a concern needs a note and is shown to the author."""
+    if user['role'] not in APPROVER_ROLES:
+        raise HTTPException(status_code=403, detail="Your role doesn't allow this")
+    note = (payload.note or '').strip()
+    if payload.decision == 'concern' and len(note) < 5:
+        raise HTTPException(status_code=422, detail='Say what the concern is')
+    with engine.begin() as db:
+        row = _lock(db, notice_id)
+        if not row['urgent']:
+            raise HTTPException(status_code=409, detail='Only an urgent alert needs this review')
+        if row['author_id'] == int(user['id']):
+            raise HTTPException(status_code=403, detail='You cannot review your own alert')
+        if row['reviewed_at'] is not None:
+            raise HTTPException(status_code=409, detail='This alert has already been reviewed')
+        _require_region_scope(user, row['regions'])
+        db.execute(text('UPDATE resq_notices SET reviewed_by=:u,reviewed_at=now(),review_decision=:d,review_note=:n,updated_at=now() WHERE id=:id'),
+                   {'u': int(user['id']), 'd': payload.decision, 'n': note or None, 'id': notice_id})
+        updated = _fetch(db, notice_id)
+        _audit(db, 'notice_urgent_reviewed', updated, user, row['status'], {'decision': payload.decision})
+    return updated
