@@ -119,7 +119,7 @@ export function ReportPage() {
 
       <section aria-labelledby="rp-photo" className="space-y-3">
         <h2 id="rp-photo" className="text-lg">{t('citizen.v2.photo_title', 'Take a photo')} <span className="text-base font-normal text-ink-muted">{t('citizen.v2.optional', '(helps staff, not required)')}</span></h2>
-        <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden onChange={event => { setPhotos(current => [...current, ...Array.from(event.target.files ?? [])].slice(0, MAX_PHOTOS)); event.target.value = ''; }} />
+        <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden onChange={event => { const picked = Array.from(event.target.files ?? []); event.target.value = ''; setPhotos(current => [...current, ...picked].slice(0, MAX_PHOTOS)); }} />
         {previews.length > 0 && (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">{previews.map((url, index) => (
             <li key={url} className="relative overflow-hidden rounded-xl border border-line bg-surface-2">

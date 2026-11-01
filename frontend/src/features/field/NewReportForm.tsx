@@ -73,7 +73,7 @@ export function NewReportForm() {
         </div>
       </Card>
       <Card title={t('field.photo.title', 'Photo')}>
-        <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden onChange={event => { setPhotos(current => [...current, ...Array.from(event.target.files ?? [])].slice(0, 4)); event.target.value = ''; }} />
+        <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden onChange={event => { const picked = Array.from(event.target.files ?? []); event.target.value = ''; setPhotos(current => [...current, ...picked].slice(0, 4)); }} />
         {previews.length > 0 && <ul className="mb-3 grid grid-cols-4 gap-2">{previews.map((url, index) => (
           <li key={url} className="relative overflow-hidden rounded-lg border border-line"><img src={url} alt={t('field.photo.alt', { n: index + 1, defaultValue: 'Photo {{n}}' })} className="aspect-square w-full object-cover" />
             <button type="button" onClick={() => setPhotos(current => current.filter((_, i) => i !== index))} aria-label={t('field.photo.remove', 'Remove this photo')} className="absolute right-1 top-1 flex size-8 items-center justify-center rounded-full bg-surface/90 shadow"><X aria-hidden="true" size={16} /></button></li>))}</ul>}

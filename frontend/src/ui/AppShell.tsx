@@ -1,3 +1,4 @@
+import { ErrorBoundary } from './ErrorBoundary';
 import { LogOut, Menu, MoreHorizontal, User } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -73,7 +74,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
             </ul>
           </nav>
         )}
-        <main id="main" ref={main} tabIndex={-1} className={`min-w-0 px-4 pb-28 pt-6 outline-none md:px-8 md:pb-10 ${rail ? 'md:pl-[14.5rem]' : ''}`}>{children}</main>
+        <main id="main" ref={main} tabIndex={-1} className={`min-w-0 px-4 pb-28 pt-6 outline-none md:px-8 md:pb-10 ${rail ? 'md:pl-[14.5rem]' : ''}`}><ErrorBoundary key={pathname}>{children}</ErrorBoundary></main>
       </div>
 
       {mobileOverflow.length > 0 && <div aria-hidden={!mobileMoreOpen} inert={!mobileMoreOpen} data-open={mobileMoreOpen ? 'true' : 'false'} className={`rq-popover fixed inset-x-3 bottom-20 z-40 rounded-xl border border-line bg-surface p-2 shadow-[0_12px_32px_rgb(15_23_42/0.12)] md:hidden ${mobileMoreOpen ? 'rq-popover-open' : 'rq-popover-closed pointer-events-none'}`}>

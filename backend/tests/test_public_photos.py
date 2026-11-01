@@ -106,3 +106,18 @@ def test_switched_off_shows_nothing(monkeypatch):
     client, _, rid, _ = report_with_photo()
     monkeypatch.setenv("PUBLIC_REPORTS_ENABLED", "false")
     assert client.get("/api/public/reports").json() == {"enabled": False, "items": []}
+
+
+def test_a_citizen_can_see_their_own_photo_and_the_list_counts_it(monkeypatch):
+    """The photo route must work when files live in blob storage (no local file exists)."""
+    from app.services import blob_storage
+    store = {}
+    async def put(path, data, content_type): store[path] = data; return True
+    async def get(path, sha): return store.get(path)
+    monkeypatch.setattr(blob_storage, "enabled", lambda: True)
+    monkeypatch.setattr(blob_storage, "put", put); monkeypatch.setattr(blob_storage, "get", get)
+    client, headers, rid, image_id = report_with_photo()
+    shown = client.get(f"/api/citizen/reports/{rid}/evidence/{image_id}", headers=headers)
+    assert shown.status_code == 200 and shown.headers["content-type"] == "image/jpeg" and len(shown.content) > 100
+    mine = [i for i in client.get("/api/citizen/reports", headers=headers).json()["items"] if i["id"] == rid][0]
+    assert mine["photo_count"] == 1 and mine["first_photo_id"] == image_id

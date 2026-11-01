@@ -52,3 +52,19 @@ export async function incidentImageUrl(incidentId: number, imageId: number): Pro
   if (!response.ok) throw new ApiError(response.status);
   return URL.createObjectURL(await response.blob());
 }
+
+/** A protected image as an object URL, fetched with the person's own sign-in (renewed once if it has expired). The caller frees it with URL.revokeObjectURL. */
+export async function authorizedImageUrl(path: string): Promise<string> {
+  const get = async () => {
+    const token = localStorage.getItem('resq_token');
+    const headers = new Headers();
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    return fetch(`${API}${path}`, { headers, credentials: 'include' });
+  };
+  let response = await get();
+  if (response.status === 401 && localStorage.getItem('resq_user')) {
+    if (await refreshSession()) response = await get(); else endSession();
+  }
+  if (!response.ok) throw new ApiError(response.status);
+  return URL.createObjectURL(await response.blob());
+}

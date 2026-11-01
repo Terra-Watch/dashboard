@@ -83,9 +83,11 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
 @router.get('/reports')
 def list_reports(user: dict = Depends(citizen_user)) -> dict:
     with engine.connect() as db:
-        rows = db.execute(text('''SELECT id,status,close_reason,state,latitude,longitude,observed_at,created_at,updated_at
-            FROM resq_incidents WHERE reporter_id=:reporter_id ORDER BY created_at DESC'''), {'reporter_id': user['id']}).mappings().all()
-    return {'items': [_safe_report(dict(row)) for row in rows]}
+        rows = db.execute(text('''SELECT i.id,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,
+              (SELECT count(*) FROM resq_incident_images g WHERE g.incident_id=i.id) AS photo_count,
+              (SELECT g.id FROM resq_incident_images g WHERE g.incident_id=i.id ORDER BY g.created_at LIMIT 1) AS first_photo_id
+            FROM resq_incidents i WHERE i.reporter_id=:reporter_id ORDER BY i.created_at DESC'''), {'reporter_id': user['id']}).mappings().all()
+    return {'items': [{**_safe_report(dict(row)), 'photo_count': row['photo_count'], 'first_photo_id': row['first_photo_id']} for row in rows]}
 
 
 @router.get('/reports/{report_id}')
@@ -116,9 +118,7 @@ async def get_report_evidence(report_id: int, image_id: int, user: dict = Depend
     if not image:
         raise HTTPException(status_code=404, detail='Evidence image not found')
     path = _stored_image_path(image['storage_key'])
-    if not path.is_file():
-        raise HTTPException(status_code=404, detail='Stored image is unavailable')
-    data = await blob_storage.read_or_local(image['storage_key'], path, image['sha256'])
+    data = await blob_storage.read_or_local(image['storage_key'], path, image['sha256'])  # blob storage has no local file, so there is no is_file() check here
     if data is None:
         raise HTTPException(status_code=404, detail='Stored image is unavailable')
     return Response(
