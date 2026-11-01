@@ -8,6 +8,7 @@ import { PageTitle, LoadError } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { STATES, STATE_BOUNDS, formatWhen, stateName } from '../citizen/format';
+import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { SYMBOL_OF_RUNG, boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
@@ -158,23 +159,21 @@ export function OpsMapPage() {
       {satelliteFailed && <Notice kind="warning">{t('basemap.offline_notice', 'Satellite tiles are not available offline. Switching to map.')}</Notice>}
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
-        <div className={view === 'list' ? 'hidden lg:block' : ''}>
+        <div className={`relative ${view === 'list' ? 'hidden lg:block' : ''}`}>
           <MapView label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
+          {selectedIncident && (
+            <section aria-label={t('map.selected', 'Selected')} data-testid="selected" className="absolute inset-x-2 bottom-2 z-10 max-h-[85%] overflow-auto rounded-panel border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:left-3 md:w-[26rem]">
+              <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
+              <IncidentPreview incidentId={selectedIncident.id} />
+            </section>)}
         </div>
         <div className="space-y-3">
           <Legend kinds={['signal', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />
-          {(selectedIncident || selectedSignal) && (
+          {selectedSignal && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
-              {selectedIncident ? <>
-                <h2 className="text-xl">#{selectedIncident.id} <RungBadge rung={rungOfStatus(selectedIncident.status)} age={ageText(selectedIncident.created_at)} /></h2>
-                <p className="mt-2 whitespace-pre-wrap">{selectedIncident.notes || '—'}</p>
-                <p className="mt-2 text-sm text-ink-muted">{stateName(selectedIncident.state)}</p>
-                <Link to={`/ops/incidents/${selectedIncident.id}`} className="mt-3 inline-flex min-h-11 items-center rounded-rq bg-action px-4 font-bold text-on-action">{t('map.open_incident', 'Open incident')}</Link>
-              </> : selectedSignal && <>
-                <h2 className="text-xl"><RungBadge rung="signal" age={ageText(selectedSignal.acq_datetime)} /></h2>
-                <p className="mt-2 text-sm text-ink-muted">{selectedSignal.satellite} · {formatWhen(selectedSignal.acq_datetime)}</p>
-                <p className="mt-1">{t('map.signal_note', 'Heat seen from space. It is not a confirmed fire until staff check it.')}</p>
-              </>}
+              <h2 className="text-xl"><RungBadge rung="signal" age={ageText(selectedSignal.acq_datetime)} /></h2>
+              <p className="mt-2 text-sm text-ink-muted">{selectedSignal.satellite} · {formatWhen(selectedSignal.acq_datetime)}</p>
+              <p className="mt-1">{t('map.signal_note', 'Heat seen from space. It is not a confirmed fire until staff check it.')}</p>
             </section>)}
         </div>
       </div>

@@ -27,6 +27,19 @@ type PublicIncidents = { enabled: boolean; items: Array<{ cell: string; count: n
 const REGION_KEY = 'tw_region';
 const rememberedRegion = () => { try { return localStorage.getItem(REGION_KEY) ?? ''; } catch { return ''; } };
 
+function ReportCard({ item }: { item: PublicReport }) {
+  const { t } = useTranslation();
+  return (
+              <div className={`rounded-rq border-l-4 p-3 ${item.label === 'confirmed' ? 'border-danger bg-danger-tint' : 'border-unconfirmed bg-unconfirmed-tint'}`}>
+                <p className="text-sm font-bold uppercase tracking-wide">{item.label === 'confirmed' ? t('citizen.near.confirmed', 'Confirmed by officials') : t('citizen.near.unverified', 'Unverified')}</p>
+                <p className="mt-1">{item.label === 'confirmed' ? t('citizen.near.confirmed_text', 'Fire reported and confirmed by officials.') : t('citizen.near.unverified_text', 'Reported by a citizen. Not checked by officials.')}</p>
+                {item.note && <p className="mt-1 italic">“{item.note}”</p>}
+                {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <img key={src} src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" />)}</div>}
+                <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.reported_at)}{item.distance_km !== null ? ` · ${t('citizen.near.km_away', { count: item.distance_km, defaultValue: 'about {{count}} km away' })}` : ''}{` · ${t('citizen.near.area_only', 'area only, not the exact place')}`}</p>
+              </div>
+  );
+}
+
 export function NearMePage() {
   const { t } = useTranslation();
   const [region, setRegion] = useState(rememberedRegion);
@@ -34,6 +47,7 @@ export function NearMePage() {
   const notices = useQuery({ queryKey: ['notices', region], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region ? `?region=${region}` : ''}`) });
   const mine = useQuery({ queryKey: ['my-report-points'], queryFn: () => api<{ items: MyReport[] }>('/api/citizen/reports'), retry: false });
   const [me, setMe] = useState<{ lat: number; lon: number } | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const reports = useQuery({
     queryKey: ['public-reports', me?.lat?.toFixed(2), me?.lon?.toFixed(2)], refetchInterval: 25_000, retry: false,
     queryFn: () => api<{ enabled: boolean; items: PublicReport[] }>(`/api/public/reports${me ? `?lat=${me.lat}&lon=${me.lon}&radius_km=50` : ''}`),
@@ -49,6 +63,8 @@ export function NearMePage() {
     ...(reports.data?.enabled ? reports.data.items.map(item => ({ id: `u${item.id}`, lat: item.lat, lon: item.lon, symbol: 'report' as const, label: item.label === 'unverified' ? t('citizen.near.unverified_short', 'Unverified') : `#${item.id}` })) : []),
     ...(me ? [{ id: 'me', lat: me.lat, lon: me.lon, symbol: 'me' as const }] : []),
   ];
+  const pickedReport = selected?.startsWith('u') ? reports.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
+  const pickedMine = selected?.startsWith('r') ? mine.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
   const nearbyCount = (notices.data?.items.length ?? 0) + (areas.data?.enabled ? areas.data.items.length : 0);
   const hasNearby = nearbyCount > 0;
   const box = region ? STATE_BOUNDS[region] : null;
@@ -85,7 +101,20 @@ export function NearMePage() {
       </SelectField>
 
       <Card title={t('citizen.near.map', 'Map')}>
-        <MapView label={t('citizen.near.map', 'Map')} points={points} polygons={polygons} bounds={bounds} className="h-80" />
+        <div className="relative">
+          <MapView label={t('citizen.near.map', 'Map')} points={points} polygons={polygons} bounds={bounds} className="h-80" selectedId={selected} onSelect={setSelected} />
+          {pickedReport && (
+            <div className="absolute inset-x-2 bottom-2 z-10 max-h-[90%] overflow-auto rounded-panel border border-line bg-surface p-3 shadow-lg">
+              <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 z-10 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
+              <ReportCard item={pickedReport} />
+            </div>)}
+          {pickedMine && (
+            <div className="absolute inset-x-2 bottom-2 z-10 rounded-panel border border-line bg-surface p-3 shadow-lg">
+              <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
+              <p className="font-bold">{t('citizen.near.your_report', 'Your report')} #{pickedMine.id}</p>
+              <Link to={`/citizen/reports/${pickedMine.id}`} className="mt-2 inline-flex min-h-11 items-center rounded-rq bg-action px-4 font-bold text-on-action">{t('citizen.near.open_report', 'See its photos and steps')}</Link>
+            </div>)}
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-3"><button type="button" onClick={locate} className="min-h-11 rounded-rq border border-control px-4 font-semibold hover:bg-surface-2">{t('field.use_position', 'Show my position')}</button><p className="text-sm text-ink-muted">{t('citizen.near.map_note', 'Only verified areas, official notice areas and your own reports are shown. Your reports are private to you.')}</p></div>
         <div className="mt-3"><Legend kinds={['report', 'me']} /></div>
       </Card>
@@ -94,13 +123,7 @@ export function NearMePage() {
         <Card title={t('citizen.near.reports', 'Reports from people nearby')}>
           {!reports.data.items.length ? <p>{t('citizen.near.no_reports', 'No reports with photos nearby right now.')}</p>
             : <ul className="space-y-3">{reports.data.items.map(item => (
-              <li key={item.id} className={`rounded-rq border-l-4 p-3 ${item.label === 'confirmed' ? 'border-danger bg-danger-tint' : 'border-unconfirmed bg-unconfirmed-tint'}`}>
-                <p className="text-sm font-bold uppercase tracking-wide">{item.label === 'confirmed' ? t('citizen.near.confirmed', 'Confirmed by officials') : t('citizen.near.unverified', 'Unverified')}</p>
-                <p className="mt-1">{item.label === 'confirmed' ? t('citizen.near.confirmed_text', 'Fire reported and confirmed by officials.') : t('citizen.near.unverified_text', 'Reported by a citizen. Not checked by officials.')}</p>
-                {item.note && <p className="mt-1 italic">“{item.note}”</p>}
-                {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <img key={src} src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" />)}</div>}
-                <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.reported_at)}{item.distance_km !== null ? ` · ${t('citizen.near.km_away', { count: item.distance_km, defaultValue: 'about {{count}} km away' })}` : ''}{` · ${t('citizen.near.area_only', 'area only, not the exact place')}`}</p>
-              </li>))}</ul>}
+              <li key={item.id}><ReportCard item={item} /></li>))}</ul>}
           <p className="mt-3 text-sm text-ink-muted">{t('citizen.near.reports_safety', 'Stay clear of smoke and fire. If anyone is in danger, call the emergency number.')}</p>
         </Card>
       )}
