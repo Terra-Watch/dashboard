@@ -411,6 +411,9 @@ def update_incident_status(
             {'id': incident_id, 'status': payload.status, 'close_reason': payload.close_reason if payload.status == 'closed' else None},
         ).mappings().first()
 
+        if payload.status == 'closed':  # an alert never outlives its incident: it ends with a note
+            db.execute(text("UPDATE resq_notices SET status='withdrawn',withdrawn_at=now(),withdrawn_reason='The incident was closed',updated_at=now() WHERE incident_id=:id AND status='published'"), {'id': incident_id})
+
         audit_log.write_audit_log(
             action=f"incident_status_{payload.status}",
             entity_type="incident",

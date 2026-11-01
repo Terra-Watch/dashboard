@@ -4,8 +4,10 @@ Region codes are state codes ("OD") or district codes prefixed by the state ("OD
 Expiry is computed at read time; there is no job.
 """
 import json
+import math
+import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,6 +18,7 @@ from ..core.permissions import user_scopes
 from ..core.security import current_redesign_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
+from ..services.h3_coarsen import to_cell
 
 router = APIRouter(prefix='/api/notices', tags=['notices'])
 AUTHOR_ROLES = ('control_room_operator', 'incident_commander')  # admin is always allowed by require_roles
@@ -23,8 +26,8 @@ APPROVER_ROLES = {'admin', 'incident_commander'}
 STAFF_ROLES = {'admin', 'control_room_operator', 'incident_commander'}
 REGION_RE = re.compile(r'^[A-Z0-9]{1,8}(-[A-Z0-9_]{1,16})?$')
 COLUMNS = ('id,title,body,severity,regions,area_geojson,starts_at,expires_at,status,author_id,approver_id,return_reason,created_at,updated_at,'
-           'published_at,withdrawn_at,withdrawn_reason,(status=\'published\' AND expires_at<=now()) AS expired')
-PUBLIC_FIELDS = ('id', 'title', 'body', 'severity', 'regions', 'area_geojson', 'starts_at', 'expires_at', 'published_at')
+           'published_at,withdrawn_at,withdrawn_reason,incident_id,image_id,urgent,(status=\'published\' AND expires_at<=now()) AS expired')
+PUBLIC_FIELDS = ('id', 'title', 'body', 'severity', 'regions', 'area_geojson', 'starts_at', 'expires_at', 'published_at', 'incident_id', 'image_id')
 
 
 def _regions(values: list[str]) -> list[str]:
@@ -260,7 +263,7 @@ def _shape(row: dict, user: dict) -> dict:
 
 
 @router.get('')
-def list_notices(region: str | None = Query(None, max_length=30), status: Literal['draft', 'pending_approval', 'published', 'withdrawn'] | None = None,
+def list_notices(region: str | None = Query(None, max_length=30), incident_id: int | None = None, status: Literal['draft', 'pending_approval', 'published', 'withdrawn'] | None = None,
                  limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0), user: dict = Depends(current_redesign_user)) -> dict:
     region = region.strip().upper() if region else None
     if region and not REGION_RE.match(region):
@@ -269,6 +272,9 @@ def list_notices(region: str | None = Query(None, max_length=30), status: Litera
     if status and user['role'] in STAFF_ROLES:
         clause += ' AND status=:status'
         params['status'] = status
+    if incident_id is not None:
+        clause += ' AND incident_id=:incident_id'
+        params['incident_id'] = incident_id
     with engine.connect() as db:
         rows = db.execute(text(f'SELECT {COLUMNS} FROM resq_notices WHERE {clause} ORDER BY created_at DESC,id DESC LIMIT :limit OFFSET :offset'),
                           {**params, 'limit': limit, 'offset': offset}).mappings().all()
@@ -284,3 +290,74 @@ def notice_revisions(notice_id: int, user: dict = Depends(require_roles(*AUTHOR_
         rows = db.execute(text('SELECT revision_no,title,body,severity,regions,edited_by,created_at FROM resq_notice_revisions WHERE notice_id=:id ORDER BY revision_no'),
                           {'id': notice_id}).mappings().all()
     return {'items': [dict(r) for r in rows]}
+
+
+# ---- a confirmed-fire alert made from an incident (docs/REPORT_TO_ALERT_DESIGN.md, section 8, Tier B) ----
+CONFIRMED_STATUSES = ('verified', 'responding', 'contained')
+ALERT_HOURS = 24
+
+
+def _radius_options() -> list[float]:
+    """Radii staff may choose, from EXPOSURE_RADII_KM; 1 to 25 km when that is not configured."""
+    raw = os.environ.get('EXPOSURE_RADII_KM', '')
+    try:
+        values = sorted({float(p) for p in raw.split(',') if p.strip()})
+    except ValueError:
+        values = []
+    return values if values and all(v > 0 for v in values) else [1.0, 2.0, 5.0, 10.0, 25.0]
+
+
+def _circle(lat: float, lon: float, km: float, points: int = 32) -> dict:
+    ring = []
+    for k in range(points):
+        a = 2 * math.pi * k / points
+        ring.append([round(lon + (km / (111.0 * max(0.2, math.cos(math.radians(lat))))) * math.sin(a), 5), round(lat + (km / 111.0) * math.cos(a), 5)])
+    ring.append(ring[0])
+    return {'type': 'Polygon', 'coordinates': [ring]}
+
+
+class IncidentAlertRequest(BaseModel):
+    radius_km: float = Field(gt=0, le=100)
+    instructions: str | None = Field(default=None, max_length=300)
+    image_id: int | None = None
+
+
+@router.get('/alert-options')
+def alert_options(user: dict = Depends(require_roles(*AUTHOR_ROLES))) -> dict:
+    return {'radii_km': _radius_options(), 'hours': ALERT_HOURS}
+
+
+@router.post('/from-incident/{incident_id}', status_code=201, dependencies=[Depends(require_csrf)])
+def alert_from_incident(incident_id: int, payload: IncidentAlertRequest, user: dict = Depends(require_roles(*AUTHOR_ROLES))) -> dict:
+    """Urgent path: one authorised person publishes at once; the notice is marked urgent and audited so a second person can review it afterwards.
+    Needs a confirmed incident. Shows the coarse area only, never the exact pin."""
+    if payload.radius_km not in _radius_options():
+        raise HTTPException(status_code=422, detail=f'Choose one of the allowed radii: {_radius_options()}')
+    note = (payload.instructions or '').strip()
+    with engine.begin() as db:
+        inc = db.execute(text('SELECT id,status,state,latitude,longitude FROM resq_incidents WHERE id=:i FOR UPDATE'), {'i': incident_id}).mappings().first()
+        if not inc:
+            raise HTTPException(status_code=404, detail='Incident not found')
+        _require_region_scope(user, [inc['state']] if inc['state'] else [])
+        if inc['status'] not in CONFIRMED_STATUSES or inc['latitude'] is None or inc['longitude'] is None or not inc['state']:
+            raise HTTPException(status_code=409, detail='Confirm the incident (verified) before alerting people nearby')
+        if db.execute(text("SELECT 1 FROM resq_notices WHERE incident_id=:i AND status='published' AND expires_at>now()"), {'i': incident_id}).first():
+            raise HTTPException(status_code=409, detail='An alert for this incident is already published; end it first')
+        image_id = payload.image_id
+        if image_id is not None and not db.execute(text("SELECT 1 FROM resq_incident_images WHERE id=:g AND incident_id=:i AND public_state='visible'"), {'g': image_id, 'i': incident_id}).first():
+            raise HTTPException(status_code=422, detail='That photo is not shown to the public; show it first, or send without a photo')
+        centre = to_cell(inc['latitude'], inc['longitude'], 7)
+        import h3
+        clat, clon = h3.cell_to_latlng(centre)
+        title = 'Fire confirmed by officials near you'
+        body = ('Officials have confirmed a fire in this area. Stay clear of smoke and fire and follow the instructions of the forest and emergency services. '
+                'If anyone is in danger, call the emergency number now.' + (f'\n{note}' if note else ''))
+        now = datetime.now(timezone.utc)
+        new_id = db.execute(text("""INSERT INTO resq_notices (title,body,severity,regions,area_geojson,starts_at,expires_at,status,author_id,published_at,incident_id,image_id,urgent)
+            VALUES (:t,:b,'warning',:r,CAST(:g AS jsonb),:st,:ex,'published',:a,now(),:inc,:img,true) RETURNING id"""),
+                            {'t': title, 'b': body, 'r': [inc['state']], 'g': json.dumps(_circle(clat, clon, payload.radius_km)), 'st': now, 'ex': now + timedelta(hours=ALERT_HOURS),
+                             'a': int(user['id']), 'inc': incident_id, 'img': image_id}).scalar()
+        row = _fetch(db, new_id)
+        _revision(db, new_id, row, int(user['id']))
+        _audit(db, 'notice_published_urgent', row, user, None, {'incident_id': incident_id, 'radius_km': payload.radius_km, 'with_photo': image_id is not None})
+    return row

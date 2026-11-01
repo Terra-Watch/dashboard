@@ -11,6 +11,7 @@ import { Card, PageTitle, Skeleton } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
 import { stateName, formatWhen } from '../citizen/format';
+import { AlertNearby } from '../incidents/AlertNearby';
 import { CloseIncident } from '../incidents/CloseIncident';
 import { EvidenceReview, type EvidenceImage } from '../incidents';
 import { closeReasonLabel, closurePayload, type CloseReason } from '../incidents/closure';
@@ -77,6 +78,7 @@ export function OpsIncidentPage() {
               {item.status === 'reported' && <p className="mt-2 text-sm text-ink-muted">{t('ops.verify_hint', 'Verify only after you have checked the evidence. Nothing else changes this.')}</p>}
               {closing && <CloseIncident incidentId={item.id} busy={busy} onCancel={() => setClosing(false)} onConfirm={(reason, note) => void close(reason, note)} />}
             </Card>)}
+          {['verified', 'responding', 'contained'].includes(item.status) && <AlertNearby incidentId={item.id} images={item.images} />}
           {item.status !== 'closed' && (
             <Card title={t('ops.assign', 'Field officer')}>
               {active ? <p><strong>{active.ranger_name}</strong> · {t(`field.status.${active.status}`, active.status)} · {ageText(active.updated_at)}</p> : <p className="text-ink-muted">{t('ops.no_officer', 'No officer is assigned.')}</p>}

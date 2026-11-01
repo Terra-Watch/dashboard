@@ -173,6 +173,7 @@ export function ReportPage() {
           <div className="min-w-0">
             <p className="font-semibold">{locating ? t('citizen.v2.locating', 'Finding your place...') : place ? t('citizen.v2.place_found', 'Place found') : t('citizen.v2.place_missing', 'Place not set yet')}{state ? ` · ${stateName(state)}` : ''}</p>
             {place && <p className="text-sm text-ink-muted">{place.lat.toFixed(4)}, {place.lon.toFixed(4)}{fix?.accuracy ? ` (±${Math.round(fix.accuracy)} m)` : ''}</p>}
+            {place && <p className="text-sm text-ink-muted">{t('citizen.report.pin_hint', 'The pin is where the smoke or fire is, not necessarily where you stand. Tap the map to move it.')}</p>}
           </div>
           <Button variant="secondary" onClick={locate} loading={locating} icon={<LocateFixed aria-hidden="true" size={18} />} className="ml-auto shrink-0">{t('citizen.v2.locate_again', 'Use my location')}</Button>
         </div>

@@ -18,7 +18,7 @@ import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { STATES, STATE_BOUNDS, formatWhen } from './format';
 
 type Contact = { label: string; number: string; region?: string | null };
-type NoticeItem = NoticeArea & { id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; expires_at: string; published_at: string | null };
+type NoticeItem = NoticeArea & { id: number; incident_id?: number | null; image_id?: number | null; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; expires_at: string; published_at: string | null };
 type NoticeArea = { id: number; title: string; severity: string; area_geojson?: { type: string; coordinates: number[][][] } | null };
 type MyReport = { id: number; status: string; latitude: number; longitude: number };
 type PublicReport = { id: number; label: 'unverified' | 'confirmed'; text: string; note: string | null; lat: number; lon: number; distance_km: number | null; reported_at: string; photos: string[] };
@@ -143,6 +143,7 @@ export function NearMePage() {
               <li key={item.id} className={`rounded-rq border-l-4 p-3 ${item.severity === 'warning' ? 'border-danger bg-danger-tint' : item.severity === 'advisory' ? 'border-warn bg-warn-tint' : 'border-action bg-action-tint'}`}>
                 <p className="text-sm font-bold uppercase tracking-wide">{t(`citizen.severity.${item.severity}`, item.severity)}</p>
                 <h3 className="text-lg">{item.title}</h3><p className="mt-1 whitespace-pre-wrap">{item.body}</p>
+                {item.incident_id && item.image_id ? <img src={`${API}/api/public/reports/${item.incident_id}/photos/${item.image_id}`} alt={t('citizen.near.notice_photo', 'Photo from the incident, shown by officials')} loading="lazy" className="mt-2 h-40 w-auto max-w-full rounded-lg border border-line object-cover" /> : null}
                 <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.published_at)} · {t('citizen.near.until', 'until')} {formatWhen(item.expires_at)}</p>
               </li>))}</ul>}
       </Card>
