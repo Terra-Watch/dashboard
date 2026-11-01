@@ -1,18 +1,18 @@
 """Which Indian state or union territory a point is in. The server decides this; a state sent by a client is never trusted."""
 import json
 from functools import lru_cache
-from pathlib import Path
 
 from shapely.geometry import Point, shape
 from shapely.prepared import prep
 
-DATA = Path(__file__).resolve().parents[1] / "data" / "india_states.json"
+from .india_states_data import STATES_JSON
+
 SLACK_DEG = 0.05  # about 5 km: the outlines are simplified, so a point on the coast or border may fall just outside its polygon
 
 
 @lru_cache(maxsize=1)
 def _states() -> tuple[tuple[str, str, object, object], ...]:
-    return tuple((s["code"], s["name"], shape(s["geometry"]), prep(shape(s["geometry"]))) for s in json.loads(DATA.read_text()))
+    return tuple((s["code"], s["name"], shape(s["geometry"]), prep(shape(s["geometry"]))) for s in json.loads(STATES_JSON))
 
 
 def state_names() -> dict[str, str]:
