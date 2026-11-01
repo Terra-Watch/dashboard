@@ -1,3 +1,4 @@
+import { shrinkPhoto } from '../../lib/photo';
 import { Camera } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,7 +56,7 @@ export function PhotoButton({ assignmentId, uploadPath, onDone }: { assignmentId
   async function upload(file: File | undefined) {
     if (!file) return;
     setBusy(true); setMessage(null);
-    try { const form = new FormData(); form.append('image', file); await api(uploadPath ?? `/api/ranger/assignments/${assignmentId}/evidence`, { method: 'POST', form }); setMessage({ kind: 'success', text: t('field.photo.saved', 'Photo sent.') }); onDone(); }
+    try { const form = new FormData(); form.append('image', await shrinkPhoto(file)); await api(uploadPath ?? `/api/ranger/assignments/${assignmentId}/evidence`, { method: 'POST', form }); setMessage({ kind: 'success', text: t('field.photo.saved', 'Photo sent.') }); onDone(); }
     catch (reason) { setMessage({ kind: 'danger', text: reason instanceof ApiError ? reason.detail : t('field.photo.failed', 'The photo was not sent. Photos need signal; try again.') }); }
     finally { setBusy(false); if (input.current) input.current.value = ''; }
   }

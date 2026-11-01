@@ -1,3 +1,4 @@
+import { shrinkPhoto } from '../../lib/photo';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -31,7 +32,7 @@ export function ReportDetailPage() {
   async function addPhoto(file: File | undefined) {
     if (!file) return;
     setUploading(true); setProblem('');
-    try { const form = new FormData(); form.append('image', file); await api(`/api/citizen/reports/${id}/evidence`, { method: 'POST', form }); await queryClient.invalidateQueries({ queryKey: ['my-report', id] }); }
+    try { const form = new FormData(); form.append('image', await shrinkPhoto(file)); await api(`/api/citizen/reports/${id}/evidence`, { method: 'POST', form }); await queryClient.invalidateQueries({ queryKey: ['my-report', id] }); }
     catch (reason) { setProblem(reason instanceof ApiError ? reason.detail : t('citizen.detail.photo_failed', 'The photo was not added. Try again.')); }
     finally { setUploading(false); }
   }

@@ -2,7 +2,8 @@ import { Camera, Check, LocateFixed, MapPin, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
-import { ApiError, OfflineError, api } from '../../app/http';
+import { ApiError, OfflineError } from '../../app/http';
+import { submitReport } from '../../lib/outbox';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
@@ -80,13 +81,8 @@ export function ReportPage() {
     setBusy(true); setProblem('');
     const observedAt = when === 'now' ? new Date().toISOString() : new Date(earlier).toISOString();
     try {
-      const created = await api<{ report: { id: number } }>('/api/citizen/reports', { method: 'POST', json: { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, queueIfOffline: { idempotencyKey: clientKey } });
-      let failed = 0;
-      for (const photo of photos) {
-        const form = new FormData(); form.append('image', photo);
-        try { await api(`/api/citizen/reports/${created.report.id}/evidence`, { method: 'POST', form }); } catch { failed += 1; }
-      }
-      navigate(`/citizen/reports/${created.report.id}`, { replace: true, state: { sent: true, photosFailed: failed } });
+      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos);
+      navigate(`/citizen/reports/${sent.id}`, { replace: true, state: { sent: true, photosFailed: sent.photosLeft + sent.photosRejected } });
     } catch (reason) {
       if (reason instanceof OfflineError) { if (reason.queued) setSaved(true); else setProblem(t('citizen.report.offline', 'You are offline. Check your connection and try again.')); }
       else setProblem(reason instanceof ApiError ? reason.detail : t('citizen.report.failed', 'The report was not sent. Nothing was lost; try again.'));
@@ -96,7 +92,7 @@ export function ReportPage() {
   if (saved) return (
     <div className="mx-auto max-w-xl space-y-4">
       <PageTitle title={t('citizen.report.saved_title', 'Saved on this phone')} />
-      <Notice kind="info">{t('citizen.report.saved', 'You are offline, so your report is saved here and will be sent when the connection returns. Photos are not saved offline: add them from My reports afterwards.')}</Notice>
+      <Notice kind="info">{t('citizen.report.saved', 'You are offline, so your report is saved here and will be sent when the connection returns. Your photos are saved with it.')}</Notice>
       <Link to="/citizen/reports" className="inline-flex min-h-11 items-center font-semibold underline">{t('nav.my_reports')}</Link>
     </div>
   );
