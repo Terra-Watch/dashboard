@@ -6,7 +6,8 @@ import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { PageTitle } from '../../ui/Page';
-import { STATES, STATE_BOUNDS, parseCoordinates } from '../citizen/format';
+import { parseCoordinates } from '../citizen/format';
+import { communityBox, useCommunities } from '../../lib/community';
 import { MapView } from '../map/MapView';
 import { useOpsRegion } from './useOps';
 
@@ -19,7 +20,10 @@ export function LogReportPage() {
   const navigate = useNavigate();
   const region = useOpsRegion();
   const clientKey = useMemo(() => crypto.randomUUID(), []);
-  const [state, setState] = useState(region);
+  const [slug, setSlug] = useState(region);
+  const communities = useCommunities();
+  const chosen = (communities.data?.items ?? []).find(c => c.slug === slug);
+  const state = chosen?.state ?? '';
   const [source, setSource] = useState('');
   const [size, setSize] = useState('unknown');
   const [coords, setCoords] = useState('');
@@ -28,7 +32,7 @@ export function LogReportPage() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const place = parseCoordinates(coords);
-  const box = state ? STATE_BOUNDS[state] : null;
+  const box = chosen ? communityBox(chosen) : null;
   const ready = Boolean(state && source && place && notes.trim().length >= 5);
 
   async function submit(event: FormEvent) {
@@ -47,8 +51,8 @@ export function LogReportPage() {
       <PageTitle title={t('ops.log.title', 'Log a report')} subtitle={t('ops.log.sub', 'For a report that came by phone, radio or from a colleague. It joins the queue as not yet checked.')} actions={<Link to="/ops/queue" className="font-semibold underline">{t('ops.back_queue', 'Back to the queue')}</Link>} />
       {problem && <Notice kind="danger">{problem}</Notice>}
       <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField label={t('ops.log.state', 'State')} value={state} onChange={event => setState(event.target.value)}>
-          <option value="">{t('citizen.report.choose', 'Choose')}</option>{STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+        <SelectField label={t('ops.log.community', 'Community')} value={slug} onChange={event => setSlug(event.target.value)}>
+          <option value="">{t('citizen.report.choose', 'Choose')}</option>{(communities.data?.items ?? []).map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </SelectField>
         <SelectField label={t('ops.log.source', 'How it reached us')} value={source} onChange={event => setSource(event.target.value)}>
           <option value="">{t('citizen.report.choose', 'Choose')}</option>{SOURCES.map(s => <option key={s} value={s}>{t(`ops.log.src.${s}`, s.replace('_', ' '))}</option>)}

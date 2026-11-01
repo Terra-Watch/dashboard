@@ -8,9 +8,13 @@ from sqlalchemy import text
 
 from ..core.security import RESQ_ROLES, require_csrf, require_roles
 from ..database.session import engine
-from ..services import audit_log
+from ..services import audit_log, communities
 
 router = APIRouter(prefix='/api/admin', tags=['admin'])
+
+
+class CommunitiesRequest(BaseModel):
+    communities: list[str] = Field(max_length=40)
 
 
 class ScopesRequest(BaseModel):
@@ -21,10 +25,11 @@ class ScopesRequest(BaseModel):
 def people(admin: dict = Depends(require_roles())) -> dict:
     with engine.connect() as db:
         users = db.execute(text('''SELECT u.id,u.name,u.email,u.role,u.created_at,u.deactivated_at,
-              COALESCE((SELECT array_agg(s.state ORDER BY s.state) FROM resq_user_scopes s WHERE s.user_id=u.id),'{}') AS scopes
+              COALESCE((SELECT array_agg(s.state ORDER BY s.state) FROM resq_user_scopes s WHERE s.user_id=u.id),'{}') AS scopes,
+              COALESCE((SELECT array_agg(c.slug ORDER BY c.name) FROM resq_user_community_scopes x JOIN resq_communities c ON c.id=x.community_id WHERE x.user_id=u.id),'{}') AS communities
             FROM resq_users u WHERE u.role = ANY(:roles) ORDER BY u.deactivated_at IS NOT NULL, u.name'''), {'roles': sorted(RESQ_ROLES)}).mappings().all()
         citizens = db.execute(text("SELECT count(*) FROM resq_users WHERE role='citizen' AND deleted_at IS NULL")).scalar() or 0
-        invites = db.execute(text('''SELECT id,email,role,scopes,created_at,expires_at FROM resq_invites
+        invites = db.execute(text('''SELECT id,email,role,scopes,community_slugs,created_at,expires_at FROM resq_invites
             WHERE accepted_at IS NULL AND expires_at > now() ORDER BY created_at DESC''')).mappings().all()
         requests = db.execute(text('''SELECT id,name,designation,department,email,state,reason,created_at FROM resq_access_requests
             WHERE handled_at IS NULL ORDER BY created_at DESC LIMIT 100''')).mappings().all()
@@ -79,6 +84,24 @@ def set_scopes(user_id: int, payload: ScopesRequest, admin: dict = Depends(requi
         db.execute(text('UPDATE resq_users SET home_state=:h WHERE id=:i'), {'i': user_id, 'h': states[0] if states else None})
         audit_log.write_audit_log(action='staff_scopes_changed', entity_type='user', entity_id=str(user_id), user_id=int(admin['id']), metadata={'before': before, 'after': states}, connection=db)
     return {'states': states}
+
+
+@router.put('/people/{user_id}/communities', dependencies=[Depends(require_csrf)])
+def set_communities(user_id: int, payload: CommunitiesRequest, admin: dict = Depends(require_roles())) -> dict:
+    slugs = sorted({s.strip() for s in payload.communities})
+    with engine.begin() as db:
+        target = db.execute(text('SELECT id,role FROM resq_users WHERE id=:i FOR UPDATE'), {'i': user_id}).mappings().first()
+        if not target or target['role'] not in RESQ_ROLES:
+            raise HTTPException(status_code=404, detail='No such staff account')
+        if target['role'] != 'admin' and not slugs:
+            raise HTTPException(status_code=422, detail='Choose at least one community')
+        before = list(db.execute(text('SELECT c.slug FROM resq_user_community_scopes x JOIN resq_communities c ON c.id=x.community_id WHERE x.user_id=:i ORDER BY c.slug'), {'i': user_id}).scalars().all())
+        try:
+            communities.set_scopes(db, user_id, slugs)
+        except ValueError:
+            raise HTTPException(status_code=422, detail='Choose communities from the list')
+        audit_log.write_audit_log(action='staff_communities_changed', entity_type='user', entity_id=str(user_id), user_id=int(admin['id']), metadata={'before': before, 'after': slugs}, connection=db)
+    return {'communities': slugs}
 
 
 @router.post('/access-requests/{request_id}/handled', dependencies=[Depends(require_csrf)])

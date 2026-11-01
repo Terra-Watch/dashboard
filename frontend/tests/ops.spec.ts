@@ -1,11 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { json, signedInAs } from './helpers';
+import { json, mockCommunities, signedInAs } from './helpers';
 
 const incident = (over: object = {}) => ({ id: 21, source: 'citizen', size: 'unknown', notes: 'Smoke over the ridge', status: 'reported', close_reason: null, state: 'OD', latitude: 20.3, longitude: 85.8, observed_at: '2026-10-16T08:00:00Z', created_at: new Date(Date.now() - 3_600_000).toISOString(), updated_at: new Date().toISOString(), image_assessment_status: null, ...over });
 
 test.describe('Control Room', () => {
   test.beforeEach(async ({ page }) => {
+    await mockCommunities(page);
     await signedInAs(page, 'incident_commander', 'Lead Rao');
     await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: { radius_km: 2, window_minutes: 40 }, exposure_radii_km: null, scenario_enabled: false })));
     await page.route('**/api/hotspots**', route => route.fulfill(json({ items: [{ id: 1, latitude: 20.301, longitude: 85.801, acq_datetime: new Date().toISOString() }], freshness: {} })));
@@ -146,7 +147,7 @@ test.describe('Control Room', () => {
     expect(marked).toEqual([{ ids: [1] }]);
   });
 
-  test('Log a report: needs a state, a source, a place and words; sends one request with a retry key and opens the incident', async ({ page }) => {
+  test('Log a report: needs a community, a source, a place and words; sends one request with a retry key and opens the incident', async ({ page }) => {
     const bodies: Array<Record<string, unknown>> = [];
     await page.route('**/api/incidents', route => { if (route.request().method() === 'POST') { bodies.push(JSON.parse(route.request().postData() ?? '{}')); return route.fulfill(json({ id: 77 }, 201)); } return route.fulfill(json([])); });
     await page.route('**/api/incidents/77', route => route.fulfill(json({ ...incident({ id: 77 }), images: [] })));
@@ -156,7 +157,7 @@ test.describe('Control Room', () => {
     await page.getByRole('link', { name: 'Log a report' }).click();
     const add = page.getByRole('button', { name: 'Add to the queue' });
     await expect(add).toBeDisabled();
-    await page.getByLabel('State').selectOption('OD');
+    await page.getByLabel('Community', { exact: true }).selectOption('similipal');
     await page.getByLabel('How it reached us').selectOption('phone');
     await page.getByLabel('Place (latitude, longitude)').fill('20.31, 85.82');
     await page.getByLabel('What was reported').fill('Caller from Sundargarh sees smoke on the ridge');
@@ -173,7 +174,7 @@ test.describe('Control Room', () => {
     await page.goto('/ops/alert-rules');
     await expect(page.getByText('No rules yet.')).toBeVisible();
     await page.getByLabel('Name').fill('Large fires in Odisha');
-    await page.getByLabel('State').selectOption('OD');
+    await page.getByLabel('Community', { exact: true }).selectOption('similipal');
     await page.getByLabel('At least this size').selectOption('large');
     await page.getByRole('button', { name: 'Add rule' }).click();
     await expect.poll(() => bodies.length).toBe(1);

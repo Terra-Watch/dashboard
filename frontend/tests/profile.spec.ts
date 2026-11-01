@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { json, signedInAs } from './helpers';
 
-const ME = (role: string, scopes: string[]) => ({ id: 7, name: 'Test Person', email: 'person@example.test', role, home_state: scopes[0] ?? null, scopes });
+const ME = (role: string, scopes: string[]) => ({ id: 7, name: 'Test Person', email: 'person@example.test', role, home_state: scopes[0] ?? null, scopes, communities: scopes.length > 1 ? ['Similipal test community', 'Bolampatti forest community'] : ['Similipal test community'] });
 
 test.describe('every role has an account page, and the header reaches it', () => {
   for (const [role, home, label, scopes] of [['control_room_operator', '/ops/queue', 'Control Room operator', ['OD', 'CG']], ['field_crew', '/field/tasks', 'Range Officer', ['OD']]] as const) {
@@ -15,7 +15,7 @@ test.describe('every role has an account page, and the header reaches it', () =>
       await page.goto(role === 'field_crew' ? '/field/me' : '/ops/me');
       await expect(page.getByText('person@example.test')).toBeVisible();
       await expect(page.getByText(label, { exact: true })).toBeVisible();
-      await expect(page.getByText(scopes.length > 1 ? 'Odisha, Chhattisgarh' : 'Odisha')).toBeVisible();
+      await expect(page.getByText(scopes.length > 1 ? 'Similipal test community, Bolampatti forest community' : 'Similipal test community')).toBeVisible();
       await expect(page.getByRole('link', { name: 'Change password' })).toBeVisible();
       await expect(page.getByRole('main').getByRole('button', { name: 'Sign out' })).toBeVisible();
     });

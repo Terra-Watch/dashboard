@@ -250,7 +250,8 @@ def my_community(user: dict = Depends(current_redesign_user)) -> dict:
 
 
 @router.get('/list')
-def list_communities(user: dict = Depends(current_redesign_user)) -> dict:
+def list_communities() -> dict:
+    """Open to everyone: where the communities are is not private, and the access-request page needs it before sign-in."""
     with engine.connect() as db:
         rows = db.execute(text('SELECT slug,name,forest_name,area,state,latitude,longitude,radius_km FROM resq_communities ORDER BY name')).mappings().all()
     return {'items': [dict(row) for row in rows]}

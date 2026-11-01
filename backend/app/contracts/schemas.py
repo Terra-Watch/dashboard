@@ -104,6 +104,7 @@ class InviteCreateRequest(BaseModel):
     email: str
     role: str
     scopes: list[str] = Field(default_factory=list)
+    communities: list[str] = Field(default_factory=list, max_length=40)
 
 
 class InviteAcceptRequest(BaseModel):

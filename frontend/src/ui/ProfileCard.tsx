@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { api } from '../app/http';
 import { signOut } from '../app/session';
-import { STATES } from '../features/citizen/format';
 import { Button } from './Button';
 import { InstallApp } from './InstallApp';
 import { LanguageMenu } from './LanguageMenu';
@@ -12,11 +11,10 @@ import { Notice } from './Notice';
 import { Card, Skeleton } from './Page';
 import { ThemeMenu } from './ThemeMenu';
 
-type Me = { id: number; email: string; name: string; role: string; home_state: string | null; scopes: string[]; community?: { slug: string; name: string } | null };
+type Me = { id: number; email: string; name: string; role: string; home_state: string | null; scopes: string[]; community?: { slug: string; name: string } | null; communities?: string[] };
 const ROLE_LABELS: Record<string, string> = {
   field_crew: 'Range Officer', range_officer: 'Range Officer', control_room_operator: 'Control Room operator', incident_commander: 'Incident commander', officer: 'Control Room officer', admin: 'Administrator', citizen: 'Citizen',
 };
-const stateName = (code: string) => STATES.find(state => state.code === code)?.name ?? code;
 
 /** Who you are signed in as, the same on every role: name, email, role, the states you cover, language and theme, install, password, sign out. */
 export function ProfileCard() {
@@ -32,7 +30,7 @@ export function ProfileCard() {
             {field(t('citizen.account.name', 'Name'), me.data.name)}
             {field(t('auth.email', 'Email'), me.data.email)}
             {field(t('profile.role', 'Role'), t(`profile.role_${me.data.role}`, ROLE_LABELS[me.data.role] ?? me.data.role))}
-            {field(t('profile.areas', 'Areas you cover'), me.data.scopes.length ? me.data.scopes.map(stateName).join(', ') : me.data.home_state ? stateName(me.data.home_state) : t('profile.all_areas', 'All areas'))}
+            {field(t('profile.areas', 'Communities you work in'), me.data.communities?.length ? me.data.communities.join(', ') : t('profile.all_areas', 'All communities'))}
             {me.data.community && field(t('profile.community', 'Forest community'), me.data.community.name)}
           </dl>) : <Notice kind="danger">{t('citizen.account.error', 'Your account details could not be loaded.')}</Notice>}
       </Card>

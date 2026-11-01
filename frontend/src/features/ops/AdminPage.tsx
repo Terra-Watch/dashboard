@@ -9,10 +9,11 @@ import { Button } from '../../ui/Button';
 import { SelectField, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { Card, LoadError, PageTitle, Skeleton } from '../../ui/Page';
-import { STATES, formatWhen } from '../citizen/format';
+import { formatWhen } from '../citizen/format';
+import { useCommunities, type Community } from '../../lib/community';
 
-type Staff = { id: number; name: string; email: string; role: string; scopes: string[]; created_at: string; deactivated_at: string | null };
-type Invite = { id: number; email: string; role: string; scopes: string[]; expires_at: string };
+type Staff = { id: number; name: string; email: string; role: string; scopes: string[]; communities: string[]; created_at: string; deactivated_at: string | null };
+type Invite = { id: number; email: string; role: string; scopes: string[]; community_slugs: string[]; expires_at: string };
 type Req = { id: number; name: string; designation: string; department: string; email: string; state: string; reason: string; created_at: string };
 type People = { staff: Staff[]; citizens: number; invites: Invite[]; requests: Req[] };
 type Made = { link: string; emailed: boolean; email: string };
@@ -21,14 +22,14 @@ export const ROLE_LABEL: Record<string, string> = { admin: 'Administrator', inci
 const INVITE_ROLES = ['control_room_operator', 'incident_commander', 'field_crew', 'admin'];
 const KEY = ['admin-people'] as const;
 
-function States({ value, onChange, label }: { value: string[]; onChange: (next: string[]) => void; label: string }) {
+function CommunityPicker({ value, onChange, label, items }: { value: string[]; onChange: (next: string[]) => void; label: string; items: Community[] }) {
   return (
     <fieldset className="min-w-0"><legend className="text-sm font-semibold">{label}</legend>
       <div className="mt-1 flex gap-3 text-sm">
-        <button type="button" onClick={() => onChange(STATES.map(s => s.code))} className="min-h-11 font-semibold underline">All states</button>
+        <button type="button" onClick={() => onChange(items.map(c => c.slug))} className="min-h-11 font-semibold underline">All communities</button>
         <button type="button" onClick={() => onChange([])} className="min-h-11 font-semibold underline">Clear</button>
       </div>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">{STATES.map(s => <label key={s.code} className="inline-flex min-h-11 items-center gap-2"><input type="checkbox" className="size-5" checked={value.includes(s.code)} onChange={event => onChange(event.target.checked ? [...value, s.code] : value.filter(c => c !== s.code))} />{s.name}</label>)}</div>
+      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">{items.map(c => <label key={c.slug} className="inline-flex min-h-11 items-center gap-2"><input type="checkbox" className="size-5" checked={value.includes(c.slug)} onChange={event => onChange(event.target.checked ? [...value, c.slug] : value.filter(x => x !== c.slug))} />{c.name}</label>)}</div>
     </fieldset>
   );
 }
@@ -40,17 +41,17 @@ export function AdminPage() {
   const people = useQuery({ queryKey: KEY, queryFn: () => api<People>('/api/admin/people'), enabled: user?.role === 'admin' });
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [states, setStates] = useState<string[]>([]);
+  const [picked, setPicked] = useState<string[]>([]); const communities = useCommunities(); const list = communities.data?.items ?? []; const nameOf = (slug: string) => list.find(c => c.slug === slug)?.name ?? slug;
   const [made, setMade] = useState<Made | null>(null);
   const [error, setError] = useState('');
   const [reset, setReset] = useState<{ id: number; link: string } | null>(null);
-  const [editing, setEditing] = useState<{ id: number; states: string[] } | null>(null);
+  const [editing, setEditing] = useState<{ id: number; communities: string[] } | null>(null);
   const refresh = () => queryClient.invalidateQueries({ queryKey: KEY });
   const fail = (reason: unknown) => setError(reason instanceof ApiError ? reason.detail : t('auth.network'));
 
   const invite = useMutation({
-    mutationFn: () => api<Made>('/api/auth/invites', { method: 'POST', json: { email: email.trim(), role, scopes: states } }),
-    onSuccess: result => { setMade(result); setEmail(''); setRole(''); setStates([]); setError(''); void refresh(); }, onError: fail,
+    mutationFn: () => api<Made>('/api/auth/invites', { method: 'POST', json: { email: email.trim(), role, communities: picked } }),
+    onSuccess: result => { setMade(result); setEmail(''); setRole(''); setPicked([]); setError(''); void refresh(); }, onError: fail,
   });
   const act = useMutation({ mutationFn: (request: () => Promise<unknown>) => request(), onSuccess: () => { setError(''); void refresh(); }, onError: fail });
 
@@ -60,7 +61,7 @@ export function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <PageTitle title={t('ops.admin.title', 'People and access')} subtitle={t('ops.admin.sub', 'Who can sign in, and which states they cover. People who leave are deactivated, not deleted, so their history stays.')} />
+      <PageTitle title={t('ops.admin.title', 'People and access')} subtitle={t('ops.admin.sub', 'Who can sign in, and which communities they work in. People who leave are deactivated, not deleted, so their history stays.')} />
       {error && <Notice kind="danger">{error}</Notice>}
 
       <SystemCheck />
@@ -73,8 +74,8 @@ export function AdminPage() {
               <option value="">{t('citizen.report.choose', 'Choose')}</option>{INVITE_ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
             </SelectField>
           </div>
-          {needsStates && <States label={t('ops.admin.states', 'States this person covers')} value={states} onChange={setStates} />}
-          <Button type="submit" loading={invite.isPending} disabled={!email.trim() || !role || (needsStates && !states.length)}>{t('ops.admin.send_invite', 'Create invitation')}</Button>
+          {needsStates && <CommunityPicker items={list} label={t('ops.admin.communities', 'Communities this person works in')} value={picked} onChange={setPicked} />}
+          <Button type="submit" loading={invite.isPending} disabled={!email.trim() || !role || (needsStates && !picked.length)}>{t('ops.admin.send_invite', 'Create invitation')}</Button>
         </form>
         {made && (
           <div className="mt-4"><Notice kind="success" title={made.emailed ? t('ops.admin.emailed', 'Invitation emailed to {{email}}.', { email: made.email }) : t('ops.admin.not_emailed', 'Email is not set up, so nothing was sent. Give this link to {{email}} yourself. It works once, for 7 days.', { email: made.email })}>
@@ -94,14 +95,14 @@ export function AdminPage() {
                     <p><strong>{person.name}</strong> <span className="text-ink-muted">· {person.email}</span></p>
                     <p className="text-sm">{ROLE_LABEL[person.role] ?? person.role}{person.deactivated_at ? ` · ${t('ops.admin.deactivated', 'deactivated')}` : ''}</p>
                   </div>
-                  <p className="text-sm text-ink-muted">{person.scopes.length ? person.scopes.map(c => STATES.find(s => s.code === c)?.name ?? c).join(', ') : t('ops.admin.no_states', 'No states')}</p>
+                  <p className="text-sm text-ink-muted">{person.communities.length ? person.communities.map(nameOf).join(', ') : t('ops.admin.no_communities', 'No communities')}</p>
                   {editing?.id === person.id
                     ? (
-                      <div className="mt-2 space-y-2"><States label={t('ops.admin.states', 'States this person covers')} value={editing.states} onChange={next => setEditing({ id: person.id, states: next })} />
-                        <div className="flex gap-2"><Button onClick={() => act.mutate(() => api(`/api/admin/people/${person.id}/scopes`, { method: 'PUT', json: { states: editing.states } }).then(() => setEditing(null)))}>{t('common.save', 'Save')}</Button><Button variant="secondary" onClick={() => setEditing(null)}>{t('common.cancel', 'Cancel')}</Button></div></div>)
+                      <div className="mt-2 space-y-2"><CommunityPicker items={list} label={t('ops.admin.communities', 'Communities this person works in')} value={editing.communities} onChange={next => setEditing({ id: person.id, communities: next })} />
+                        <div className="flex gap-2"><Button onClick={() => act.mutate(() => api(`/api/admin/people/${person.id}/communities`, { method: 'PUT', json: { communities: editing.communities } }).then(() => setEditing(null)))}>{t('common.save', 'Save')}</Button><Button variant="secondary" onClick={() => setEditing(null)}>{t('common.cancel', 'Cancel')}</Button></div></div>)
                     : (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {!person.deactivated_at && <Button variant="secondary" onClick={() => setEditing({ id: person.id, states: person.scopes })}>{t('ops.admin.edit_states', 'Change states')}</Button>}
+                        {!person.deactivated_at && <Button variant="secondary" onClick={() => setEditing({ id: person.id, communities: person.communities })}>{t('ops.admin.edit_communities', 'Change communities')}</Button>}
                         {!person.deactivated_at && <Button variant="secondary" onClick={() => act.mutate(async () => { const r = await api<{ token: string }>('/api/auth/password-reset/admin-initiate', { method: 'POST', json: { user_id: person.id } }); setReset({ id: person.id, link: `${window.location.origin}/reset?token=${r.token}` }); })}>{t('ops.admin.reset', 'Make a password reset link')}</Button>}
                         {person.deactivated_at
                           ? <Button variant="secondary" onClick={() => act.mutate(() => api(`/api/admin/people/${person.id}/reactivate`, { method: 'POST' }))}>{t('ops.admin.reactivate', 'Reactivate')}</Button>
@@ -115,7 +116,7 @@ export function AdminPage() {
 
           {people.data.invites.length > 0 && (
             <Card title={t('ops.admin.pending', 'Invitations waiting')}>
-              <ul className="space-y-1 text-sm">{people.data.invites.map(i => <li key={i.id}>{i.email} · {ROLE_LABEL[i.role] ?? i.role} · {i.scopes.join(', ') || '—'} · {t('ops.admin.until', 'valid until')} {formatWhen(i.expires_at)}</li>)}</ul>
+              <ul className="space-y-1 text-sm">{people.data.invites.map(i => <li key={i.id}>{i.email} · {ROLE_LABEL[i.role] ?? i.role} · {i.community_slugs.map(nameOf).join(', ') || '—'} · {t('ops.admin.until', 'valid until')} {formatWhen(i.expires_at)}</li>)}</ul>
             </Card>)}
 
           <Card title={`${t('ops.admin.requests', 'Requests for access')} (${people.data.requests.length})`}>
@@ -123,11 +124,11 @@ export function AdminPage() {
             <ul className="divide-y divide-line">
               {people.data.requests.map(r => (
                 <li key={r.id} className="py-3">
-                  <p><strong>{r.name}</strong> · {r.designation}, {r.department} · {STATES.find(s => s.code === r.state)?.name ?? r.state}</p>
+                  <p><strong>{r.name}</strong> · {r.designation}, {r.department} · {list.filter(c => c.state === r.state).map(c => c.name).join(', ') || r.state}</p>
                   <p className="text-sm text-ink-muted">{r.email} · {formatWhen(r.created_at)}</p>
                   <p className="mt-1 whitespace-pre-wrap">{r.reason}</p>
                   <div className="mt-2 flex gap-2">
-                    <Button variant="secondary" onClick={() => { setEmail(r.email); setStates(STATES.some(s => s.code === r.state) ? [r.state] : []); window.scrollTo({ top: 0 }); }}>{t('ops.admin.prefill', 'Start an invitation')}</Button>
+                    <Button variant="secondary" onClick={() => { setEmail(r.email); setPicked(list.filter(c => c.state === r.state).map(c => c.slug)); window.scrollTo({ top: 0 }); }}>{t('ops.admin.prefill', 'Start an invitation')}</Button>
                     <Button variant="ghost" onClick={() => act.mutate(() => api(`/api/admin/access-requests/${r.id}/handled`, { method: 'POST' }))}>{t('ops.admin.handled', 'Mark handled')}</Button>
                   </div>
                 </li>))}

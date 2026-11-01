@@ -33,3 +33,12 @@ def test_device_position_places_the_person_by_software():
     moved_out = c.post("/api/community/locate", headers=h, json={"latitude": 10.9, "longitude": 76.5}).json()["community"]
     assert moved_out["slug"] == "bolampatti-west"          # outside every circle: stays where they were
     assert c.post("/api/community/locate", headers=h, json={"latitude": 10.90158, "longitude": 76.90577}).json()["community"]["slug"] == "bolampatti"
+
+
+def test_admin_gives_communities_and_the_person_can_work_there():
+    admin, ah, _ = actor("admin"); ops, oh, uid = actor("control_room_operator", scopes=["OD"])
+    r = admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": ["bolampatti", "bolampatti-west"]})
+    assert r.status_code == 200, r.text
+    assert ops.get("/api/auth/me", headers=oh).json()["scopes"] == ["TN"]            # worked out from the communities
+    assert admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": ["nowhere"]}).status_code == 422
+    assert admin.put(f"/api/admin/people/{uid}/communities", headers=ah, json={"communities": []}).status_code == 422

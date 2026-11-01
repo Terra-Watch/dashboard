@@ -114,13 +114,13 @@ test.describe('Range Officer', () => {
 
   test('Me shows who you are and what is waiting to send; the notices have their own tab', async ({ page }) => {
     await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: [] })));
-    await page.route('**/api/auth/me', route => route.fulfill(json({ id: 7, name: 'Officer Rao', email: 'person@example.test', role: 'field_crew', home_state: 'OD', scopes: ['OD'] })));
+    await page.route('**/api/auth/me', route => route.fulfill(json({ id: 7, name: 'Officer Rao', email: 'person@example.test', role: 'field_crew', home_state: 'OD', scopes: ['OD'], communities: ['Similipal test community'] })));
     await page.route('**/api/notices**', route => route.fulfill(json({ items: [{ id: 1, title: 'Smoke advisory', body: 'Avoid the ridge road.', severity: 'advisory', expires_at: '2030-01-01T00:00:00Z', published_at: '2026-10-16T05:30:00Z' }] })));
     await page.goto('/field/me');
     await expect(page.getByText('Everything has been sent.')).toBeVisible();
     await expect(page.getByText('person@example.test')).toBeVisible();
     await expect(page.getByText('Range Officer', { exact: true })).toBeVisible();
-    await expect(page.getByText('Odisha')).toBeVisible();
+    await expect(page.getByText('Similipal test community')).toBeVisible();
     await expect(page.getByRole('main').getByRole('button', { name: 'Sign out' })).toBeVisible();
     await page.goto('/field/notices');
     await expect(page.getByText('Avoid the ridge road.')).toBeVisible();

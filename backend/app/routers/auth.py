@@ -238,10 +238,11 @@ def me(user: dict = Depends(current_redesign_user)) -> dict[str, object]:
     with engine.connect() as db:
         row = db.execute(text("SELECT id,email,name,role,home_state FROM resq_users WHERE id=:id"), {'id': user['id']}).mappings().first()
         community = communities.of_user(db, int(user['id']))
+        names = db.execute(text('SELECT c.name FROM resq_user_community_scopes x JOIN resq_communities c ON c.id=x.community_id WHERE x.user_id=:i ORDER BY c.name'), {'i': user['id']}).scalars().all()
         scopes = db.execute(text("SELECT state FROM resq_user_scopes WHERE user_id=:id"), {'id': user['id']}).scalars().all()
     if not row:
         raise HTTPException(status_code=401, detail='Session expired')
-    return {**dict(row), 'scopes': list(scopes), 'community': community and {'slug': community['slug'], 'name': community['name']}}
+    return {**dict(row), 'scopes': list(scopes), 'community': community and {'slug': community['slug'], 'name': community['name']}, 'communities': list(names)}
 
 
 # ---------- invites (admin-only) ----------
@@ -253,21 +254,28 @@ def create_invite(payload: InviteCreateRequest, admin: dict = Depends(require_ro
     email = payload.email.strip().lower()
     if not re.match(EMAIL_PATTERN, email):
         raise HTTPException(status_code=422, detail='Enter a valid email address')
+    slugs = sorted({s.strip() for s in payload.communities})
+    if slugs:
+        with engine.connect() as db:
+            try:
+                payload.scopes = communities.states_of(db, slugs)
+            except ValueError:
+                raise HTTPException(status_code=422, detail='Choose communities from the list')
     scopes = sorted({s.strip().upper() for s in payload.scopes})
     if any(s not in state_names() for s in scopes):
         raise HTTPException(status_code=422, detail='Scopes must be Indian state or union-territory codes')
     if payload.role != 'admin' and not scopes:
-        raise HTTPException(status_code=422, detail='Choose at least one state for this person')
+        raise HTTPException(status_code=422, detail='Choose at least one community for this person')
     raw = new_raw_token()
     with engine.begin() as db:
         if db.execute(text('SELECT 1 FROM resq_users WHERE email=:e'), {'e': email}).first():
             raise HTTPException(status_code=409, detail='An account with this email already exists')
         db.execute(
             text(
-                "INSERT INTO resq_invites (email, role, scopes, token_hash, created_by, expires_at) "
-                "VALUES (:email, :role, :scopes, :token_hash, :created_by, now() + interval '7 days')"
+                "INSERT INTO resq_invites (email, role, scopes, community_slugs, token_hash, created_by, expires_at) "
+                "VALUES (:email, :role, :scopes, :slugs, :token_hash, :created_by, now() + interval '7 days')"
             ),
-            {'email': email, 'role': payload.role, 'scopes': scopes, 'token_hash': hash_token(raw), 'created_by': admin['id']},
+            {'email': email, 'role': payload.role, 'scopes': scopes, 'slugs': slugs, 'token_hash': hash_token(raw), 'created_by': admin['id']},
         )
     write_audit_log(action='invite_created', entity_type='invite', entity_id=email, user_id=admin['id'], metadata={'role': payload.role, 'scopes': scopes})
     link = f'{public_base_url()}/invite/{raw}' if public_base_url() else f'/invite/{raw}'
@@ -293,7 +301,7 @@ def accept_invite(token: str, payload: InviteAcceptRequest) -> dict[str, object]
     try:
         with engine.begin() as db:
             invite = db.execute(
-                text("SELECT id, email, role, scopes FROM resq_invites WHERE token_hash=:h AND accepted_at IS NULL AND expires_at > now()"),
+                text("SELECT id, email, role, scopes, community_slugs FROM resq_invites WHERE token_hash=:h AND accepted_at IS NULL AND expires_at > now()"),
                 {'h': token_hash},
             ).mappings().first()
             if not invite:
@@ -312,6 +320,8 @@ def accept_invite(token: str, payload: InviteAcceptRequest) -> dict[str, object]
                 ),
                 {'email': invite['email'], 'name': chosen_name or invite['email'].split('@')[0], 'hash': hash_password_argon2(payload.password), 'role': invite['role'], 'home_state': home_state},
             ).scalar()
+            if invite['community_slugs']:
+                communities.set_scopes(db, user_id, list(invite['community_slugs']))
             for state in invite['scopes']:
                 db.execute(text("INSERT INTO resq_user_scopes (user_id, state) VALUES (:uid, :state) ON CONFLICT DO NOTHING"), {'uid': user_id, 'state': state})
     except IntegrityError as exc:

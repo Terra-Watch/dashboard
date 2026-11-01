@@ -8,7 +8,7 @@ import { SelectField, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { Card, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { useSession } from '../../app/session';
-import { STATES, stateName } from '../citizen/format';
+import { useCommunities } from '../../lib/community';
 
 type Rule = { id: number; name: string; kind: string; enabled: boolean; state: string | null; severity: string; conditions: { min_size?: string; source?: string } | null };
 const KEY = ['alert-rules'] as const;
@@ -22,12 +22,12 @@ export function AlertRulesPage() {
   const needsState = user?.role !== 'admin';   // everyone else may only watch the states they cover
   const rules = useQuery({ queryKey: KEY, queryFn: () => api<Rule[]>('/api/alerts/rules') });
   const [name, setName] = useState('');
-  const [state, setState] = useState('');
+  const [state, setState] = useState(''); const communities = useCommunities(); const items = communities.data?.items ?? [];
   const [minSize, setMinSize] = useState('');
   const [severity, setSeverity] = useState('warning');
   const [error, setError] = useState('');
   const create = useMutation({
-    mutationFn: () => api('/api/alerts/rules', { method: 'POST', json: { name: name.trim(), kind: 'incident', enabled: true, channel: 'in-app', state: state || null, severity, conditions: minSize ? { min_size: minSize } : {} } }),
+    mutationFn: () => api('/api/alerts/rules', { method: 'POST', json: { name: name.trim(), kind: 'incident', enabled: true, channel: 'in-app', state: items.find(c => c.slug === state)?.state ?? null, severity, conditions: minSize ? { min_size: minSize } : {} } }),
     onSuccess: () => { setName(''); setState(''); setMinSize(''); setError(''); void queryClient.invalidateQueries({ queryKey: KEY }); },
     onError: reason => setError(reason instanceof ApiError ? reason.detail : t('auth.network')),
   });
@@ -41,7 +41,7 @@ export function AlertRulesPage() {
         <form onSubmit={submit} noValidate className="space-y-3">
           <TextField label={t('ops.rules.name', 'Name')} value={name} maxLength={80} onChange={event => setName(event.target.value)} />
           <div className="grid gap-3 sm:grid-cols-3">
-            <SelectField label={t('ops.rules.state', 'State')} value={state} onChange={event => setState(event.target.value)}>{!needsState && <option value="">{t('ops.rules.any_state', 'Any state I cover')}</option>}{needsState && <option value="">{t('citizen.report.choose', 'Choose')}</option>}{STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}</SelectField>
+            <SelectField label={t('ops.rules.community', 'Community')} value={state} onChange={event => setState(event.target.value)}>{!needsState && <option value="">{t('ops.rules.any_community', 'Any community I work in')}</option>}{needsState && <option value="">{t('citizen.report.choose', 'Choose')}</option>}{items.map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}</SelectField>
             <SelectField label={t('ops.rules.size', 'At least this size')} value={minSize} onChange={event => setMinSize(event.target.value)}><option value="">{t('ops.rules.any_size', 'Any size')}</option>{SIZES.map(s => <option key={s} value={s}>{t(`ops.log.size.${s}`, s)}</option>)}</SelectField>
             <SelectField label={t('ops.rules.severity', 'Importance')} value={severity} onChange={event => setSeverity(event.target.value)}>{['info', 'warning', 'critical'].map(s => <option key={s} value={s}>{t(`ops.rules.sev.${s}`, s)}</option>)}</SelectField>
           </div>
@@ -52,7 +52,7 @@ export function AlertRulesPage() {
         {rules.isLoading && <Skeleton lines={3} />}
         {rules.isError && <LoadError message={t('ops.rules.error', 'Alert rules could not be loaded.')} onRetry={() => void rules.refetch()} retryLabel={t('citizen.retry', 'Try again')} />}
         {rules.data && !rules.data.length && <p className="text-ink-muted">{t('ops.rules.none', 'No rules yet. New reports reach you through the queue only.')}</p>}
-        <ul className="divide-y divide-line">{rules.data?.map(rule => <li key={rule.id} className="py-2"><strong>{rule.name}</strong> <span className="text-sm text-ink-muted">· {rule.state ? stateName(rule.state) : t('ops.rules.any_state', 'Any state I cover')} · {rule.conditions?.min_size ? `${t('ops.rules.size', 'At least this size')}: ${rule.conditions.min_size}` : t('ops.rules.any_size', 'Any size')} · {rule.severity}</span></li>)}</ul>
+        <ul className="divide-y divide-line">{rules.data?.map(rule => <li key={rule.id} className="py-2"><strong>{rule.name}</strong> <span className="text-sm text-ink-muted">· {rule.state ? (items.filter(c => c.state === rule.state).map(c => c.name).join(', ') || rule.state) : t('ops.rules.any_community', 'Any community I work in')} · {rule.conditions?.min_size ? `${t('ops.rules.size', 'At least this size')}: ${rule.conditions.min_size}` : t('ops.rules.any_size', 'Any size')} · {rule.severity}</span></li>)}</ul>
       </Card>
     </div>
   );

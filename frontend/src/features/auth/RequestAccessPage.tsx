@@ -5,7 +5,7 @@ import { api } from '../../app/http';
 import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
-import { STATES } from '../citizen/format';
+import { useCommunities } from '../../lib/community';
 import { AuthLayout } from './AuthLayout';
 
 const BLANK = { name: '', designation: '', department: '', email: '', state: '', reason: '' };
@@ -14,6 +14,7 @@ const BLANK = { name: '', designation: '', department: '', email: '', state: '',
 export function RequestAccessPage() {
   const { t } = useTranslation();
   const [form, setForm] = useState(BLANK);
+  const communities = useCommunities();
   const [sent, setSent] = useState(false);
   const [problem, setProblem] = useState('');
   const [busy, setBusy] = useState(false);
@@ -24,7 +25,7 @@ export function RequestAccessPage() {
     event.preventDefault();
     if (!complete) return;
     setBusy(true); setProblem('');
-    try { await api('/api/auth/access-requests', { method: 'POST', json: Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v.trim()])) }); setSent(true); }
+    try { await api('/api/auth/access-requests', { method: 'POST', json: { ...Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v.trim()])), state: (communities.data?.items ?? []).find(c => c.slug === form.state)?.state ?? '' } }); setSent(true); }
     catch (reason) { setProblem(reason instanceof Error ? reason.message : t('auth.network')); }
     finally { setBusy(false); }
   }
@@ -40,8 +41,8 @@ export function RequestAccessPage() {
             <TextField label={t('auth.access.designation', 'Designation')} value={form.designation} maxLength={100} onChange={set('designation')} />
             <TextField label={t('auth.access.department', 'Department or division')} value={form.department} maxLength={150} onChange={set('department')} />
             <TextField label={t('auth.email', 'Email')} type="email" autoComplete="email" value={form.email} maxLength={200} onChange={set('email')} />
-            <SelectField label={t('auth.access.state', 'State you work in')} value={form.state} onChange={set('state')}>
-              <option value="">{t('citizen.report.choose', 'Choose')}</option>{STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+            <SelectField label={t('auth.access.community', 'Community you work in')} value={form.state} onChange={set('state')}>
+              <option value="">{t('citizen.report.choose', 'Choose')}</option>{(communities.data?.items ?? []).map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}
             </SelectField>
             <TextArea label={t('auth.access.reason', 'What you need access for')} value={form.reason} maxLength={500} onChange={set('reason')} />
             <Button type="submit" block loading={busy} disabled={!complete}>{t('auth.access.submit', 'Send request')}</Button>

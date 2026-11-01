@@ -1,18 +1,19 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { json, signedInAs } from './helpers';
+import { json, mockCommunities, signedInAs } from './helpers';
 
 const PEOPLE = {
   staff: [
-    { id: 7, name: 'Admin Rao', email: 'admin@x.in', role: 'admin', scopes: [], created_at: '2026-01-01T00:00:00Z', deactivated_at: null },
-    { id: 8, name: 'Asha Operator', email: 'asha@x.in', role: 'control_room_operator', scopes: ['OD'], created_at: '2026-01-02T00:00:00Z', deactivated_at: null },
+    { id: 7, name: 'Admin Rao', email: 'admin@x.in', role: 'admin', scopes: [], communities: [], created_at: '2026-01-01T00:00:00Z', deactivated_at: null },
+    { id: 8, name: 'Asha Operator', email: 'asha@x.in', role: 'control_room_operator', scopes: ['OD'], communities: ['similipal'], created_at: '2026-01-02T00:00:00Z', deactivated_at: null },
   ],
-  citizens: 12, invites: [{ id: 1, email: 'wait@x.in', role: 'field_crew', scopes: ['OD'], created_at: '2026-10-01T00:00:00Z', expires_at: '2026-10-20T00:00:00Z' }],
+  citizens: 12, invites: [{ id: 1, email: 'wait@x.in', role: 'field_crew', scopes: ['OD'], community_slugs: ['similipal'], created_at: '2026-10-01T00:00:00Z', expires_at: '2026-10-20T00:00:00Z' }],
   requests: [{ id: 3, name: 'Meera K', designation: 'Forest Guard', department: 'Angul Division', email: 'meera@x.in', state: 'OD', reason: 'Field verification duty', created_at: '2026-10-10T00:00:00Z' }],
 };
 
 test.describe('Administration', () => {
   test.beforeEach(async ({ page }) => {
+    await mockCommunities(page);
     await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: null, exposure_radii_km: null, feed_stale_minutes: null, scenario_enabled: false })));
     await page.route('**/api/inbox', route => route.fulfill(json({ items: [], unread: 0 })));
   });
@@ -24,7 +25,7 @@ test.describe('Administration', () => {
     await expect(page.getByRole('link', { name: 'People' })).toHaveCount(0);
   });
 
-  test('invite needs a role and states, shows the link when email is not set up, and requests can be started or handled', async ({ page }) => {
+  test('invite needs a role and communities, shows the link when email is not set up, and requests can be started or handled', async ({ page }) => {
     await signedInAs(page, 'admin', 'Admin Rao');
     const calls: Array<{ url: string; body: unknown }> = [];
     await page.route('**/api/admin/people', route => route.fulfill(json(PEOPLE)));
@@ -36,12 +37,12 @@ test.describe('Administration', () => {
     await expect(send).toBeDisabled();
     await page.getByLabel('Email').fill('new@x.in');
     await page.getByLabel('Role').selectOption('control_room_operator');
-    await expect(send).toBeDisabled();                                             // a state is required
-    await page.getByRole('checkbox', { name: 'Odisha' }).check();
+    await expect(send).toBeDisabled();                                             // a community is required
+    await page.getByRole('checkbox', { name: 'Similipal test community' }).check();
     await send.click();
     await expect(page.getByText(/Email is not set up, so nothing was sent/)).toBeVisible();
     await expect(page.getByTestId('invite-link')).toContainText('/invite/tok123');
-    expect(calls[0]).toEqual({ url: 'invite', body: { email: 'new@x.in', role: 'control_room_operator', scopes: ['OD'] } });
+    expect(calls[0]).toEqual({ url: 'invite', body: { email: 'new@x.in', role: 'control_room_operator', communities: ['similipal'] } });
     await page.getByRole('button', { name: 'Start an invitation' }).click();
     await expect(page.getByLabel('Email')).toHaveValue('meera@x.in');
     await page.getByRole('button', { name: 'Mark handled' }).click();
@@ -86,7 +87,7 @@ test.describe('Administration', () => {
     await page.getByLabel('Designation').fill('Forest Guard');
     await page.getByLabel('Department or division').fill('Angul Division');
     await page.getByLabel('Email').fill('meera@x.in');
-    await page.getByLabel('State you work in').selectOption('OD');
+    await page.getByLabel('Community you work in').selectOption('similipal');
     await page.getByLabel('What you need access for').fill('Field verification duty');
     await send.click();
     await expect(page.getByText(/Your request was received/)).toBeVisible();
