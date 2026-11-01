@@ -8,7 +8,8 @@ import { Button } from '../../ui/Button';
 import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
-import { STATES, formatWhen } from '../citizen/format';
+import { formatWhen } from '../citizen/format';
+import { useCommunities } from '../../lib/community';
 import type { CommunityImageAssessment } from '../../lib/assessmentPresentation';
 import { PhotoLibrary } from './PhotoLibrary';
 import { ModerationMedia, type ModerationImage } from './ModerationMedia';
@@ -40,10 +41,11 @@ export function NoticesPage() {
 function NoticeAdmin() {
   const { t } = useTranslation();
   const { user } = useSession();
+  const communities = useCommunities();
   const queryClient = useQueryClient();
   const list = useQuery({ queryKey: ['notice-admin'], queryFn: () => api<{ items: NoticeRow[] }>('/api/notices?limit=100') });
   const [problem, setProblem] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
-  const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [severity, setSeverity] = useState('info'); const [regions, setRegions] = useState<string[]>([]);
+  const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [severity, setSeverity] = useState('info'); const [regions, setRegions] = useState<string[]>([]); const [picked, setPicked] = useState<string[]>([]);
   const [startsAt, setStartsAt] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)); const [expiresAt, setExpiresAt] = useState('');
   const [reasonFor, setReasonFor] = useState<{ id: number; kind: 'return' | 'withdraw' } | null>(null); const [reason, setReason] = useState('');
   const canApprove = user?.role === 'admin' || user?.role === 'incident_commander';
@@ -71,7 +73,7 @@ function NoticeAdmin() {
           <ul className="mt-2 space-y-3">{urgentToReview.map(item => (
             <li key={item.id} className="rounded-rq border border-line p-3">
               <p className="font-semibold">{item.title}</p><p className="whitespace-pre-wrap text-sm">{item.body}</p>
-              <p className="mt-1 text-sm text-ink-muted">{item.regions.join(', ')}{item.incident_id ? ` · #${item.incident_id}` : ''}</p>
+              <p className="mt-1 text-sm text-ink-muted">{(communities.data?.items ?? []).filter(c => item.regions.includes(c.state)).map(c => c.name).join(', ') || item.regions.join(', ')}{item.incident_id ? ` · #${item.incident_id}` : ''}</p>
               {canApprove && item.author_id !== user?.id && (concern?.id === item.id ? (
                 <div className="mt-2 space-y-2"><TextArea label={t('ops.notices.concern', 'What is the concern?')} rows={2} maxLength={500} value={concern.note} onChange={event => setConcern({ id: item.id, note: event.target.value })} />
                   <div className="flex gap-2"><Button disabled={busy || concern.note.trim().length < 5} onClick={() => void act(() => api(`/api/notices/${item.id}/review`, { method: 'POST', json: { decision: 'concern', note: concern.note.trim() } }), t('ops.notices.reviewed', 'Review saved.')).then(() => setConcern(null))}>{t('ops.notices.send_concern', 'Send my concern')}</Button><Button variant="secondary" onClick={() => setConcern(null)}>{t('ops.cancel', 'Cancel')}</Button></div></div>
@@ -89,7 +91,7 @@ function NoticeAdmin() {
             <TextField label={t('ops.notices.starts', 'Shows from')} type="datetime-local" value={startsAt} onChange={event => setStartsAt(event.target.value)} />
             <TextField label={t('ops.notices.expires', 'Shows until')} type="datetime-local" value={expiresAt} onChange={event => setExpiresAt(event.target.value)} />
           </div>
-          <fieldset><legend className="text-sm font-semibold">{t('ops.notices.regions', 'Who sees it')}</legend><div className="mt-1 flex flex-wrap gap-3">{STATES.map(state => <label key={state.code} className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={regions.includes(state.code)} onChange={event => setRegions(current => event.target.checked ? [...current, state.code] : current.filter(code => code !== state.code))} className="size-5 accent-[var(--tw-action)]" />{state.name}</label>)}</div></fieldset>
+          <fieldset><legend className="text-sm font-semibold">{t('ops.notices.regions', 'Who sees it')}</legend><div className="mt-1 flex flex-wrap gap-3">{(communities.data?.items ?? []).map(c => <label key={c.slug} className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={picked.includes(c.slug)} onChange={event => { const next = event.target.checked ? [...picked, c.slug] : picked.filter(slug => slug !== c.slug); setPicked(next); setRegions([...new Set((communities.data?.items ?? []).filter(x => next.includes(x.slug)).map(x => x.state))]); }} className="size-5 accent-[var(--tw-action)]" />{c.name}</label>)}</div></fieldset>
           <Button type="submit" loading={busy} disabled={!ready}>{t('ops.notices.save_draft', 'Save draft')}</Button>
         </form>
       </Card>

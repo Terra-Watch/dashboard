@@ -32,7 +32,7 @@ export function QueuePage() {
   const [cursor, setCursor] = useState(0);
   const list = useRef<HTMLUListElement>(null);
 
-  const scoped = useMemo(() => (incidents.data ?? []).filter(item => !region || item.state === region), [incidents.data, region]);
+  const scoped = useMemo(() => (incidents.data ?? []).filter(item => !region || item.community_slug === region), [incidents.data, region]);
   const counts = Object.fromEntries(TABS.map(item => [item.id, scoped.filter(incident => (item.statuses as readonly string[]).includes(incident.status)).length]));
   const rows = useMemo(() => scoped.filter(incident => (TABS.find(item => item.id === tab)!.statuses as readonly string[]).includes(incident.status)).sort((a, b) => tab === 'new' ? Date.parse(a.created_at) - Date.parse(b.created_at) : Date.parse(b.updated_at) - Date.parse(a.updated_at)), [scoped, tab]);
 

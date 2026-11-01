@@ -156,6 +156,7 @@ def list_incidents(
 ) -> list[dict[str, object]]:
     query = """SELECT i.id,i.source,i.size,i.notes,i.status,i.close_reason,i.state,i.latitude,i.longitude,i.observed_at,i.created_at,i.updated_at,
         (SELECT c.name FROM resq_communities c WHERE c.id=i.community_id) AS community,
+        (SELECT c.slug FROM resq_communities c WHERE c.id=i.community_id) AS community_slug,
         (SELECT assessment_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS image_assessment_status,
         (SELECT authenticity_status FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS authenticity_status,
         (SELECT assessment FROM resq_incident_images x WHERE x.incident_id=i.id ORDER BY x.created_at DESC LIMIT 1) AS _image_assessment,

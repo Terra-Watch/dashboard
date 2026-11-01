@@ -1,8 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../../app/http';
+import { useMyCommunity } from '../../lib/community';
 import { Notice } from '../../ui/Notice';
 import { PageTitle } from '../../ui/Page';
 import { ChatTab } from './community/ChatTab';
@@ -12,7 +11,7 @@ import { NoticesTab } from './community/NoticesTab';
 export function CommunityPage() {
   const { t } = useTranslation();
   const [tab, setTab] = useState('discussion');
-  const mine = useQuery({ queryKey: ['my-community'], queryFn: () => api<{ community: { slug: string; name: string; forest_name: string; area: string } | null }>('/api/community/mine'), staleTime: 60_000 });
+  const mine = useMyCommunity();
   const community = mine.data?.community ?? null;
   const spaces = community ? [['discussion', t('citizen.community.discussion', 'Discussion')], ['chat', t('citizen.community.chat', 'Chat')], ['notices', t('citizen.community.notices', 'Official notices')]] : [['notices', t('citizen.community.notices', 'Official notices')]];
   return (

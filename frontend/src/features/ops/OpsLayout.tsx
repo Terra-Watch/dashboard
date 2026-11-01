@@ -3,18 +3,19 @@ import { useTranslation } from 'react-i18next';
 import { signOut, useSession } from '../../app/session';
 import { AppShell } from '../../ui/AppShell';
 import { homePath } from '../../ui/nav';
-import { STATES } from '../citizen/format';
+import { useCommunities } from '../../lib/community';
 import { setOpsRegion, useOpsRegion } from './useOps';
 
 function RegionSwitch() {
   const { t } = useTranslation();
   const region = useOpsRegion();
+  const communities = useCommunities();
   return (
     <label className="hidden items-center gap-2 text-sm font-semibold md:flex">
-      <span className="sr-only md:not-sr-only">{t('ops.region', 'Region')}</span>
+      <span className="sr-only md:not-sr-only">{t('ops.community', 'Community')}</span>
       <select value={region} onChange={event => setOpsRegion(event.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2 font-normal text-ink">
-        <option value="">{t('ops.all_regions', 'All my regions')}</option>
-        {STATES.map(state => <option key={state.code} value={state.code}>{state.name}</option>)}
+        <option value="">{t('ops.all_communities', 'All communities')}</option>
+        {(communities.data?.items ?? []).map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}
       </select>
     </label>
   );

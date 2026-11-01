@@ -1,3 +1,4 @@
+import { useMyCommunity } from '../../lib/community';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Flame, MapPin, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +15,6 @@ import { formatWhen, stateName } from './format';
 type Row = { id: number; status: string; close_reason: string | null; state: string; created_at: string; updated_at: string };
 type Post = { id: number; content: string | null; status: string; topic: string; created_at: string; author?: { name?: string } };
 
-const region = () => { try { return localStorage.getItem('tw_region') ?? ''; } catch { return ''; } };
 const snippet = (text: string | null) => { const value = (text ?? '').trim().replace(/\s+/g, ' '); return value.length > 140 ? `${value.slice(0, 137)}...` : value; };
 
 /** The first screen after sign-in. One job: let a person report a fire in a few taps. Everything else is a short read below it. */
@@ -22,7 +22,8 @@ export function CitizenHome() {
   const { t } = useTranslation();
   const { user } = useSession();
   const reports = useQuery({ queryKey: ['my-reports'], queryFn: () => api<{ items: Row[] }>('/api/citizen/reports') });
-  const notices = useQuery({ queryKey: ['notices', region()], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region() ? `?region=${region()}` : ''}`) });
+  const region = useMyCommunity().data?.community?.state ?? '';
+  const notices = useQuery({ queryKey: ['notices', region], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region ? `?region=${region}` : ''}`) });
   const posts = useQuery({ queryKey: ['community-posts', ''], queryFn: () => api<{ items: Post[] }>('/api/community/posts'), refetchInterval: 60_000 });
   const latest = reports.data?.items[0];
   const firstName = (user?.name ?? '').split(' ')[0];

@@ -7,12 +7,13 @@ import { Notice } from '../../ui/Notice';
 import { PageTitle, LoadError } from '../../ui/Page';
 import { RungBadge } from '../../ui/RungBadge';
 import { ageText, rungOfStatus } from '../../ui/ladder';
-import { STATES, STATE_BOUNDS, formatWhen, stateName } from '../citizen/format';
+import { formatWhen } from '../citizen/format';
 import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { SYMBOL_OF_RUNG, boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { TIME_WINDOWS, canShow, withinHours, type LayerId, type TimeWindow } from '../map/profiles';
+import { communityBox, useCommunities } from '../../lib/community';
 import { useOpsSettings, useIncidents, useOpsRegion, type Incident } from './useOps';
 import { basemapStyle, satelliteStyle } from '../map/style';
 import { readMapColors, isDark } from '../map/colors';
@@ -37,6 +38,7 @@ function Chip({ label, freshness }: { label: string; freshness?: Freshness }) {
 export function OpsMapPage() {
   const { t } = useTranslation();
   const region = useOpsRegion();
+  const communities = useCommunities();
   const incidents = useIncidents();
   const settings = useOpsSettings();
   const [hours, setHours] = useState<TimeWindow>(24);
@@ -93,7 +95,8 @@ export function OpsMapPage() {
     }
   }, [basemapType]);
 
-  const box = region ? STATE_BOUNDS[region] : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
+  const chosen = (communities.data?.items ?? []).find(c => c.slug === region);
+  const box = chosen ? communityBox(chosen) : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
   const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
@@ -108,7 +111,7 @@ export function OpsMapPage() {
     queryFn: () => api<{ type: string; features: Array<{ type: string; geometry: { type: string; coordinates: [number, number] }; properties: { cell_id: number; state: string; rank_percentile: number; band: string } }> }>(`/api/risk/geojson?target=${riskDate}${riskHighOnly ? '&risk_band=high' : ''}`),
   });
 
-  const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.state === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
+  const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.community_slug === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
   const points: MapPoint[] = useMemo(() => [
     ...shown.filter(item => item.status === 'reported' ? layers.has('reports') : layers.has('incidents')).map(item => ({ id: `i${item.id}`, lat: item.latitude!, lon: item.longitude!, symbol: SYMBOL_OF_RUNG[rungOfStatus(item.status)], label: `#${item.id}` })),
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
@@ -132,7 +135,7 @@ export function OpsMapPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-3">
-      <PageTitle title={t('nav.map')} subtitle={region ? stateName(region) : t('ops.all_regions', 'All my regions')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
+      <PageTitle title={t('nav.map')} subtitle={chosen ? chosen.name : t('ops.all_communities', 'All communities')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
       <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.preset', 'What to show')}</p><div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex max-w-full rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div></div>
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.window', 'Time window')}</p><div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex max-w-full rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item} h</button>)}</div></div>
@@ -182,7 +185,7 @@ export function OpsMapPage() {
           <h2 id="map-list-title" className="mb-2 text-xl">{t('map.same_items', 'The same items as a list')}</h2>
           {!points.length ? <p className="text-ink-muted">{t('map.none', 'Nothing in this view.')}</p> : <ul className="space-y-2">{points.map(point => <li key={point.id}><button type="button" onClick={() => { setSelected(point.id); setView('map'); }} className="flex min-h-11 w-full items-center gap-3 rounded-rq border border-line bg-surface px-3 text-left">{point.id.startsWith('i') ? `#${point.id.slice(1)} · ${t(`rung.${rungOfStatus(incidents.data?.find(item => item.id === Number(point.id.slice(1)))?.status)}`)}` : `${t('rung.signal')} · ${ageText(signals.data?.items.find(item => `s${item.id}` === point.id)?.acq_datetime)}`}</button></li>)}</ul>}
       </section>
-      <p className="text-sm text-ink-muted">{t('map.states', 'Regions:')} {STATES.map(state => state.name).join(', ')}.</p>
+      <p className="text-sm text-ink-muted">{t('map.communities', 'Communities:')} {(communities.data?.items ?? []).map(c => c.name).join(', ')}.</p>
     </div>
   );
 }

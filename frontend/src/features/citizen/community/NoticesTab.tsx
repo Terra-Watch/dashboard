@@ -1,3 +1,4 @@
+import { useMyCommunity } from '../../../lib/community';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../../app/http';
@@ -22,7 +23,7 @@ export function NoticeList({ items }: { items: NoticeItem[] }) {
 
 export function NoticesTab() {
   const { t } = useTranslation();
-  const region = (() => { try { return localStorage.getItem('tw_region') ?? ''; } catch { return ''; } })();
+  const region = useMyCommunity().data?.community?.state ?? '';
   const notices = useQuery({ queryKey: ['notices', region], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region ? `?region=${region}` : ''}`) });
   if (notices.isLoading) return <Skeleton />;
   if (notices.isError) return <Notice kind="danger">{t('citizen.near.notices_error', 'Notices could not be loaded. Try again in a moment.')}</Notice>;

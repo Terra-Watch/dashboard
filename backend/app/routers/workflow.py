@@ -71,7 +71,7 @@ def all_active_assignments(user: dict = Depends(_control_user)) -> dict:
         params['scopes'] = list(scopes)
     with engine.connect() as db:
         rows = db.execute(text(f'''SELECT a.id,a.incident_id,a.ranger_id,a.status,a.priority,a.due_at,a.created_at,a.updated_at,
-                u.name AS ranger_name,i.state,i.status AS incident_status,i.latitude,i.longitude,
+                u.name AS ranger_name,i.state,(SELECT c.slug FROM resq_communities c WHERE c.id=i.community_id) AS community_slug,i.status AS incident_status,i.latitude,i.longitude,
                 (SELECT count(*) FROM resq_field_verifications v WHERE v.assignment_id=a.id) AS observations
             FROM resq_incident_assignments a JOIN resq_users u ON u.id=a.ranger_id JOIN resq_incidents i ON i.id=a.incident_id
             WHERE a.status IN ('assigned','accepted','in_progress') {scope_clause} ORDER BY a.created_at ASC LIMIT 500'''), params).mappings().all()

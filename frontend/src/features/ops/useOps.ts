@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { api } from '../../app/http';
 
 export type Incident = {
-  id: number; source: string; size: string; notes: string | null; status: string; close_reason: string | null; state: string | null; community?: string | null;
+  id: number; source: string; size: string; notes: string | null; status: string; close_reason: string | null; state: string | null; community?: string | null; community_slug?: string | null;
   latitude: number | null; longitude: number | null; observed_at: string | null; created_at: string; updated_at: string;
   image_assessment_status?: string | null;
   image_media_integrity_status?: string | null;

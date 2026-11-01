@@ -9,13 +9,13 @@ import { ageText, rungOfStatus } from '../../ui/ladder';
 import { stateName } from '../citizen/format';
 import { useOpsRegion } from './useOps';
 
-type Row = { id: number; incident_id: number; ranger_name: string; status: string; state: string | null; incident_status: string; observations: number; updated_at: string; created_at: string };
+type Row = { id: number; incident_id: number; ranger_name: string; status: string; state: string | null; community_slug?: string | null; incident_status: string; observations: number; updated_at: string; created_at: string };
 
 export function OpsFieldPage() {
   const { t } = useTranslation();
   const region = useOpsRegion();
   const list = useQuery({ queryKey: ['ops-assignments'], queryFn: () => api<{ items: Row[] }>('/api/control-room/assignments'), refetchInterval: 30_000 });
-  const rows = (list.data?.items ?? []).filter(row => !region || row.state === region);
+  const rows = (list.data?.items ?? []).filter(row => !region || row.community_slug === region);
   const waiting = rows.filter(row => row.status === 'assigned');
   return (
     <div className="mx-auto max-w-5xl space-y-4">

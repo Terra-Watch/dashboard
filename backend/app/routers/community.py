@@ -249,6 +249,13 @@ def my_community(user: dict = Depends(current_redesign_user)) -> dict:
         return {'community': communities.of_user(db, int(user['id']))}
 
 
+@router.get('/list')
+def list_communities(user: dict = Depends(current_redesign_user)) -> dict:
+    with engine.connect() as db:
+        rows = db.execute(text('SELECT slug,name,forest_name,area,state,latitude,longitude,radius_km FROM resq_communities ORDER BY name')).mappings().all()
+    return {'items': [dict(row) for row in rows]}
+
+
 @router.post('/locate', dependencies=[Depends(require_csrf)])
 def locate(payload: LocatePayload, user: dict = Depends(current_redesign_user)) -> dict:
     """The app sends the device position when it has one; the software, not a person, decides which community it falls in."""

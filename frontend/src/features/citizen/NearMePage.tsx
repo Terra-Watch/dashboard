@@ -1,4 +1,3 @@
-import { reportPosition } from '../../lib/community';
 import { useQuery } from '@tanstack/react-query';
 import { Phone, Plus, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -17,7 +16,8 @@ import { PushToggle } from './PushToggle';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
-import { STATES, STATE_BOUNDS, formatWhen } from './format';
+import { formatWhen } from './format';
+import { communityBox, reportPosition, useMyCommunity } from '../../lib/community';
 
 type Contact = { label: string; number: string; region?: string | null };
 type NoticeItem = NoticeArea & { id: number; incident_id?: number | null; image_id?: number | null; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; expires_at: string; published_at: string | null };
@@ -26,8 +26,6 @@ type MyReport = { id: number; status: string; latitude: number; longitude: numbe
 type PublicReport = { id: number; label: 'unverified' | 'confirmed'; text: string; note: string | null; lat: number; lon: number; distance_km: number | null; reported_at: string; photos: string[]; photo_check?: { no_sign_of_editing: boolean; looks_like_flames_or_smoke: boolean } };
 type PublicIncidents = { enabled: boolean; items: Array<{ cell: string; count: number; status: 'verified' | 'responding' | 'contained'; as_of: string }>; delay_minutes?: number };
 
-const REGION_KEY = 'tw_region';
-const rememberedRegion = () => { try { return localStorage.getItem(REGION_KEY) ?? ''; } catch { return ''; } };
 
 function FlagPhoto({ incidentId, src }: { incidentId: number; src: string }) {
   const { t } = useTranslation();
@@ -56,7 +54,8 @@ function ReportCard({ item }: { item: PublicReport }) {
 
 export function NearMePage() {
   const { t } = useTranslation();
-  const [region, setRegion] = useState(rememberedRegion);
+  const community = useMyCommunity().data?.community ?? null;
+  const region = community?.state ?? '';
   const contacts = useQuery({ queryKey: ['contacts'], queryFn: () => api<{ configured: boolean; items: Contact[] }>('/api/public/contacts') });
   const notices = useQuery({ queryKey: ['notices', region], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region ? `?region=${region}` : ''}`) });
   const mine = useQuery({ queryKey: ['my-report-points'], queryFn: () => api<{ items: MyReport[] }>('/api/citizen/reports'), retry: false });
@@ -81,7 +80,7 @@ export function NearMePage() {
   const pickedMine = selected?.startsWith('r') ? mine.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
   const nearbyCount = (notices.data?.items.length ?? 0) + (areas.data?.enabled ? areas.data.items.length : 0);
   const hasNearby = nearbyCount > 0;
-  const box = region ? STATE_BOUNDS[region] : null;
+  const box = community ? communityBox(community) : null;
   const bounds = me ? boundsOf([me]) : polygons.length || points.length ? boundsOf([...polygons.flatMap(p => p.ring.map(([lon, lat]) => ({ lat, lon }))), ...points]) : box ? [[box[0], box[1]], [box[2], box[3]]] as [[number, number], [number, number]] : null;
   const locate = () => navigator.geolocation?.getCurrentPosition(position => { reportPosition(position.coords.latitude, position.coords.longitude); setMe({ lat: position.coords.latitude, lon: position.coords.longitude }); }, () => undefined, { enableHighAccuracy: true, timeout: 15000 });
 
@@ -109,10 +108,7 @@ export function NearMePage() {
           : <ul className="space-y-2">{contacts.data.items.map(item => <li key={item.label + item.number}><a href={`tel:${item.number.replace(/[^+0-9]/g, '')}`} className="flex min-h-12 items-center gap-3 rounded-rq border border-control px-4 font-semibold text-ink hover:bg-surface-2"><Phone aria-hidden="true" size={20} /><span>{item.label}</span><span className="ml-auto">{item.number}</span></a></li>)}</ul>}
       </Card>
 
-      <SelectField label={t('citizen.near.region', 'Your state')} value={region} onChange={event => { setRegion(event.target.value); try { localStorage.setItem(REGION_KEY, event.target.value); } catch { /* remembered for this visit only */ } }}>
-        <option value="">{t('citizen.near.all', 'All states')}</option>
-        {STATES.map(state => <option key={state.code} value={state.code}>{state.name}</option>)}
-      </SelectField>
+      {community && <p className="rounded-panel border border-line bg-surface p-3"><span className="font-bold">{community.name}</span><span className="block text-sm text-ink-muted">{community.forest_name} · {community.area}</span></p>}
 
       <Card title={t('citizen.near.map', 'Map')}>
         <div className="relative">
