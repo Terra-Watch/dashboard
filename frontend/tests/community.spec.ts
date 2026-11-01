@@ -19,6 +19,7 @@ test.describe('Community (citizen)', () => {
 
   test('official notices come first and are marked official; the rule about emergencies is always visible', async ({ page }) => {
     await page.goto('/citizen/community');
+    await page.getByRole('tab', { name: 'Official notices' }).click();
     await expect(page.getByRole('tab', { name: 'Official notices' })).toHaveAttribute('data-state', 'active');
     await expect(page.getByText('Avoid the ridge road until noon.')).toBeVisible();
     await expect(page.getByText(/Official/).first()).toBeVisible();
@@ -34,6 +35,7 @@ test.describe('Community (citizen)', () => {
     await page.goto('/citizen/community');
     await page.getByRole('tab', { name: 'Discussion' }).click();
     await expect(page.getByText('Road to the gate is closed')).toBeVisible();
+    await page.getByRole('button', { name: 'Ask a question or share a local tip' }).click();
     const publish = page.getByRole('button', { name: 'Post', exact: true });
     await expect(publish).toBeDisabled();
     await page.getByLabel('Your post').fill('There is a fire at the ridge, help');
@@ -46,6 +48,7 @@ test.describe('Community (citizen)', () => {
     await publish.click();
     await expect(page.getByText('Posted. Only signed-in members can see it.')).toBeVisible();
     expect(bodies[0]).toMatchObject({ content: 'Where is the nearest water point?', topic: 'question', language: 'hi' });
+    await page.getByRole('button', { name: 'Ask a question or share a local tip' }).click();
     await page.getByLabel('Your post').fill('Call me on 9876543210 for water');
     await publish.click();
     await expect(page.getByText('A moderator will look at this before it appears.')).toBeVisible();

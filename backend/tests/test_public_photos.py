@@ -154,3 +154,15 @@ def test_a_citizen_sees_that_a_photo_is_waiting_but_not_why():
 
 def _headers_of(client, rid):
     return {"x-resq-csrf": client.cookies.get("resq_csrf") or ""}
+
+
+def test_public_reports_show_only_positive_photo_check_marks():
+    client, _, rid, image_id = report_with_photo()
+    with engine.begin() as db:
+        db.execute(text("UPDATE resq_incident_images SET authenticity_status='NO_CONCERN_DETECTED', assessment_status='COMPLETED', assessment=CAST(:a AS jsonb) WHERE id=:i"),
+                   {"a": '{"derived_label": "SMOKE_ONLY"}', "i": image_id})
+    item = listed(client, rid)[0]
+    assert item["photo_check"] == {"no_sign_of_editing": True, "looks_like_flames_or_smoke": True}
+    with engine.begin() as db:
+        db.execute(text("UPDATE resq_incident_images SET authenticity_status='POSSIBLE_EDITED', assessment=CAST(:a AS jsonb) WHERE id=:i"), {"a": '{"derived_label": "UNCERTAIN"}', "i": image_id})
+    assert listed(client, rid)[0]["photo_check"] == {"no_sign_of_editing": False, "looks_like_flames_or_smoke": False}      # nothing negative is ever said

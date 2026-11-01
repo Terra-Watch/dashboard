@@ -22,7 +22,7 @@ type Contact = { label: string; number: string; region?: string | null };
 type NoticeItem = NoticeArea & { id: number; incident_id?: number | null; image_id?: number | null; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; expires_at: string; published_at: string | null };
 type NoticeArea = { id: number; title: string; severity: string; area_geojson?: { type: string; coordinates: number[][][] } | null };
 type MyReport = { id: number; status: string; latitude: number; longitude: number };
-type PublicReport = { id: number; label: 'unverified' | 'confirmed'; text: string; note: string | null; lat: number; lon: number; distance_km: number | null; reported_at: string; photos: string[] };
+type PublicReport = { id: number; label: 'unverified' | 'confirmed'; text: string; note: string | null; lat: number; lon: number; distance_km: number | null; reported_at: string; photos: string[]; photo_check?: { no_sign_of_editing: boolean; looks_like_flames_or_smoke: boolean } };
 type PublicIncidents = { enabled: boolean; items: Array<{ cell: string; count: number; status: 'verified' | 'responding' | 'contained'; as_of: string }>; delay_minutes?: number };
 
 const REGION_KEY = 'tw_region';
@@ -44,6 +44,10 @@ function ReportCard({ item }: { item: PublicReport }) {
                 <p className="mt-1">{item.label === 'confirmed' ? t('citizen.near.confirmed_text', 'Fire reported and confirmed by officials.') : t('citizen.near.unverified_text', 'Reported by a citizen. Not checked by officials.')}</p>
                 {item.note && <p className="mt-1 italic">“{item.note}”</p>}
                 {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <figure key={src} className="max-w-full"><img src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" /><figcaption><FlagPhoto incidentId={item.id} src={src} /></figcaption></figure>)}</div>}
+                {item.photo_check && (item.photo_check.no_sign_of_editing || item.photo_check.looks_like_flames_or_smoke) && (
+                  <div className="mt-2 rounded-rq border border-line bg-surface p-2 text-sm"><p className="font-semibold">{t('citizen.near.auto_check', 'Automatic photo check')}</p>
+                    <ul className="list-disc pl-5">{item.photo_check.looks_like_flames_or_smoke && <li>{t('citizen.near.looks_like', 'The photo looks like it shows flames or smoke.')}</li>}{item.photo_check.no_sign_of_editing && <li>{t('citizen.near.not_edited', 'No sign it was edited or made by AI.')}</li>}</ul>
+                    <p className="text-ink-muted">{t('citizen.near.auto_check_note', 'A computer made this check. It can be wrong and it does not confirm a fire. Only officials can.')}</p></div>)}
                 <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.reported_at)}{item.distance_km !== null ? ` · ${t('citizen.near.km_away', { count: item.distance_km, defaultValue: 'about {{count}} km away' })}` : ''}{` · ${t('citizen.near.area_only', 'area only, not the exact place')}`}</p>
               </div>
   );

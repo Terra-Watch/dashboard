@@ -459,13 +459,13 @@ def test_a_held_posts_image_is_hidden_from_the_public_until_a_moderator_approves
     assert other.get("/api/community/posts", headers=oh).json()["items"] == [i for i in other.get("/api/community/posts", headers=oh).json()["items"] if i["id"] != pid]
     assert c.get(f"/api/community/posts/{pid}/image", headers=h).status_code == 200            # the author sees their own upload
     mine = next(i for i in c.get("/api/community/posts", headers=h).json()["items"] if i["id"] == pid)
-    assert mine["image"] == {"url": f"/api/community/posts/{pid}/image", "mime": "image/jpeg"} and mine["state"] == "held for review"
+    assert mine["image"] == {"url": f"/api/community/posts/{pid}/image", "mime": "image/jpeg", "checked": None} and mine["state"] == "held for review"
     assert mod.get(f"/api/community/posts/{pid}/image", headers=mh).status_code == 200         # moderators can inspect it
     item = queue_item(mod, mh, pid)
     assert mod.post(f"/api/community/moderation/reports/{item['id']}/resolve", headers=mh, json={"action": "approve"}).status_code == 200
     assert other.get(f"/api/community/posts/{pid}/image", headers=oh).status_code == 200
     shown = next(i for i in other.get("/api/community/posts", headers=oh).json()["items"] if i["id"] == pid)
-    assert shown["image"]["url"].endswith(f"/{pid}/image") and shown["verified"] is False and set(shown["image"]) == {"url", "mime"}
+    assert shown["image"]["url"].endswith(f"/{pid}/image") and shown["verified"] is False and set(shown["image"]) == {"url", "mime", "checked"} and shown["image"]["checked"] == "moderator"
 
 
 def test_a_tampered_stored_file_is_not_served(monkeypatch):

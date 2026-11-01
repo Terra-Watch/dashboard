@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquarePlus, ThumbsUp } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ApiError, api } from '../../../app/http';
@@ -11,9 +11,13 @@ import { Notice } from '../../../ui/Notice';
 import { Card, EmptyState, Skeleton } from '../../../ui/Page';
 import { LANGUAGES_FOR_POSTS, MAX_POST, REPORT_REASONS, TOPICS, canEdit, looksLikeEmergency, removalText, validatePost } from '../../community/communityLogic';
 import { formatWhen } from '../format';
+import { shrinkPhoto } from '../../../lib/photo';
+import { usePhotoHints } from '../../../lib/usePhotoHints';
+import { PhotoHint } from '../../../ui/PhotoHint';
+import { PostPhoto } from './PostPhoto';
 
 type Removed = { by?: string | null; reason?: string | null };
-type Post = { id: number; content: string | null; status: string; state?: string; created_at: string; edited_at?: string | null; topic: string; language: string; region?: string | null; verified: boolean; helpful_count: number; helpful_by_me: boolean; comments_count: number; badge?: string | null; author: { id?: number; name?: string }; removed?: Removed };
+type Post = { image?: { url: string; mime: string; checked: 'automatic' | 'moderator' | null } | null; id: number; content: string | null; status: string; state?: string; created_at: string; edited_at?: string | null; topic: string; language: string; region?: string | null; verified: boolean; helpful_count: number; helpful_by_me: boolean; comments_count: number; badge?: string | null; author: { id?: number; name?: string }; removed?: Removed };
 type Comment = { id: number; content: string | null; status: string; created_at: string; edited_at?: string | null; badge?: string | null; author: { id?: number; name?: string }; removed?: Removed };
 
 const POSTS_KEY = ['community-posts'] as const;
@@ -22,14 +26,14 @@ export function DiscussionTab() {
   const { t } = useTranslation();
   const { user } = useSession();
   const [topic, setTopic] = useState('');
-  const posts = useQuery({ queryKey: [...POSTS_KEY, topic], queryFn: () => api<{ items: Post[] }>(`/api/community/posts${topic ? `?topic=${topic}` : ''}`), refetchInterval: 30_000 });
+  const posts = useQuery({ queryKey: [...POSTS_KEY, topic], queryFn: () => api<{ items: Post[]; images_enabled?: boolean }>(`/api/community/posts${topic ? `?topic=${topic}` : ''}`), refetchInterval: 30_000 });
   const [notice, setNotice] = useState<{ kind: 'success' | 'danger' | 'info'; text: string } | null>(null);
   const [writing, setWriting] = useState(false);
 
   return (
     <div className="space-y-4">
       {writing
-        ? <Composer onDone={message => { setNotice(message); if (message.kind !== 'danger') setWriting(false); void posts.refetch(); }} />
+        ? <Composer images={posts.data?.images_enabled === true} onDone={message => { setNotice(message); if (message.kind !== 'danger') setWriting(false); void posts.refetch(); }} />
         : <button type="button" onClick={() => setWriting(true)} className="flex min-h-16 w-full items-center gap-3 rounded-xl border-2 border-action bg-action-tint px-4 text-left text-lg font-semibold text-ink hover:bg-surface-2"><MessageSquarePlus aria-hidden="true" className="shrink-0 text-action" size={26} />{t('citizen.v2.ask', 'Ask a question or share a local tip')}</button>}
       {notice && <Notice kind={notice.kind}>{notice.text}</Notice>}
       <SelectField label={t('citizen.community.filter', 'Show')} value={topic} onChange={event => setTopic(event.target.value)}>
@@ -43,18 +47,29 @@ export function DiscussionTab() {
   );
 }
 
-function Composer({ onDone }: { onDone: (notice: { kind: 'success' | 'danger' | 'info'; text: string }) => void }) {
+function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind: 'success' | 'danger' | 'info'; text: string }) => void }) {
   const { t } = useTranslation();
   const [body, setBody] = useState(''); const [topic, setTopic] = useState('question'); const [language, setLanguage] = useState('en'); const [region, setRegion] = useState('');
   const [busy, setBusy] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null); const picker = useRef<HTMLInputElement>(null);
+  const hints = usePhotoHints(photo ? [photo] : [])[0] ?? [];
   const problem = validatePost(body);
   const emergency = looksLikeEmergency(body);
   async function submit(event: FormEvent) {
     event.preventDefault(); if (problem || busy) return; setBusy(true);
     try {
-      const result = await api<{ post: { status: string }; message?: string }>('/api/community/posts', { method: 'POST', json: { content: body.trim(), topic, post_type: topic, language, region: region.trim() || undefined } });
-      setBody(''); setRegion('');
-      onDone(result.post.status === 'held' ? { kind: 'info', text: result.message ?? t('citizen.community.held', 'A moderator will look at this before it appears.') } : { kind: 'success', text: t('citizen.community.published', 'Posted. Only signed-in members can see it.') });
+      const result = await api<{ post: { id: number; status: string }; message?: string }>('/api/community/posts', { method: 'POST', json: { content: body.trim(), topic, post_type: topic, language, region: region.trim() || undefined } });
+      let held = result.post.status === 'held'; let message = result.message; let photoProblem = '';
+      if (photo) {
+        try {
+          const form = new FormData(); form.append('image', await shrinkPhoto(photo));
+          const sent = await api<{ post_status: string; message?: string }>(`/api/community/posts/${result.post.id}/image`, { method: 'POST', form });
+          held = held || sent.post_status === 'held'; message = sent.message ?? message;
+        } catch (reason) { photoProblem = reason instanceof ApiError ? reason.detail : t('citizen.community.photo_failed', 'The photo was not added.'); }
+      }
+      setBody(''); setRegion(''); setPhoto(null);
+      onDone(photoProblem ? { kind: 'info', text: `${t('citizen.community.posted_no_photo', 'Your post is up, but')} ${photoProblem}` }
+        : held ? { kind: 'info', text: message ?? t('citizen.community.held', 'A moderator will look at this before it appears.') } : { kind: 'success', text: t('citizen.community.published', 'Posted. Only signed-in members can see it.') });
     } catch (reason) { onDone({ kind: 'danger', text: reason instanceof ApiError ? reason.detail : t('citizen.community.post_failed', 'Your post was not published.') }); }
     finally { setBusy(false); }
   }
@@ -67,6 +82,14 @@ function Composer({ onDone }: { onDone: (notice: { kind: 'success' | 'danger' | 
         <TextField label={t('citizen.community.area', 'Area (district)')} maxLength={80} value={region} onChange={event => setRegion(event.target.value)} />
       </div>
       <TextArea label={t('citizen.community.post', 'Your post')} rows={4} value={body} onChange={event => setBody(event.target.value)} hint={t('citizen.community.no_contact', 'Do not share phone numbers, links or exact locations; such posts wait for a moderator.')} />
+      {images && (
+        <div className="space-y-2">
+          <input ref={picker} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={event => { const picked = event.target.files?.[0] ?? null; event.target.value = ''; setPhoto(picked); }} />
+          {photo ? <div className="flex flex-wrap items-center gap-3"><span className="text-sm">{photo.name}</span><button type="button" className="min-h-11 text-sm font-semibold underline" onClick={() => setPhoto(null)}>{t('citizen.community.remove_photo', 'Remove photo')}</button></div>
+            : <Button type="button" variant="secondary" onClick={() => picker.current?.click()}>{t('citizen.community.add_photo', 'Add a photo (optional)')}</Button>}
+          <PhotoHint hints={hints} />
+          <p className="text-sm text-ink-muted">{t('citizen.community.photo_note', 'Photos are checked automatically before others see them. Some are looked at by a moderator first. Use your own, unedited photo.')}</p>
+        </div>)}
       {emergency && <Notice kind="warning" title={t('citizen.community.emergency_title', 'Is this an emergency?')}>{t('citizen.community.emergency', 'Nobody is told when you post here.')} <Link className="font-bold underline" to="/citizen/report">{t('nav.report')}</Link></Notice>}
       <div className="flex items-center justify-between gap-3"><span className={`text-sm ${body.length > MAX_POST ? 'font-bold text-danger' : 'text-ink-muted'}`} aria-live="polite">{body.length}/{MAX_POST}</span><Button type="submit" loading={busy} disabled={Boolean(problem)}>{t('citizen.community.publish', 'Post')}</Button></div>
     </form>
@@ -90,6 +113,7 @@ function PostCard({ post, userId, onChanged, onNotice }: { post: Post; userId?: 
           <div className="flex gap-2"><Button type="submit" disabled={Boolean(validatePost(draft))}>{t('citizen.community.save', 'Save')}</Button><Button variant="secondary" onClick={() => setEditing(false)}>{t('citizen.community.cancel', 'Cancel')}</Button></div>
         </form>
       ) : <p className="mt-2 whitespace-pre-wrap text-lg">{post.content}</p>}
+      {post.image && <PostPhoto url={post.image.url} checked={post.image.checked} />}
       <p className="mt-2 text-sm text-ink-muted">{post.author?.name || t('citizen.community.member', 'Member')}{post.badge ? <span className="ml-1 rounded-full bg-action px-2 py-0.5 text-xs font-bold text-on-action">{post.badge}</span> : null} · {formatWhen(post.created_at)}{post.edited_at ? ` · ${t('citizen.community.edited', 'edited')}` : ''}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <button type="button" aria-pressed={post.helpful_by_me} onClick={() => void run(() => api(`/api/community/posts/${post.id}/helpful`, { method: 'POST', json: {} }))} className={`inline-flex min-h-11 items-center gap-1.5 rounded-rq border px-3 font-semibold ${post.helpful_by_me ? 'border-action bg-action-tint' : 'border-line hover:bg-surface-2'}`}><ThumbsUp aria-hidden="true" size={16} />{t('citizen.community.helpful', 'Helpful')} {post.helpful_count > 0 && post.helpful_count}</button>

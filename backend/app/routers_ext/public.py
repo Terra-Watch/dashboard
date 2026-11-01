@@ -169,7 +169,9 @@ def public_reports(lat: float | None = None, lon: float | None = None, radius_km
     hours = public_photo.unverified_hours()
     with engine.connect() as db:
         rows = db.execute(text("""SELECT i.id,i.status,i.notes,i.latitude,i.longitude,i.created_at,i.updated_at,
-              (SELECT array_agg(g.id ORDER BY g.created_at) FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible') AS photo_ids
+              (SELECT array_agg(g.id ORDER BY g.created_at) FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible') AS photo_ids,
+              (SELECT COALESCE(bool_or(g.authenticity_status='NO_CONCERN_DETECTED'), false) FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible') AS no_concern,
+              (SELECT COALESCE(bool_or(g.assessment_status='COMPLETED' AND g.assessment->>'derived_label' IN ('ACTIVE_FIRE','SMOKE_ONLY')), false) FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible') AS looks_like_fire
             FROM resq_incidents i
             WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL
               AND ((i.status='reported' AND i.created_at > now() - make_interval(hours => :hours))
@@ -193,6 +195,7 @@ def public_reports(lat: float | None = None, lon: float | None = None, radius_km
             'note': (row['notes'] or '').strip()[:200] or None, 'lat': round(clat, 4), 'lon': round(clon, 4),
             'distance_km': None if distance is None else round(distance), 'reported_at': row['created_at'].isoformat(),
             'photos': [f"/api/public/reports/{row['id']}/photos/{pid}" for pid in (row['photo_ids'] or [])][:4],
+            'photo_check': {'no_sign_of_editing': bool(row['no_concern']), 'looks_like_flames_or_smoke': bool(row['looks_like_fire'])},   # positive findings only; absence says nothing
         })
     return {'enabled': True, 'unverified_hours': hours, 'items': items}
 

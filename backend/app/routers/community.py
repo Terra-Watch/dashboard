@@ -144,21 +144,25 @@ def list_posts(archived: bool = False, topic: str | None = Query(None, pattern='
     items = [{**_shape(dict(row)), 'verified': False} for row in rows]  # nothing posted by neighbours is verified; official facts are in notices
     if media.images_enabled():  # flag off: the key does not exist at all
         _attach_image_links(items, user)
-    return {'items': items, 'page': page, 'page_size': page_size, 'total': total, 'has_more': offset + len(rows) < total}
+    return {'items': items, 'images_enabled': media.images_enabled(), 'page': page, 'page_size': page_size, 'total': total, 'has_more': offset + len(rows) < total}
 
 
 def _attach_image_links(items: list[dict], user: dict | None) -> None:
-    """Public view of post images: a link only. Never a status, signal or verdict; a held post shows its image to its author only."""
+    """Public view of post images: a link, and at most a positive mark: `checked` is 'automatic' when the automatic check found no sign of editing or AI generation, or
+    'moderator' when a moderator looked and let it through. Never a negative result, a signal or a score; a held post shows its image to its author only."""
     ids = [item['id'] for item in items]
     have: dict = {}
     if ids:
         with engine.connect() as db:
-            have = {r['post_id']: r['mime'] for r in db.execute(text('SELECT post_id,mime FROM resq_community_post_images WHERE post_id = ANY(:ids)'), {'ids': ids}).mappings().all()}
+            have = {r['post_id']: (r['mime'], r['status'], r['moderator_decision']) for r in db.execute(text("""SELECT i.post_id,i.mime,a.status,a.moderator_decision FROM resq_community_post_images i
+                LEFT JOIN resq_community_image_assessments a ON a.image_id=i.id WHERE i.post_id = ANY(:ids)"""), {'ids': ids}).mappings().all()}
     viewer = _viewer(user)
     for item in items:
         mine = item['author']['id'] == viewer
         shown = item['id'] in have and not item.get('removed') and (item.get('state') != 'held for review' or mine)
-        item['image'] = {'url': f"/api/community/posts/{item['id']}/image", 'mime': have[item['id']]} if shown else None
+        mime, status, decision = have.get(item['id'], (None, None, None))
+        checked = 'moderator' if decision == 'approved' else 'automatic' if status == 'AUTHENTIC_NO_CONCERN' else None
+        item['image'] = {'url': f"/api/community/posts/{item['id']}/image", 'mime': mime, 'checked': checked} if shown else None
 
 
 @router.post('/posts', status_code=201, dependencies=[Depends(require_csrf)])
