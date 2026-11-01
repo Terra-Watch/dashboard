@@ -1,5 +1,9 @@
 /** Wind on a coarse lat/lon grid, as the server sends it (u east and v north in m/s, indexed [lat][lon], lats south to north, lons west to east). */
-export type WindGrid = { lats: number[]; lons: number[]; u: number[][]; v: number[][]; valid_time: string };
+export type WindGrid = {
+  lats: number[]; lons: number[]; u: number[][]; v: number[][]; valid_time: string;
+  /** WMO weather code, temperature (°C), precipitation (mm) and daylight (1/0) per grid point; any can be null. */
+  code?: Array<Array<number | null>>; temp?: Array<Array<number | null>>; precip?: Array<Array<number | null>>; is_day?: number[][];
+};
 
 /** Bilinear wind at a point, or null outside the grid. */
 export function sampleWind(g: WindGrid, lat: number, lon: number): { u: number; v: number } | null {

@@ -67,7 +67,7 @@ def fetch_wind_grid(min_lat: float, min_lon: float, max_lat: float, max_lon: flo
     lons = [round(min_lon + (max_lon - min_lon) * j / (n - 1), 4) for j in range(n)]
     pts = [(la, lo) for la in lats for lo in lons]
     params = {"latitude": ",".join(str(p[0]) for p in pts), "longitude": ",".join(str(p[1]) for p in pts), "wind_speed_unit": "ms", "timezone": "GMT",
-              "current": "wind_speed_10m,wind_direction_10m"}
+              "current": "wind_speed_10m,wind_direction_10m,weather_code,temperature_2m,precipitation,is_day"}
     owns = client is None
     client = client or _feeds.http_client()
     try:
@@ -80,13 +80,16 @@ def fetch_wind_grid(min_lat: float, min_lon: float, max_lat: float, max_lon: flo
             raise FeedError("Weather feed returned an unexpected response")
         u = [[0.0] * n for _ in range(n)]
         v = [[0.0] * n for _ in range(n)]
+        code = [[None] * n for _ in range(n)]; temp = [[None] * n for _ in range(n)]; rain = [[None] * n for _ in range(n)]; day = [[1] * n for _ in range(n)]   # conditions are optional: a point without them just gets no icon
         valid = None
         for k, item in enumerate(body):
             cur = item["current"]
             speed, direction = float(cur["wind_speed_10m"]), math.radians(float(cur["wind_direction_10m"]))
             u[k // n][k % n], v[k // n][k % n] = round(-speed * math.sin(direction), 3), round(-speed * math.cos(direction), 3)  # the wind blows TOWARD direction+180
+            code[k // n][k % n], temp[k // n][k % n], rain[k // n][k % n] = cur.get("weather_code"), cur.get("temperature_2m"), cur.get("precipitation")
+            day[k // n][k % n] = 0 if cur.get("is_day") == 0 else 1
             valid = valid or cur["time"]
-        out = {"lats": lats, "lons": lons, "u": u, "v": v, "valid_time": datetime.fromisoformat(valid).replace(tzinfo=timezone.utc), "source": "open-meteo"}
+        out = {"lats": lats, "lons": lons, "u": u, "v": v, "code": code, "temp": temp, "precip": rain, "is_day": day, "valid_time": datetime.fromisoformat(valid).replace(tzinfo=timezone.utc), "source": "open-meteo"}
     except httpx.TimeoutException:
         raise FeedError("Weather feed timed out") from None
     except httpx.HTTPError as exc:

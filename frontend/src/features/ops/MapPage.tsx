@@ -10,6 +10,7 @@ import { ageText, rungOfStatus } from '../../ui/ladder';
 import { formatWhen } from '../citizen/format';
 import { cellCentre } from '../map/geojson';
 import { WindLayer, type MapInstance } from '../map/WindLayer';
+import { WeatherIcons } from '../map/WeatherIcons';
 import type { WindGrid } from '../map/windField';
 import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
@@ -71,6 +72,7 @@ export function OpsMapPage() {
   const [view, setView] = useState<'map' | 'list'>('map');
   const [riskHighOnly, setRiskHighOnly] = useState(false);
   const [showWind, setShowWind] = useState(true);
+  const [showWeather, setShowWeather] = useState(true);
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
@@ -126,7 +128,7 @@ export function OpsMapPage() {
   const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
   const windGrid = useQuery({
-    queryKey: ['map-wind-grid', box.map(v => Math.round(v * 2) / 2).join()], retry: false, staleTime: 25 * 60 * 1000, refetchInterval: 30 * 60 * 1000, enabled: showWind,
+    queryKey: ['map-wind-grid', box.map(v => Math.round(v * 2) / 2).join()], retry: false, staleTime: 25 * 60 * 1000, refetchInterval: 30 * 60 * 1000, enabled: showWind || showWeather,
     queryFn: () => api<WindGrid & { freshness: Freshness }>(`/api/weather/wind-grid?min_lon=${box[0] - 1}&min_lat=${box[1] - 1}&max_lon=${box[2] + 1}&max_lat=${box[3] + 1}&n=10`),
   });
   const notices = useQuery({ queryKey: ['map-notices'], retry: false, enabled: layers.has('advisories'), queryFn: () => api<{ items: NoticeArea[] }>('/api/notices?status=published') });
@@ -182,6 +184,10 @@ export function OpsMapPage() {
           </div></div>
         )}
         <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+          <input type="checkbox" checked={showWeather} onChange={(e) => setShowWeather(e.target.checked)} className="h-4 w-4" />
+          <span>{t('map.weather_icons', 'Weather icons')}</span>
+        </label>
+        <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
           <input type="checkbox" checked={showWind} onChange={(e) => setShowWind(e.target.checked)} className="h-4 w-4" />
           <span>{t('map.wind_flow', 'Animated wind')}</span>
         </label>
@@ -194,6 +200,7 @@ export function OpsMapPage() {
         {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
         <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Link to="/ops/satellite" className="text-sm font-semibold underline">{t('map.satellite_list', 'All satellite detections')}</Link><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
       </div>
+      {showWeather && <WeatherIcons map={mapInstance} grid={windGrid.data} />}
       {showWind && <WindLayer map={mapInstance} grid={windGrid.data} onSatellite={basemapType === 'satellite'} />}
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
       {wind.isLoading && <p role="status" className="text-sm text-ink-muted">{t('map.loading_weather', 'Updating weather…')}</p>}
