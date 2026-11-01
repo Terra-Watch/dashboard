@@ -237,8 +237,8 @@ def test_citizen_upload_requires_authentication_csrf_role_and_ownership():
 
 def test_incident_image_upload_requires_authentication_role_and_state_scope():
     officer = make_user("officer", scopes=["OD"])[0]
-    bearer = {"Authorization": f"Bearer {make_token(officer, 'officer')}"}
     client = fresh_client()
+    bearer = with_csrf(client, {"Authorization": f"Bearer {make_token(officer, 'officer')}"})
     created = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                   "notes": "authz", "state": "OD"})
     assert created.status_code == 201, created.text
@@ -287,8 +287,8 @@ def test_ranger_upload_persists_unavailable_then_completed_without_touching_assi
 
 def test_human_review_and_status_changes_are_independent_of_the_automated_assessment():
     officer_id = make_user("officer", scopes=["OD"])[0]
-    bearer = {"Authorization": f"Bearer {make_token(officer_id, 'officer')}"}
     client = fresh_client()
+    bearer = with_csrf(client, {"Authorization": f"Bearer {make_token(officer_id, 'officer')}"})
     iid = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                "notes": "review", "state": "OD"}).json()["id"]
     up = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, bearer), files=files(jpeg_bytes()))

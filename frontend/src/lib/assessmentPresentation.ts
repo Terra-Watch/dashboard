@@ -238,7 +238,7 @@ export function presentMediaIntegrity(image: AssessmentLike, t: Translate = plai
     : 'NOT_ASSESSED';
   return {
     state,
-    title: t('assess.mi.title', 'Media integrity (advisory)'),
+    title: t('assess.mi.title', 'Photo authenticity (advisory)'),
     label: t(`assess.mi.${state}`, MEDIA_INTEGRITY[state]),
     caveat: state === 'NO_CONCERN_DETECTED' ? t('assess.mi.caveat', 'Not proof the photo is genuine.') : null,
     advisoryLine: t('assess.mi.advisory', MEDIA_INTEGRITY_ADVISORY),

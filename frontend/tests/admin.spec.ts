@@ -78,6 +78,7 @@ test.describe('Administration', () => {
     const bodies: Array<Record<string, string>> = [];
     await page.route('**/api/auth/access-requests', route => { bodies.push(JSON.parse(route.request().postData() ?? '{}')); return route.fulfill(json({ status: 'received' }, 202)); });
     await page.goto('/login');
+    await page.getByText('Are you staff?').click();
     await page.getByRole('link', { name: 'Ask for staff access' }).click();
     const send = page.getByRole('button', { name: 'Send request' });
     await expect(send).toBeDisabled();

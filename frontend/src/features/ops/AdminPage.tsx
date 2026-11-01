@@ -1,3 +1,4 @@
+import { SystemCheck } from './SystemCheck';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -61,6 +62,8 @@ export function AdminPage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <PageTitle title={t('ops.admin.title', 'People and access')} subtitle={t('ops.admin.sub', 'Who can sign in, and which states they cover. People who leave are deactivated, not deleted, so their history stays.')} />
       {error && <Notice kind="danger">{error}</Notice>}
+
+      <SystemCheck />
 
       <Card title={t('ops.admin.invite', 'Invite someone')}>
         <form onSubmit={submit} noValidate className="space-y-3">

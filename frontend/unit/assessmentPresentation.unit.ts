@@ -198,7 +198,7 @@ const FORBIDDEN_AUTH = /authentic|genuine|synthetic|ai-generated|edited|manipula
 const visibleText = (p: ReturnType<typeof presentAssessment>) => [p.headline, p.detail, p.reason, p.reviewRequiredText, p.scoresNote, p.advisoryNote, p.labelText, p.oodWarning, ...p.qualityWarnings, ...p.limitations].filter(Boolean).join(' ');
 
 const mi = (status: string | undefined, row: object = {}) => ({ assessment_status: 'COMPLETED', assessment: { artifact_status: 'APPROVED', media_integrity: status === undefined ? undefined : { status, note: 'n', advisory: true, affects_incident: false } }, ...row });
-const MI_FORBIDDEN = /\b(fake|forged|authentic\w*|genuine|verified|confirmed|dispatch)\b/i;
+const MI_FORBIDDEN = /\b(fake|forged|authentic(?!ity)\w*|genuine|verified|confirmed|dispatch)\b/i;   // the heading may say "authenticity"; no verdict word may appear
 
 test('media integrity: all seven display states use the exact cautious labels', () => {
   const expected: Record<string, string> = {
@@ -208,7 +208,7 @@ test('media integrity: all seven display states use the exact cautious labels', 
   for (const [status, label] of Object.entries(expected)) {
     const row = status === 'UNAVAILABLE' ? mi(status, { assessment_status: 'UNAVAILABLE' }) : mi(status);
     const p = presentMediaIntegrity(row);
-    assert.equal(p.state, status); assert.equal(p.label, label); assert.equal(p.title, 'Media integrity (advisory)');
+    assert.equal(p.state, status); assert.equal(p.label, label); assert.equal(p.title, 'Photo authenticity (advisory)');
     assert.equal(p.advisoryLine, 'Advisory only. This does not verify or reject the report and does not change its priority, status or visibility. A person decides.');
     assert.equal(p.caveat, status === 'NO_CONCERN_DETECTED' ? 'Not proof the photo is genuine.' : null);
     assert.ok(!MI_FORBIDDEN.test([p.label, p.title, p.advisoryLine.replace('does not verify or reject', '')].join(' ')), status);

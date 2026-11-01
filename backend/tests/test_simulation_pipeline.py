@@ -145,7 +145,9 @@ class ServiceAndRouterTests(unittest.TestCase):
 
         app = FastAPI()
         app.include_router(operations.router)
+        from app.core.security import require_csrf
         app.dependency_overrides[require_write] = lambda: {"id": 1, "role": "officer"}
+        app.dependency_overrides[require_csrf] = lambda: None
         client = TestClient(app)
         with mock.patch.object(simulation_service, "run_simulation") as run:
             response = client.post(

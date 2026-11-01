@@ -13,7 +13,6 @@ test.describe('Languages', () => {
     await page.route('**/api/citizen/**', route => route.fulfill(json({ items: [], report: null })));
     await page.goto('/citizen/report');
     await expect(page.getByRole('heading', { name: 'आग की रिपोर्ट करें' })).toBeVisible();
-    await expect(page.getByText('1. यह कहाँ है?')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([]);

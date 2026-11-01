@@ -8,13 +8,11 @@ import { useEvidenceImage } from './useEvidenceImage';
 
 export type { EvidenceImage, ReviewStatus };
 
-const TONE_BOX: Record<AssessmentTone, string> = {
-  review_required: 'border-warn bg-warn-tint',
-  advisory: 'border-warn bg-warn-tint',
-  experimental: 'border-unconfirmed bg-unconfirmed-tint',
-  unavailable: 'border-control bg-canvas',
-  pending: 'border-control bg-canvas',
-  shadow: 'border-control bg-canvas',
+const TONE_DOT: Record<AssessmentTone, string> = {
+  review_required: 'bg-warn', advisory: 'bg-warn', experimental: 'bg-unconfirmed', unavailable: 'bg-ink-muted', pending: 'bg-ink-muted', shadow: 'bg-ink-muted',
+};
+const INTEGRITY_DOT: Record<string, string> = {
+  NO_CONCERN_DETECTED: 'bg-ok', POSSIBLE_SYNTHETIC: 'bg-warn', POSSIBLE_EDITED: 'bg-warn', POSSIBLE_REUSED: 'bg-warn', INCONCLUSIVE: 'bg-ink-muted', NOT_ASSESSED: 'bg-ink-muted', UNAVAILABLE: 'bg-ink-muted',
 };
 
 type Props = {
@@ -95,31 +93,52 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
         )}
       </div>
 
-      <div className={`mt-3 rounded-rq border-l-4 p-3 ${TONE_BOX[assessment.tone]}`} data-testid="assessment-box" data-tone={assessment.tone}>
-        <p className="text-ink-muted" data-testid="image-assessment">{t('ops.ev.auto', 'Automated check')}: {assessment.headline}{assessment.reason ? ` · ${assessment.reason}` : ''}</p>
-        {assessment.reviewRequiredText && <p className="mt-2 flex items-start gap-2 font-semibold text-ink" data-testid="review-required"><AlertTriangle aria-hidden="true" size={18} className="mt-0.5 shrink-0" /><span>{assessment.reviewRequiredText}</span></p>}
-        {assessment.experimentalOutput && <p className="mt-1 font-mono text-xs text-ink-muted" data-testid="experimental-output">{assessment.experimentalOutput}</p>}
-        {assessment.detail && <p className="mt-1 text-ink-muted">{assessment.detail}</p>}
-        {assessment.scores && (
-          <div className="mt-2" data-testid="assessment-scores">
-            <p>{t('assess.flames', 'Flames visible')}: <span className="font-semibold">{assessment.scores.flames}</span> · {t('assess.smoke', 'Smoke visible')}: <span className="font-semibold">{assessment.scores.smoke}</span></p>
-            {assessment.scoresNote && <p className="text-xs text-ink-muted">{assessment.scoresNote}</p>}
+      <div className="mt-3 space-y-3">
+        <section className="overflow-hidden rounded-panel border border-line bg-surface" aria-label={t('ops.ev.auto', 'Automated check')} data-testid="assessment-box" data-tone={assessment.tone}>
+          <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <h4 className="flex items-center gap-2 text-base font-semibold"><span aria-hidden="true" className={`size-2.5 rounded-full ${TONE_DOT[assessment.tone]}`} />{t('ops.ev.auto', 'Automated check')}</h4>
+            <span className="rounded-full border border-line bg-surface-2 px-3 py-1 text-xs font-semibold text-ink-muted">{t('ops.ev.advisory_chip', 'Advisory · a person decides')}</span>
+          </header>
+          <div className="space-y-4 px-4 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{t('ops.ev.fire_smoke', 'Fire and smoke')}</p>
+              <p className="mt-1 text-lg font-semibold leading-snug" data-testid="image-assessment"><span className="sr-only">{t('ops.ev.auto', 'Automated check')}: </span>{assessment.headline}{assessment.reason ? <span className="font-normal text-ink-muted"> · {assessment.reason}</span> : null}</p>
+              {assessment.experimentalOutput && <p className="mt-1 font-mono text-xs text-ink-muted" data-testid="experimental-output">{assessment.experimentalOutput}</p>}
+              {assessment.detail && <p className="mt-1 text-ink-muted">{assessment.detail}</p>}
+            </div>
+            {assessment.scores && (
+              <div data-testid="assessment-scores" className="grid gap-3 sm:grid-cols-2">
+                {([['assess.flames', 'Flames visible', assessment.scores.flames, 'bg-danger'], ['assess.smoke', 'Smoke visible', assessment.scores.smoke, 'bg-warn']] as const).map(([key, label, value, color]) => (
+                  <div key={key}>
+                    <p className="flex items-baseline justify-between gap-2"><span>{t(key, label)}: </span><span className="text-lg font-semibold">{value}</span></p>
+                    <div aria-hidden="true" className="mt-1 h-2 overflow-hidden rounded-full bg-line/70"><div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, Number.parseInt(value, 10) || 0))}%` }} /></div>
+                  </div>))}
+                {assessment.scoresNote && <p className="text-xs text-ink-muted sm:col-span-2">{assessment.scoresNote}</p>}
+              </div>
+            )}
+            {assessment.oodWarning && <p className="text-warn" data-testid="assessment-ood">{assessment.oodWarning}</p>}
+            {assessment.qualityWarnings.length > 0 && (
+              <ul className="list-disc pl-5 text-ink-muted" aria-label={t('assess.quality', 'Photo quality warnings')} data-testid="assessment-quality">{assessment.qualityWarnings.map(text => <li key={text}>{text}</li>)}</ul>
+            )}
+            {assessment.limitations.length > 0 && <ul className="list-disc pl-5 text-xs text-ink-muted" data-testid="assessment-limitations">{assessment.limitations.map(text => <li key={text}>{text}</li>)}</ul>}
           </div>
-        )}
-        {assessment.oodWarning && <p className="mt-2 text-warn" data-testid="assessment-ood">{assessment.oodWarning}</p>}
-        {assessment.qualityWarnings.length > 0 && (
-          <ul className="mt-2 list-disc pl-5 text-ink-muted" aria-label={t('assess.quality', 'Photo quality warnings')} data-testid="assessment-quality">{assessment.qualityWarnings.map(text => <li key={text}>{text}</li>)}</ul>
-        )}
-        {assessment.limitations.length > 0 && <ul className="mt-2 list-disc pl-5 text-xs text-ink-muted" data-testid="assessment-limitations">{assessment.limitations.map(text => <li key={text}>{text}</li>)}</ul>}
-        <p className="mt-1 text-xs text-ink-muted">{assessment.advisoryNote}</p>
-      </div>
+          <footer className="border-t border-line bg-surface-2 px-4 py-3">
+            {assessment.reviewRequiredText && <p className="flex items-start gap-2 font-semibold text-ink" data-testid="review-required"><AlertTriangle aria-hidden="true" size={18} className="mt-0.5 shrink-0" /><span>{assessment.reviewRequiredText}</span></p>}
+            <p className="mt-1 text-xs text-ink-muted">{assessment.advisoryNote}</p>
+          </footer>
+        </section>
 
-      <div className="mt-3"><button type="button" disabled={rerunning} onClick={() => void rerun()} className="min-h-11 rounded-rq border border-control bg-surface px-4 font-semibold disabled:opacity-50">{rerunning ? t('ops.ev.rerunning', 'Running the check…') : t('ops.ev.rerun', 'Run the automated check again')}</button></div>
-      <section className="mt-3 rounded-rq border border-control bg-canvas p-3" aria-label={integrity.title} data-testid="media-integrity" data-state={integrity.state}>
-        <h4 className="font-semibold">{integrity.title}</h4>
-        <p className="mt-1" data-testid="media-integrity-label">{integrity.label}{integrity.caveat ? ` ${integrity.caveat}` : ''}</p>
-        <p className="mt-1 text-xs text-ink-muted" data-testid="media-integrity-advisory">{integrity.advisoryLine}</p>
-      </section>
+        <section className="overflow-hidden rounded-panel border border-line bg-surface" aria-label={integrity.title} data-testid="media-integrity" data-state={integrity.state}>
+          <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <h4 className="flex items-center gap-2 text-base font-semibold"><span aria-hidden="true" className={`size-2.5 rounded-full ${INTEGRITY_DOT[integrity.state] ?? 'bg-ink-muted'}`} />{integrity.title}</h4>
+          </header>
+          <div className="px-4 py-4">
+            <p className="text-lg font-semibold leading-snug" data-testid="media-integrity-label">{integrity.label}{integrity.caveat ? ` ${integrity.caveat}` : ''}</p>
+            <p className="mt-2 text-xs text-ink-muted" data-testid="media-integrity-advisory">{integrity.advisoryLine}</p>
+          </div>
+        </section>
+        <div><button type="button" disabled={rerunning} onClick={() => void rerun()} className="min-h-11 rounded-rq border border-control bg-surface px-4 font-semibold disabled:opacity-50">{rerunning ? t('ops.ev.rerunning', 'Running the check…') : t('ops.ev.rerun', 'Run the automated check again')}</button></div>
+      </div>
 
       <section className="mt-3 rounded-rq border border-control bg-canvas p-3" aria-label={t('ops.ev.public', 'Public view')} data-testid="public-state" data-state={publicState}>
         <h4 className="font-semibold">{t('ops.ev.public', 'Public view')}</h4>

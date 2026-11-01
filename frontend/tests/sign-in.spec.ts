@@ -14,6 +14,7 @@ test.describe('sign-in', () => {
     await page.route('**/api/auth/sign-in', route => route.fulfill(json({ detail: 'Invalid email or password.' }, 401)));
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+    await page.getByText('Are you staff?').click();
     await expect(page.getByText('Staff accounts are created by an administrator.')).toBeVisible();
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page.getByRole('alert')).toContainText('Enter your email and password.');
@@ -61,7 +62,7 @@ test.describe('sign-in', () => {
     await page.goto('/login?next=//evil.example/x'); await fill(page);
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page.waitForURL(url => url.pathname.startsWith('/citizen'));
-    expect(new URL(page.url()).hostname).toBe('127.0.0.1');
+    expect(new URL(page.url()).hostname).toBe('localhost');
   });
 
   test('old sign-in addresses lead to the one page', async ({ page }) => {
@@ -84,7 +85,7 @@ test.describe('create a citizen account', () => {
     await expect(page.getByText('Not a common password')).not.toContainText('✓');
     await expect(submit).toBeDisabled();
     await page.getByLabel('Password', { exact: true }).fill('correct-horse-battery-staple');
-    await expect(page.getByText('10+ characters')).toContainText('✓');
+    await expect(page.getByText('10 or more characters')).toContainText('✓');
     await expect(submit).toBeDisabled();                                  // consent still missing
     await page.getByRole('checkbox').check();
     await expect(submit).toBeEnabled();

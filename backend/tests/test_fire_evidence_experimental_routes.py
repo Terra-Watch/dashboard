@@ -75,8 +75,8 @@ def test_a_very_confident_experimental_output_still_moves_nothing(monkeypatch, t
 def test_staff_upload_review_and_status_remain_human_driven(monkeypatch, tmp_path):
     setup_dev(monkeypatch, tmp_path)
     officer_id = make_user("officer", scopes=["OD"])[0]
-    bearer = {"Authorization": f"Bearer {make_token(officer_id, 'officer')}"}
     client = fresh_client()
+    bearer = with_csrf(client, {"Authorization": f"Bearer {make_token(officer_id, 'officer')}"})
     iid = client.post("/api/incidents", headers=bearer, json={"client_key": f"fe-{uuid.uuid4().hex[:8]}", "source": "lookout_tower", "size": "small",
                                                                "notes": "exp", "state": "OD"}).json()["id"]
     up = client.post(f"/api/incidents/{iid}/images", headers=with_csrf(client, bearer), files=files(jpeg_bytes()))

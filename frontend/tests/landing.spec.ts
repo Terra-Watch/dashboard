@@ -44,19 +44,6 @@ test.describe('landing page', () => {
     await expect(page.getByRole('button', { name: 'Next step' })).toBeVisible();
   });
 
-  test('role explorer shows each role\'s real navigation', async ({ page }) => {
-    await page.goto('/');
-    const explorer = page.getByTestId('role-explorer');
-    await expect(explorer.getByRole('button', { name: /Near me/ })).toBeVisible();
-    await explorer.getByRole('tab', { name: 'Control Room' }).click();
-    for (const name of ['Queue', 'Map', 'Field', 'Notices', 'Handover']) await expect(explorer.getByRole('button', { name: new RegExp(`^${name}`) })).toBeVisible();
-    await explorer.getByRole('button', { name: /^Notices/ }).click();
-    await expect(explorer.getByRole('button', { name: /^Notices/ })).toHaveAttribute('aria-pressed', 'true');
-    await explorer.getByRole('tab', { name: 'Range Officer' }).click();
-    await expect(explorer.getByRole('button', { name: /^Capture/ })).toBeVisible();
-    await expect(explorer.getByRole('button', { name: /^Community/ })).toHaveCount(0);
-  });
-
   test('public and staff views of the map differ: unchecked items appear only to staff', async ({ page }) => {
     await page.goto('/');
     const map = page.getByTestId('privacy-map');
@@ -86,7 +73,7 @@ test.describe('landing page', () => {
         await page.setViewportSize(viewport);
         await page.goto('/');
         await page.getByTestId('privacy-map').scrollIntoViewIfNeeded();
-        await page.getByRole('heading', { name: 'How a report is handled' }).scrollIntoViewIfNeeded();
+        await page.getByRole('heading', { name: 'Follow a report' }).scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         const serious = result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical');

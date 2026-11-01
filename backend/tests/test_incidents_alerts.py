@@ -26,7 +26,8 @@ class IncidentsAndAlertsTests(unittest.TestCase):
     def _auth_header(self, role: str, scopes: list[str] | None = None) -> dict[str, str]:
         user_id, _ = make_user(role, scopes=scopes)
         token = make_token(user_id, role)
-        return {"Authorization": f"Bearer {token}"}
+        self.client.cookies.set("resq_csrf", "test-csrf-token")      # these routes check the double-submit CSRF pair as well
+        return {"Authorization": f"Bearer {token}", "x-resq-csrf": "test-csrf-token"}
 
     def test_incident_lifecycle_and_history(self):
         headers = self._auth_header("officer", scopes=["OD"])

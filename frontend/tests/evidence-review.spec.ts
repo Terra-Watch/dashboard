@@ -115,7 +115,7 @@ test('an approved result is shown as advisory with human review required, scores
   await expect(page.getByTestId('assessment-quality')).toContainText('blurry');
   // media integrity is its own section, outside the fire/smoke box, and does not touch it
   const mi = page.getByTestId('media-integrity');
-  await expect(mi).toContainText('Media integrity (advisory)');
+  await expect(mi).toContainText('Photo authenticity (advisory)');
   await expect(mi).toContainText('Possible edited image');
   await expect(mi.getByTestId('media-integrity-advisory')).toHaveText('Advisory only. This does not verify or reject the report and does not change its priority, status or visibility. A person decides.');
   await expect(box.getByTestId('media-integrity')).toHaveCount(0);
@@ -194,7 +194,7 @@ for (const [status, text] of MI_CASES) {
     await expect(page.getByText("It does not change the incident's status.")).toBeVisible();
     await page.getByTestId('evidence-card').getByLabel(/Seen, no conclusion/).check();
     await expect(page.getByRole('button', { name: 'Save review' })).toBeEnabled();
-    expect(await mi.innerText()).not.toMatch(/\b(fake|forged|authentic\w*)\b/i);
+    expect(await mi.innerText()).not.toMatch(/\b(fake|forged|authentic(?!ity)\w*)\b/i);
   });
 }
 

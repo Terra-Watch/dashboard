@@ -102,14 +102,14 @@ def list_plans(user: dict[str, object] = Depends(current_risk_user)) -> list[dic
     return [dict(row) for row in rows]
 
 
-@router.post("/plans", status_code=201, dependencies=[Depends(patrol_planning_enabled)])
+@router.post("/plans", status_code=201, dependencies=[Depends(patrol_planning_enabled), Depends(require_csrf)])
 def create_plan(payload: PlanRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     with engine.begin() as db:
         row = db.execute(text("INSERT INTO resq_plans (owner_id,plan_date,region,teams,priority_cells) VALUES (:owner_id,:date,:region,:teams,:priority_cells) RETURNING id,plan_date,region,teams,priority_cells,status"), {"owner_id": user["id"], **payload.model_dump()}).mappings().one()
     return dict(row)
 
 
-@router.post('/plans/{plan_id}/route', dependencies=[Depends(patrol_planning_enabled)])
+@router.post('/plans/{plan_id}/route', dependencies=[Depends(patrol_planning_enabled), Depends(require_csrf)])
 def generate_plan_route(plan_id: int, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     with engine.connect() as db:
         plan = db.execute(text('SELECT id,plan_date,region,priority_cells FROM resq_plans WHERE id=:id AND (owner_id=:user_id OR :role=\'admin\')'), {'id': plan_id, 'user_id': user['id'], 'role': user['role']}).mappings().first()
@@ -178,7 +178,7 @@ def list_incidents(
     return mask_authenticity_status(attach_media_integrity_status(rows))
 
 
-@router.post("/incidents", status_code=201)
+@router.post("/incidents", status_code=201, dependencies=[Depends(require_csrf)])
 def create_incident(payload: IncidentRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     if not payload.client_key.strip() or len(payload.client_key) > 120:
         raise HTTPException(status_code=422, detail="client_key must contain 1 to 120 characters")
@@ -337,7 +337,7 @@ async def upload_incident_image(
     return {'image': _image_row(dict(row)), 'message': 'Image uploaded. Automated assessment is advisory and separate from human verification.'}
 
 
-@router.patch('/incidents/{incident_id}/images/{image_id}/review')
+@router.patch('/incidents/{incident_id}/images/{image_id}/review', dependencies=[Depends(require_csrf)])
 def review_incident_image(
     incident_id: int,
     image_id: int,
@@ -369,7 +369,7 @@ def review_incident_image(
     return {'image': _image_row(dict(row)), 'message': 'Human review recorded separately from automated assessment.'}
 
 
-@router.patch('/incidents/{incident_id}/status')
+@router.patch('/incidents/{incident_id}/status', dependencies=[Depends(require_csrf)])
 def update_incident_status(
     incident_id: int,
     payload: IncidentStatusUpdate,
@@ -508,7 +508,7 @@ def list_alerts(
         return [dict(row) for row in db.execute(text(query), params).mappings().all()]
 
 
-@router.post("/alerts", status_code=201)
+@router.post("/alerts", status_code=201, dependencies=[Depends(require_csrf)])
 def create_operational_alert(
     payload: OperationalAlertCreateRequest,
     user: dict[str, object] = Depends(require_write),
@@ -527,7 +527,7 @@ def create_operational_alert(
     return {**alert, "deduplicated": not created}
 
 
-@router.patch('/alerts/{alert_id}/acknowledge')
+@router.patch('/alerts/{alert_id}/acknowledge', dependencies=[Depends(require_csrf)])
 def acknowledge_alert_endpoint(
     alert_id: int,
     user: dict[str, object] = Depends(require_write),
@@ -544,7 +544,7 @@ def acknowledge_alert_endpoint(
     return result
 
 
-@router.patch('/alerts/{alert_id}/resolve')
+@router.patch('/alerts/{alert_id}/resolve', dependencies=[Depends(require_csrf)])
 def resolve_alert_endpoint(
     alert_id: int,
     user: dict[str, object] = Depends(require_write),
@@ -561,7 +561,7 @@ def resolve_alert_endpoint(
     return result
 
 
-@router.patch('/alerts/{alert_id}/read')
+@router.patch('/alerts/{alert_id}/read', dependencies=[Depends(require_csrf)])
 def mark_alert_read(alert_id: int, user: dict[str, object] = Depends(current_user)) -> dict[str, bool]:
     with engine.connect() as db:
         alert = db.execute(
@@ -591,7 +591,7 @@ def list_alert_rules(user: dict[str, object] = Depends(current_risk_user)) -> li
     return [dict(row) for row in rows]
 
 
-@router.post('/alerts/rules', status_code=201)
+@router.post('/alerts/rules', status_code=201, dependencies=[Depends(require_csrf)])
 def create_alert_rule(payload: AlertRuleRequest, user: dict[str, object] = Depends(require_staff_write)) -> dict[str, object]:
     if user.get('role') != 'admin':
         if not payload.state:
@@ -623,7 +623,7 @@ def get_settings(user: dict[str, object] = Depends(current_user)) -> dict[str, o
     return dict(row)
 
 
-@router.patch('/settings')
+@router.patch('/settings', dependencies=[Depends(require_csrf)])
 def update_settings(payload: SettingsUpdate, user: dict[str, object] = Depends(current_user)) -> dict[str, object]:
     values = {key: value for key, value in payload.model_dump().items() if value is not None}
     if values.get('locale') not in {None, 'English', 'हिन्दी', 'తెలుగు', 'ଓଡ଼ିଆ', 'मराठी'}:
@@ -637,7 +637,7 @@ def update_settings(payload: SettingsUpdate, user: dict[str, object] = Depends(c
     return get_settings(user)
 
 
-@router.post('/spread/jobs', status_code=202)
+@router.post('/spread/jobs', status_code=202, dependencies=[Depends(require_csrf)])
 def create_spread_job(payload: SpreadRequest, _: dict[str, object] = Depends(require_write)) -> dict[str, object]:
     raise HTTPException(
         status_code=503,
