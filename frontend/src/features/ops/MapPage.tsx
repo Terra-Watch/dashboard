@@ -194,7 +194,7 @@ export function OpsMapPage() {
         {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
         <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} /><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} /></div>
       </div>
-      {showWind && <WindLayer map={mapInstance} grid={windGrid.data} />}
+      {showWind && <WindLayer map={mapInstance} grid={windGrid.data} onSatellite={basemapType === 'satellite'} />}
       {wind.data && typeof wind.data.wind_speed_ms === 'number' && <p className="text-sm" role="status">{t('map.wind', { speed: wind.data.wind_speed_ms.toFixed(1), dir: Math.round(wind.data.wind_dir_deg), defaultValue: 'Wind {{speed}} m/s from {{dir}}°' })} · {t('map.read_at', 'read')} {formatWhen(wind.data.valid_time)}</p>}
       {wind.isLoading && <p role="status" className="text-sm text-ink-muted">{t('map.loading_weather', 'Updating weather…')}</p>}
       {wind.isError && <Notice kind="warning">{t('map.weather_off', 'Weather is not available right now.')}</Notice>}
