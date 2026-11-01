@@ -40,6 +40,17 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
   const assessment = presentAssessment(image, t);
   const integrity = presentMediaIntegrity(image, t);
   const problem = validateReview(choice, note);
+  const [publicBusy, setPublicBusy] = useState(false);
+  const publicState = image.public_state ?? 'none';
+
+  async function setPublic(action: 'publish' | 'release' | 'withdraw') {
+    setPublicBusy(true); setError('');
+    try {
+      const result = await api<{ public_state: string }>(`/api/incidents/${incidentId}/images/${image.id}/public`, { method: 'POST', body: JSON.stringify({ action }) });
+      onUpdated({ ...image, public_state: result.public_state, public_hold_reason: null });
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'The public view could not be changed. Try again.'); }
+    finally { setPublicBusy(false); }
+  }
 
   async function save() {
     if (problem || !choice || saving) return;
@@ -99,6 +110,19 @@ export function EvidenceReview({ incidentId, image, onUpdated }: Props) {
         <h4 className="font-semibold">{integrity.title}</h4>
         <p className="mt-1" data-testid="media-integrity-label">{integrity.label}{integrity.caveat ? ` ${integrity.caveat}` : ''}</p>
         <p className="mt-1 text-xs text-ink-muted" data-testid="media-integrity-advisory">{integrity.advisoryLine}</p>
+      </section>
+
+      <section className="mt-3 rounded-rq border border-control bg-canvas p-3" aria-label={t('ops.ev.public', 'Public view')} data-testid="public-state" data-state={publicState}>
+        <h4 className="font-semibold">{t('ops.ev.public', 'Public view')}</h4>
+        <p className="mt-1">{publicState === 'visible' ? t('ops.ev.public_visible', 'Shown to the public, labelled unverified until you confirm the incident.')
+          : publicState === 'held' ? `${t('ops.ev.public_held', 'Held back, not shown to the public.')} ${image.public_hold_reason ?? ''}`
+          : publicState === 'withdrawn' ? t('ops.ev.public_withdrawn', 'Withdrawn. Not shown to the public.')
+          : t('ops.ev.public_none', 'Not shown to the public.')}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {publicState === 'held' && <button type="button" disabled={publicBusy} onClick={() => void setPublic('release')} className="min-h-11 rounded-rq bg-action px-4 font-semibold text-on-action disabled:opacity-50">{t('ops.ev.public_release', 'Release to the public')}</button>}
+          {(publicState === 'none' || publicState === 'withdrawn') && <button type="button" disabled={publicBusy} onClick={() => void setPublic('publish')} className="min-h-11 rounded-rq border border-control bg-surface px-4 font-semibold disabled:opacity-50">{t('ops.ev.public_publish', 'Show this photo to the public')}</button>}
+          {(publicState === 'visible' || publicState === 'held') && <button type="button" disabled={publicBusy} onClick={() => void setPublic('withdraw')} className="min-h-11 rounded-rq border border-danger bg-surface px-4 font-semibold text-danger disabled:opacity-50">{t('ops.ev.public_withdraw', 'Take down now')}</button>}
+        </div>
       </section>
 
       <p className="mt-3" data-testid="current-review">

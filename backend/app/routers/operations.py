@@ -6,6 +6,9 @@ import os
 import re
 from io import BytesIO
 from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 from ..database.session import engine
@@ -16,7 +19,7 @@ from ..contracts.schemas import (
 from ..core.permissions import require_scope, user_scopes
 from ..core.security import current_redesign_user, current_risk_user, current_user, require_csrf, require_staff_write, require_write
 from ..services import alert_service, audit_log
-from ..services import blob_storage
+from ..services import blob_storage, public_photo
 from ..services.image_assessment import assess_image_async, persistence_fields, present_assessment, attach_media_integrity_status, displayed_authenticity_status, mask_authenticity_status
 from ..services.simulation_service import validate_simulation
 
@@ -64,6 +67,8 @@ def _image_row(row: dict) -> dict:
         "human_reviewed_at": row.get("human_reviewed_at"),
         "created_at": row["created_at"],
         "assessed_at": row.get("assessed_at"),
+        "public_state": row.get("public_state", "none"),
+        "public_hold_reason": row.get("public_hold_reason"),
     }
 
 
@@ -647,3 +652,36 @@ def get_spread_validation(month: str = '2024-01', _: dict[str, object] = Depends
 @router.get("/notifications")
 def list_notifications(user: dict[str, object] = Depends(current_redesign_user)) -> list[dict[str, object]]:
     return list_alerts(user=user)
+
+
+class PublicPhotoAction(BaseModel):
+    action: Literal['publish', 'release', 'withdraw']
+
+
+@router.post('/incidents/{incident_id}/images/{image_id}/public', dependencies=[Depends(require_csrf)])
+async def set_public_photo(incident_id: int, image_id: int, payload: PublicPhotoAction, user: dict[str, object] = Depends(current_risk_user)) -> dict[str, object]:
+    """Staff control of the public copy: publish (make a copy of any incident photo and show it), release a held copy, or withdraw a shown one."""
+    if user.get('role') not in {'admin', 'officer', 'control_room_operator', 'incident_commander', 'range_officer'}:
+        raise HTTPException(status_code=403, detail='Authorized staff only')
+    with engine.connect() as db:
+        row = db.execute(text('SELECT g.storage_key,g.sha256,g.public_state,i.state FROM resq_incident_images g JOIN resq_incidents i ON i.id=g.incident_id WHERE g.id=:g AND g.incident_id=:i'),
+                         {'g': image_id, 'i': incident_id}).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail='Image not found')
+    require_scope(user, row['state'], entity_type='incident', entity_id=str(incident_id))
+    if payload.action == 'withdraw':
+        await public_photo.withdraw_copy(image_id)
+    elif payload.action == 'release':
+        if not public_photo.release_copy(image_id):
+            raise HTTPException(status_code=409, detail='Only a held photo can be released')
+    else:
+        original = await blob_storage.read_or_local(row['storage_key'], _stored_image_path(row['storage_key']), row['sha256'])
+        if original is None:
+            raise HTTPException(status_code=404, detail='The original photo is not available')
+        if await public_photo.publish_copy(incident_id, image_id, original, None) == 'none':
+            raise HTTPException(status_code=503, detail='The public copy could not be made (is public sharing switched on?)')
+        public_photo.release_copy(image_id)  # a person chose this one, so no automatic hold applies
+    audit_log.write_audit_log(action=f'public_photo_{payload.action}', entity_type='incident_image', entity_id=str(image_id), user_id=int(user['id']), metadata={'incident_id': incident_id})
+    with engine.connect() as db:
+        state = db.execute(text('SELECT public_state FROM resq_incident_images WHERE id=:g'), {'g': image_id}).scalar()
+    return {'image_id': image_id, 'public_state': state}

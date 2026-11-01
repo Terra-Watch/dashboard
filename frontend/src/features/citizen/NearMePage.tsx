@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { api } from '../../app/http';
+import { API } from '../../app/config';
 import { Card, EmptyState, PageTitle, Skeleton } from '../../ui/Page';
 import { Notice } from '../../ui/Notice';
 import { EmergencyStrip } from '../../ui/EmergencyStrip';
@@ -20,6 +21,7 @@ type Contact = { label: string; number: string; region?: string | null };
 type NoticeItem = NoticeArea & { id: number; title: string; body: string; severity: 'info' | 'advisory' | 'warning'; expires_at: string; published_at: string | null };
 type NoticeArea = { id: number; title: string; severity: string; area_geojson?: { type: string; coordinates: number[][][] } | null };
 type MyReport = { id: number; status: string; latitude: number; longitude: number };
+type PublicReport = { id: number; label: 'unverified' | 'confirmed'; text: string; note: string | null; lat: number; lon: number; distance_km: number | null; reported_at: string; photos: string[] };
 type PublicIncidents = { enabled: boolean; items: Array<{ cell: string; count: number; status: 'verified' | 'responding' | 'contained'; as_of: string }>; delay_minutes?: number };
 
 const REGION_KEY = 'tw_region';
@@ -32,6 +34,10 @@ export function NearMePage() {
   const notices = useQuery({ queryKey: ['notices', region], queryFn: () => api<{ items: NoticeItem[] }>(`/api/notices${region ? `?region=${region}` : ''}`) });
   const mine = useQuery({ queryKey: ['my-report-points'], queryFn: () => api<{ items: MyReport[] }>('/api/citizen/reports'), retry: false });
   const [me, setMe] = useState<{ lat: number; lon: number } | null>(null);
+  const reports = useQuery({
+    queryKey: ['public-reports', me?.lat?.toFixed(2), me?.lon?.toFixed(2)], refetchInterval: 25_000, retry: false,
+    queryFn: () => api<{ enabled: boolean; items: PublicReport[] }>(`/api/public/reports${me ? `?lat=${me.lat}&lon=${me.lon}&radius_km=50` : ''}`),
+  });
   const areas = useQuery({ queryKey: ['public-incidents'], queryFn: () => api<PublicIncidents>('/api/public/incidents') });
 
   const polygons: MapPolygon[] = [
@@ -40,6 +46,7 @@ export function NearMePage() {
   ];
   const points: MapPoint[] = [
     ...(mine.data?.items ?? []).filter(item => item.latitude != null).map(item => ({ id: `r${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'report' as const, label: `#${item.id}` })),
+    ...(reports.data?.enabled ? reports.data.items.map(item => ({ id: `u${item.id}`, lat: item.lat, lon: item.lon, symbol: 'report' as const, label: item.label === 'unverified' ? t('citizen.near.unverified_short', 'Unverified') : `#${item.id}` })) : []),
     ...(me ? [{ id: 'me', lat: me.lat, lon: me.lon, symbol: 'me' as const }] : []),
   ];
   const nearbyCount = (notices.data?.items.length ?? 0) + (areas.data?.enabled ? areas.data.items.length : 0);
@@ -82,6 +89,21 @@ export function NearMePage() {
         <div className="mt-3 flex flex-wrap items-center gap-3"><button type="button" onClick={locate} className="min-h-11 rounded-rq border border-control px-4 font-semibold hover:bg-surface-2">{t('field.use_position', 'Show my position')}</button><p className="text-sm text-ink-muted">{t('citizen.near.map_note', 'Only verified areas, official notice areas and your own reports are shown. Your reports are private to you.')}</p></div>
         <div className="mt-3"><Legend kinds={['report', 'me']} /></div>
       </Card>
+
+      {reports.data?.enabled && (
+        <Card title={t('citizen.near.reports', 'Reports from people nearby')}>
+          {!reports.data.items.length ? <p>{t('citizen.near.no_reports', 'No reports with photos nearby right now.')}</p>
+            : <ul className="space-y-3">{reports.data.items.map(item => (
+              <li key={item.id} className={`rounded-rq border-l-4 p-3 ${item.label === 'confirmed' ? 'border-danger bg-danger-tint' : 'border-unconfirmed bg-unconfirmed-tint'}`}>
+                <p className="text-sm font-bold uppercase tracking-wide">{item.label === 'confirmed' ? t('citizen.near.confirmed', 'Confirmed by officials') : t('citizen.near.unverified', 'Unverified')}</p>
+                <p className="mt-1">{item.label === 'confirmed' ? t('citizen.near.confirmed_text', 'Fire reported and confirmed by officials.') : t('citizen.near.unverified_text', 'Reported by a citizen. Not checked by officials.')}</p>
+                {item.note && <p className="mt-1 italic">“{item.note}”</p>}
+                {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map(src => <img key={src} src={`${API}${src}`} alt={t('citizen.near.photo_alt', 'Photo sent by a citizen, not checked by officials')} loading="lazy" className="h-32 w-auto max-w-full rounded-lg border border-line object-cover" />)}</div>}
+                <p className="mt-2 text-sm text-ink-muted">{formatWhen(item.reported_at)}{item.distance_km !== null ? ` · ${t('citizen.near.km_away', { count: item.distance_km, defaultValue: 'about {{count}} km away' })}` : ''}{` · ${t('citizen.near.area_only', 'area only, not the exact place')}`}</p>
+              </li>))}</ul>}
+          <p className="mt-3 text-sm text-ink-muted">{t('citizen.near.reports_safety', 'Stay clear of smoke and fire. If anyone is in danger, call the emergency number.')}</p>
+        </Card>
+      )}
 
       <Card title={t('citizen.near.notices', 'Official notices')}>
         {notices.isLoading ? <Skeleton /> : notices.isError ? <Notice kind="warning">{t('citizen.near.notices_error', 'Notices could not be loaded. Try again in a moment.')}</Notice>

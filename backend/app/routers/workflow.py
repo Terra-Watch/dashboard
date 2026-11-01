@@ -16,7 +16,7 @@ from ..core.regions import state_at
 from ..core.security import current_redesign_user, current_risk_user, require_csrf, require_roles
 from ..database.session import engine
 from ..services import audit_log
-from ..services import blob_storage
+from ..services import blob_storage, public_photo
 from ..services.recipients import incident_staff_recipients
 from ..services.image_assessment import assess_image_async, persistence_fields
 from .operations import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _image_row, _stored_image_path
@@ -271,6 +271,8 @@ async def _persist_ranger_image(incident_id: int, image: UploadFile, user: dict,
     except Exception as exc:
         await blob_storage.delete_or_local(key, path)
         raise HTTPException(status_code=503, detail='Evidence could not be stored. No upload was confirmed.') from exc
+    if audit_extra.get('report'):  # only a report's own photos are published; a task's field photos are staff evidence
+        await public_photo.publish_copy(incident_id, int(row['id']), data, assessment)
     return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}
 
 

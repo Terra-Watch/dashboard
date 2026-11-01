@@ -336,6 +336,9 @@ def init_db() -> None:
             db.execute(text('ALTER TABLE resq_incident_assignments ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ'))
             db.execute(text('CREATE UNIQUE INDEX IF NOT EXISTS resq_incidents_client_key ON resq_incidents (client_key) WHERE client_key IS NOT NULL'))
             db.execute(text('CREATE INDEX IF NOT EXISTS resq_incident_images_incident_idx ON resq_incident_images (incident_id, created_at DESC)'))
+            for ddl in ("public_state VARCHAR(10) NOT NULL DEFAULT 'none'", 'public_key TEXT', 'public_sha256 VARCHAR(64)', 'public_hold_reason TEXT', 'public_at TIMESTAMPTZ'):
+                db.execute(text(f'ALTER TABLE resq_incident_images ADD COLUMN IF NOT EXISTS {ddl}'))
+            db.execute(text("CREATE INDEX IF NOT EXISTS resq_incident_images_public_idx ON resq_incident_images (incident_id) WHERE public_state='visible'"))
             db.execute(text('CREATE INDEX IF NOT EXISTS resq_incident_assignments_ranger_idx ON resq_incident_assignments (ranger_id, status)'))
             db.execute(text("ALTER TABLE resq_incident_assignments ADD COLUMN IF NOT EXISTS priority VARCHAR(10) NOT NULL DEFAULT 'normal'"))
             db.execute(text('ALTER TABLE resq_incident_assignments ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ'))

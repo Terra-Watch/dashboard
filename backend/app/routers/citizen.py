@@ -21,7 +21,7 @@ from ..database.session import engine
 from ..routers.operations import ALLOWED_IMAGE_TYPES, IMAGE_ROOT, MAX_IMAGE_BYTES, _assert_stored_image_integrity, _stored_image_path
 from ..services.recipients import incident_staff_recipients
 from ..services import audit_log
-from ..services import blob_storage
+from ..services import blob_storage, public_photo
 from ..services.alert_service import generate_alert
 from ..services.image_assessment import assess_image_async, persistence_fields
 
@@ -237,4 +237,5 @@ async def upload_report_evidence(report_id: int, image: UploadFile = File(...), 
         if isinstance(exc, HTTPException):
             raise
         raise HTTPException(status_code=503, detail='Evidence could not be stored. The report remains persisted.') from exc
+    await public_photo.publish_copy(report_id, int(row['id']), data, assessment)
     return {'evidence': dict(row), 'message': 'Evidence persisted. Automated assessment remains advisory.'}

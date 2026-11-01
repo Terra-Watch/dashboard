@@ -11,6 +11,8 @@ export type EvidenceImage = AssessmentLike & {
   human_review_note?: string | null;
   human_reviewed_by?: number | null;
   human_reviewed_at?: string | null;
+  public_state?: string;
+  public_hold_reason?: string | null;
 };
 
 export const REVIEW_OPTIONS: ReadonlyArray<{ value: ReviewStatus; label: string; hint: string }> = [

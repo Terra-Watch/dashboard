@@ -15,11 +15,14 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+import math
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import text
 
 from ..core.security import client_ip
 from ..database.session import engine
+from ..services import public_photo
 from ..services.h3_coarsen import to_cell
 
 logger = logging.getLogger(__name__)
@@ -137,3 +140,73 @@ def public_status() -> dict:
     minutes = max(0, int((datetime.now(timezone.utc) - newest).total_seconds() // 60))
     noun = 'area' if len(items) == 1 else 'areas'
     return {'enabled': True, 'summary': f'{len(items)} verified {noun} · updated {minutes} min ago'}
+
+
+# ---- unverified and confirmed citizen reports with their cleaned photos (docs/REPORT_TO_ALERT_DESIGN.md) ----
+CONFIRMED = ('verified', 'responding', 'contained')
+
+
+def _reports_resolution() -> int:
+    raw = os.environ.get('PUBLIC_REPORTS_H3_RESOLUTION', '7').strip()
+    return int(raw) if raw.isdigit() and 3 <= int(raw) <= 9 else 7
+
+
+def _km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    p = math.pi / 180
+    a = math.sin((lat2 - lat1) * p / 2) ** 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * math.sin((lon2 - lon1) * p / 2) ** 2
+    return 12742 * math.asin(math.sqrt(a))
+
+
+@router.get('/reports')
+def public_reports(lat: float | None = None, lon: float | None = None, radius_km: float = 25.0) -> dict:
+    """Reports a person can see on the Near me page. Coarse position only (centre of an H3 cell); never the reporter, exact pin or original photo.
+    Unverified ones carry label 'unverified'. Nothing is returned for a closed incident, a held or withdrawn photo, or a note with a link or phone number."""
+    if not public_photo.enabled():
+        return {'enabled': False, 'items': []}
+    if (lat is None) != (lon is None) or (lat is not None and not (-90 <= lat <= 90 and -180 <= (lon or 0) <= 180)):
+        raise HTTPException(status_code=422, detail='Give both lat and lon, or neither')
+    radius = min(max(radius_km, 1.0), 100.0)
+    hours = public_photo.unverified_hours()
+    with engine.connect() as db:
+        rows = db.execute(text("""SELECT i.id,i.status,i.notes,i.latitude,i.longitude,i.created_at,i.updated_at,
+              (SELECT array_agg(g.id ORDER BY g.created_at) FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible') AS photo_ids
+            FROM resq_incidents i
+            WHERE i.latitude IS NOT NULL AND i.longitude IS NOT NULL
+              AND ((i.status='reported' AND i.created_at > now() - make_interval(hours => :hours))
+                OR (i.status IN ('verified','responding','contained') AND i.updated_at > now() - interval '24 hours'))
+              AND EXISTS (SELECT 1 FROM resq_incident_images g WHERE g.incident_id=i.id AND g.public_state='visible')
+            ORDER BY i.created_at DESC LIMIT 200"""), {'hours': hours}).mappings().all()
+    resolution, items = _reports_resolution(), []
+    for row in rows:
+        if not public_photo.text_is_public_safe(row['notes']):
+            continue
+        cell = to_cell(row['latitude'], row['longitude'], resolution)
+        import h3
+        clat, clon = h3.cell_to_latlng(cell)
+        distance = _km(lat, lon, clat, clon) if lat is not None else None
+        if distance is not None and distance > radius:
+            continue
+        confirmed = row['status'] in CONFIRMED
+        items.append({
+            'id': row['id'], 'label': 'confirmed' if confirmed else 'unverified',
+            'text': ('Fire reported and confirmed by officials.' if confirmed else 'Unverified: reported by a citizen, not checked by officials.'),
+            'note': (row['notes'] or '').strip()[:200] or None, 'lat': round(clat, 4), 'lon': round(clon, 4),
+            'distance_km': None if distance is None else round(distance), 'reported_at': row['created_at'].isoformat(),
+            'photos': [f"/api/public/reports/{row['id']}/photos/{pid}" for pid in (row['photo_ids'] or [])][:4],
+        })
+    return {'enabled': True, 'unverified_hours': hours, 'items': items}
+
+
+@router.get('/reports/{incident_id}/photos/{image_id}')
+async def public_report_photo(incident_id: int, image_id: int) -> Response:
+    if not public_photo.enabled():
+        raise HTTPException(status_code=404, detail='Not found')
+    with engine.connect() as db:
+        row = db.execute(text("""SELECT g.public_key,g.public_sha256,i.status,i.notes FROM resq_incident_images g JOIN resq_incidents i ON i.id=g.incident_id
+            WHERE g.id=:g AND g.incident_id=:i AND g.public_state='visible' AND g.public_key IS NOT NULL AND i.status<>'closed'"""), {'g': image_id, 'i': incident_id}).mappings().first()
+    if not row or not public_photo.text_is_public_safe(row['notes']):
+        raise HTTPException(status_code=404, detail='Not found')
+    data = await public_photo.read_copy(row['public_key'], row['public_sha256'])
+    if data is None:
+        raise HTTPException(status_code=404, detail='Not found')
+    return Response(data, media_type='image/jpeg', headers={'Cache-Control': 'public, max-age=20, s-maxage=20', 'X-Content-Type-Options': 'nosniff'})
