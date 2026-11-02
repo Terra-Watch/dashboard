@@ -76,6 +76,13 @@ def create_report(payload: CitizenReportRequest, user: dict = Depends(citizen_us
         if not result or result['reporter_id'] != user['id']:
             raise HTTPException(status_code=409, detail='Report key conflicts with another account')
         row = dict(result)
+        if created and payload.bearing_deg is not None:
+            if state_at(payload.observer_latitude, payload.observer_longitude) is None:
+                raise HTTPException(status_code=422, detail='The observer position is outside India')
+            db.execute(text('''INSERT INTO resq_report_bearings (incident_id,observer_lat,observer_lon,observer_accuracy_m,bearing_deg,source,distance_band)
+                VALUES (:id,:lat,:lon,:acc,:bearing,:source,:band)'''), {
+                    'id': row['id'], 'lat': payload.observer_latitude, 'lon': payload.observer_longitude, 'acc': payload.observer_accuracy_m,
+                    'bearing': payload.bearing_deg, 'source': payload.bearing_source, 'band': payload.distance_band or 'unsure'})
         if created:
             audit_log.write_audit_log(action='citizen_report_created', entity_type='incident', entity_id=str(row['id']), user_id=int(user['id']), metadata={'state': row['state']}, connection=db)
     if created:

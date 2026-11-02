@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -29,6 +30,19 @@ class CitizenReportRequest(BaseModel):
     state: str | None = Field(default=None, max_length=2)  # ignored: the server works the state out from the position
     description: str = Field(default='', max_length=5000)
     observed_at: str = Field(min_length=1, max_length=80)
+    # Optional "which way is it": where the citizen stood, the direction the phone pointed (compass, or picked by hand) and how far they think it is.
+    bearing_deg: float | None = Field(default=None, ge=0, lt=360)
+    bearing_source: Literal['compass', 'rose'] | None = None
+    distance_band: Literal['close', 'medium', 'far', 'unsure'] | None = None
+    observer_latitude: float | None = Field(default=None, ge=-90, le=90)
+    observer_longitude: float | None = Field(default=None, ge=-180, le=180)
+    observer_accuracy_m: float | None = Field(default=None, ge=0, le=100000)
+
+    @model_validator(mode='after')
+    def _bearing_needs_its_parts(self):
+        if self.bearing_deg is not None and (self.bearing_source is None or self.observer_latitude is None or self.observer_longitude is None):
+            raise ValueError('bearing_deg needs bearing_source, observer_latitude and observer_longitude')
+        return self
 
 
 class CommunityPostRequest(BaseModel):

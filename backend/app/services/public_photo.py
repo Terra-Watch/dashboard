@@ -5,7 +5,7 @@ same private store as the originals and is served to anyone only through /api/pu
 automatic check flags is held (public_state 'held') until staff release it. Staff can withdraw a copy at any time, and a closed incident shows nothing.
 
 Off unless PUBLIC_REPORTS_ENABLED is "true". Never raises into the upload that called it.
-shortcut: faces and number plates are not blurred (no detector is installed), so staff see the hold reasons and can withdraw; add a detector before wide launch.
+Faces are blurred (services/privacy_blur.py); if that cannot run, no public copy is made. shortcut: number plates are not blurred (no reliable open detector for Indian plates), so staff can still withdraw a copy.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from typing import Any
 from sqlalchemy import text
 
 from ..database.session import engine
-from . import blob_storage
+from . import blob_storage, privacy_blur
 
 logger = logging.getLogger(__name__)
 MAX_SIDE = 1200
@@ -60,6 +60,7 @@ def clean_copy(data: bytes) -> bytes:
     except Exception as exc:
         raise ValueError("unreadable image") from exc
     pixels.thumbnail((MAX_SIDE, MAX_SIDE))
+    pixels, _faces = privacy_blur.blur_faces(pixels)   # BlurUnavailable propagates: the caller then publishes nothing
     out = BytesIO()
     pixels.save(out, format="JPEG", quality=QUALITY, optimize=True)
     return out.getvalue()

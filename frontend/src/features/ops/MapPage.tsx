@@ -75,6 +75,7 @@ export function OpsMapPage() {
   const [view, setView] = useState<'map' | 'list'>('map');
   const [riskHighOnly, setRiskHighOnly] = useState(false);
   const [showWind, setShowWind] = useState(true);
+  const [showBearings, setShowBearings] = useState(true);
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
@@ -169,7 +170,13 @@ export function OpsMapPage() {
       state: f.properties.state,
     }));
   }, [layers, riskEnabled, riskForecast.data]);
-  const polygons: MapPolygon[] = useMemo(() => (layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title })), [notices.data, layers]);
+  type Bearings = { label: string; wedges: Array<{ incident_id: number; coords: Array<[number, number]> }>; areas: Array<{ incident_ids: number[]; count: number; area_km2: number; coords: Array<[number, number]> }> };
+  const bearings = useQuery({ queryKey: ['report-bearings', 6], retry: false, staleTime: 30_000, refetchInterval: 60_000, enabled: showBearings, queryFn: () => api<Bearings>('/api/bearings?since_hours=6') });
+  const bearingPolygons: MapPolygon[] = useMemo(() => showBearings && bearings.data ? [
+    ...bearings.data.wedges.map(w => ({ id: `bw${w.incident_id}`, ring: w.coords, tone: 'envelope' as const })),
+    ...bearings.data.areas.map((a, i) => ({ id: `ba${i}`, ring: a.coords, tone: 'warning' as const, label: t('map.bearing_area', { count: a.count, km: a.area_km2, defaultValue: '{{count}} reports point here (about {{km}} km²)' }) })),
+  ] : [], [bearings.data, showBearings, t]);
+  const polygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
@@ -191,6 +198,11 @@ export function OpsMapPage() {
           <input type="checkbox" checked={showWind} onChange={(e) => setShowWind(e.target.checked)} className="h-4 w-4" />
           <span>{t('map.wind_flow', 'Animated wind')}</span>
         </label>
+        <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+          <input type="checkbox" checked={showBearings} onChange={(e) => setShowBearings(e.target.checked)} className="h-4 w-4" />
+          <span>{t('map.bearings', 'Where reports point')}</span>
+        </label>
+        {showBearings && bearings.data && <p role="status" className="text-sm text-ink-muted sm:col-span-2 xl:col-span-4">{bearings.data.wedges.length === 0 ? t('map.bearings_none', 'No recent reports with a direction.') : `${t('map.bearings_count', { count: bearings.data.wedges.length, areas: bearings.data.areas.length, defaultValue: '{{count}} recent reports with a direction, {{areas}} areas where they agree.' })} ${bearings.data.label}`}</p>}
         {layers.has('risk_forecast') && riskEnabled && (
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
             <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />

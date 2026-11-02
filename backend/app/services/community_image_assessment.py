@@ -47,6 +47,7 @@ from sqlalchemy import text
 
 from . import image_assessment as shared_model
 from . import blob_storage
+from . import privacy_blur
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,7 @@ def validate_and_reencode(data: bytes, declared_type: str | None) -> tuple[bytes
                 raise ImageRejected(422, "Animated images are not accepted")
             img.load()
             pixels = ImageOps.exif_transpose(img)  # honour orientation before the EXIF that carries it is dropped
+            pixels, _faces = privacy_blur.blur_faces(pixels)   # faces are blurred before anyone else can see the image (RGB from here on)
             out = BytesIO()
             if detected == "image/jpeg":
                 pixels.convert("RGB" if pixels.mode not in ("RGB", "L") else pixels.mode).save(out, format="JPEG", quality=90, optimize=True)
@@ -139,6 +141,8 @@ def validate_and_reencode(data: bytes, declared_type: str | None) -> tuple[bytes
                 pixels.convert("RGBA" if pixels.mode == "RGBA" else "RGB").save(out, format="WEBP", quality=90)
     except ImageRejected:
         raise
+    except privacy_blur.BlurUnavailable as exc:   # fail closed: no unblurred image is stored
+        raise ImageRejected(503, "Photos cannot be added right now. Try again later.") from exc
     except Exception as exc:  # truncated, corrupt, decompression bomb, unsupported variants
         raise ImageRejected(422, "The uploaded file is not a readable image") from exc
     clean = out.getvalue()

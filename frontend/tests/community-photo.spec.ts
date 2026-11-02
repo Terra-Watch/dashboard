@@ -4,6 +4,8 @@ import { json, signedInAs } from './helpers';
 const JPEG = Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', 'base64');
 const post = (id: number, over: object = {}) => ({ id, content: 'Smoke over the ridge this evening', status: 'published', created_at: new Date().toISOString(), edited_at: null, topic: 'information', language: 'en', region: null, verified: false, helpful_count: 0, helpful_by_me: false, author: { id: 9, name: 'Ravi K.' }, comment_count: 0, ...over });
 
+test.use({ permissions: ['camera'], launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] } });
+
 test.describe('Community posts with a photo', () => {
   test.beforeEach(async ({ page }) => {
     await signedInAs(page, 'citizen', 'Asha Rao');
@@ -22,8 +24,10 @@ test.describe('Community posts with a photo', () => {
     await page.getByRole('tab', { name: 'Discussion' }).click();
     await page.getByRole('button', { name: 'Ask a question or share a local tip' }).click();
     await page.getByLabel('Your post').fill('Smoke over the ridge this evening');
-    await page.locator('input[type=file]').setInputFiles({ name: 'ridge.jpg', mimeType: 'image/jpeg', buffer: JPEG });
-    await expect(page.getByText('ridge.jpg')).toBeVisible();
+    await expect(page.locator('input[type=file]')).toHaveCount(0);   // camera only: no gallery or file upload
+    await page.getByRole('button', { name: 'Take a photo (optional)' }).click();
+    await page.getByRole('button', { name: 'Take photo' }).click();
+    await expect(page.getByText('photo.jpg')).toBeVisible();
     await page.getByRole('button', { name: 'Post', exact: true }).click();
     await expect(page.getByText('Posted. Only signed-in members can see it.')).toBeVisible();
     expect(sent).toEqual(['POST']);
@@ -35,7 +39,7 @@ test.describe('Community posts with a photo', () => {
     await page.getByRole('tab', { name: 'Discussion' }).click();
     await page.getByRole('button', { name: 'Ask a question or share a local tip' }).click();
     await expect(page.getByLabel('Your post')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Add a photo (optional)' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Take a photo (optional)' })).toHaveCount(0);
   });
 
   test('a photo that passed the automatic check carries a positive note; one without a mark carries none', async ({ page }) => {

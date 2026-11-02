@@ -1,5 +1,5 @@
 import { Camera, Check, LocateFixed, MapPin, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router';
@@ -13,10 +13,19 @@ import { SelectField, TextArea, TextField } from '../../ui/Field';
 import { Notice } from '../../ui/Notice';
 import { EmergencyStrip } from '../../ui/EmergencyStrip';
 import { PageTitle } from '../../ui/Page';
+import { LiveCamera } from './LiveCamera';
+import { ROSE, roseDegrees, rosePoint, type RosePoint } from '../../lib/heading';
+import { useCompass } from '../../lib/useCompass';
 import { MapView } from '../map/MapView';
 import { STATE_BOUNDS, parseCoordinates, stateName } from './format';
 
 const MAX_PHOTOS = 4;
+const BANDS = [
+  { id: 'close', en: 'Close, under 1 km' },
+  { id: 'medium', en: '1 to 3 km' },
+  { id: 'far', en: 'More than 3 km' },
+  { id: 'unsure', en: 'Not sure' },
+] as const;
 type Fix = { lat: number; lon: number; accuracy?: number };
 
 /** What the person sees, in one tap. The English text is what staff read; the label is shown in the person's language. */
@@ -55,7 +64,11 @@ export function ReportPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [research, setResearch] = useState(false);
   const [manual, setManual] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const compass = useCompass();
+  const [camera, setCamera] = useState(false);
+  const [heads, setHeads] = useState<(number | null)[]>([]);           // the direction the phone pointed for each photo, same order as photos
+  const [picked, setPicked] = useState<RosePoint | null>(null);        // a direction chosen by hand
+  const [band, setBand] = useState<(typeof BANDS)[number]['id'] | ''>('');
   const photoHints = usePhotoHints(photos);
   const previews = useMemo(() => photos.map(photo => URL.createObjectURL(photo)), [photos]);
   useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
@@ -69,6 +82,8 @@ export function ReportPage() {
   const choice = SEEN.find(item => item.id === seen);
   const description = choice ? (note.trim() ? `${choice.en}. ${note.trim()}` : choice.en) : '';
   const ready = Boolean(place && state && description.length >= 5 && (when === 'now' || earlier));
+  const photoHeading = heads.find(h => h != null) ?? null;
+  const aim = picked != null ? { deg: roseDegrees(picked), source: 'rose' as const } : photoHeading != null ? { deg: photoHeading, source: 'compass' as const } : null;
 
   function locate() {
     if (!navigator.geolocation) { setManual(true); setProblem(t('citizen.report.no_gps', 'This device cannot share its location. Type the coordinates instead.')); return; }
@@ -91,7 +106,8 @@ export function ReportPage() {
     setBusy(true); setProblem('');
     const observedAt = when === 'now' ? new Date().toISOString() : new Date(earlier).toISOString();
     try {
-      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt }, photos, setProgress, research);
+      const sent = await submitReport('citizen', { client_key: clientKey, latitude: place.lat, longitude: place.lon, state, description, observed_at: observedAt,
+        ...(aim && fix ? { bearing_deg: Math.round(aim.deg * 10) / 10 % 360, bearing_source: aim.source, distance_band: band || 'unsure', observer_latitude: fix.lat, observer_longitude: fix.lon, observer_accuracy_m: fix.accuracy } : {}) }, photos, setProgress, research);
       navigate(`/citizen/reports/${sent.id}`, { replace: true, state: { sent: true, photosTotal: sent.photosTotal, photosLeft: sent.photosLeft, photosRejected: sent.photosRejected } });
     } catch (reason) {
       if (retryable(reason)) { setSaved(reason instanceof OfflineError ? 'offline' : 'server'); setSavedDetail(reason instanceof ApiError ? reason.detail : ''); }   // kept on the phone; it will be sent again
@@ -127,23 +143,49 @@ export function ReportPage() {
 
       <section aria-labelledby="rp-photo" className="space-y-3">
         <h2 id="rp-photo" className="text-lg">{t('citizen.v2.photo_title', 'Take a photo')} <span className="text-base font-normal text-ink-muted">{t('citizen.v2.optional', '(helps staff, not required)')}</span></h2>
-        <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple hidden onChange={event => { const picked = Array.from(event.target.files ?? []); event.target.value = ''; setPhotos(current => [...current, ...picked].slice(0, MAX_PHOTOS)); }} />
+        {camera && <LiveCamera hint={t('citizen.camera.aim', 'Point the camera at the smoke or fire, then take the photo.')} heading={compass.heading} liveHeading={compass.live} blocked={compass.state === 'denied'} onClose={() => setCamera(false)}
+          onCapture={shot => { setPhotos(current => [...current, shot.file].slice(0, MAX_PHOTOS)); setHeads(current => [...current, shot.heading].slice(0, MAX_PHOTOS)); setCamera(false); }} />}
         {previews.length > 0 && (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">{previews.map((url, index) => (
             <li key={url} className="relative overflow-hidden rounded-xl border border-line bg-surface-2">
               <img src={url} alt={t('citizen.v2.photo_alt', { n: index + 1, defaultValue: 'Photo {{n}}' })} className="aspect-square w-full object-cover" />
-              <button type="button" onClick={() => setPhotos(current => current.filter((_, i) => i !== index))} aria-label={t('citizen.v2.remove_photo', 'Remove this photo')} className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink shadow"><X aria-hidden="true" size={18} /></button>
+              <button type="button" onClick={() => { setPhotos(current => current.filter((_, i) => i !== index)); setHeads(current => current.filter((_, i) => i !== index)); }} aria-label={t('citizen.v2.remove_photo', 'Remove this photo')} className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full bg-surface/90 text-ink shadow"><X aria-hidden="true" size={18} /></button>
             </li>))}</ul>
         )}
         {photoHints.map((found, index) => found.length ? <div key={index}><p className="text-sm font-semibold">{t('citizen.v2.photo_alt', { n: index + 1, defaultValue: 'Photo {{n}}' })}</p><PhotoHint hints={found} /></div> : null)}
         {photos.length === 0 && <p className="text-sm text-ink-muted">{t('citizen.v2.capture_tip', 'Tip: take one wide photo that includes the horizon, then one closer with something recognisable in it, like a road or a building. Stay safe and do not go closer to the fire.')}</p>}
         {photos.length > 0 && <label className="flex min-h-11 items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-5" checked={research} onChange={event => setResearch(event.target.checked)} /><span>{t('citizen.v2.research', 'Optional: let TerraWatch keep these photos to test and improve its photo check. No one else sees them, and no name or location is kept with them. You can take this back later from your report.')}</span></label>}
         {photos.length < MAX_PHOTOS && (
-          <button type="button" onClick={() => fileInput.current?.click()} className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-control bg-surface p-5 text-lg font-semibold text-ink hover:bg-surface-2">
+          <button type="button" onClick={() => { void compass.start(); setCamera(true); }} className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-control bg-surface p-5 text-lg font-semibold text-ink hover:bg-surface-2">
             <Camera aria-hidden="true" size={28} />{photos.length ? t('citizen.v2.add_more', 'Add another photo') : t('citizen.v2.open_camera', 'Open the camera')}
           </button>
         )}
       </section>
+
+      {fix && photos.length > 0 && (
+        <section aria-labelledby="rp-dir" className="space-y-3">
+          <h2 id="rp-dir" className="text-lg">{t('citizen.dir.title', 'Which way is it?')} <span className="text-base font-normal text-ink-muted">{t('citizen.v2.optional_short', '(optional)')}</span></h2>
+          <p className="text-sm text-ink-muted">{picked == null && photoHeading != null
+            ? t('citizen.dir.from_photo', { point: rosePoint(photoHeading), deg: Math.round(photoHeading), defaultValue: 'Your photo was taken facing {{point}} ({{deg}}°). If the smoke or fire was in the middle of the picture, that is the direction. If not, choose it below.' })
+            : picked == null ? t('citizen.dir.no_compass', 'Your phone could not read its compass. Choose which way the smoke or fire is from where you stand.')
+            : t('citizen.dir.picked', 'Direction chosen by you.')}</p>
+          <div role="radiogroup" aria-label={t('citizen.dir.title', 'Which way is it?')} className="grid grid-cols-4 gap-2">
+            {ROSE.map(point => {
+              const active = picked === point;
+              return <button key={point} type="button" role="radio" aria-checked={active} onClick={() => setPicked(active ? null : point)}
+                className={`min-h-12 rounded-xl border-2 text-lg font-semibold ${active ? 'border-action bg-action-tint text-ink' : 'border-line bg-surface text-ink'}`}>{point}</button>;
+            })}
+          </div>
+          <h3 className="font-semibold">{t('citizen.dir.far', 'How far is it? Your best guess.')}</h3>
+          <div role="radiogroup" aria-label={t('citizen.dir.far', 'How far is it? Your best guess.')} className="grid grid-cols-2 gap-2">
+            {BANDS.map(item => {
+              const active = band === item.id;
+              return <button key={item.id} type="button" role="radio" aria-checked={active} onClick={() => setBand(active ? '' : item.id)}
+                className={`min-h-12 rounded-xl border-2 px-3 text-left font-semibold ${active ? 'border-action bg-action-tint text-ink' : 'border-line bg-surface text-ink'}`}>{t(`citizen.dir.band.${item.id}`, item.en)}</button>;
+            })}
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="rp-seen" className="space-y-3">
         <h2 id="rp-seen" className="text-lg">{t('citizen.v2.seen_title', 'What do you see?')}</h2>

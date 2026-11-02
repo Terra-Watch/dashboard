@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquarePlus, ThumbsUp } from 'lucide-react';
-import { useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ApiError, api } from '../../../app/http';
@@ -14,6 +14,7 @@ import { formatWhen } from '../format';
 import { shrinkPhoto } from '../../../lib/photo';
 import { usePhotoHints } from '../../../lib/usePhotoHints';
 import { PhotoHint } from '../../../ui/PhotoHint';
+import { LiveCamera } from '../LiveCamera';
 import { PostPhoto } from './PostPhoto';
 
 type Removed = { by?: string | null; reason?: string | null };
@@ -51,7 +52,7 @@ function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind
   const { t } = useTranslation();
   const [body, setBody] = useState(''); const [topic, setTopic] = useState('question'); const [language, setLanguage] = useState('en');
   const [busy, setBusy] = useState(false);
-  const [photo, setPhoto] = useState<File | null>(null); const picker = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<File | null>(null); const [camera, setCamera] = useState(false);
   const hints = usePhotoHints(photo ? [photo] : [])[0] ?? [];
   const problem = validatePost(body);
   const emergency = looksLikeEmergency(body);
@@ -83,11 +84,11 @@ function Composer({ images, onDone }: { images: boolean; onDone: (notice: { kind
       <TextArea label={t('citizen.community.post', 'Your post')} rows={4} value={body} onChange={event => setBody(event.target.value)} hint={t('citizen.community.no_contact', 'Do not share phone numbers, links or exact locations; such posts wait for a moderator.')} />
       {images && (
         <div className="space-y-2">
-          <input ref={picker} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={event => { const picked = event.target.files?.[0] ?? null; event.target.value = ''; setPhoto(picked); }} />
+          {camera && <LiveCamera onClose={() => setCamera(false)} onCapture={shot => { setPhoto(shot.file); setCamera(false); }} />}
           {photo ? <div className="flex flex-wrap items-center gap-3"><span className="text-sm">{photo.name}</span><button type="button" className="min-h-11 text-sm font-semibold underline" onClick={() => setPhoto(null)}>{t('citizen.community.remove_photo', 'Remove photo')}</button></div>
-            : <Button type="button" variant="secondary" onClick={() => picker.current?.click()}>{t('citizen.community.add_photo', 'Add a photo (optional)')}</Button>}
+            : <Button type="button" variant="secondary" onClick={() => setCamera(true)}>{t('citizen.community.add_photo', 'Take a photo (optional)')}</Button>}
           <PhotoHint hints={hints} />
-          <p className="text-sm text-ink-muted">{t('citizen.community.photo_note', 'Photos are checked automatically before others see them. Some are looked at by a moderator first. Use your own, unedited photo.')}</p>
+          <p className="text-sm text-ink-muted">{t('citizen.community.photo_note', 'The photo is taken with the camera here; there is no upload. Faces are blurred automatically before others see it.')}</p>
         </div>)}
       {emergency && <Notice kind="warning" title={t('citizen.community.emergency_title', 'Is this an emergency?')}>{t('citizen.community.emergency', 'Nobody is told when you post here.')} <Link className="font-bold underline" to="/citizen/report">{t('nav.report')}</Link></Notice>}
       <div className="flex items-center justify-between gap-3"><span className={`text-sm ${body.length > MAX_POST ? 'font-bold text-danger' : 'text-ink-muted'}`} aria-live="polite">{body.length}/{MAX_POST}</span><Button type="submit" loading={busy} disabled={Boolean(problem)}>{t('citizen.community.publish', 'Post')}</Button></div>

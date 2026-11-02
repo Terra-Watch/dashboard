@@ -1,0 +1,1 @@
+face_public_domain.jpg: downscaled copy of Wikimedia Commons "File:Maurice Baril.JPG" by Ahunt (public domain). Used only to test face blurring.
