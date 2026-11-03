@@ -25,6 +25,15 @@ def decode_payload(payload: bytes) -> dict | None:
             "temp_c": round(temp / 100, 2) if bme else None, "humidity_pct": round(hum / 100, 2) if bme else None, "battery_mv": ok(batt)}
 
 
+SOUND_KINDS = {1: "chainsaw", 2: "blast"}
+
+
+def decode_sound(payload: bytes) -> dict | None:
+    """A sound alert from a station's classifier ('A', version 1, kind 1 chainsaw or 2 blast, confidence in percent), or None when the payload is not one."""
+    if len(payload) != 4 or payload[0] != 0x41 or payload[1] != 1 or payload[2] not in SOUND_KINDS or payload[3] > 100: return None
+    return {"kind": SOUND_KINDS[payload[2]], "confidence": payload[3]}
+
+
 def status_of(last_heard: datetime | None, interval_s: int, now: datetime | None = None) -> str:
     """online: heard within 2 intervals; late: within 6; offline: longer; never: nothing yet. Thresholds scale with the station's own interval."""
     if last_heard is None: return "never"

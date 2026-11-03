@@ -58,23 +58,42 @@ async def ingest(request: Request) -> dict:
     if secret is None or not hmac.compare_digest(sig, request.headers.get('x-signature', '')): raise HTTPException(status_code=401, detail='Bad gateway signature')
     try: body = IngestBody.model_validate(json.loads(raw))
     except Exception as exc: raise HTTPException(status_code=422, detail='Malformed batch') from exc
-    now = datetime.now(timezone.utc); out = {'stored': 0, 'duplicate': 0, 'unknown_node': 0, 'invalid': 0}
+    now = datetime.now(timezone.utc); out = {'stored': 0, 'duplicate': 0, 'unknown_node': 0, 'invalid': 0}; new_sounds = []
     with engine.begin() as db:
         ids = {r['node_id']: (r['id'], r['active']) for r in db.execute(text('SELECT id,node_id,active FROM resq_stations')).mappings()}
         for r in body.readings:
             at = (r.received_at or now); at = at if at.tzinfo else at.replace(tzinfo=timezone.utc)
-            vals = st.decode_payload(bytes.fromhex(r.payload_hex)) if len(r.payload_hex) % 2 == 0 else None
-            if vals is None or at > now + timedelta(minutes=5) or at < now - timedelta(days=7): out['invalid'] += 1; continue
+            raw_payload = bytes.fromhex(r.payload_hex) if len(r.payload_hex) % 2 == 0 else b''
+            vals = st.decode_payload(raw_payload); sound = None if vals else st.decode_sound(raw_payload)
+            if (vals is None and sound is None) or at > now + timedelta(minutes=5) or at < now - timedelta(days=7): out['invalid'] += 1; continue
             sid = ids.get(r.node_id)
             if sid is None or not sid[1]:
                 db.execute(text('''INSERT INTO resq_station_unknown (node_id) VALUES (:n) ON CONFLICT (node_id) DO UPDATE SET last_heard=now(), heard=resq_station_unknown.heard+1'''), {'n': r.node_id})
                 out['unknown_node'] += 1; continue
+            if sound:
+                res = db.execute(text('''INSERT INTO resq_station_sounds (station_id,received_at,node_seq,rssi,snr,kind,confidence) VALUES (:s,:at,:seq,:rssi,:snr,:k,:c) ON CONFLICT DO NOTHING'''),
+                                 {'s': sid[0], 'at': at, 'seq': r.seq, 'rssi': r.rssi, 'snr': r.snr, 'k': sound['kind'], 'c': sound['confidence']})
+                if res.rowcount: new_sounds.append((sid[0], sound))
+                out['duplicate' if res.rowcount == 0 else 'stored'] += 1; continue
             res = db.execute(text('''INSERT INTO resq_station_readings (station_id,received_at,node_seq,rssi,snr,hops,temp_c,humidity_pct,pm25,pm10,battery_mv,flags)
                 VALUES (:s,:at,:seq,:rssi,:snr,:hops,:t,:h,:p25,:p10,:b,:f) ON CONFLICT DO NOTHING'''), {
                 's': sid[0], 'at': at, 'seq': r.seq, 'rssi': r.rssi, 'snr': r.snr, 'hops': r.hops, 't': vals['temp_c'], 'h': vals['humidity_pct'],
                 'p25': vals['pm25'], 'p10': vals['pm10'], 'b': vals['battery_mv'], 'f': vals['flags']})
             out['duplicate' if res.rowcount == 0 else 'stored'] += 1
+    for sid, sound in new_sounds: _sound_alert(sid, sound)
     return out
+
+
+def _sound_alert(station_id: int, sound: dict) -> None:
+    """Tell the staff of the station's area what its sound classifier heard. It is a prompt to check, not a confirmed event."""
+    with engine.connect() as db:
+        s = db.execute(text('SELECT name,state,community_id,latitude,longitude FROM resq_stations WHERE id=:i'), {'i': station_id}).mappings().first()
+        cid = communities.at_point(db, s['latitude'], s['longitude']) if s and s['community_id'] is None else (s['community_id'] if s else None)
+    if not s: return
+    what = 'a chainsaw' if sound['kind'] == 'chainsaw' else 'a gunshot or blast'
+    for rid in incident_staff_recipients(s['state'], community_id=cid):
+        generate_alert(kind='station_sound', message=f"Station '{s['name']}' heard what sounds like {what} ({sound['confidence']} % sure). A sound classifier, not a person: check it.",
+                       state=s['state'], severity='warning', entity_type='station', entity_id=str(station_id), user_id=rid)
 
 
 _LIST = '''SELECT s.id,s.node_id,s.name,s.latitude,s.longitude,s.state,s.community_id,s.kind,s.expected_interval_s,s.installed_at,s.notes,
@@ -130,8 +149,10 @@ def station(station_id: int, hours: int = Query(24, ge=1, le=168), lat: float | 
         b = max(int(hours * 3600 / 300), 1)
         pts = db.execute(text('''SELECT to_timestamp(floor(extract(epoch FROM received_at)/:b)*:b) AS t, avg(pm25) AS pm25, avg(pm10) AS pm10, avg(temp_c) AS temp_c, avg(humidity_pct) AS humidity_pct
             FROM resq_station_readings WHERE station_id=:id AND received_at >= now() - make_interval(hours => :h) GROUP BY 1 ORDER BY 1'''), {'b': b, 'id': station_id, 'h': hours}).mappings().all()
+    with engine.connect() as db:
+        sounds = db.execute(text('''SELECT received_at,kind,confidence FROM resq_station_sounds WHERE station_id=:id AND received_at >= now() - interval '24 hours' ORDER BY received_at DESC LIMIT 20'''), {'id': station_id}).mappings().all()
     series = [{'t': p['t'].isoformat(), **{k: (round(float(p[k]), 1) if p[k] is not None else None) for k in ('pm25', 'pm10', 'temp_c', 'humidity_pct')}} for p in pts]
-    return {'label': LABEL, 'station': _shape(r, lat, lon), 'hours': hours, 'series': series}
+    return {'label': LABEL, 'station': _shape(r, lat, lon), 'hours': hours, 'series': series, 'sounds': [{'at': x['received_at'].isoformat(), 'kind': x['kind'], 'confidence': x['confidence']} for x in sounds]}
 
 
 @router.get('/stations/{station_id}/nearby')

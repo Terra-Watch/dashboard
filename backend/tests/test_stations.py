@@ -37,6 +37,13 @@ def test_payload_decodes_and_marks_missing_fields():
     assert st.decode_payload(payload(temp=-512))["temp_c"] == -5.12
 
 
+def test_sound_alert_payload():
+    assert st.decode_sound(bytes([0x41, 1, 1, 61])) == {"kind": "chainsaw", "confidence": 61}
+    assert st.decode_sound(bytes([0x41, 1, 2, 100])) == {"kind": "blast", "confidence": 100}
+    assert st.decode_sound(bytes([0x41, 1, 3, 50])) is None and st.decode_sound(bytes([0x41, 1, 1, 101])) is None and st.decode_sound(bytes([0x41, 1, 1])) is None
+    assert st.decode_payload(bytes([0x41, 1, 1, 61])) is None       # not a reading
+
+
 def test_status_scales_with_the_stations_own_interval():
     now = datetime.now(timezone.utc)
     s = lambda age, iv: st.status_of(now - timedelta(seconds=age), iv, now)
@@ -92,6 +99,16 @@ def test_ingest_stores_dedupes_and_rejects(setup):
     assert out["invalid"] == 1 and out["unknown_node"] == 1
     assert ingest([r], secret="wrong").status_code == 401 and ingest([r], gid="nope").status_code == 401
     assert any(x["node_id"] == (node + 1 if node < 250 else 19) for x in admin.get("/api/stations/unknown").json()["items"])
+
+
+def test_sound_alert_is_stored_shown_and_alerts_staff(setup):
+    node, sid, admin = setup
+    op = Who("control_room_operator", ("OD",))
+    snd = lambda seq, k, c: {**reading(node, seq), "payload_hex": bytes([0x41, 1, k, c]).hex()}
+    first = snd(1, 1, 61)
+    out = ingest([first, first, snd(2, 2, 97), {**reading(node, 3), "payload_hex": bytes([0x41, 1, 9, 50]).hex()}]).json()
+    assert out == {"stored": 2, "duplicate": 1, "unknown_node": 0, "invalid": 1}
+    d = op.get(f"/api/stations/{sid}").json(); assert {x["kind"] for x in d["sounds"]} == {"chainsaw", "blast"} and any(x["confidence"] == 97 for x in d["sounds"])
 
 
 def test_ingest_is_off_without_keys(setup, monkeypatch):

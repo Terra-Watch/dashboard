@@ -28,6 +28,17 @@ def ensure(db) -> None:
         UNIQUE (station_id, received_at, node_seq)
     )'''))
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_station_readings_latest ON resq_station_readings (station_id, received_at DESC)'))
+    db.execute(text('''CREATE TABLE IF NOT EXISTS resq_station_sounds (
+        id BIGSERIAL PRIMARY KEY,
+        station_id INTEGER NOT NULL REFERENCES resq_stations(id) ON DELETE CASCADE,
+        received_at TIMESTAMPTZ NOT NULL,
+        node_seq INTEGER NOT NULL DEFAULT 0,
+        rssi SMALLINT, snr REAL,
+        kind TEXT NOT NULL CHECK (kind IN ('chainsaw','blast')),
+        confidence SMALLINT NOT NULL CHECK (confidence BETWEEN 0 AND 100),
+        UNIQUE (station_id, received_at, node_seq)
+    )'''))
+    db.execute(text('CREATE INDEX IF NOT EXISTS resq_station_sounds_latest ON resq_station_sounds (station_id, received_at DESC)'))
     db.execute(text('''CREATE TABLE IF NOT EXISTS resq_station_unknown (
         node_id INTEGER PRIMARY KEY, first_heard TIMESTAMPTZ NOT NULL DEFAULT now(), last_heard TIMESTAMPTZ NOT NULL DEFAULT now(), heard INTEGER NOT NULL DEFAULT 1
     )'''))
