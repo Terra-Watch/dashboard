@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 CATCH_ALL_ROLES = ("control_room_operator", "incident_commander")
+FIELD_ROLES = ("field_crew", "range_officer")      # rangers: they see their own community only
 
 
 def uncovered_states() -> set[str]:
@@ -66,10 +67,33 @@ def scope_clause(user: dict[str, object], state_col: str, community_col: str, in
     comms = community_scope(uid)
     if comms is None:
         return (f"{state_col} = ANY(CAST(:sc_states AS text[]))", {"sc_states": states}) if states else ("FALSE", {})
+    if user.get("role") in FIELD_ROLES:      # a ranger with community grants sees those communities and nothing else: no state-wide rows, no rows without a community
+        return (f"{community_col} = ANY(CAST(:sc_comms AS int[]))", {"sc_comms": sorted(comms)})
     if include_uncovered and user.get("role") in CATCH_ALL_ROLES:
         comms = comms | uncovered_communities()
     return (f"({community_col} = ANY(CAST(:sc_comms AS int[])) OR ({community_col} IS NULL AND {state_col} = ANY(CAST(:sc_states AS text[]))))",
             {"sc_comms": sorted(comms), "sc_states": states})
+
+
+def ranger_communities(user: dict[str, object]) -> list[int] | None:
+    """The community ids a ranger was given, or None when the person is not a ranger or only has older state scopes (then the state decides)."""
+    if user.get("role") not in FIELD_ROLES:
+        return None
+    return sorted(community_scope(int(user["id"])) or []) or None
+
+
+def within_communities_sql(lat: str, lon: str, ids_param: str = "rc_ids") -> str:
+    """SQL: the point (lat, lon columns or expressions) lies inside one of the circles of the communities in :ids_param (great-circle distance against each radius_km)."""
+    return (f"EXISTS (SELECT 1 FROM resq_communities rc WHERE rc.id = ANY(CAST(:{ids_param} AS int[])) AND 12742.0 * asin(sqrt("
+            f"power(sin(radians({lat} - rc.latitude) / 2), 2) + cos(radians({lat})) * cos(radians(rc.latitude)) * power(sin(radians({lon} - rc.longitude) / 2), 2))) <= rc.radius_km)")
+
+
+def in_communities(ids: list[int], lat: float, lon: float) -> bool:
+    """Python twin of within_communities_sql, for features that are filtered after they are loaded."""
+    from ..services import communities as comms
+    with engine.connect() as db:
+        rows = db.execute(text("SELECT latitude,longitude,radius_km FROM resq_communities WHERE id = ANY(:ids)"), {"ids": list(ids)}).mappings().all()
+    return any(comms._km(lat, lon, r["latitude"], r["longitude"]) <= r["radius_km"] for r in rows)
 
 
 def _community_of(entity_type: str, entity_id: str) -> int | None:

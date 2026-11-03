@@ -9,7 +9,7 @@ import pandas as pd
 from sqlalchemy import text
 from .. import risk_settings
 from ..risk_model import daily_geojson, daily_risk
-from ..core.permissions import user_scopes
+from ..core.permissions import in_communities, ranger_communities, user_scopes
 from ..core.security import require_risk_roles
 from ..database.session import engine
 from ..services.risk_runs import import_run_data
@@ -24,6 +24,17 @@ _HIGH_RISK_BANDS = {"Very high", "High"}
 def _scope_filter_features(features: list[dict], user: dict) -> list[dict]:
     if user["role"] == "admin":
         return features
+    circles = ranger_communities(user)
+    if circles:          # a ranger sees the cells inside his own community only (the centre of the cell decides)
+        def centre(f):
+            pts = []
+            def walk(c):
+                if c and isinstance(c[0], (int, float)): pts.append(c)
+                else:
+                    for x in c or []: walk(x)
+            walk((f.get("geometry") or {}).get("coordinates"))
+            return (sum(p[1] for p in pts) / len(pts), sum(p[0] for p in pts) / len(pts)) if pts else None
+        return [f for f in features if (c := centre(f)) is not None and in_communities(circles, c[0], c[1])]
     scopes = user_scopes(user["id"])
     return [f for f in features if f.get("properties", {}).get("state") in scopes]
 

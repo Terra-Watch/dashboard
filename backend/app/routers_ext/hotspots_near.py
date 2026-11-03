@@ -1,8 +1,8 @@
-"""Satellite detections near a point, for rangers (read-only): the same hotspots staff see, limited to the ranger's states, with distance and direction from where they stand."""
+"""Satellite detections near a point, for rangers (read-only): the same hotspots staff see, limited to the ranger's community (older accounts: states), with distance and direction from where they stand."""
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 
-from ..core.permissions import user_scopes
+from ..core.permissions import ranger_communities, user_scopes, within_communities_sql
 from ..core.security import require_roles
 from ..database.session import engine
 from ..services import stations as geo
@@ -17,7 +17,10 @@ def hotspots_near(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180,
     where = ['acq_datetime >= now() - make_interval(hours => :h)', 'latitude BETWEEN :a AND :b', 'longitude BETWEEN :c AND :d']
     d = radius_km / 111.0
     params: dict = {'h': since_hours, 'a': lat - d, 'b': lat + d, 'c': lon - d * 1.2, 'd': lon + d * 1.2}
-    if user.get('role') != 'admin':
+    circles = ranger_communities(user)
+    if circles:        # a ranger sees detections inside his own community only
+        where.append(within_communities_sql('latitude', 'longitude')); params['rc_ids'] = circles
+    elif user.get('role') != 'admin':
         scopes = sorted(user_scopes(int(user['id'])))
         if not scopes: return {'label': SATELLITE_LABEL, 'items': []}
         where.append('(state IS NULL OR state = ANY(:scopes))'); params['scopes'] = scopes

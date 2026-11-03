@@ -168,3 +168,18 @@ def test_hotspots_near_is_limited_to_the_rangers_states_and_sorted():
     assert [round(i["distance_km"]) for i in items[:2]] == [1, 9] and items[0]["bearing"] == "N" and items[0]["age_minutes"] >= 29
     assert other.get(f"/api/hotspots/near?lat={LAT}&lon={LON}&radius_km=20").json()["items"] == []
     assert fresh_client().get(f"/api/hotspots/near?lat={LAT}&lon={LON}").status_code in (401, 403)
+
+
+def test_a_ranger_with_a_community_sees_only_that_community(setup):
+    node, sid, admin = setup                      # station at LAT/LON (Odisha), in no community
+    with engine.begin() as db: db.execute(text("DELETE FROM resq_stations WHERE node_id IN (:a,:b)"), {"a": node + 1, "b": node + 2})
+    inside = admin.post("/api/stations", json={"node_id": node + 1, "name": f"test-in-{node}", "latitude": 10.9, "longitude": 76.9, "expected_interval_s": 15}).json()["id"]
+    outside = admin.post("/api/stations", json={"node_id": node + 2, "name": f"test-out-{node}", "latitude": 10.9642, "longitude": 76.70, "expected_interval_s": 15}).json()["id"]
+    _, email = make_user("field_crew", ["TN"]); c = fresh_client(); r = login(c, email); h = {"Authorization": f"Bearer {r.json()['access_token']}", **csrf_headers(c)}
+    with engine.begin() as db:
+        uid = db.execute(text("SELECT id FROM resq_users WHERE email=:e"), {"e": email}).scalar()
+        db.execute(text("DELETE FROM resq_user_community_scopes WHERE user_id=:u"), {"u": uid})
+        db.execute(text("INSERT INTO resq_user_community_scopes (user_id,community_id) SELECT :u,id FROM resq_communities WHERE slug='bolampatti'"), {"u": uid})
+    ids = [x["id"] for x in c.get("/api/stations", headers=h).json()["items"]]
+    assert inside in ids and outside not in ids and sid not in ids
+    with engine.begin() as db: db.execute(text("DELETE FROM resq_stations WHERE name LIKE 'test-%'"))
