@@ -22,7 +22,7 @@ type NoticeRow = { urgent?: boolean; reviewed_at?: string | null; review_decisio
 type QueueItem = { id: number; reason: string; kind: string; held: boolean; content: string | null; author_id: number | null; author_name: string | null; author_prior_removals: number; open_reports: number; severity: 'high' | 'held' | 'normal'; image?: ModerationImage | null; community_image_assessment?: CommunityImageAssessment | null };
 type Room = { region: string; slow_mode_seconds: number; frozen: boolean; retention_days: number | null };
 
-const go = 'inline-flex min-h-11 items-center font-bold text-action underline decoration-2 underline-offset-4 after:ml-1.5 after:content-['→'] disabled:opacity-50';
+const go = "inline-flex min-h-11 items-center font-bold text-action underline decoration-2 underline-offset-4 after:ml-1.5 after:content-['→'] disabled:opacity-50";
 const alt = 'inline-flex min-h-11 items-center underline decoration-ink-muted underline-offset-4 disabled:opacity-50';
 const warn = 'inline-flex min-h-11 items-center font-semibold text-danger underline decoration-danger/60 underline-offset-4 disabled:opacity-50';
 
