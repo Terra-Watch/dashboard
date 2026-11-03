@@ -48,7 +48,7 @@ def main(argv):
     load_env_file(f"{BACKEND}/.env"); attempts = int(os.environ.get("RUN_ATTEMPTS", "6"))
     for n in range(1, attempts + 1):
         try:
-            print(f"=== {datetime.now(timezone.utc):%FT%TZ} run for {day}, attempt {n}", flush=True); once(day); print("done", flush=True); return 0
+            print(f"=== {datetime.now(timezone.utc):%FT%TZ} run for {day}, attempt {n}", flush=True); once(day); open(f"{WORK}/runs/{day}/imported.ok", "w").write(datetime.now(timezone.utc).isoformat()); print("done", flush=True); return 0   # the marker lets a later schedule skip a day that is finished
         except Exception as e:
             print(f"attempt {n} failed: {e}", flush=True)
             if n < attempts: time.sleep(int(os.environ.get("RUN_RETRY_WAIT", "1200")))

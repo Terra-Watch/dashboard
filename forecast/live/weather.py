@@ -27,7 +27,7 @@ def get(url, params, deadline_s=7200):
     from retry import retry
 
     def once():
-        r = httpx.get(url, params=params, timeout=120)
+        r = httpx.get(url, params=params, timeout=httpx.Timeout(120, connect=10))   # a stalled TLS handshake from a shared runner now costs 10 s, not 120 s, before the retry
         if r.status_code == 200: return r.json()
         if r.status_code == 429 or r.status_code >= 500: raise Throttled(f"weather feed returned {r.status_code}")
         raise RuntimeError(f"weather feed returned {r.status_code}")  # a 4xx other than 429 is our mistake: do not retry

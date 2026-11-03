@@ -5,6 +5,8 @@ name: daily-forecast
 on:
   schedule:
     - cron: "40 11 * * *"      # 11:40 UTC, after the 06 UTC GFS run is out
+    - cron: "40 14 * * *"      # GitHub starts scheduled runs late or drops them: these two repeat the run, and a day that is already imported is skipped
+    - cron: "40 17 * * *"
   workflow_dispatch:
     inputs:
       day:
@@ -18,7 +20,6 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,15 +32,21 @@ jobs:
           mkdir -p forecast/state
           gh release download forecast-state --pattern state.tar.gz --dir /tmp
           tar -xzf /tmp/state.tar.gz -C forecast/state
+      - name: Is today already done
+        id: gate
+        run: |
+          day="${{ github.event.inputs.day }}"; day="${day:-$(date -u +%F)}"
+          if [ "${{ github.event_name }}" = schedule ] && [ -f "forecast/state/runs/$day/imported.ok" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; echo "$day is already imported"; fi
       - name: Run
+        if: steps.gate.outputs.skip != 'true'
         env:
           RISK_INGEST_URL: ${{ secrets.RISK_INGEST_URL }}
           RISK_INGEST_TOKEN: ${{ secrets.RISK_INGEST_TOKEN }}
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
           RISK_BUNDLE_PUBLIC_KEY: ${{ secrets.RISK_BUNDLE_PUBLIC_KEY }}
         run: python forecast/live/run_daily.py ${{ github.event.inputs.day }}
-      - name: Save state          # also after a failed run, so fetched weather and fire rows are not lost
-        if: always()
+      - name: Save state          # also after a failed or cancelled run, so fetched weather and fire rows are not lost
+        if: always() && steps.gate.outputs.skip != 'true'
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           tar -czf /tmp/state.tar.gz -C forecast/state --exclude=gfs --exclude='runs/*/scores.parquet' .
