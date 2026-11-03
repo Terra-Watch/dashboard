@@ -55,6 +55,10 @@ const minutesSince = (iso: string | null | undefined, now: number): number => {
   const then = iso ? Date.parse(iso) : NaN;
   return Number.isFinite(then) ? Math.max(0, Math.round((now - then) / 60_000)) : 0;
 };
+/** The big number and unit shown for a time waiting: minutes, then hours, then days. */
+export function ageParts(minutes: number): [number, 'min' | 'h' | 'd'] {
+  return minutes < 60 ? [minutes, 'min'] : minutes < 1440 ? [Math.round(minutes / 60), 'h'] : [Math.round(minutes / 1440), 'd'];
+}
 export const firstLine = (text: string | null | undefined, max = 90): string => {
   const line = (text ?? '').split('\n')[0].trim();
   return line.length > max ? `${line.slice(0, max - 1)}…` : line;

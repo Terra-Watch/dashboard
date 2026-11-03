@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, api } from '../../app/http';
 import { Button } from '../../ui/Button';
 import { Notice } from '../../ui/Notice';
-import { Card, EmptyState, Skeleton } from '../../ui/Page';
+import { Skeleton } from '../../ui/Page';
 import { useEvidenceImage } from '../incidents/useEvidenceImage';
 
 type Item = { id: number; incident_id: number; created_at: string };
@@ -22,7 +22,7 @@ function Photo({ item, onDone }: { item: Item; onDone: () => void }) {
     finally { setBusy(false); }
   }
   return (
-    <li className="rounded-rq border border-line p-3">
+    <li className="border-b border-line py-4">
       {state.status === 'ready' ? <img src={state.url} alt={t('ops.library.alt', 'A photo shared for the photo check')} className="max-h-64 w-auto max-w-full rounded-lg border border-line object-contain" /> : <p className="text-ink-muted">{t('ops.library.loading', 'Loading photo…')}</p>}
       <fieldset className="mt-3"><legend className="font-semibold">{t('ops.library.scene', 'What is in the photo?')}</legend>
         <div className="grid gap-1">{SCENES.map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-2"><input type="radio" name={`scene-${item.id}`} checked={scene === value} onChange={() => setScene(value)} />{t(`ops.library.scene_${value}`, label)}</label>)}</div></fieldset>
@@ -43,12 +43,13 @@ export function PhotoLibrary() {
   const refresh = () => { void queryClient.invalidateQueries({ queryKey: ['library-list'] }); void queryClient.invalidateQueries({ queryKey: ['library-stats'] }); };
   return (
     <div className="space-y-4">
-      <Card title={t('ops.library.title', 'Photo library for the photo check')}>
+      <div>
+        <h3 className="text-lg font-bold">{t('ops.library.title', 'Photo library for the photo check')}</h3>
         <p className="text-sm text-ink-muted">{t('ops.library.help', 'These photos were shared by citizens who agreed. Label each one honestly. When there are enough of every kind, we test the check on them and tune it.')}</p>
         {stats.data && <p className="mt-2 font-semibold">{t('ops.library.progress', { labeled: stats.data.labeled, target: stats.data.target, total: stats.data.total, defaultValue: '{{labeled}} labelled of {{target}} needed ({{total}} shared so far)' })}</p>}
-      </Card>
-      {list.isLoading ? <Skeleton lines={4} /> : !list.data?.items.length ? <EmptyState title={t('ops.library.empty', 'No photos are waiting for labels.')}>{t('ops.library.empty_hint', 'Photos appear here when a citizen agrees to share one with their report.')}</EmptyState>
-        : <ul className="grid gap-3 lg:grid-cols-2">{list.data.items.map(item => <Photo key={item.id} item={item} onDone={refresh} />)}</ul>}
+      </div>
+      {list.isLoading ? <Skeleton lines={4} /> : !list.data?.items.length ? <p className="py-2 text-ink-muted">{t('ops.library.empty', 'No photos are waiting for labels.')} {t('ops.library.empty_hint', 'Photos appear here when a citizen agrees to share one with their report.')}</p>
+        : <ul className="grid gap-x-8 lg:grid-cols-2">{list.data.items.map(item => <Photo key={item.id} item={item} onDone={refresh} />)}</ul>}
     </div>
   );
 }

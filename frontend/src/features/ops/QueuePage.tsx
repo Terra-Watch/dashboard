@@ -10,7 +10,7 @@ import { listStatusText, mediaCheckSuffix } from '../../lib/assessmentPresentati
 import { ageText } from '../../ui/ladder';
 import { closurePayload } from '../incidents/closure';
 import { INCIDENTS_KEY, useIncidents, useOpsRegion, useOpsSettings } from './useOps';
-import { NOT_CONFIRMED, SECTIONS, buildQueue, lateCount, needsYou, type QAssignment, type QStation, type QueueEvent, type Section } from './queueModel';
+import { NOT_CONFIRMED, SECTIONS, ageParts, buildQueue, lateCount, needsYou, type QAssignment, type QStation, type QueueEvent, type Section } from './queueModel';
 
 /*
  * The Control Room queue: a flat dispatch board. No cards, pills or side bars. Each row is a line of text; the time waiting is the loudest thing on it
@@ -37,10 +37,6 @@ const readMuted = (): Record<string, number> => { try { return JSON.parse(localS
 const writeMuted = (value: Record<string, number>) => { try { localStorage.setItem(MUTE_KEY, JSON.stringify(value)); } catch { /* kept for this visit only */ } };
 
 const STATE_TONE: Record<QueueEvent['rung'], string> = { report: 'text-unconfirmed', signal: 'text-unconfirmed', verified: 'text-danger', responding: 'text-warn', contained: 'text-ok' };
-
-function ageParts(minutes: number): [number, 'min' | 'h' | 'd'] {
-  return minutes < 60 ? [minutes, 'min'] : minutes < 1440 ? [Math.round(minutes / 60), 'h'] : [Math.round(minutes / 1440), 'd'];
-}
 
 export function QueuePage() {
   const { t } = useTranslation();

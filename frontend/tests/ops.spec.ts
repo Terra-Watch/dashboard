@@ -205,11 +205,17 @@ test.describe('Control Room', () => {
     expect(bodies[0]).toMatchObject({ kind: 'incident', state: 'OD', conditions: { min_size: 'large' } });
   });
 
-  test('Field shows open assignments and flags unanswered ones', async ({ page }) => {
-    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [{ id: 5, incident_id: 21, ranger_name: 'Officer Rao', status: 'assigned', state: 'OD', incident_status: 'verified', observations: 0, updated_at: new Date().toISOString(), created_at: new Date().toISOString() }] })));
+  test('Field is a roster: an officer who has not answered is flagged, others are on the ground, the rest are free', async ({ page }) => {
+    const row = (id: number, over: object) => ({ id, incident_id: 20 + id, ranger_id: id, ranger_name: `Officer ${id}`, status: 'accepted', state: 'OD', incident_status: 'verified', observations: 0, updated_at: new Date(Date.now() - 600_000).toISOString(), created_at: new Date(Date.now() - 3_600_000).toISOString(), ...over });
+    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [row(1, { status: 'assigned', created_at: new Date(Date.now() - 2_400_000).toISOString() }), row(2, { status: 'in_progress', observations: 2 })] })));
+    await page.route('**/api/control-room/rangers', route => route.fulfill(json({ items: [1, 2, 3].map(id => ({ id, name: `Officer ${id}`, home_state: 'OD', community: null })) })));
+    await page.route('**/api/incidents', route => route.fulfill(json([incident({ id: 21, notes: 'Smoke by the river' }), incident({ id: 22, notes: 'Fire on the ridge' })])));
     await page.goto('/ops/field');
-    await expect(page.getByRole('row', { name: /Officer Rao/ })).toBeVisible();
-    await expect(page.getByText('1 assignment(s) have not been answered yet.')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Not answering' }).getByText('Officer 1')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'On the ground' }).getByText('Officer 2')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'On the ground' }).getByText('Notes recorded: 2')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Free' }).getByText('Officer 3')).toBeVisible();
+    await expect(page.getByText('2 out · 1 not answering · 1 free')).toBeVisible();
   });
 
   test('Notices: the author cannot approve their own notice; a second person can; withdrawing needs a reason', async ({ page }) => {
@@ -242,7 +248,6 @@ test.describe('Control Room', () => {
     await page.route('**/api/community/moderation/queue', route => route.fulfill(json({ items: [{ id: 5, reason: 'auto: phone', kind: 'post', held: true, content: 'Call 9876543210', author_id: 9, author_name: 'Ravi K.', author_prior_removals: 1, open_reports: 1, severity: 'held' }] })));
     await page.route('**/api/community/moderation/reports/5/resolve', route => { calls.push(JSON.parse(route.request().postData() ?? '{}')); return route.fulfill(json({ status: 'removed' })); });
     await page.goto('/ops/notices');
-    await page.getByRole('tab', { name: /Moderation/ }).click();
     const item = page.getByTestId('moderation');
     await expect(item.getByText('1 earlier removal(s)')).toBeVisible();
     await item.getByRole('button', { name: 'Remove' }).click();
