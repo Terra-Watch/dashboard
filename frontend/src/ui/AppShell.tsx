@@ -10,7 +10,7 @@ import { NavIcon } from './Icon';
 import { LanguageMenu } from './LanguageMenu';
 import { ThemeMenu } from './ThemeMenu';
 import { useOpsSettings } from '../features/ops/useOps';
-import { navFor, activeItem, homePath, profilePath, type NavItem, type ProductRole } from './nav';
+import { navFor, activeItem, homePath, profilePath, BAR_ITEMS, type NavItem, type ProductRole } from './nav';
 
 type Props = { role: ProductRole; userName?: string; pending?: number; onSignOut: () => void; topSlot?: ReactNode; children: ReactNode };
 
@@ -28,8 +28,8 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
   const [railHovered, setRailHovered] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const railExpanded = railOpen || railHovered;
-  const mobileOverflow = rail ? items.filter(item => item.id === 'handover' || item.id === 'whatif') : [];
-  const mobileItems = mobileOverflow.length ? [...items.filter(item => !mobileOverflow.some(hidden => hidden.id === item.id)).slice(0, 4)] : items;
+  const mobileOverflow = items.length > 5 ? items.slice(BAR_ITEMS) : [];                    // more than five destinations: four in the bottom bar, the rest under "More"
+  const mobileItems = mobileOverflow.length ? items.slice(0, BAR_ITEMS) : items;
   const mobileMoreActive = mobileOverflow.some(item => item.id === current?.id);
 
   // After each navigation move focus to the page so keyboard and screen-reader users start at the top of the new view.

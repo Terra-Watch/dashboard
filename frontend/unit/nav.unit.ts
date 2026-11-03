@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { BUILT, MAX_NAV_ITEMS, NAV, activeItem, homePath, productRole, roleOfPath } from '../src/ui/nav.ts';
+import { BAR_ITEMS, BUILT, MAX_NAV_ITEMS, NAV, activeItem, homePath, productRole, roleOfPath } from '../src/ui/nav.ts';
 import { resources } from '../src/ui/i18n/locales.ts';
 
 test('exactly three product roles map from every stored role; unknown roles get nothing', () => {
@@ -11,7 +11,7 @@ test('exactly three product roles map from every stored role; unknown roles get 
   assert.equal(productRole(undefined), null);
 });
 
-test('each role has at most five destinations, unique ids and paths, and at most one primary action', () => {
+test('each role has at most seven destinations, unique ids and paths, and at most one primary action', () => {
   for (const [role, items] of Object.entries(NAV)) {
     assert.ok(items.length >= 4 && items.length <= MAX_NAV_ITEMS, role);
     assert.equal(new Set(items.map(item => item.id)).size, items.length);
@@ -42,13 +42,21 @@ test('every navigation label exists in every language', () => {
 test('the raised primary button sits in the middle of the bottom bar, and every role has one account page', async () => {
   const { profilePath } = await import('../src/ui/nav.ts');
   for (const [role, items] of Object.entries(NAV)) {
-    const at = items.findIndex(item => item.primary);
-    if (at >= 0) assert.equal(at, (items.length - 1) / 2, `${role}: the primary action must be the middle item of an odd-sized bar`);
+    const bar = items.length > 5 ? [...items.slice(0, BAR_ITEMS), { id: 'more' }] : items;     // what the phone shows: four items plus "More" when there are more than five
+    const at = bar.findIndex(item => 'primary' in item && item.primary);
+    if (at >= 0) assert.equal(at, (bar.length - 1) / 2, `${role}: the primary action must be the middle item of an odd-sized bar`);
   }
-  assert.deepEqual(NAV.field.map(item => item.id), ['tasks', 'map', 'capture', 'notices', 'me']);
+  assert.deepEqual(NAV.field.map(item => item.id), ['tasks', 'map', 'capture', 'stations', 'satellite', 'notices', 'me']);
   assert.equal(profilePath('citizen'), '/citizen/account');
   assert.equal(profilePath('field'), '/field/me');
   assert.equal(profilePath('control_room'), '/ops/me');
   assert.equal(profilePath(null), '/login');
   assert.equal(roleOfPath(profilePath('control_room')), 'control_room');
+});
+
+test('with more than five destinations the phone bar keeps four and the capture button stays in the bar', () => {
+  for (const role of ['control_room', 'field'] as const) assert.ok(NAV[role].length > 5);
+  assert.ok(NAV.field.slice(0, 4).some(item => item.primary), 'ranger capture button must be one of the first four');
+  assert.deepEqual(NAV.control_room.slice(0, 4).map(i => i.id), ['queue', 'map', 'stations', 'satellite']);
+  assert.deepEqual(NAV.field.map(i => i.id).slice(0, 5), ['tasks', 'map', 'capture', 'stations', 'satellite']);
 });

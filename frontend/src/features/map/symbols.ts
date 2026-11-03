@@ -47,6 +47,13 @@ export function drawSymbol(kind: SymbolKind, colors: MapColors, pixelRatio = 2):
       const draw = () => path(() => ctx.rect(c - 9, c - 9, 18, 18));
       halo(draw); draw(); ctx.fillStyle = colors.text; ctx.fill(); path(() => ctx.arc(c, c, 4, 0, Math.PI * 2)); ctx.fillStyle = colors.ember; ctx.fill(); break;
     }
+    case 'station_ok': case 'station_late': case 'station_off': case 'station_high': { // triangle = a lookout station; fill says how it is doing
+      const tri = () => path(() => { ctx.moveTo(c, 4); ctx.lineTo(SIZE - 4, SIZE - 6); ctx.lineTo(4, SIZE - 6); ctx.closePath(); });
+      halo(tri); tri();
+      if (kind === 'station_off') { ctx.fillStyle = colors.surface; ctx.fill(); ctx.setLineDash([3, 2]); ctx.lineWidth = 2.5; ctx.strokeStyle = colors.muted; ctx.stroke(); }
+      else { ctx.fillStyle = kind === 'station_ok' ? colors.ok : kind === 'station_late' ? colors.warn : colors.danger; ctx.fill(); }
+      break;
+    }
     case 'me': { // blue dot with a white ring: where I am
       path(() => ctx.arc(c, c, 11, 0, Math.PI * 2)); ctx.fillStyle = colors.surface; ctx.fill();
       path(() => ctx.arc(c, c, 7, 0, Math.PI * 2)); ctx.fillStyle = colors.action; ctx.fill(); break;

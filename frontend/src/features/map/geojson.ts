@@ -1,6 +1,6 @@
 import type { Rung } from '../../ui/ladder';
 
-export type SymbolKind = 'signal' | 'report' | 'verified' | 'responding' | 'contained' | 'closed' | 'officer' | 'me' | 'task';
+export type SymbolKind = 'signal' | 'report' | 'verified' | 'responding' | 'contained' | 'closed' | 'officer' | 'me' | 'task' | 'station_ok' | 'station_late' | 'station_off' | 'station_high';
 export type MapPoint = { id: string; lat: number; lon: number; symbol: SymbolKind; label?: string; ageMinutes?: number };
 export type MapPolygon = { id: string; ring: Array<[number, number]>; tone: 'cell' | 'advisory' | 'warning' | 'envelope' | 'band' | 'observed'; hour?: number; label?: string };
 export type RiskCell = { id: number; lat: number; lon: number; rank_percentile: number; band: string; state: string };

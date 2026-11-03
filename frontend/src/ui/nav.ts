@@ -1,6 +1,6 @@
 /** Navigation per product role (docs/design/D3-clean-sheet-design.md, section 3). Pure data so it can be tested without a browser. */
 export type ProductRole = 'citizen' | 'control_room' | 'field';
-export type IconId = 'map-pin' | 'plus' | 'clipboard-list' | 'users' | 'user' | 'inbox' | 'map' | 'radio' | 'megaphone' | 'clipboard-check' | 'list-todo' | 'camera' | 'flame' | 'home';
+export type IconId = 'map-pin' | 'plus' | 'clipboard-list' | 'users' | 'user' | 'inbox' | 'map' | 'radio' | 'megaphone' | 'clipboard-check' | 'list-todo' | 'camera' | 'flame' | 'home' | 'radio-tower' | 'satellite';
 export type NavItem = { id: string; path: string; icon: IconId; labelKey: string; primary?: boolean };
 /** Destinations that exist only when an ops setting is on. They are not in NAV, which stays at five fixed items. */
 export type Gate = 'scenario';
@@ -28,6 +28,8 @@ export const NAV: Record<ProductRole, NavItem[]> = {
   control_room: [
     { id: 'queue', path: '/ops/queue', icon: 'inbox', labelKey: 'nav.queue' },
     { id: 'map', path: '/ops/map', icon: 'map', labelKey: 'nav.map' },
+    { id: 'stations', path: '/ops/stations', icon: 'radio-tower', labelKey: 'nav.stations' },
+    { id: 'satellite', path: '/ops/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
     { id: 'field', path: '/ops/field', icon: 'radio', labelKey: 'nav.field' },
     { id: 'notices', path: '/ops/notices', icon: 'megaphone', labelKey: 'nav.notices' },
     { id: 'handover', path: '/ops/handover', icon: 'clipboard-check', labelKey: 'nav.handover' },
@@ -36,12 +38,16 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'tasks', path: '/field/tasks', icon: 'list-todo', labelKey: 'nav.tasks' },
     { id: 'map', path: '/field/map', icon: 'map', labelKey: 'nav.map' },
     { id: 'capture', path: '/field/capture', icon: 'camera', labelKey: 'nav.capture', primary: true },
+    { id: 'stations', path: '/field/stations', icon: 'radio-tower', labelKey: 'nav.stations' },
+    { id: 'satellite', path: '/field/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
     { id: 'notices', path: '/field/notices', icon: 'megaphone', labelKey: 'nav.notices' },
     { id: 'me', path: '/field/me', icon: 'user', labelKey: 'nav.me' },
   ],
 };
 
-export const MAX_NAV_ITEMS = 5;
+/** Up to seven destinations. With more than five, the phone's bottom bar shows the first four and puts the rest under "More"; the control-room sidebar shows all. */
+export const MAX_NAV_ITEMS = 7;
+export const BAR_ITEMS = 4;
 
 /** Extra destinations per role, shown only while their setting is on (the what-if page needs the Scenario setting, like the Scenario tab). */
 export const GATED_NAV: Record<ProductRole, GatedNavItem[]> = {

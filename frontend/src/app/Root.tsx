@@ -33,6 +33,11 @@ const LogReportPage = lazy(() => import('../features/ops/LogReportPage').then(m 
 const PlanListPage = lazy(() => import('../features/operations').then(m => ({ default: m.PlanListPage })));
 const PlanPage = lazy(() => import('../features/operations').then(m => ({ default: m.PlanPage })));
 const AdminPage = lazy(() => import('../features/ops/AdminPage').then(m => ({ default: m.AdminPage })));
+const OpsStationsPage = lazy(() => import('../features/stations/OpsStationsPage').then(m => ({ default: m.OpsStationsPage })));
+const OpsStationPage = lazy(() => import('../features/stations/OpsStationPage').then(m => ({ default: m.OpsStationPage })));
+const FieldStationsPage = lazy(() => import('../features/stations/FieldPages').then(m => ({ default: m.FieldStationsPage })));
+const FieldStationPage = lazy(() => import('../features/stations/FieldPages').then(m => ({ default: m.FieldStationPage })));
+const FieldSatellitePage = lazy(() => import('../features/stations/FieldPages').then(m => ({ default: m.FieldSatellitePage })));
 const SatellitePage = lazy(() => import('../features/ops/SatellitePage').then(m => ({ default: m.SatellitePage })));
 const OpsMapPage = lazy(() => import('../features/ops/MapPage').then(m => ({ default: m.OpsMapPage })));
 const HandoverPage = lazy(() => import('../features/ops/HandoverPage').then(m => ({ default: m.HandoverPage })));
@@ -98,6 +103,8 @@ export function Root() {
           <Route path="incidents/:id" element={<OpsIncidentPage />} />
           <Route path="map" element={<OpsMapPage />} />
           <Route path="satellite" element={<SatellitePage />} />
+          <Route path="stations" element={<OpsStationsPage />} />
+          <Route path="stations/:id" element={<OpsStationPage />} />
           <Route path="me" element={<OpsMePage />} />
           <Route path="field" element={<OpsFieldPage />} />
           <Route path="notices" element={<NoticesPage />} />
@@ -115,6 +122,9 @@ export function Root() {
           <Route path="tasks/:id" element={<TaskDetailPage />} />
           <Route path="map" element={<FieldMapPage />} />
           <Route path="capture" element={<CapturePage />} />
+          <Route path="stations" element={<FieldStationsPage />} />
+          <Route path="stations/:id" element={<FieldStationPage />} />
+          <Route path="satellite" element={<FieldSatellitePage />} />
           <Route path="notices" element={<FieldNoticesPage />} />
           <Route path="me" element={<MePage />} />
         </Route>
