@@ -32,7 +32,6 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'satellite', path: '/ops/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
     { id: 'field', path: '/ops/field', icon: 'radio', labelKey: 'nav.field' },
     { id: 'notices', path: '/ops/notices', icon: 'megaphone', labelKey: 'nav.notices' },
-    { id: 'handover', path: '/ops/handover', icon: 'clipboard-check', labelKey: 'nav.handover' },
   ],
   field: [
     { id: 'tasks', path: '/field/tasks', icon: 'list-todo', labelKey: 'nav.tasks' },

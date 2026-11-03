@@ -252,27 +252,13 @@ test.describe('Control Room', () => {
     await expect.poll(() => calls).toEqual([{ action: 'remove', reason: 'Phone number in a public post' }]);
   });
 
-  test('Handover: notes are saved and the next shift acknowledges them', async ({ page }) => {
-    const calls: string[] = []; let notes: unknown[] = [{ id: 4, state: 'OD', body: 'Ridge incident waits for a second officer', incident_id: null, created_at: new Date().toISOString(), acknowledged_at: null, author_name: 'Night shift', acknowledged_by_name: null }];
-    await page.route('**/api/incidents', route => route.fulfill(json([incident(), incident({ id: 40, status: 'responding' })])));
-    await page.route('**/api/handover/notes', route => { if (route.request().method() === 'POST') { calls.push('add ' + JSON.parse(route.request().postData() ?? '{}').body); return route.fulfill(json({ note: {} }, 201)); } return route.fulfill(json({ items: notes })); });
-    await page.route('**/api/handover/notes/4/acknowledge', route => { calls.push('ack 4'); notes = [{ ...(notes[0] as object), acknowledged_at: new Date().toISOString(), acknowledged_by_name: 'Lead Rao' }]; return route.fulfill(json({ status: 'acknowledged' })); });
-    await page.goto('/ops/handover');
-    await expect(page.getByText('Ridge incident waits for a second officer')).toBeVisible();
-    await page.getByRole('button', { name: 'I have read this' }).click();
-    await expect(page.getByText(/Read by Lead Rao/)).toBeVisible();
-    await page.getByLabel('Note').fill('Waiting for the water tanker');
-    await page.getByRole('button', { name: 'Save note' }).click();
-    await expect.poll(() => calls).toEqual(['ack 4', 'add Waiting for the water tanker']);
-  });
-
-  test('navigation: seven destinations on the rail, current page marked', async ({ page }) => {
+  test('navigation: six destinations on the rail, current page marked', async ({ page }) => {
     await page.route('**/api/incidents', route => route.fulfill(json([])));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/ops/queue');
     const rail = page.getByRole('navigation', { name: 'Main navigation' }).first();
-    await expect(rail.getByRole('link')).toHaveCount(7);
-    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Field', 'Notices', 'Handover']);
+    await expect(rail.getByRole('link')).toHaveCount(6);
+    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Field', 'Notices']);
     await expect(rail.getByRole('link', { name: 'Queue' })).toHaveAttribute('aria-current', 'page');
   });
 
@@ -285,9 +271,8 @@ test.describe('Control Room', () => {
       await page.route('**/api/control-room/**', route => route.fulfill(json({ assignments: [], verifications: [], items: [] })));
       await page.route('**/api/notices?limit=100', route => route.fulfill(json({ items: [] })));
       await page.route('**/api/community/**', route => route.fulfill(json({ items: [] })));
-      await page.route('**/api/handover/notes', route => route.fulfill(json({ items: [] })));
       await page.route('**/api/alerts/rules', route => route.fulfill(json([])));
-      for (const path of ['/ops/queue', '/ops/incidents/21', '/ops/incidents/new', '/ops/alert-rules', '/ops/field', '/ops/notices', '/ops/handover']) {
+      for (const path of ['/ops/queue', '/ops/incidents/21', '/ops/incidents/new', '/ops/alert-rules', '/ops/field', '/ops/notices']) {
         await page.goto(path); await page.waitForTimeout(400);
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         expect(result.violations.filter(v => v.impact === 'serious' || v.impact === 'critical').map(v => `${path} ${v.id}: ${v.nodes[0]?.html.slice(0, 100)}`)).toEqual([]);

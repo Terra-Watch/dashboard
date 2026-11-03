@@ -1,4 +1,4 @@
-"""Control Room read models: incident list fields, all open assignments, handover notes (real PostgreSQL)."""
+"""Control Room read models: incident list fields, all open assignments (real PostgreSQL)."""
 from datetime import datetime, timezone
 import uuid
 
@@ -25,24 +25,6 @@ def test_all_open_assignments_are_scoped_and_show_progress():
     assert aid not in {a["id"] for a in out.get("/api/control-room/assignments", headers=wh).json()["items"]}
     citizen, zh, _ = actor("citizen")
     assert citizen.get("/api/control-room/assignments", headers=zh).status_code == 403
-
-
-def test_handover_notes_are_scoped_and_acknowledged_by_the_next_shift():
-    night, nh, nuid = actor("control_room_operator", scopes=["OD"])
-    day, dh, duid = actor("incident_commander", scopes=["OD"])
-    far, fh, _ = actor("control_room_operator", scopes=["WB"])
-    r = night.post("/api/handover/notes", headers=nh, json={"state": "OD", "body": "Ridge incident: waiting for the second officer."})
-    assert r.status_code == 201
-    note_id = r.json()["note"]["id"]
-    assert far.post("/api/handover/notes", headers=fh, json={"state": "OD", "body": "x"}).status_code == 403          # outside scope
-    assert note_id in {n["id"] for n in day.get("/api/handover/notes", headers=dh).json()["items"]}
-    assert note_id not in {n["id"] for n in far.get("/api/handover/notes", headers=fh).json()["items"]}
-    assert night.post(f"/api/handover/notes/{note_id}/acknowledge", headers=nh).status_code == 409                   # not the author
-    assert day.post(f"/api/handover/notes/{note_id}/acknowledge", headers=dh).status_code == 200
-    got = {n["id"]: n for n in day.get("/api/handover/notes", headers=dh).json()["items"]}[note_id]
-    assert got["acknowledged_at"] and got["acknowledged_by_name"]
-    ranger, rh, _ = actor("field_crew"); citizen, zh, _ = actor("citizen")
-    assert ranger.get("/api/handover/notes", headers=rh).status_code == 403 and citizen.get("/api/handover/notes", headers=zh).status_code == 403
 
 
 def test_ops_settings_come_only_from_configuration(monkeypatch):

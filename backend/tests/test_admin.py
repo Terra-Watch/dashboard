@@ -70,11 +70,11 @@ def test_a_deactivated_persons_existing_token_stops_working_at_once():
     client = fresh_client()
     token = login(client, email).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
-    assert client.get("/api/handover/notes", headers=headers).status_code == 200
+    assert client.get("/api/control-room/assignments", headers=headers).status_code == 200
     adm.post(f"/api/admin/people/{uid}/deactivate", headers=ah)
-    assert client.get("/api/handover/notes", headers=headers).status_code == 401
+    assert client.get("/api/control-room/assignments", headers=headers).status_code == 401
     adm.post(f"/api/admin/people/{uid}/reactivate", headers=ah)
-    assert client.get("/api/handover/notes", headers=headers).status_code == 200
+    assert client.get("/api/control-room/assignments", headers=headers).status_code == 200
 
 
 def test_alert_rules_are_limited_to_the_states_the_person_covers():

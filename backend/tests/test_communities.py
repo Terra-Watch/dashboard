@@ -63,11 +63,6 @@ def test_a_person_in_one_community_cannot_see_another_in_the_same_state():
     assert rid in [i["id"] for i in a.get("/api/incidents", headers=ha).json()]
     assert rid not in [i["id"] for i in b.get("/api/incidents", headers=hb).json()]
     assert b.patch(f"/api/incidents/{rid}/status", headers=hb, json={"status": "verified", "notes": "x"}).status_code == 403
-    # a handover note for a community needs that community
-    assert b.post("/api/handover/notes", headers=hb, json={"state": "TN", "community": "bolampatti", "body": "hello"}).status_code == 403
-    assert b.post("/api/handover/notes", headers=hb, json={"state": "TN", "community": "bolampatti-west", "body": "hello"}).status_code == 201
-    notes_a = a.get("/api/handover/notes", headers=ha).json()["items"]
-    assert all(n["community"] != "Bolampatti West forest community" for n in notes_a)
     # staff told about the report: A yes, B no
     from app.services.recipients import incident_staff_recipients
     told = incident_staff_recipients("TN", incident_id=rid)

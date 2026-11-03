@@ -40,7 +40,6 @@ const FieldStationPage = lazy(() => import('../features/stations/FieldPages').th
 const FieldSatellitePage = lazy(() => import('../features/stations/FieldPages').then(m => ({ default: m.FieldSatellitePage })));
 const SatellitePage = lazy(() => import('../features/ops/SatellitePage').then(m => ({ default: m.SatellitePage })));
 const OpsMapPage = lazy(() => import('../features/ops/MapPage').then(m => ({ default: m.OpsMapPage })));
-const HandoverPage = lazy(() => import('../features/ops/HandoverPage').then(m => ({ default: m.HandoverPage })));
 const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({ default: m.OpsFieldPage })));
 const OpsIncidentPage = lazy(() => import('../features/ops/IncidentPage').then(m => ({ default: m.OpsIncidentPage })));
 const NoticesPage = lazy(() => import('../features/ops/NoticesPage').then(m => ({ default: m.NoticesPage })));
@@ -108,7 +107,6 @@ export function Root() {
           <Route path="me" element={<OpsMePage />} />
           <Route path="field" element={<OpsFieldPage />} />
           <Route path="notices" element={<NoticesPage />} />
-          <Route path="handover" element={<HandoverPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="alert-rules" element={<AlertRulesPage />} />
           {PATROL_PLANNING && <><Route path="plans" element={<PlanListPage />} /><Route path="plans/new" element={<PlanPage />} /></>}
