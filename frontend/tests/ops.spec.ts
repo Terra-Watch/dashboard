@@ -18,33 +18,57 @@ test.describe('Control Room', () => {
     await expect(page.getByRole('heading', { name: 'This area is for Control Room staff.' })).toBeVisible();
   });
 
-  test('the queue groups incidents by what needs doing, oldest decision first, and suggests (never makes) links', async ({ page }) => {
-    await page.route('**/api/incidents', route => route.fulfill(json([incident(), incident({ id: 22, created_at: new Date(Date.now() - 7_200_000).toISOString(), latitude: 21.5, longitude: 86.5 }), incident({ id: 23, status: 'verified' }), incident({ id: 24, status: 'closed', close_reason: 'false_alarm' })])));
+  test('the queue groups events by the action they need: decide ranked by evidence, verified ones without an officer under send someone', async ({ page }) => {
+    await page.route('**/api/incidents', route => route.fulfill(json([incident(), incident({ id: 22, notes: 'Older report', created_at: new Date(Date.now() - 7_200_000).toISOString(), latitude: 21.5, longitude: 86.5 }), incident({ id: 23, status: 'verified', notes: 'Verified ridge fire', latitude: 25.1, longitude: 90.1 }), incident({ id: 24, status: 'closed', close_reason: 'false_alarm' })])));
+    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/stations', route => route.fulfill(json({ label: '', items: [] })));
     await page.goto('/ops/queue');
-    const rows = page.getByRole('list', { name: 'Incidents' }).getByRole('link');
-    await expect(rows).toHaveCount(2);
-    await expect(rows.first()).toContainText('#22');                      // older first
-    await expect(page.getByRole('tab', { name: /Needs a decision/ })).toContainText('2');
-    await expect(page.getByText('Possibly the same event')).toBeVisible();
-    await expect(page.getByText('Suggested only. Nothing is merged or verified until you do it.')).toBeVisible();
-    await page.getByRole('tab', { name: /Closed/ }).click();
-    await expect(page.getByText('false_alarm').or(page.getByText('False alarm'))).toBeVisible();
+    const decide = page.getByRole('listbox', { name: 'Decide' }).getByRole('option');
+    await expect(decide).toHaveCount(2);
+    await expect(decide.first()).toContainText('Older report');            // nothing else separates them, so the longest waiting is first
+    await expect(page.getByRole('listbox', { name: 'Send someone' }).getByRole('option')).toHaveCount(1);
+    await expect(page.getByRole('listbox', { name: 'Send someone' })).toContainText('Verified ridge fire');
+    await expect(page.getByText('3 need you')).toBeVisible();              // closed incidents never count
+    await expect(page.getByText('Not confirmed, because:')).toBeVisible(); // the selected event offers its decisions beside the list
   });
 
-  test('without configured limits the link suggestions are off and say why', async ({ page }) => {
+  test('a satellite detection near a report is shown as a fact, never as a merge', async ({ page }) => {
+    await page.route('**/api/incidents', route => route.fulfill(json([incident({ id: 41, notes: 'Smoke by the road', observed_at: new Date().toISOString() }), incident({ id: 42, notes: 'Smoke by the road, second call', observed_at: new Date().toISOString(), latitude: 20.302, longitude: 85.802 })])));
+    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/stations', route => route.fulfill(json({ label: '', items: [] })));
+    await page.goto('/ops/queue');
+    await expect(page.getByRole('listbox', { name: 'Decide' }).getByRole('option').first()).toContainText('Satellite detections nearby: 1');
+    await expect(page.getByRole('listbox', { name: 'Decide' }).getByRole('option')).toHaveCount(2);   // still two events: linked, not merged
+  });
+
+  test('without configured limits nothing is linked and a lone report says so', async ({ page }) => {
     await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: null, exposure_radii_km: null, scenario_enabled: false })));
     await page.route('**/api/incidents', route => route.fulfill(json([incident()])));
+    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/stations', route => route.fulfill(json({ label: '', items: [] })));
     await page.goto('/ops/queue');
-    await expect(page.getByText('Suggested links are off until their distance and time limits are configured.')).toBeVisible();
-    await expect(page.getByText('Possibly the same event')).toHaveCount(0);
+    await expect(page.getByText('One report, nothing else yet.').first()).toBeVisible();
+  });
+
+  test('a station sound alert and a satellite cluster appear under Signals to check, and "Not an issue" hides one on this device', async ({ page }) => {
+    await page.route('**/api/incidents', route => route.fulfill(json([])));
+    await page.route('**/api/control-room/assignments', route => route.fulfill(json({ items: [] })));
+    await page.route('**/api/stations', route => route.fulfill(json({ label: '', items: [{ id: 3, name: 'Lookout 12', latitude: 22.5, longitude: 84.5, state: 'OD', status: 'online', last_sound: { kind: 'chainsaw', confidence: 84, age_s: 540 }, pm25: 20, pm25_vs_normal: 1 }] })));
+    await page.goto('/ops/queue');
+    const signals = page.getByRole('listbox', { name: 'Signals to check' }).getByRole('option');
+    await expect(signals).toHaveCount(1);
+    await expect(signals.first()).toContainText('chainsaw, 84 % sure. A sound model, not a person.');
+    await page.getByRole('button', { name: 'Not an issue' }).click();
+    await expect(page.getByText('No unexplained signals.')).toBeVisible();
   });
 
   test('keyboard: j and k move, Enter opens the incident', async ({ page }) => {
     await page.route('**/api/incidents', route => route.fulfill(json([incident({ id: 31 }), incident({ id: 32, created_at: new Date(Date.now() - 100_000).toISOString() })])));
+    await page.route('**/api/stations', route => route.fulfill(json({ label: '', items: [] })));
     await page.route('**/api/incidents/32**', route => route.fulfill(json({ ...incident({ id: 32 }), images: [] })));
     await page.route('**/api/control-room/**', route => route.fulfill(json({ assignments: [], verifications: [], items: [] })));
     await page.goto('/ops/queue');
-    await expect(page.getByRole('list', { name: 'Incidents' })).toBeVisible();
+    await expect(page.getByRole('listbox', { name: 'Decide' })).toBeVisible();
     await page.keyboard.press('j'); await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/ops\/incidents\/32$/);
   });
@@ -242,13 +266,13 @@ test.describe('Control Room', () => {
     await expect.poll(() => calls).toEqual(['ack 4', 'add Waiting for the water tanker']);
   });
 
-  test('navigation: five destinations on the rail, current page marked', async ({ page }) => {
+  test('navigation: seven destinations on the rail, current page marked', async ({ page }) => {
     await page.route('**/api/incidents', route => route.fulfill(json([])));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/ops/queue');
     const rail = page.getByRole('navigation', { name: 'Main navigation' }).first();
-    await expect(rail.getByRole('link')).toHaveCount(5);
-    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Field', 'Notices', 'Handover']);
+    await expect(rail.getByRole('link')).toHaveCount(7);
+    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Field', 'Notices', 'Handover']);
     await expect(rail.getByRole('link', { name: 'Queue' })).toHaveAttribute('aria-current', 'page');
   });
 

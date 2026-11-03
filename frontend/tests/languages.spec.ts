@@ -35,7 +35,7 @@ test.describe('Languages', () => {
     await page.route('**/api/incidents', route => route.fulfill(json([])));
     await page.route('**/api/inbox', route => route.fulfill(json({ items: [], unread: 0 })));
     await page.goto('/ops/queue');
-    await expect(page.getByRole('tab', { name: /निर्णय चाहिए/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /निर्णय लें/ })).toBeVisible();
     await expect(page.getByRole('link', { name: 'रिपोर्ट दर्ज करें' })).toBeVisible();
   });
 });
