@@ -64,12 +64,18 @@ async def ingest(request: Request) -> dict:
         for r in body.readings:
             at = (r.received_at or now); at = at if at.tzinfo else at.replace(tzinfo=timezone.utc)
             raw_payload = bytes.fromhex(r.payload_hex) if len(r.payload_hex) % 2 == 0 else b''
-            vals = st.decode_payload(raw_payload); sound = None if vals else st.decode_sound(raw_payload)
-            if (vals is None and sound is None) or at > now + timedelta(minutes=5) or at < now - timedelta(days=7): out['invalid'] += 1; continue
+            vals = st.decode_payload(raw_payload); sound = None if vals else st.decode_sound(raw_payload); pos = None if vals or sound else st.decode_position(raw_payload)
+            if (vals is None and sound is None and pos is None) or at > now + timedelta(minutes=5) or at < now - timedelta(days=7): out['invalid'] += 1; continue
             sid = ids.get(r.node_id)
             if sid is None or not sid[1]:
-                db.execute(text('''INSERT INTO resq_station_unknown (node_id) VALUES (:n) ON CONFLICT (node_id) DO UPDATE SET last_heard=now(), heard=resq_station_unknown.heard+1'''), {'n': r.node_id})
+                db.execute(text('''INSERT INTO resq_station_unknown (node_id,reported_lat,reported_lon,reported_at) VALUES (:n,:la,:lo,CASE WHEN CAST(:la AS float) IS NULL THEN NULL ELSE now() END)
+                    ON CONFLICT (node_id) DO UPDATE SET last_heard=now(), heard=resq_station_unknown.heard+1,
+                    reported_lat=COALESCE(CAST(:la AS float), resq_station_unknown.reported_lat), reported_lon=COALESCE(CAST(:lo AS float), resq_station_unknown.reported_lon),
+                    reported_at=CASE WHEN CAST(:la AS float) IS NULL THEN resq_station_unknown.reported_at ELSE now() END'''), {'n': r.node_id, 'la': pos and pos['latitude'], 'lo': pos and pos['longitude']})
                 out['unknown_node'] += 1; continue
+            if pos:
+                res = db.execute(text('UPDATE resq_stations SET reported_lat=:la, reported_lon=:lo, reported_at=:at WHERE id=:s AND (reported_at IS NULL OR reported_at < :at)'), {'la': pos['latitude'], 'lo': pos['longitude'], 'at': at, 's': sid[0]})
+                out['stored'] += 1; continue
             if sound:
                 res = db.execute(text('''INSERT INTO resq_station_sounds (station_id,received_at,node_seq,rssi,snr,kind,confidence) VALUES (:s,:at,:seq,:rssi,:snr,:k,:c) ON CONFLICT DO NOTHING'''),
                                  {'s': sid[0], 'at': at, 'seq': r.seq, 'rssi': r.rssi, 'snr': r.snr, 'k': sound['kind'], 'c': sound['confidence']})
@@ -96,7 +102,7 @@ def _sound_alert(station_id: int, sound: dict) -> None:
                        state=s['state'], severity='warning', entity_type='station', entity_id=str(station_id), user_id=rid)
 
 
-_LIST = '''SELECT s.id,s.node_id,s.name,s.latitude,s.longitude,s.state,s.community_id,s.kind,s.expected_interval_s,s.installed_at,s.notes,
+_LIST = '''SELECT s.id,s.node_id,s.name,s.latitude,s.longitude,s.state,s.community_id,s.kind,s.expected_interval_s,s.installed_at,s.notes,s.reported_lat,s.reported_lon,s.reported_at,
        l.received_at AS last_heard,ls.kind AS sound_kind,ls.confidence AS sound_confidence,ls.received_at AS sound_at,l.temp_c,l.humidity_pct,l.pm25,l.pm10,l.battery_mv,l.rssi,l.snr,l.hops,l.flags,b.base AS pm25_normal
   FROM resq_stations s
   LEFT JOIN LATERAL (SELECT * FROM resq_station_readings r WHERE r.station_id=s.id ORDER BY r.received_at DESC LIMIT 1) l ON TRUE
@@ -114,6 +120,8 @@ def _shape(r, lat=None, lon=None) -> dict:
     d['pm25_vs_normal'] = round(d['pm25'] / base, 2) if d['pm25'] is not None and base and base >= 1 else None
     sk, sc, sa = d.pop('sound_kind', None), d.pop('sound_confidence', None), d.pop('sound_at', None)
     d['last_sound'] = {'kind': sk, 'confidence': sc, 'age_s': int((now - sa).total_seconds())} if sk else None
+    rl, rn, ra = d.pop('reported_lat'), d.pop('reported_lon'), d.pop('reported_at')
+    d['reported'] = {'latitude': rl, 'longitude': rn, 'at': ra.isoformat(), 'offset_km': round(st.distance_km(rl, rn, d['latitude'], d['longitude']), 2)} if rl is not None and ra else None
     for k in ('last_heard', 'installed_at'): d[k] = d[k].isoformat() if d[k] else None
     if lat is not None and lon is not None:
         d['distance_km'] = round(st.distance_km(lat, lon, d['latitude'], d['longitude']), 1)
@@ -140,7 +148,7 @@ def _one(db, sid: int, user: dict) -> dict:
 
 @router.get('/stations/unknown')
 def unknown_nodes(user: dict = Depends(require_roles())) -> dict:
-    with engine.connect() as db: rows = db.execute(text('SELECT node_id,first_heard,last_heard,heard FROM resq_station_unknown ORDER BY last_heard DESC LIMIT 100')).mappings().all()
+    with engine.connect() as db: rows = db.execute(text('SELECT node_id,first_heard,last_heard,heard,reported_lat,reported_lon FROM resq_station_unknown ORDER BY last_heard DESC LIMIT 100')).mappings().all()
     return {'items': [{**dict(r), 'first_heard': r['first_heard'].isoformat(), 'last_heard': r['last_heard'].isoformat()} for r in rows]}
 
 

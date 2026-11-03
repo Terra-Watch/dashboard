@@ -183,3 +183,16 @@ def test_a_ranger_with_a_community_sees_only_that_community(setup):
     ids = [x["id"] for x in c.get("/api/stations", headers=h).json()["items"]]
     assert inside in ids and outside not in ids and sid not in ids
     with engine.begin() as db: db.execute(text("DELETE FROM resq_stations WHERE name LIKE 'test-%'"))
+
+
+def test_station_position_payload(setup):
+    node, sid, admin = setup
+    assert st.decode_position(struct.pack("<BBii", 0x50, 1, 20_300_000, 85_800_000)) == {"latitude": 20.3, "longitude": 85.8}
+    assert st.decode_position(struct.pack("<BBii", 0x50, 1, 99_000_000, 0)) is None and st.decode_position(b"P\x01") is None
+    body = struct.pack("<BBii", 0x50, 1, 20_310_000, 85_800_000).hex()
+    r = ingest([{"node_id": node, "seq": 5, "payload_hex": body}]); assert r.json()["stored"] == 1, r.text
+    item = next(x for x in admin.get("/api/stations").json()["items"] if x["id"] == sid)
+    assert item["reported"]["latitude"] == 20.31 and item["reported"]["offset_km"] >= 0
+    with engine.begin() as db: db.execute(text("DELETE FROM resq_stations WHERE node_id=:n"), {"n": node + 1})
+    r = ingest([{"node_id": node + 1, "seq": 1, "payload_hex": body}]); assert r.json()["unknown_node"] == 1
+    assert next(u for u in admin.get("/api/stations/unknown").json()["items"] if u["node_id"] == node + 1)["reported_lat"] == 20.31

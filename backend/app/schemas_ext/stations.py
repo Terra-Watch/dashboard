@@ -42,3 +42,8 @@ def ensure(db) -> None:
     db.execute(text('''CREATE TABLE IF NOT EXISTS resq_station_unknown (
         node_id INTEGER PRIMARY KEY, first_heard TIMESTAMPTZ NOT NULL DEFAULT now(), last_heard TIMESTAMPTZ NOT NULL DEFAULT now(), heard INTEGER NOT NULL DEFAULT 1
     )'''))
+    # position the node itself reports (fixed, configured at install; no GPS). The registered position stays the one the map uses.
+    for t in ('resq_stations', 'resq_station_unknown'):
+        db.execute(text(f'ALTER TABLE {t} ADD COLUMN IF NOT EXISTS reported_lat DOUBLE PRECISION'))
+        db.execute(text(f'ALTER TABLE {t} ADD COLUMN IF NOT EXISTS reported_lon DOUBLE PRECISION'))
+        db.execute(text(f'ALTER TABLE {t} ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ'))

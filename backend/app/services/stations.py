@@ -34,6 +34,13 @@ def decode_sound(payload: bytes) -> dict | None:
     return {"kind": SOUND_KINDS[payload[2]], "confidence": payload[3]}
 
 
+def decode_position(payload: bytes) -> dict | None:
+    """A station's own position ('P', version 1, latitude and longitude as int32 micro-degrees, little-endian), or None when it is not one or is not a place on Earth."""
+    if len(payload) != 10 or payload[0] != 0x50 or payload[1] != 1: return None
+    lat, lon = (v / 1e6 for v in struct.unpack_from("<ii", payload, 2))
+    return {"latitude": lat, "longitude": lon} if -90 <= lat <= 90 and -180 <= lon <= 180 else None
+
+
 def status_of(last_heard: datetime | None, interval_s: int, now: datetime | None = None) -> str:
     """online: heard within 2 intervals; late: within 6; offline: longer; never: nothing yet. Thresholds scale with the station's own interval."""
     if last_heard is None: return "never"
