@@ -97,9 +97,10 @@ def _sound_alert(station_id: int, sound: dict) -> None:
 
 
 _LIST = '''SELECT s.id,s.node_id,s.name,s.latitude,s.longitude,s.state,s.community_id,s.kind,s.expected_interval_s,s.installed_at,s.notes,
-       l.received_at AS last_heard,l.temp_c,l.humidity_pct,l.pm25,l.pm10,l.battery_mv,l.rssi,l.snr,l.hops,l.flags,b.base AS pm25_normal
+       l.received_at AS last_heard,ls.kind AS sound_kind,ls.confidence AS sound_confidence,ls.received_at AS sound_at,l.temp_c,l.humidity_pct,l.pm25,l.pm10,l.battery_mv,l.rssi,l.snr,l.hops,l.flags,b.base AS pm25_normal
   FROM resq_stations s
   LEFT JOIN LATERAL (SELECT * FROM resq_station_readings r WHERE r.station_id=s.id ORDER BY r.received_at DESC LIMIT 1) l ON TRUE
+  LEFT JOIN LATERAL (SELECT kind,confidence,received_at FROM resq_station_sounds x WHERE x.station_id=s.id AND x.received_at >= now() - interval '6 hours' ORDER BY x.received_at DESC LIMIT 1) ls ON TRUE
   LEFT JOIN LATERAL (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY pm25) AS base FROM resq_station_readings r
         WHERE r.station_id=s.id AND r.pm25 IS NOT NULL AND r.received_at >= now() - interval '24 hours' AND r.received_at < now() - interval '15 minutes') b ON TRUE
  WHERE s.active AND ({clause})'''
@@ -111,6 +112,8 @@ def _shape(r, lat=None, lon=None) -> dict:
     d['age_s'] = int((now - d['last_heard']).total_seconds()) if d['last_heard'] else None
     base = d.pop('pm25_normal'); d['pm25_normal'] = round(float(base), 1) if base is not None else None
     d['pm25_vs_normal'] = round(d['pm25'] / base, 2) if d['pm25'] is not None and base and base >= 1 else None
+    sk, sc, sa = d.pop('sound_kind', None), d.pop('sound_confidence', None), d.pop('sound_at', None)
+    d['last_sound'] = {'kind': sk, 'confidence': sc, 'age_s': int((now - sa).total_seconds())} if sk else None
     for k in ('last_heard', 'installed_at'): d[k] = d[k].isoformat() if d[k] else None
     if lat is not None and lon is not None:
         d['distance_km'] = round(st.distance_km(lat, lon, d['latitude'], d['longitude']), 1)

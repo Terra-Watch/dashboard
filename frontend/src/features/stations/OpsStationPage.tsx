@@ -10,7 +10,7 @@ import { ageText } from '../../ui/ladder';
 import { Chart } from './Chart';
 import { useCreateCheck, useNearby, useStation } from './api';
 import { fmt, ageLabel } from './model';
-import { Readings, StatusChip } from './parts';
+import { Readings, Sounds, StatusChip } from './parts';
 
 /** One station: current readings against its own normal, trend, link health, what else is near it, and the way to turn it into a check. */
 export function OpsStationPage() {
@@ -30,6 +30,7 @@ export function OpsStationPage() {
       <PageTitle title={s.name} subtitle={q.data!.label} actions={<StatusChip s={s} />} />
       <p className="text-sm text-ink-muted">{s.state} · {t('stations.node', { n: s.node_id, defaultValue: 'node {{n}}' })} · {s.latitude.toFixed(4)}, {s.longitude.toFixed(4)} · {t('stations.interval', { n: s.expected_interval_s, defaultValue: 'reports every {{n}} s' })}</p>
       {(s.status === 'late' || s.status === 'offline' || s.status === 'never') && <Notice kind="warning" title={t('stations.silent_title', 'This station is not reporting')}>{s.status === 'never' ? t('stations.never_msg', 'Nothing has been heard from it yet.') : t('stations.silent_msg', { age: ageLabel(s.age_s), defaultValue: 'Last heard {{age}} ago. Treat it as not reporting, not as quiet.' })}</Notice>}
+      <Sounds items={q.data!.sounds} />
       <Readings s={s} />
       <Card title={t('stations.trend', 'Trend')}>
         <div role="group" aria-label={t('map.window', 'Time window')} className="mb-2 inline-flex rounded-rq border border-control p-1">

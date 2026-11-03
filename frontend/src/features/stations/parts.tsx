@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ageLabel, fmt, type Station } from './model';
+import { ageLabel, fmt, soundName, type SoundEvent, type Station } from './model';
 
 /** Status shown by an icon-like mark AND words, never by colour alone. */
 export function StatusChip({ s }: { s: Pick<Station, 'status' | 'age_s'> }) {
@@ -25,5 +25,27 @@ export function Readings({ s }: { s: Station }) {
       <Tile label={t('stations.temp', 'Temperature')} value={fmt(s.temp_c, 1, ' °C')} />
       <Tile label={t('stations.humidity', 'Humidity')} value={fmt(s.humidity_pct, 0, ' %')} />
     </div>
+  );
+}
+
+/** The last sound a station reported (within 6 h): words and a mark, never colour alone. */
+export function SoundChip({ s }: { s: Pick<Station, 'last_sound'> }) {
+  const { t } = useTranslation();
+  if (!s.last_sound) return null;
+  return <span className="inline-flex items-center gap-1.5 rounded-full border border-warn bg-warn-tint px-2.5 py-0.5 text-sm font-semibold"><span aria-hidden="true">♪</span>{t(`stations.sound_${s.last_sound.kind}`, soundName(s.last_sound.kind))} {s.last_sound.confidence} % · {ageLabel(s.last_sound.age_s)}</span>;
+}
+
+/** What the station's microphone classifier reported in the last 24 h. A prompt to check, not a person's report. */
+export function Sounds({ items }: { items: SoundEvent[] }) {
+  const { t } = useTranslation();
+  if (!items.length) return null;
+  return (
+    <section aria-label={t('stations.sounds', 'What it heard')} className="rounded-rq border border-warn bg-warn-tint p-3">
+      <h2 className="font-bold">{t('stations.sounds', 'What it heard')}</h2>
+      <p className="text-sm">{t('stations.sounds_note', 'A sound classifier on the station, not a person: a prompt to check. It can be wrong.')}</p>
+      <ul className="mt-1 space-y-0.5 text-sm tabular-nums">
+        {items.slice(0, 6).map(e => <li key={e.at + e.kind}><b>{t(`stations.sound_${e.kind}`, soundName(e.kind))}</b> · {e.confidence} % {t('stations.sure', 'sure')} · {new Date(e.at).toLocaleString()}</li>)}
+      </ul>
+    </section>
   );
 }

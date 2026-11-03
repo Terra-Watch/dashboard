@@ -7,7 +7,7 @@ import { MapView } from '../map/MapView';
 import { boundsOf, type MapPoint } from '../map/geojson';
 import { useStations } from './api';
 import { counts, fmt, isHigh, symbolOf, type Station } from './model';
-import { StatusChip } from './parts';
+import { SoundChip, StatusChip } from './parts';
 
 /** All lookout stations in the person's area: a list with status first, and a map. Readings are from sensors, not people. */
 export function OpsStationsPage() {
@@ -53,6 +53,7 @@ function StationRow({ s, active }: { s: Station; active: boolean }) {
   return (
     <Link to={`/ops/stations/${s.id}`} className={`block rounded-rq border p-3 hover:bg-surface-2 ${active ? 'border-action ring-2 ring-action' : 'border-line bg-surface'}`}>
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
+      {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
       <p className="mt-1 text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · PM10 {fmt(s.pm10)} · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}
         {isHigh(s) && <span className="ml-2 rounded border border-warn bg-warn-tint px-1.5 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>
       <p className="text-sm text-ink-muted">{s.state} · {t('stations.node', { n: s.node_id, defaultValue: 'node {{n}}' })}{s.rssi !== null ? ` · ${s.rssi} dBm` : ''}</p>

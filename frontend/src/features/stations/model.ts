@@ -7,11 +7,14 @@ export type Station = {
   status: StationStatus; age_s: number | null; last_heard: string | null;
   temp_c: number | null; humidity_pct: number | null; pm25: number | null; pm10: number | null; battery_mv: number | null;
   rssi: number | null; snr: number | null; hops: number | null; pm25_normal: number | null; pm25_vs_normal: number | null;
+  last_sound: { kind: SoundKind; confidence: number; age_s: number } | null;
   distance_km?: number; bearing?: string;
 };
+export type SoundKind = 'chainsaw' | 'blast';
+export type SoundEvent = { at: string; kind: SoundKind; confidence: number };
 export type StationsResponse = { label: string; items: Station[] };
 export type SeriesPoint = { t: string; pm25: number | null; pm10: number | null; temp_c: number | null; humidity_pct: number | null };
-export type StationResponse = { label: string; station: Station; hours: number; series: SeriesPoint[] };
+export type StationResponse = { label: string; station: Station; hours: number; series: SeriesPoint[]; sounds: SoundEvent[] };
 export type Nearby = {
   hotspots: { count: number; items: Array<{ id: number; km: number; satellite: string; at: string; frp: number | null }> };
   incidents: { count: number; items: Array<{ id: number; km: number; status: string; source: string }> };
@@ -40,3 +43,6 @@ export const fmt = (v: number | null | undefined, digits = 0, unit = ''): string
 
 export const counts = (items: Station[]) => ({ online: items.filter(s => s.status === 'online').length, late: items.filter(s => s.status === 'late').length,
   offline: items.filter(s => s.status === 'offline' || s.status === 'never').length, high: items.filter(isHigh).length });
+
+/** Plain words for what a station's sound classifier reported. It is a classifier's guess, never a confirmed event. */
+export const soundName = (k: SoundKind): string => (k === 'chainsaw' ? 'Chainsaw' : 'Gunshot or blast');

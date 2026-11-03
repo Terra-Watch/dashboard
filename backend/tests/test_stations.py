@@ -109,6 +109,7 @@ def test_sound_alert_is_stored_shown_and_alerts_staff(setup):
     out = ingest([first, first, snd(2, 2, 97), {**reading(node, 3), "payload_hex": bytes([0x41, 1, 9, 50]).hex()}]).json()
     assert out == {"stored": 2, "duplicate": 1, "unknown_node": 0, "invalid": 1}
     d = op.get(f"/api/stations/{sid}").json(); assert {x["kind"] for x in d["sounds"]} == {"chainsaw", "blast"} and any(x["confidence"] == 97 for x in d["sounds"])
+    item = next(x for x in op.get("/api/stations").json()["items"] if x["id"] == sid); assert item["last_sound"]["kind"] in ("chainsaw", "blast") and item["last_sound"]["age_s"] < 60
 
 
 def test_ingest_is_off_without_keys(setup, monkeypatch):

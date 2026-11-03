@@ -10,7 +10,7 @@ import { LocateButton, usePosition } from '../field/Position';
 import { Chart } from './Chart';
 import { useStation, useStations } from './api';
 import { ageLabel, fmt, isHigh, type Station } from './model';
-import { Readings, StatusChip } from './parts';
+import { Readings, SoundChip, Sounds, StatusChip } from './parts';
 
 /** Stations near the ranger, nearest first. Read-only. The position is taken only when the ranger taps. */
 export function FieldStationsPage() {
@@ -35,6 +35,7 @@ function Row({ s }: { s: Station }) {
   return (
     <Link to={`/field/stations/${s.id}`} className="block rounded-rq border border-line bg-surface p-3 active:bg-surface-2">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
+      {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
       {s.distance_km !== undefined && <p className="text-sm font-semibold">{s.distance_km} km {s.bearing}</p>}
       <p className="text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}{isHigh(s) && <span className="ml-2 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>
       {s.age_s !== null && <p className="text-sm text-ink-muted">{t('stations.heard_ago', { age: ageLabel(s.age_s), defaultValue: 'heard {{age}} ago' })}</p>}
@@ -56,6 +57,7 @@ export function FieldStationPage() {
       <PageTitle title={s.name} subtitle={q.data!.label} actions={<StatusChip s={s} />} />
       {s.distance_km !== undefined && <p className="font-semibold">{s.distance_km} km {s.bearing} {t('stations.from_you', 'from you')}</p>}
       {s.status !== 'online' && <Notice kind="warning">{s.status === 'never' ? t('stations.never_msg', 'Nothing has been heard from it yet.') : t('stations.silent_msg', { age: ageLabel(s.age_s), defaultValue: 'Last heard {{age}} ago. Treat it as not reporting, not as quiet.' })}</Notice>}
+      <Sounds items={q.data!.sounds} />
       <Readings s={s} />
       <Card title={t('stations.last6', 'Last 6 hours')}><Chart label={t('stations.chart_pm', 'Smoke particles')} unit="µg/m³" times={series.map(p => p.t)} lines={[{ name: 'PM2.5', values: series.map(p => p.pm25), className: 'text-action' }, { name: 'PM10', values: series.map(p => p.pm10), className: 'text-ink-muted' }]} /></Card>
       <a className="inline-flex min-h-11 items-center gap-2 font-semibold underline" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}`}>{t('stations.directions', 'Directions to this station')} <ExternalLink aria-hidden="true" size={16} /></a>
