@@ -1,0 +1,6 @@
+# Local development, tests and the offline data/inference scripts. The deployed API installs requirements.txt only:
+# rasterio with GDAL and pyhdf are about 140 MB and would push the Vercel function over its 500 MB limit, and the API does not use them.
+-r requirements.txt
+pytest>=8.0.0
+rasterio>=1.3,<2.0
+pyhdf==0.11.7

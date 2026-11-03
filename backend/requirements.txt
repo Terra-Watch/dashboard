@@ -7,15 +7,13 @@ bcrypt>=4.2,<5.0
 argon2-cffi>=23.1,<26.0
 numpy>=2.0,<3.0
 pandas>=2.2,<3.0
-pyhdf==0.11.7
-rasterio>=1.3,<2.0
+affine>=2.4,<3.0
 Pillow>=10.0,<12.0
 python-multipart>=0.0.9,<1.0
 pyproj>=3.6,<4.0
 shapely>=2.0,<3.0
 h3>=4.0,<5.0
 httpx>=0.27,<1.0
-pytest>=8.0.0
 cryptography>=42.0,<60
 vercel-blob>=0.5,<1.0
 pywebpush>=2.0,<3.0

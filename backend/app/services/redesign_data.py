@@ -14,9 +14,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import shapely
+import shapely.affinity
 from affine import Affine
 from pyproj import Transformer
-from shapely.geometry import Point, mapping, shape
+from shapely.geometry import Point, mapping
+from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform as shapely_transform
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -286,29 +289,33 @@ def simulation_start_utc(incident_id: str) -> str:
     return normalized if normalized.endswith("Z") else f"{normalized}Z"
 
 
+def _shapes(grid: np.ndarray, mask: np.ndarray | None, transform: Affine) -> list[tuple[BaseGeometry, int]]:
+    """Dissolved polygons per cell value (4-connected, holes kept), in map coordinates: what rasterio.features.shapes returns,
+    built from each row's runs of equal cells so the API needs no GDAL (rasterio plus its libraries is about 130 MB of the serverless bundle)."""
+    valid = np.ones(grid.shape, bool) if mask is None else mask.astype(bool)
+    out = []
+    for value in np.unique(grid[valid]):
+        edges = np.diff(np.pad((valid & (grid == value)).astype(np.int8), ((0, 0), (1, 1))), axis=1)
+        rows, starts = np.nonzero(edges == 1); _, ends = np.nonzero(edges == -1)          # row-major order: the k-th start and k-th end are the same run
+        merged = shapely.union_all(shapely.box(starts, rows, ends, rows + 1))
+        for part in getattr(merged, "geoms", [merged]):
+            out.append((shapely.affinity.affine_transform(part, [transform.a, transform.b, transform.d, transform.e, transform.c, transform.f]), int(value)))
+    return out
+
+
 def _grid_to_wgs84_geojson(grid: np.ndarray, incident_id: str, mask: np.ndarray | None = None) -> dict:
-    # Rasterio contains native GDAL/Expat dependencies that are not available in
-    # every serverless Python runtime. Keep it out of application startup so
-    # authentication, citizen reports, and other API routes remain available.
-    try:
-        import rasterio.features
-    except ImportError as exc:
-        raise RuntimeError(
-            "Simulation map rendering requires a runtime with Rasterio native libraries"
-        ) from exc
     transform, crs, _cell_m, _n = domain_transform(incident_id)
     tr = _wgs84_transformer(crs)
     features = []
-    for geom, value in rasterio.features.shapes(grid, mask=mask, transform=transform):
-        poly = shape(geom)
+    for poly, value in _shapes(grid, mask, transform):
         poly_wgs = shapely_transform(lambda x, y: tr.transform(x, y), poly)
         features.append({"type": "Feature", "properties": {"band": int(value)}, "geometry": mapping(poly_wgs)})
     return {"type": "FeatureCollection", "features": features}
 
 
 def probability_grid_geojson(incident_id: str, wind_source: str, overpass_k: int) -> dict:
-    """Burn-probability bands as real georeferenced polygons (dissolved per band via
-    rasterio.features.shapes, not per-cell squares), reprojected from the simulation's
+    """Burn-probability bands as real georeferenced polygons (dissolved per band by
+    _shapes, not per-cell squares), reprojected from the simulation's
     EPSG:32644 domain to WGS84. Same 4-band digitisation as the router's downsampled-grid
     endpoint (0.2/0.5/0.8 thresholds), full resolution (no stride) since polygons generalise
     naturally."""
