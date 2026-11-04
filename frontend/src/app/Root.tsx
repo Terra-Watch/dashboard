@@ -43,6 +43,7 @@ const OpsMapPage = lazy(() => import('../features/ops/MapPage').then(m => ({ def
 const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({ default: m.OpsFieldPage })));
 const OpsIncidentPage = lazy(() => import('../features/ops/IncidentPage').then(m => ({ default: m.OpsIncidentPage })));
 const NoticesPage = lazy(() => import('../features/ops/NoticesPage').then(m => ({ default: m.NoticesPage })));
+const FireSpreadPage = lazy(() => import('../features/firespread/FireSpreadPage').then(m => ({ default: m.FireSpreadPage })));
 const WhatIfPage = lazy(() => import('../features/scenarios/WhatIfPage').then(m => ({ default: m.WhatIfPage })));
 const OpsLayout = lazy(() => import('../features/ops/OpsLayout').then(m => ({ default: m.OpsLayout })));
 const QueuePage = lazy(() => import('../features/ops/QueuePage').then(m => ({ default: m.QueuePage })));
@@ -102,6 +103,7 @@ export function Root() {
           <Route path="incidents/:id" element={<OpsIncidentPage />} />
           <Route path="map" element={<OpsMapPage />} />
           <Route path="satellite" element={<SatellitePage />} />
+          <Route path="fire-spread" element={<FireSpreadPage />} />
           <Route path="stations" element={<OpsStationsPage />} />
           <Route path="stations/:id" element={<OpsStationPage />} />
           <Route path="me" element={<OpsMePage />} />
