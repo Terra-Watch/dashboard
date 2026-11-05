@@ -33,3 +33,9 @@ backend/tests/fixtures/**/weights.pt
 # generated simulation diagnostics and local cookie jars
 docs/sim_diagnosis/
 *cookies.txt
+
+.pytest_cache/
+.vercel/
+.ruff_cache/
+*.pem
+*.key
