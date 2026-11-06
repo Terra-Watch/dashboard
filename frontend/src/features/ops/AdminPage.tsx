@@ -1,3 +1,4 @@
+import { StationSetup } from './StationSetup';
 import { SystemCheck } from './SystemCheck';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
@@ -65,6 +66,7 @@ export function AdminPage() {
       {error && <Notice kind="danger">{error}</Notice>}
 
       <SystemCheck />
+      <StationSetup />
 
       <Card title={t('ops.admin.invite', 'Invite someone')}>
         <form onSubmit={submit} noValidate className="space-y-3">

@@ -16,6 +16,9 @@ test.describe('Administration', () => {
     await mockCommunities(page);
     await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: null, exposure_radii_km: null, feed_stale_minutes: null, scenario_enabled: false })));
     await page.route('**/api/inbox', route => route.fulfill(json({ items: [], unread: 0 })));
+    await page.route('**/api/stations/unknown', route => route.fulfill(json({ items: [{ node_id: 2, first_heard: '2026-11-06T10:00:00Z', last_heard: '2026-11-06T10:05:00Z', heard: 4, reported_lat: 10.9, reported_lon: 76.9 }] })));
+    await page.route(/\/api\/stations(\?.*)?$/, route => route.request().method() === 'POST'
+      ? route.fulfill(json({ id: 5, state: 'TN' }, 201)) : route.fulfill(json({ items: [], label: '' })));
   });
 
   test('only administrators see the page', async ({ page }) => {
@@ -107,4 +110,19 @@ test.describe('Administration', () => {
       }
     });
   }
+
+  test('an administrator can register a station, and claim a node the gateway heard', async ({ page }) => {
+    await signedInAs(page, 'admin', 'Admin Rao');
+    await page.route('**/api/admin/people', route => route.fulfill(json(PEOPLE)));
+    let sent: Record<string, unknown> | null = null;
+    await page.route(/\/api\/stations$/, route => { if (route.request().method() === 'POST') sent = route.request().postDataJSON(); return route.fallback(); });
+    await page.goto('/ops/admin');
+    await expect(page.getByRole('heading', { name: 'Lookout stations' })).toBeVisible();
+    await page.getByRole('button', { name: 'Register this node' }).click();                   // fills node 2 and its reported position
+    await expect(page.getByLabel('Node number (1 to 253)')).toHaveValue('2');
+    await page.getByLabel('Name').fill('Ridge 2');
+    await page.getByRole('button', { name: 'Register station' }).click();
+    await expect(page.getByText('Registered Ridge 2 (TN).')).toBeVisible();
+    expect(sent).toMatchObject({ node_id: 2, name: 'Ridge 2', latitude: 10.9, longitude: 76.9, expected_interval_s: 600 });
+  });
 });
