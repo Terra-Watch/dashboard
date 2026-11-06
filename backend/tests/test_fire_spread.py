@@ -33,6 +33,9 @@ class FireSpreadTests(unittest.TestCase):
         for e in ("a1", "b2"):
             json.dump({"type": "FeatureCollection", "features": [], "event": e}, open(run / f"{e}_48h.geojson", "w"))
             json.dump({"type": "FeatureCollection", "features": []}, open(run / f"{e}_pixels.geojson", "w"))
+            json.dump({"type": "FeatureCollection", "features": [], "burned": True}, open(run / f"{e}_burned_48h.geojson", "w"))
+            json.dump({"type": "FeatureCollection", "features": []}, open(run / f"{e}_places_48h.geojson", "w"))
+        json.dump({"own": True}, open(run / "skill.json", "w"))
         cls._env = patch.dict(os.environ, {"FIRE_SPREAD_DIR": str(root)})
         cls._env.start()
         cls._secret = patch.object(security, "RESQ_SECRET_KEY", "test-only-secret-with-more-than-32-bytes")
@@ -55,7 +58,7 @@ class FireSpreadTests(unittest.TestCase):
     def test_admin_sees_every_fire_and_the_skill_numbers(self):
         body = self.client().get("/api/fire-spread/runs/latest").json()
         self.assertEqual({f["event"] for f in body["fires"]}, {"a1", "b2"})
-        self.assertEqual(body["skill"], {"validated": True})
+        self.assertEqual(body["skill"], {"own": True})           # the run carries its own skill file
 
     def test_a_person_scoped_to_one_state_sees_only_that_fire(self):
         with patch.object(fire_spread, "ranger_communities", return_value=None), patch.object(fire_spread, "user_scopes", return_value={"UK"}):
@@ -71,6 +74,21 @@ class FireSpreadTests(unittest.TestCase):
         self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/pixels").status_code, 200)
         self.assertEqual(c.get("/api/fire-spread/..%2F..%2Fetc/a1/48").status_code, 404)
         self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/..%2Fa1/48").status_code, 404)
+
+    def test_the_burned_overlay_and_a_run_specific_skill(self):
+        c = self.client()
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/burned/48").json()["burned"], True)
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/burned/24").status_code, 404)      # no such file written
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/b2/burned/48").status_code, 200)
+        own = Path(self.tmp.name) / "replay-20250312T1200" / "skill.json"; own.rename(own.with_suffix(".off"))
+        try: self.assertEqual(c.get("/api/fire-spread/runs/latest").json()["skill"], {"validated": True})      # without one, the folder's skill file is used
+        finally: own.with_suffix(".off").rename(own)
+
+    def test_places_layer_is_served_and_checked(self):
+        c = self.client()
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/places/48").status_code, 200)
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/roads/48").status_code, 404)       # no such file written
+        self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/secrets/48").status_code, 404)      # only places and roads
 
     def test_a_role_without_risk_access_is_refused(self):
         self.assertEqual(self.client("citizen").get("/api/fire-spread/runs/latest").status_code, 403)

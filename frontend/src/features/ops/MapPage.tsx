@@ -15,7 +15,7 @@ import { IncidentPreview } from '../incidents/IncidentPreview';
 import { Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { SYMBOL_OF_RUNG, boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
-import { TIME_WINDOWS, canShow, withinHours, type LayerId, type TimeWindow } from '../map/profiles';
+import { TIME_WINDOWS, canShow, minutesSinceMidnight, withinHours, type LayerId, type TimeWindow } from '../map/profiles';
 import { communityBox, useCommunities } from '../../lib/community';
 import { useOpsSettings, useIncidents, useOpsRegion, type Incident } from './useOps';
 import { basemapStyle, satelliteStyle } from '../map/style';
@@ -69,8 +69,9 @@ export function OpsMapPage() {
   const communities = useCommunities();
   const incidents = useIncidents();
   const settings = useOpsSettings();
-  const [hours, setHours] = useState<TimeWindow>(24);
+  const [hours, setHours] = useState<TimeWindow>(0);
   const [preset, setPreset] = useState('situation');
+  const [riskDay, setRiskDay] = useState<'today' | 'tomorrow'>('tomorrow');
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<'map' | 'list'>('map');
   const [riskHighOnly, setRiskHighOnly] = useState(false);
@@ -128,7 +129,7 @@ export function OpsMapPage() {
 
   const chosen = (communities.data?.items ?? []).find(c => c.slug === region);
   const box = chosen ? communityBox(chosen) : [74, 15.6, 87.9, 26.9] as [number, number, number, number];
-  const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours}`) });
+  const signals = useQuery({ queryKey: ['map-hotspots', box.join(), hours], retry: false, enabled: layers.has('signals'), queryFn: () => api<{ items: Hotspot[]; freshness: Freshness }>(`/api/hotspots?min_lon=${box[0]}&min_lat=${box[1]}&max_lon=${box[2]}&max_lat=${box[3]}&since_hours=${hours || Math.max(1, Math.ceil(minutesSinceMidnight() / 60))}`).then(r => hours ? r : { ...r, items: r.items.filter(i => i.age_minutes <= minutesSinceMidnight()) }) });
   const wind = useQuery({ queryKey: ['map-wind', region], retry: false, queryFn: () => api<Wind>(`/api/weather/context?lat=${(box[1] + box[3]) / 2}&lon=${(box[0] + box[2]) / 2}`) });
   // always the whole of India, not the current region: a grid that follows the region leaves most of the country without wind and draws a visible rectangle
   const windGrid = useQuery({
@@ -146,7 +147,9 @@ export function OpsMapPage() {
   });
   const latestRun = riskStatus.data?.runs.live ?? riskStatus.data?.runs.replay;
   // an operator pin wins; otherwise show the newest run the server has, not "today" (a run may not exist yet)
-  const riskDate = settings.data?.risk_forecast_date || latestRun?.forecast_date || new Date().toISOString().slice(0, 10);
+  const newestDate = settings.data?.risk_forecast_date || latestRun?.forecast_date || new Date().toISOString().slice(0, 10);
+  // "today" = the forecast issued yesterday for today, to hold against today's detections
+  const riskDate = riskDay === 'today' ? new Date(Date.parse(newestDate) - 86_400_000).toISOString().slice(0, 10) : newestDate;
   
   const riskForecast = useQuery({
     queryKey: ['risk-forecast', riskDate, riskHighOnly],
@@ -187,7 +190,7 @@ export function OpsMapPage() {
       <PageTitle title={t('nav.map')} subtitle={chosen ? chosen.name : t('ops.all_communities', 'All communities')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
       <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.preset', 'What to show')}</p><div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex max-w-full rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div></div>
-        <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.window', 'Time window')}</p><div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex max-w-full rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item} h</button>)}</div></div>
+        <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.window', 'Time window')}</p><div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex max-w-full rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item ? `${item} h` : t('map.today', 'Today')}</button>)}</div></div>
         {satelliteEnabled && (
           <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('basemap.label', 'Basemap')}</p><div role="radiogroup" aria-label={t('basemap.label', 'Basemap')} className="inline-flex rounded-rq border border-control p-1">
             <button key="map" type="button" role="radio" aria-checked={basemapType === 'map'} onClick={() => setBasemapType('map')} className={`min-h-11 rounded-rq px-4 font-semibold ${basemapType === 'map' ? 'bg-action text-on-action' : ''}`}>{t('basemap.map', 'Map')}</button>
@@ -203,6 +206,9 @@ export function OpsMapPage() {
           <span>{t('map.bearings', 'Where reports point')}</span>
         </label>
         {showBearings && bearings.data && <p role="status" className="text-sm text-ink-muted sm:col-span-2 xl:col-span-4">{bearings.data.wedges.length === 0 ? t('map.bearings_none', 'No recent reports with a direction.') : `${t('map.bearings_count', { count: bearings.data.wedges.length, areas: bearings.data.areas.length, defaultValue: '{{count}} recent reports with a direction, {{areas}} areas where they agree.' })} ${bearings.data.label}`}</p>}
+        {layers.has('risk_forecast') && riskEnabled && (
+          <div role="group" aria-label={t('map.risk_day', 'Forecast day')} className="mt-5 inline-flex rounded-rq border border-control p-1">{(['today', 'tomorrow'] as const).map(d => <button key={d} type="button" aria-pressed={riskDay === d} onClick={() => setRiskDay(d)} className={`min-h-11 rounded-rq px-4 font-semibold ${riskDay === d ? 'bg-action text-on-action' : ''}`}>{d === 'today' ? t('map.risk_today', 'Forecast for today') : t('map.risk_tomorrow', 'Forecast for tomorrow')}</button>)}</div>
+        )}
         {layers.has('risk_forecast') && riskEnabled && (
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
             <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />

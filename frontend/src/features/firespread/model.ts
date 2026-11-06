@@ -1,8 +1,13 @@
 import type { MapPoint, MapPolygon } from '../map/geojson';
 
-export type Fire = { event: string; lat: number; lon: number; n_detections: number; first_detection: string; last_detection: string; frp_sum: number };
+export type Summary = { bearing: string; bearing_deg: number; cover: 'tree' | 'shrub' | 'grass' | 'crop'; cover_share: number; uphill_share: number | null; slope_deg: number };
+export type BandFacts = { area_km2: number; people: number; cover: Record<string, number> };
+export type Place = { name: string; kind: string; band: number; distance_km: number; bearing: string; lon: number; lat: number };
+export type Affected = { bands: Record<string, BandFacts>; places: { by_band: Record<string, Record<string, number>> }; nearest_settlement: Place | null; roads_in_bands: number; road_names: string[]; models: number };
+export type Horizon = { file: string; burned_file?: string; places_file?: string; roads_file?: string; cells_scored: number; bands: Record<string, number>; summary?: Summary; affected?: Affected };
+export type Fire = { event: string; lat: number; lon: number; state?: string; n_detections: number; first_detection: string; last_detection: string; frp_sum: number; horizons?: Record<string, Horizon> };
 export type Skill = { horizons: Record<string, { model_iou: number; baseline_iou: number; model_direction_auc: number; baseline_direction_auc: number; cases: number }>; source?: string };
-export type Run = { run: string; mode: 'replay' | 'live'; at: string; fires: Fire[]; note: string; skill: Skill | null };
+export type Run = { run: string; mode: 'replay' | 'live'; at: string; model_tag?: string; fires: Fire[]; note: string; skill: Skill | null };
 type Ring = Array<[number, number]>;
 type Bands = { features: Array<{ properties: { band: number }; geometry: { type: string; coordinates: Ring[][] } }> };
 
@@ -14,6 +19,20 @@ export const BAND_ORDER = [3, 2, 1] as const;
 export function bandPolygons(bands: Bands, id: string): MapPolygon[] {
   return bands.features.flatMap(f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates as unknown as Ring[]])
     .map((poly, i) => ({ id: `${id}-b${f.properties.band}-${i}`, ring: poly[0], tone: TONE[f.properties.band as 1 | 2 | 3] })));
+}
+
+/** The burned cells MODIS later showed, drawn as an outline-style 'observed' polygon (archived fires only). */
+export function burnedPolygons(g: { features: Array<{ geometry: { type: string; coordinates: Ring[][] } }> }, id: string): MapPolygon[] {
+  return g.features.flatMap(f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates as unknown as Ring[]]).map((poly, i) => ({ id: `${id}-burned-${i}`, ring: poly[0], tone: 'observed' as const })));
+}
+
+type Coll = { features: Array<{ geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> }> };
+/** Named places from OpenStreetMap as map points (symbol 'task' is the neutral pin; the legend names them). */
+export function placePoints(c: Coll, id: string): Array<MapPoint & { place: Place }> {
+  return c.features.map((f, i) => { const [lon, lat] = f.geometry.coordinates as [number, number]; const p = f.properties as unknown as Place; return { id: `${id}-pl${i}`, lat, lon, symbol: 'task' as const, label: p.name, place: { ...p, lon, lat } }; });
+}
+export function roadLines(c: Coll, id: string) {
+  return c.features.map((f, i) => ({ id: `${id}-rd${i}`, coords: f.geometry.coordinates as Array<[number, number]>, tone: 'road' as const }));
 }
 
 export function pixelPoints(pixels: { features: Array<{ geometry: { coordinates: [number, number] } }> }, id: string): MapPoint[] {

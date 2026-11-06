@@ -30,6 +30,7 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'map', path: '/ops/map', icon: 'map', labelKey: 'nav.map' },
     { id: 'stations', path: '/ops/stations', icon: 'radio-tower', labelKey: 'nav.stations' },
     { id: 'satellite', path: '/ops/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
+    { id: 'outlook', path: '/ops/outlook', icon: 'flame', labelKey: 'nav.outlook' },
     { id: 'field', path: '/ops/field', icon: 'radio', labelKey: 'nav.field' },
     { id: 'notices', path: '/ops/notices', icon: 'megaphone', labelKey: 'nav.notices' },
   ],
@@ -48,10 +49,10 @@ export const NAV: Record<ProductRole, NavItem[]> = {
 export const MAX_NAV_ITEMS = 7;
 export const BAR_ITEMS = 4;
 
-/** Extra destinations per role, shown only while their setting is on (the what-if page needs the Scenario setting, like the Scenario tab). */
+/** Extra destinations per role, shown only while their setting is on (none at present). */
 export const GATED_NAV: Record<ProductRole, GatedNavItem[]> = {
   citizen: [],
-  control_room: [{ id: 'whatif', path: '/app/whatif', icon: 'flame', labelKey: 'nav.whatif', gate: 'scenario' }],
+  control_room: [],
   field: [],
 };
 
@@ -73,7 +74,7 @@ export function homePath(role: ProductRole | null, built: Record<ProductRole, bo
 export const profilePath = (role: ProductRole | null): string => role === 'citizen' ? '/citizen/account' : role === 'field' ? '/field/me' : role === 'control_room' ? '/ops/me' : '/login';
 
 export function roleOfPath(path: string): ProductRole | null {
-  return path.startsWith('/citizen') ? 'citizen' : path.startsWith('/ops') || path.startsWith('/app/whatif') || path.startsWith('/control-room') ? 'control_room' : path.startsWith('/field') || path.startsWith('/ranger') ? 'field' : null;
+  return path.startsWith('/citizen') ? 'citizen' : path.startsWith('/ops') || path.startsWith('/control-room') ? 'control_room' : path.startsWith('/field') || path.startsWith('/ranger') ? 'field' : null;
 }
 
 /** The nav item that owns this path (a path under /ops/incidents/12 belongs to the queue). */

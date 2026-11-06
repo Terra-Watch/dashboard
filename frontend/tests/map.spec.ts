@@ -26,6 +26,7 @@ test.describe('Control Room map', () => {
 
   test('shows only what belongs: closed incidents and old ones stay off, the window widens on request', async ({ page }) => {
     await page.goto('/ops/map');
+    await page.getByRole('button', { name: '24 h' }).click();                 // the default window is Today (since midnight); these fixtures are dated by hours ago
     const map = page.getByTestId('map');
     await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20000 });
     await expect(map).toHaveAttribute('data-points', '3');            // verified #21, report #22, one satellite signal; not closed #23, not the 30-hour-old #24
@@ -47,6 +48,7 @@ test.describe('Control Room map', () => {
 
   test('the same items are listed for people who cannot use a map; choosing one opens its panel and link', async ({ page }) => {
     await page.goto('/ops/map');
+    await page.getByRole('button', { name: '24 h' }).click();                 // the default window is Today (since midnight); these fixtures are dated by hours ago
     await page.getByRole('button', { name: 'List', exact: true }).click();
     const list = page.getByTestId('map-list');
     await expect(list.getByRole('button')).toHaveCount(3);
@@ -66,6 +68,7 @@ test.describe('Control Room map', () => {
   test('when satellite data is unavailable the page says so and still shows incidents', async ({ page }) => {
     await page.route('**/api/hotspots**', route => route.fulfill(json({ detail: 'off' }, 503)));
     await page.goto('/ops/map');
+    await page.getByRole('button', { name: '24 h' }).click();                 // the default window is Today (since midnight); these fixtures are dated by hours ago
     await expect(page.getByText('Satellite signals are not available right now.')).toBeVisible();
     await expect(page.getByTestId('map')).toHaveAttribute('data-points', '2', { timeout: 20000 });
   });

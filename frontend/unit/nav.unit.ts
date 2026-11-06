@@ -60,3 +60,9 @@ test('with more than five destinations the phone bar keeps four and the capture 
   assert.deepEqual(NAV.control_room.slice(0, 4).map(i => i.id), ['queue', 'map', 'stations', 'satellite']);
   assert.deepEqual(NAV.field.map(i => i.id).slice(0, 5), ['tasks', 'map', 'capture', 'stations', 'satellite']);
 });
+
+test('the control room lists the spread outlook and the old what-if page is gone', () => {
+  assert.ok(NAV.control_room.some(item => item.id === 'outlook' && item.path === '/ops/outlook'));
+  assert.ok(!NAV.control_room.some(item => item.path.includes('whatif')));
+  assert.equal(roleOfPath('/ops/outlook'), 'control_room');
+});

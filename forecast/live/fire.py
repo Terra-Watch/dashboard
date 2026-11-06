@@ -24,14 +24,17 @@ def cell_id(lat, lon):
     return np.round(np.asarray(lat) * 10).astype(np.int64) * 1000 + np.round(np.asarray(lon) * 10).astype(np.int64)
 
 
-def footprint_bnd333(lat, lon, mask):
-    """Share of the 3x3 mask pixels (0.001 degree) around each detection that lie inside forest land."""
+def footprint(lat, lon, mask, half=1):
+    """Share of the (2*half+1) x (2*half+1) mask pixels (0.001 degree) around each detection that lie inside forest land: half=1 is bnd333, half=3 is bnd777."""
     i = np.floor((35.0 - np.asarray(lat)) / 0.001).astype(int); j = np.floor((np.asarray(lon) - 68.0) / 0.001).astype(int)
-    if not ((i >= 1) & (i < mask.shape[0] - 1) & (j >= 1) & (j < mask.shape[1] - 1)).all(): raise ValueError("detection outside the mask grid")
+    if not ((i >= half) & (i < mask.shape[0] - half) & (j >= half) & (j < mask.shape[1] - half)).all(): raise ValueError("detection outside the mask grid")
     s = np.zeros(len(i), np.float32)
-    for di in (-1, 0, 1):
-        for dj in (-1, 0, 1): s += mask[i + di, j + dj]
-    return s / 9.0
+    for di in range(-half, half + 1):
+        for dj in range(-half, half + 1): s += mask[i + di, j + dj]
+    return s / float((2 * half + 1) ** 2)
+
+
+def footprint_bnd333(lat, lon, mask): return footprint(lat, lon, mask, 1)
 
 
 def daily_flags(det, mask):
@@ -41,13 +44,19 @@ def daily_flags(det, mask):
     return d.groupby(["cell_id", "date"], as_index=False).forest.max()
 
 
+FIRMS_COLS = ["latitude", "longitude", "date", "acq_time", "bright_ti4", "bright_ti5", "frp", "scan", "track", "daynight", "confidence", "satellite"]
+
+
 def parse_firms(csv_text, satellite):
-    """FIRMS area CSV -> detections the way training kept them: confidence nominal or high; one row per location, time, satellite."""
-    if not csv_text.strip() or csv_text.lstrip().lower().startswith(("invalid", "error")): return pd.DataFrame(columns=["latitude", "longitude", "date"])
+    """FIRMS area CSV -> detections the way training kept them: confidence nominal or high; one row per location, time, satellite. The measurements stay (the quality filter needs them)."""
+    if not csv_text.strip() or csv_text.lstrip().lower().startswith(("invalid", "error")): return pd.DataFrame(columns=FIRMS_COLS)
     df = pd.read_csv(io.StringIO(csv_text)); df.columns = [c.strip().lower() for c in df.columns]
-    df = df[df.confidence.astype(str).str.strip().str.lower().isin(["n", "h", "nominal", "high"])]
+    conf = df.confidence.astype(str).str.strip().str.lower().str[0]
+    df = df[conf.isin(["n", "h"])]; conf = conf[df.index]
     df = df.drop_duplicates(["latitude", "longitude", "acq_date", "acq_time"])
-    return pd.DataFrame({"latitude": df.latitude.values, "longitude": df.longitude.values, "date": pd.to_datetime(df.acq_date).values})
+    return pd.DataFrame({"latitude": df.latitude.values, "longitude": df.longitude.values, "date": pd.to_datetime(df.acq_date).values, "acq_time": df.acq_time.values,
+                         "bright_ti4": df.bright_ti4.values, "bright_ti5": df.bright_ti5.values, "frp": df.frp.values, "scan": df.scan.values, "track": df.track.values,
+                         "daynight": df.daynight.astype(str).str.strip().str.upper().values, "confidence": conf.loc[df.index].values, "satellite": satellite})
 
 
 def _get(client, url):
@@ -83,7 +92,7 @@ def fetch_firms(bbox, start, end, key, client=None):
             if r.status_code != 200: errors.append((src, f"{day:%Y-%m-%d}", r.status_code))
             else: rows.append(parse_firms(r.text, src))
             day = stop + pd.Timedelta(days=1)
-    return (pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(columns=["latitude", "longitude", "date"])), errors
+    return (pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(columns=FIRMS_COLS)), errors
 
 
 def fire_channels(store, cell_ids, day):

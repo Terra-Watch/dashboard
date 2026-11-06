@@ -66,7 +66,7 @@ def latest(user: dict = Depends(require_risk_roles(*ROLES))):
     d = _latest_run()
     body = _json(d / "events.json")
     body["fires"] = _visible(body["fires"], user)
-    skill = d.parent / "skill.json"
+    skill = d / "skill.json" if (d / "skill.json").is_file() else d.parent / "skill.json"       # a run carries the skill of the model that scored it
     body["skill"] = _json(skill) if skill.is_file() else None
     return body
 
@@ -74,6 +74,22 @@ def latest(user: dict = Depends(require_risk_roles(*ROLES))):
 @router.get("/{run}/{event}/pixels")
 def pixels(run: str, event: str, user: dict = Depends(require_risk_roles(*ROLES))):
     return _json(_event_files(run, event, user) / f"{event}_pixels.geojson")
+
+
+@router.get("/{run}/{event}/burned/{horizon}")
+def burned(run: str, event: str, horizon: int, user: dict = Depends(require_risk_roles(*ROLES))):
+    """What MODIS later showed burned, for archived (replay) fires only; the file is absent for a live fire."""
+    if horizon not in HORIZONS:
+        raise HTTPException(status_code=404, detail="Horizon must be 24 or 48 hours")
+    return _json(_event_files(run, event, user) / f"{event}_burned_{horizon}h.geojson")
+
+
+@router.get("/{run}/{event}/layer/{name}/{horizon}")
+def layer(run: str, event: str, name: str, horizon: int, user: dict = Depends(require_risk_roles(*ROLES))):
+    """What the bands run over: named places and public buildings (name = places) or roads and tracks (name = roads), from OpenStreetMap."""
+    if horizon not in HORIZONS or name not in ("places", "roads"):
+        raise HTTPException(status_code=404, detail="Not available")
+    return _json(_event_files(run, event, user) / f"{event}_{name}_{horizon}h.geojson")
 
 
 @router.get("/{run}/{event}/{horizon}")

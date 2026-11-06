@@ -17,7 +17,9 @@ export function visibleLayers(role: MapRole, requested: Iterable<LayerId>): Set<
   return new Set([...requested].filter(layer => canShow(role, layer)));
 }
 
-export const TIME_WINDOWS = [6, 24, 72] as const;
+/** 0 means "today": since local midnight. */
+export const TIME_WINDOWS = [0, 6, 24, 72] as const;
+export const minutesSinceMidnight = (now: Date = new Date()): number => now.getHours() * 60 + now.getMinutes();
 export type TimeWindow = (typeof TIME_WINDOWS)[number];
 
 export const withinHours = (iso: string, hours: number, now: number = Date.now()): boolean => {

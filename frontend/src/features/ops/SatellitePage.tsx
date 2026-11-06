@@ -47,7 +47,7 @@ export function SatellitePage() {
         </label>
         <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={forestOnly} onChange={e => setForestOnly(e.target.checked)} className="h-4 w-4" />{t('ops.satellite.forest_only', 'Forest cells only')}</label>
         {q.data && <span className="text-sm text-ink-muted" role="status">{t('ops.satellite.updated', { when: formatWhen(q.data.freshness.fetched_at), defaultValue: 'Updated {{when}}' })} · {items.length} {t('ops.satellite.count', 'detections')}{forestOnly && all.length > items.length ? ` (${all.length - items.length} ${t('ops.satellite.hidden', 'outside forest cells hidden')})` : ''}</span>}
-        <Link to="/ops/fire-spread" className="ml-auto text-sm font-semibold underline">{t('firespread.link', 'Fire spread: likely next areas')}</Link>
+        <Link to="/ops/outlook" className="ml-auto text-sm font-semibold underline">{t('outlook.link', 'Spread outlook: likely next areas')}</Link>
         <Link to="/ops/map" className="text-sm font-semibold underline">{t('ops.satellite.on_map', 'See it on the main map')}</Link>
       </div>
       {stale && <Notice kind="warning">{t('ops.satellite.stale', 'The satellite feed has not updated recently, so this list may be behind.')}</Notice>}

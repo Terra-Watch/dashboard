@@ -19,7 +19,7 @@ export function AppShell({ role, userName, pending = 0, onSignOut, topSlot, chil
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const main = useRef<HTMLElement>(null);
-  // The what-if page is listed for the Control Room only, and only while the Scenario setting is on (same rule as the Scenario tab).
+  // Destinations behind an ops setting (none at present) are listed for the Control Room only while their setting is on.
   const settings = useOpsSettings(role === 'control_room');
   const items = navFor(role, { scenario: role === 'control_room' && settings.data?.scenario_enabled === true });
   const current = activeItem(role, pathname);

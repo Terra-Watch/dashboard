@@ -257,13 +257,13 @@ test.describe('Control Room', () => {
     await expect.poll(() => calls).toEqual([{ action: 'remove', reason: 'Phone number in a public post' }]);
   });
 
-  test('navigation: six destinations on the rail, current page marked', async ({ page }) => {
+  test('navigation: seven destinations on the rail, current page marked', async ({ page }) => {
     await page.route('**/api/incidents', route => route.fulfill(json([])));
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/ops/queue');
     const rail = page.getByRole('navigation', { name: 'Main navigation' }).first();
-    await expect(rail.getByRole('link')).toHaveCount(6);
-    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Field', 'Notices']);
+    await expect(rail.getByRole('link')).toHaveCount(7);
+    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Spread outlook', 'Field', 'Notices']);
     await expect(rail.getByRole('link', { name: 'Queue' })).toHaveAttribute('aria-current', 'page');
   });
 
