@@ -1,8 +1,8 @@
 """Create repeatable local-only TerraWatch development accounts.
 
 This command refuses non-loopback database hosts and requires an explicit
-confirmation flag. It changes only the three reserved *.dev@terrawatch.local
-accounts and writes generated credentials to backend/.dev-credentials.
+confirmation flag. It changes only the four reserved *.dev@terrawatch.local
+accounts (citizen, ranger, control room, admin) and writes generated credentials to backend/.dev-credentials.
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ ACCOUNTS = (
     ("citizen.dev@terrawatch.local", "TerraWatch Local Citizen", "citizen", None),
     ("ranger.dev@terrawatch.local", "TerraWatch Local Ranger", "field_crew", "OD"),
     ("controlroom.dev@terrawatch.local", "TerraWatch Local Control Room", "control_room_operator", "OD"),
+    ("admin.dev@terrawatch.local", "TerraWatch Local Admin", "admin", "OD"),          # registers lookout stations and sees the Admin page
 )
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 CREDENTIALS_FILE = BACKEND / ".dev-credentials"
