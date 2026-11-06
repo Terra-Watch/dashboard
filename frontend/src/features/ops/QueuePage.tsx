@@ -173,7 +173,7 @@ type T = TFunction;
 function trustLine(event: QueueEvent, t: T): string {
   const f = event.facts;
   if (event.kind === 'station') {
-    const base = f.sound ? t(f.sound.kind === 'chainsaw' ? 'ops.q.sig.chainsaw' : 'ops.q.sig.blast', { pct: f.sound.confidence, defaultValue: f.sound.kind === 'chainsaw' ? 'Heard what sounds like a chainsaw, {{pct}} % sure. A sound model, not a person.' : 'Heard what sounds like a gunshot or blast, {{pct}} % sure. A sound model, not a person.' })
+    const base = f.sound ? t(`ops.q.sig.${f.sound.kind}`, { pct: f.sound.confidence, defaultValue: ({ chainsaw: 'Heard what sounds like a chainsaw, {{pct}} % sure. A sound model, not a person.', fire: 'Heard what sounds like an open fire crackling, {{pct}} % sure. A sound model, not a person.' } as Record<string, string>)[f.sound.kind] ?? 'Heard what sounds like a gunshot or blast, {{pct}} % sure. A sound model, not a person.' })
       : t('ops.q.sig.pm', { ratio: (f.pmRatio ?? 0).toFixed(1), defaultValue: 'Air-quality reading {{ratio}} times its usual level. Not a fire detector.' });
     return f.nearIncident ? `${base} ${t('ops.q.sig.near', { id: f.nearIncident, defaultValue: 'A report is already open nearby: #{{id}}.' })}` : base;
   }

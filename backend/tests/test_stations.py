@@ -40,7 +40,8 @@ def test_payload_decodes_and_marks_missing_fields():
 def test_sound_alert_payload():
     assert st.decode_sound(bytes([0x41, 1, 1, 61])) == {"kind": "chainsaw", "confidence": 61}
     assert st.decode_sound(bytes([0x41, 1, 2, 100])) == {"kind": "blast", "confidence": 100}
-    assert st.decode_sound(bytes([0x41, 1, 3, 50])) is None and st.decode_sound(bytes([0x41, 1, 1, 101])) is None and st.decode_sound(bytes([0x41, 1, 1])) is None
+    assert st.decode_sound(bytes([0x41, 1, 3, 70])) == {"kind": "fire", "confidence": 70} and st.decode_sound(bytes([0x41, 1, 4, 70])) is None
+    assert st.decode_sound(bytes([0x41, 1, 9, 50])) is None and st.decode_sound(bytes([0x41, 1, 1, 101])) is None and st.decode_sound(bytes([0x41, 1, 1])) is None
     assert st.decode_payload(bytes([0x41, 1, 1, 61])) is None       # not a reading
 
 

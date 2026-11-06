@@ -96,7 +96,7 @@ def _sound_alert(station_id: int, sound: dict) -> None:
         s = db.execute(text('SELECT name,state,community_id,latitude,longitude FROM resq_stations WHERE id=:i'), {'i': station_id}).mappings().first()
         cid = communities.at_point(db, s['latitude'], s['longitude']) if s and s['community_id'] is None else (s['community_id'] if s else None)
     if not s: return
-    what = 'a chainsaw' if sound['kind'] == 'chainsaw' else 'a gunshot or blast'
+    what = {'chainsaw': 'a chainsaw', 'blast': 'a gunshot or blast', 'fire': 'an open fire crackling'}.get(sound['kind'], 'an unusual sound')
     for rid in incident_staff_recipients(s['state'], community_id=cid):
         generate_alert(kind='station_sound', message=f"Station '{s['name']}' heard what sounds like {what} ({sound['confidence']} % sure). A sound classifier, not a person: check it.",
                        state=s['state'], severity='warning', entity_type='station', entity_id=str(station_id), user_id=rid)

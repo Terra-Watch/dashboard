@@ -10,7 +10,7 @@ export type Station = {
   last_sound: { kind: SoundKind; confidence: number; age_s: number } | null;
   distance_km?: number; bearing?: string;
 };
-export type SoundKind = 'chainsaw' | 'blast';
+export type SoundKind = 'chainsaw' | 'blast' | 'fire';
 export type SoundEvent = { at: string; kind: SoundKind; confidence: number };
 export type StationsResponse = { label: string; items: Station[] };
 export type SeriesPoint = { t: string; pm25: number | null; pm10: number | null; temp_c: number | null; humidity_pct: number | null };
@@ -45,4 +45,4 @@ export const counts = (items: Station[]) => ({ online: items.filter(s => s.statu
   offline: items.filter(s => s.status === 'offline' || s.status === 'never').length, high: items.filter(isHigh).length });
 
 /** Plain words for what a station's sound classifier reported. It is a classifier's guess, never a confirmed event. */
-export const soundName = (k: SoundKind): string => (k === 'chainsaw' ? 'Chainsaw' : 'Gunshot or blast');
+export const soundName = (k: SoundKind): string => (k === 'chainsaw' ? 'Chainsaw' : k === 'fire' ? 'Open fire' : 'Gunshot or blast');

@@ -34,10 +34,16 @@ def ensure(db) -> None:
         received_at TIMESTAMPTZ NOT NULL,
         node_seq INTEGER NOT NULL DEFAULT 0,
         rssi SMALLINT, snr REAL,
-        kind TEXT NOT NULL CHECK (kind IN ('chainsaw','blast')),
+        kind TEXT NOT NULL CHECK (kind IN ('chainsaw','blast','fire')),
         confidence SMALLINT NOT NULL CHECK (confidence BETWEEN 0 AND 100),
         UNIQUE (station_id, received_at, node_seq)
     )'''))
+    # tables made before the 'fire' kind existed carry the older two-kind check: replace it once
+    db.execute(text('''DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'resq_station_sounds_kind_check' AND pg_get_constraintdef(oid) NOT LIKE '%fire%') THEN
+            ALTER TABLE resq_station_sounds DROP CONSTRAINT resq_station_sounds_kind_check;
+            ALTER TABLE resq_station_sounds ADD CONSTRAINT resq_station_sounds_kind_check CHECK (kind IN ('chainsaw','blast','fire'));
+        END IF; END $$;'''))
     db.execute(text('CREATE INDEX IF NOT EXISTS resq_station_sounds_latest ON resq_station_sounds (station_id, received_at DESC)'))
     db.execute(text('''CREATE TABLE IF NOT EXISTS resq_station_unknown (
         node_id INTEGER PRIMARY KEY, first_heard TIMESTAMPTZ NOT NULL DEFAULT now(), last_heard TIMESTAMPTZ NOT NULL DEFAULT now(), heard INTEGER NOT NULL DEFAULT 1
