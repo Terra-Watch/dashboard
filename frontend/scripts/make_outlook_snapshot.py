@@ -17,8 +17,8 @@ for H in (24, 48):
 roads = "".join(line(f["geometry"]["coordinates"]) for f in load(f"{ev}_roads_24h.geojson")["features"] if f["geometry"]["type"] == "LineString")
 places = [{"name": f["properties"]["name"], "kind": f["properties"]["kind"], "xy": list(pt(f["geometry"]["coordinates"]))} for f in load(f"{ev}_places_24h.geojson")["features"]
           if f["properties"]["kind"] in ("village", "town") and 4 < pt(f["geometry"]["coordinates"])[0] < 96 and 4 < pt(f["geometry"]["coordinates"])[1] < 96][:5]
-foot = [list(pt(f["geometry"]["coordinates"])) for f in load(f"{ev}_pixels.geojson")["features"]]
-cx, cy = sum(p[0] for p in foot) / len(foot), sum(p[1] for p in foot) / len(foot)
+fp = load(f"{ev}_pixels.geojson")["features"]; foot = "".join(poly(f["geometry"]) for f in fp)
+pts = [pt(c) for f in fp for r in rings(f["geometry"]) for c in r]; cx, cy = sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts)
 out = (f"// Generated from the spread-outlook run {events['run']}, fire {ev} ({fire['state']}). Archived fire, scored as it would have been then. Roads and places from OpenStreetMap.\n"
        f"export const OUTLOOK = {{ state: {json.dumps(fire['state'])}, halfKm: {half}, centre: [{cx:.1f}, {cy:.1f}], horizons: {json.dumps(hz)}, roads: {json.dumps(roads)}, places: {json.dumps(places)}, footprint: {json.dumps(foot)} }};\n")
 open("src/features/landing/outlookData.ts", "w").write(out); print(len(out) // 1000, "kB", len(places), "places")

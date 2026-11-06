@@ -21,9 +21,14 @@ export function bandPolygons(bands: Bands, id: string): MapPolygon[] {
     .map((poly, i) => ({ id: `${id}-b${f.properties.band}-${i}`, ring: poly[0], tone: TONE[f.properties.band as 1 | 2 | 3] })));
 }
 
-/** The burned cells MODIS later showed, drawn as an outline-style 'observed' polygon (archived fires only). */
+/** The burned cells MODIS later showed, drawn as a dashed outline (archived fires only). */
 export function burnedPolygons(g: { features: Array<{ geometry: { type: string; coordinates: Ring[][] } }> }, id: string): MapPolygon[] {
-  return g.features.flatMap(f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates as unknown as Ring[]]).map((poly, i) => ({ id: `${id}-burned-${i}`, ring: poly[0], tone: 'observed' as const })));
+  return g.features.flatMap(f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates as unknown as Ring[]]).map((poly, i) => ({ id: `${id}-burned-${i}`, ring: poly[0], tone: 'envelope' as const })));
+}
+
+/** The fire at the start: one outline around the cells within 190 m of its detections. */
+export function footprintPolygons(g: { features: Array<{ geometry: { type: string; coordinates: Ring[][] } }> }, id: string): MapPolygon[] {
+  return g.features.flatMap(f => (f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates as unknown as Ring[]]).map((poly, i) => ({ id: `${id}-start-${i}`, ring: poly[0], tone: 'observed' as const })));
 }
 
 type Coll = { features: Array<{ geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> }> };

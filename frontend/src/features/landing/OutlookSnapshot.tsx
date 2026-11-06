@@ -35,8 +35,8 @@ export function OutlookSnapshot() {
         {LAYERS.map(({ band, fill, opacity }, i) => (
           <motion.path key={`${h}-${band}`} d={(d.bands as Record<number, string>)[band]} fill={fill} initial={reduce ? false : { opacity: 0 }} animate={{ opacity }} transition={{ duration: 0.45, delay: i * 0.12, ease: 'easeOut' }} />
         ))}
-        {showBurned && <path d={d.burned} fill="none" stroke="var(--tw-text, #111)" strokeWidth="0.55" strokeDasharray="1.6 1" />}
-        {OUTLOOK.footprint.map(([x, y], i) => <rect key={i} x={x - 0.5} y={y - 0.5} width="1" height="1" fill="var(--tw-danger)" stroke="#fff" strokeWidth="0.15" />)}
+        {showBurned && <path d={d.burned} fill="none" stroke="var(--tw-unconfirmed, #555)" strokeWidth="0.6" strokeDasharray="1.6 1" />}
+        <path d={OUTLOOK.footprint} fill="none" stroke="var(--tw-text, #111)" strokeWidth="0.9" />
         <g stroke="var(--tw-text, #111)" fill="var(--tw-text, #111)"><line x1={cx} y1={cy} x2={ax} y2={ay} strokeWidth="1.1" strokeLinecap="round" /><circle cx={ax} cy={ay} r="1.6" /></g>
         {OUTLOOK.places.map(p => <g key={p.name}><rect x={p.xy[0] - 1} y={p.xy[1] - 1} width="2" height="2" fill="var(--tw-text, #111)" stroke="#fff" strokeWidth="0.3" /><text x={p.xy[0] + 2} y={p.xy[1] + 1} fontSize="3.4" fill="var(--tw-text, #111)" stroke="#fff" strokeWidth="0.7" paintOrder="stroke">{p.name}</text></g>)}
         <g transform="translate(93 10)" fill="var(--tw-text, #111)"><path d="M0 -5 L2.2 1 L0 0 L-2.2 1Z" /><text y="6.5" fontSize="3.6" textAnchor="middle">N</text></g>
@@ -49,7 +49,7 @@ export function OutlookSnapshot() {
       <dl className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
         {(['3', '2', '1'] as const).map(b => <div key={b} className="rounded-rq bg-surface-2 px-2 py-2"><dt className="text-ink-muted">{t(`outlook.band${b}`, ['', 'Possible', 'Likely', 'Most likely'][Number(b)])}</dt><dd className="font-bold">{d.people[b].toLocaleString()} <span className="font-normal text-ink-muted">{t('landing.v4.outlook.people', 'people')}</span></dd></div>)}
       </dl>
-      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v4.outlook.caption2', 'An archived fire in {{state}}, scored as it would have been then. The arrow points toward the most likely band; red squares are the fire at the start. Roads and village from OpenStreetMap, people from a 1 km population grid.', { state: OUTLOOK.state })}</figcaption>
+      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v4.outlook.caption2', 'An archived fire in {{state}}, scored as it would have been then. The arrow points toward the most likely band; the dark outline is the fire at the start. Roads and village from OpenStreetMap, people from a 1 km population grid.', { state: OUTLOOK.state })}</figcaption>
     </figure>
   );
 }

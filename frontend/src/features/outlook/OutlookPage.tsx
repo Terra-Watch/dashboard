@@ -8,7 +8,7 @@ import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page'
 import { formatWhen } from '../citizen/format';
 import { boundsOf } from '../map/geojson';
 import { MapView } from '../map/MapView';
-import { BAND_ORDER, bandPolygons, burnedPolygons, pixelPoints, placePoints, roadLines, type Place, type Run, type Summary } from '../firespread/model';
+import { BAND_ORDER, bandPolygons, burnedPolygons, footprintPolygons, placePoints, roadLines, type Place, type Run, type Summary } from '../firespread/model';
 
 const HORIZONS = [24, 48] as const;
 const SWATCH: Record<number, string> = { 3: 'bg-danger/70', 2: 'bg-danger/40', 1: 'bg-warn/40' };
@@ -40,15 +40,15 @@ export function OutlookPage() {
   const base = run.data && fire ? `/api/fire-spread/${run.data.run}/${fire.event}` : null;
   const horizon = fire?.horizons?.[String(hours)];
   const bands = useQuery({ queryKey: ['outlook', base, hours], enabled: !!base, retry: false, queryFn: () => api<Parameters<typeof bandPolygons>[0]>(`${base}/${hours}`) });
-  const pixels = useQuery({ queryKey: ['outlook', base, 'pixels'], enabled: !!base, retry: false, queryFn: () => api<Parameters<typeof pixelPoints>[0]>(`${base}/pixels`) });
+  const pixels = useQuery({ queryKey: ['outlook', base, 'pixels'], enabled: !!base, retry: false, queryFn: () => api<Parameters<typeof footprintPolygons>[0]>(`${base}/pixels`) });
   const burned = useQuery({ queryKey: ['outlook', base, hours, 'burned'], enabled: !!base && showBurned && !!horizon?.burned_file, retry: false, queryFn: () => api<Parameters<typeof burnedPolygons>[0]>(`${base}/burned/${hours}`) });
   const places = useQuery({ queryKey: ['outlook', base, hours, 'places'], enabled: !!base && !!horizon?.places_file, retry: false, queryFn: () => api<Parameters<typeof placePoints>[0]>(`${base}/layer/places/${hours}`) });
   const roads = useQuery({ queryKey: ['outlook', base, hours, 'roads'], enabled: !!base && showRoads && !!horizon?.roads_file, retry: false, queryFn: () => api<Parameters<typeof roadLines>[0]>(`${base}/layer/roads/${hours}`) });
   const placePts = useMemo(() => (places.data && fire ? placePoints(places.data, `${fire.event}-${hours}`) : []), [places.data, fire, hours]);
   const TONE_BAND: Record<string, number> = { cell: 3, warning: 2, advisory: 1 };
-  const polygons = useMemo(() => [...(bands.data && fire ? bandPolygons(bands.data, `${fire.event}-${hours}`).filter(p => bandsOn.has(TONE_BAND[p.tone] ?? 0)) : []), ...(showBurned && burned.data && fire ? burnedPolygons(burned.data, `${fire.event}-${hours}`) : [])], [bands.data, burned.data, showBurned, bandsOn, fire, hours]);
+  const polygons = useMemo(() => [...(bands.data && fire ? bandPolygons(bands.data, `${fire.event}-${hours}`).filter(p => bandsOn.has(TONE_BAND[p.tone] ?? 0)) : []), ...(showBurned && burned.data && fire ? burnedPolygons(burned.data, `${fire.event}-${hours}`) : []), ...(pixels.data && fire ? footprintPolygons(pixels.data, fire.event) : [])], [bands.data, burned.data, pixels.data, showBurned, bandsOn, fire, hours]);
   const chosen = placePts.find(p => p.id === picked)?.place ?? null;
-  const points = useMemo(() => [...(pixels.data && fire ? pixelPoints(pixels.data, fire.event) : []), ...(showPlaces ? placePts : [])], [pixels.data, fire, showPlaces, placePts]);
+  const points = useMemo(() => (showPlaces ? placePts : []), [showPlaces, placePts]);
   const lines = useMemo(() => (showRoads && roads.data && fire ? roadLines(roads.data, `${fire.event}-${hours}`) : []), [showRoads, roads.data, fire, hours]);
   const bounds = useMemo(() => chosen ? boundsOf([{ lat: chosen.lat - 0.012, lon: chosen.lon - 0.012 }, { lat: chosen.lat + 0.012, lon: chosen.lon + 0.012 }]) : boundsOf(polygons.length ? polygons.flatMap(p => p.ring.map(([lon, lat]) => ({ lat, lon }))) : fire ? [{ lat: fire.lat - 0.1, lon: fire.lon - 0.1 }, { lat: fire.lat + 0.1, lon: fire.lon + 0.1 }] : []), [polygons, fire, chosen]);
   const skill = run.data?.skill?.horizons[String(hours)];
@@ -84,6 +84,7 @@ export function OutlookPage() {
                     </div>
                     <ul aria-label={tt('outlook.legend', 'Likelihood bands')} className="flex flex-wrap gap-3 text-sm">
                       {BAND_ORDER.map(b => <li key={b}><label className="inline-flex min-h-11 items-center gap-1.5"><input type="checkbox" checked={bandsOn.has(b)} onChange={() => setBandsOn(prev => { const n = new Set(prev); if (n.has(b)) n.delete(b); else n.add(b); return n; })} className="h-4 w-4" /><span aria-hidden className={`inline-block h-3 w-5 rounded-sm border border-line ${SWATCH[b]}`} />{bandName[b]}</label></li>)}
+                      <li className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block h-3 w-5 rounded-sm border-2 border-ink" />{tt('outlook.start_key', 'Fire at the start')}</li>
                       {showBurned && <li className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block h-3 w-5 rounded-sm border border-dashed border-ink" />{tt('outlook.burned_key', 'Burned (satellite)')}</li>}
                     </ul>
                     <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showPlaces} onChange={e => setShowPlaces(e.target.checked)} className="h-4 w-4" />{tt('outlook.show_places', 'Places')}</label>
@@ -121,6 +122,7 @@ export function OutlookPage() {
                     : <p className="text-sm text-ink-muted">{tt('outlook.skill_none', 'The measured skill is not available for this run.')}</p>}
                   <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-muted">
                     <li>{tt('outlook.limit1', 'It ranks cells within 8 km of the fire. It does not say how far or how fast the fire will go.')}</li>
+                    <li>{tt('outlook.limit4', 'The bands are sized by how much usually burns: the top band holds about 2% of the cells asked about at 24 hours and about 3% at 48 hours. The 24 and 48 hour rankings are similar, so the maps differ mostly in size.')}</li>
                     <li>{tt('outlook.limit2', 'Wind is not used. It did not improve the ranking in testing.')}</li>
                     <li>{tt('outlook.limit3', 'The truth it was tested against is a satellite burned-area map, not a field-checked perimeter.')}</li>
                   </ul>
