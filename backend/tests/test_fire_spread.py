@@ -101,6 +101,10 @@ class FireSpreadTests(unittest.TestCase):
             with patch.dict(os.environ, {"FIRE_SPREAD_DIR": root}):
                 self.assertEqual(self.client().get("/api/fire-spread/runs/latest").json()["run"], "live-2026")
 
+    def test_the_archived_runs_shipped_with_the_code_are_the_default(self):
+        with patch.dict(os.environ, {"FIRE_SPREAD_DIR": ""}):
+            self.assertTrue(any(fire_spread._root().glob("*/events.json")))                       # a deployment without runtime_data still has a run to show
+
     def test_no_run_gives_a_plain_404(self):
         with tempfile.TemporaryDirectory() as empty, patch.dict(os.environ, {"FIRE_SPREAD_DIR": empty}):
             self.assertEqual(self.client().get("/api/fire-spread/runs/latest").status_code, 404)

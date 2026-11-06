@@ -20,7 +20,12 @@ _SAFE = re.compile(r"^[A-Za-z0-9T_-]{1,60}$")
 
 
 def _root() -> Path:
-    return Path(os.environ.get("FIRE_SPREAD_DIR") or Path(__file__).resolve().parents[2] / "runtime_data" / "fire_spread")
+    """FIRE_SPREAD_DIR if set; else runtime_data/fire_spread when it holds a run; else the archived runs shipped with the code (app/fire_spread_data), which is what a read-only
+    serverless deployment sees, because runtime_data is not part of the repository."""
+    if os.environ.get("FIRE_SPREAD_DIR"):
+        return Path(os.environ["FIRE_SPREAD_DIR"])
+    local = Path(__file__).resolve().parents[2] / "runtime_data" / "fire_spread"
+    return local if local.is_dir() and any(local.glob("*/events.json")) else Path(__file__).resolve().parents[1] / "fire_spread_data"
 
 
 def _json(path: Path):

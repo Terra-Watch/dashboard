@@ -12,12 +12,12 @@ const LAYERS = [
 ] as const;
 const LEGEND = [[0, 'Highest 1%'], [1, 'Next 4%'], [2, 'Next 10%'], [3, 'Lower']] as const;
 
-/** The archived forecast for one real day over the six states' forest cells. Ranks only, never a raw score. */
+/** The archived forecast for one real day over the forest cells of every state in the bundle. Ranks only, never a raw score. */
 export function ForecastSnapshot({ legend = true }: { legend?: boolean }) {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const day = new Date(`${SNAPSHOT.date}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const alt = t('landing.v3.snapshot.alt', 'Map of forest cells in Odisha, Chhattisgarh, Telangana, Madhya Pradesh, Maharashtra and Jharkhand, shaded by next-day fire rank');
+  const alt = t('landing.v4.snapshot.alt', 'Map of forest cells in {{count}} Indian states, shaded by next-day fire rank', { count: SNAPSHOT.states.length });
   return (
     <figure className="min-w-0 rounded-2xl border border-line bg-surface p-4">
       <svg viewBox={`-1 -1 ${SNAPSHOT.width + 2} ${SNAPSHOT.height + 2}`} role="img" aria-label={alt} shapeRendering="crispEdges" className="w-full">
@@ -31,7 +31,7 @@ export function ForecastSnapshot({ legend = true }: { legend?: boolean }) {
           {LEGEND.map(([band, label]) => <li key={band} className="flex items-center gap-2"><span aria-hidden="true" className="size-3.5 rounded-sm" style={{ background: LAYERS[4 - band].fill, opacity: LAYERS[4 - band].opacity }} />{t(`landing.v3.snapshot.l${band}`, label)}</li>)}
         </ul>
       )}
-      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v3.snapshot.caption', 'Archived forecast for {{day}}: {{ranked}} of {{cells}} forest cells ranked for the next day. Faint cells had no ranking that day.', { day, ranked: SNAPSHOT.ranked.toLocaleString(), cells: SNAPSHOT.cells.toLocaleString() })}</figcaption>
+      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v4.snapshot.caption', 'Forecast for {{day}}: all {{cells}} forest cells in {{states}} states ranked for the next day.', { day, cells: SNAPSHOT.cells.toLocaleString(), states: SNAPSHOT.states.length })}</figcaption>
     </figure>
   );
 }

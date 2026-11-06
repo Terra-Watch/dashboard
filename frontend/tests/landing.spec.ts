@@ -7,7 +7,7 @@ test.describe('landing page', () => {
   test('the installed app opens a signed-in person on their own workspace; a visitor still sees the introduction', async ({ page }) => {
     await page.route('**/api/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [] }) }));
     await page.goto('/?source=pwa');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is most likely to start tomorrow');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is likely tomorrow');
     await page.addInitScript(() => { localStorage.setItem('resq_token', 't'); localStorage.setItem('resq_user', JSON.stringify({ id: 3, name: 'Asha', email: 'a@x.in', role: 'field_crew' })); });
     await page.goto('/?source=pwa');
     await expect(page).toHaveURL(/\/field\/tasks/);
@@ -15,7 +15,7 @@ test.describe('landing page', () => {
 
   test('introduces the product, has no community link, and is honest when no public data exists', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is most likely to start tomorrow');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is likely tomorrow');
     await expect(page.getByRole('link', { name: 'Report a fire' }).first()).toBeVisible();
     await expect(page.getByText('If anyone is in danger, call emergency services first.')).toBeVisible();
     await expect(page.getByRole('navigation').getByRole('link', { name: /community/i })).toHaveCount(0);
@@ -59,11 +59,11 @@ test.describe('landing page', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Language', exact: true }).click();
     await page.getByRole('menuitem', { name: 'हिन्दी' }).click();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('कल जंगल की आग');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('कल आग कहाँ की संभावना है');
     expect(await page.evaluate(() => document.documentElement.lang)).toBe('hi');
     await page.getByRole('button', { name: 'भाषा', exact: true }).click();
     await page.getByRole('menuitem', { name: 'English' }).click();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is most likely to start tomorrow');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where wildfire is likely tomorrow');
   });
 
   for (const scheme of ['light', 'dark'] as const) {
@@ -80,5 +80,18 @@ test.describe('landing page', () => {
         expect(serious.map(item => `${item.id}: ${item.nodes[0]?.html.slice(0, 120)}`)).toEqual([]);
       }
     });
+  }
+});
+
+test('the landing page shows the spread outlook picture and the evidence numbers', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Know where an active fire is likely to go next' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tested before it is shown' })).toBeVisible();
+  await expect(page.getByText('17', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: '48 h' }).click();
+  await page.getByLabel('Show what actually burned').check();
+  for (const [i, name] of ['See where wildfire is likely tomorrow', 'Tested before it is shown', 'See where fire is most likely tomorrow', 'Know where an active fire is likely to go next', 'Lookout stations that watch the forest between satellite passes', 'What TerraWatch does'].entries()) {
+    const h = page.getByRole('heading', { name }).first(); await h.scrollIntoViewIfNeeded(); await page.waitForTimeout(1800);
+    await page.screenshot({ path: `test-results/landing-${i}.png` });
   }
 });

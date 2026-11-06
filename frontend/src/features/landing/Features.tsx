@@ -1,20 +1,23 @@
-import { CalendarClock, ClipboardList, FileText, FlaskConical, Languages, ListTodo, Map as MapIcon, MapPin, Megaphone, MessagesSquare, ScanSearch, SatelliteDish, Layers, UserCheck, WifiOff, Camera, Route, Inbox, type LucideIcon } from 'lucide-react';
+import { CalendarClock, ClipboardList, FileText, Ear, Flame, Waypoints, Wind, RadioTower, ShieldCheck, Languages, ListTodo, Map as MapIcon, MapPin, Megaphone, MessagesSquare, ScanSearch, SatelliteDish, Layers, UserCheck, WifiOff, Camera, Route, Inbox, type LucideIcon } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { StatusChip, type Status } from './StatusChip';
 
 type Item = { id: string; Icon: LucideIcon; status?: Status };
-type GroupId = 'fc' | 'people' | 'room' | 'field';
+type GroupId = 'fc' | 'people' | 'room' | 'monitor' | 'field';
 const GROUPS: Array<{ id: GroupId; items: Item[] }> = [
-  { id: 'fc', items: [{ id: 'map', Icon: Layers }, { id: 'bands', Icon: MapIcon }, { id: 'inputs', Icon: SatelliteDish }, { id: 'daily', Icon: CalendarClock, status: 'soon' }] },
+  { id: 'fc', items: [{ id: 'map', Icon: Layers }, { id: 'bands', Icon: MapIcon }, { id: 'inputs', Icon: SatelliteDish }, { id: 'today', Icon: Flame }, { id: 'clean', Icon: ShieldCheck }, { id: 'daily', Icon: CalendarClock, status: 'soon' }] },
   { id: 'people', items: [{ id: 'report', Icon: Camera }, { id: 'follow', Icon: Route }, { id: 'near', Icon: MapPin }, { id: 'community', Icon: MessagesSquare }, { id: 'languages', Icon: Languages }] },
-  { id: 'room', items: [{ id: 'queue', Icon: Inbox }, { id: 'map', Icon: MapIcon }, { id: 'photo', Icon: ScanSearch }, { id: 'whatif', Icon: FlaskConical }, { id: 'assign', Icon: UserCheck }, { id: 'notices', Icon: Megaphone }, { id: 'briefing', Icon: FileText, status: 'soon' }] },
+  { id: 'room', items: [{ id: 'queue', Icon: Inbox }, { id: 'map', Icon: MapIcon }, { id: 'photo', Icon: ScanSearch }, { id: 'outlook', Icon: Waypoints }, { id: 'assign', Icon: UserCheck }, { id: 'notices', Icon: Megaphone }, { id: 'briefing', Icon: FileText, status: 'soon' }] },
+  { id: 'monitor', items: [{ id: 'stations', Icon: RadioTower }, { id: 'smoke', Icon: Wind, status: 'soon' }, { id: 'mesh', Icon: Waypoints, status: 'soon' }, { id: 'sound', Icon: Ear, status: 'soon' }] },
   { id: 'field', items: [{ id: 'tasks', Icon: ListTodo }, { id: 'offline', Icon: WifiOff }, { id: 'record', Icon: ClipboardList }] },
 ];
 const DEFAULTS: Record<string, string> = {
-  'fc.map': 'Daily risk map|Every forest cell on the Control Room map, shaded by how likely fire is the next day. Works on archived days today.',
+  'fc.map': 'Daily risk map|Every forest cell of 17 states on the Control Room map, shaded by how likely fire is the next day. Works on archived days today.',
   'fc.bands': 'Ranked, never promised|Cells are shown as bands (top 1%, 5% and 15%), not as a raw score. It tells staff where to look first. A person decides what to do.',
   'fc.inputs': 'Fresh data, with its age|NASA satellite detections and weather feed the forecast. Every data chip shows how old it is, and a stale source says so.',
+  'fc.today': 'Today and tomorrow|Today’s satellite detections sit beside tomorrow’s forecast, and the forecast issued yesterday for today can be opened to compare.',
+  'fc.clean': 'Cleaner detections|A screen removes kilns, mines and other heat that is not a forest fire before fires are counted, so the forecast learns from real forest fires.',
   'fc.daily': 'Daily forecast every morning|A fresh ranking each morning from the latest satellite and weather data.',
   'people.report': 'Report in about a minute|Take a photo, tap what you see, and your place is found for you. With no signal, the report waits on your phone and is sent later.',
   'people.follow': 'Follow your report|See it move from received to checked, responding and closed, and read the reason it was closed.',
@@ -27,13 +30,17 @@ const DEFAULTS: Record<string, string> = {
   'room.assign': 'Assign and track officers|See who accepted or declined and what each officer recorded.',
   'room.notices': 'Notices with a second approver|Public notices go out only after another person approves them. Community posts are moderated here.',
   'room.briefing': 'AI incident briefing|A short plain-language summary of each incident: what was reported, what the photo check found, what officers recorded. Use it at handover. A person reviews it.',
-  'room.whatif': 'What-if fire spread|Sketch how a fire might spread with the wind and terrain. A planning aid, labelled as an estimate.',
+  'room.outlook': 'Spread outlook|For an active fire: the cells most likely to burn in 24 and 48 hours, in three bands, with the people, places and roads in the way. Tested on 250 unseen fires.',
+  'monitor.stations': 'Station list and map|Every lookout station in your area: online, late or offline, with battery and the latest readings. A silent station shows as a gap, never as quiet.',
+  'monitor.smoke': 'Smoke and wind at a known place|Smoke against the station’s own baseline, with wind and humidity, to help decide whether an alert is worth a check. It never confirms a fire.',
+  'monitor.mesh': 'Radio relay through deep forest|Stations pass packets through relay nodes to a gateway where there is no mobile signal. Being prepared for a field test.',
+  'monitor.sound': 'Sound of fire|In research: a small model to tell open flame from other forest sounds. No model is built yet.',
   'field.tasks': 'Today’s tasks|Place, priority and status for every assignment.',
   'field.offline': 'Works without signal|Map areas are saved for offline use, and notes and photos wait until the phone is online.',
   'field.record': 'Record what you find|Observations and photos go straight onto the incident timeline.',
 };
 
-const GROUP_TITLE: Record<GroupId, string> = { fc: 'Wildfire forecasting', people: 'For people near a fire', room: 'For the Control Room', field: 'For Range Officers' };
+const GROUP_TITLE: Record<GroupId, string> = { fc: 'Wildfire forecasting', people: 'For people near a fire', room: 'For the Control Room', monitor: 'Field monitoring', field: 'For Range Officers' };
 
 /** What the product does and what is coming, grouped by who uses it. Unmarked lines work today; the rest carry a status chip. */
 export function Features() {
@@ -41,7 +48,7 @@ export function Features() {
   const reduce = useReducedMotion();
   const line = (group: GroupId, id: string) => {
     const [title, body] = DEFAULTS[`${group}.${id}`].split('|');
-    return { title: t(`landing.v2.${group}.${id}.title`, title), body: t(`landing.v2.${group}.${id}.body`, body) };
+    return { title: t(`landing.v4.${group}.${id}.title`, title), body: t(`landing.v4.${group}.${id}.body`, body) };
   };
   return (
     <section id="features" aria-labelledby="features-title" className="scroll-mt-20 space-y-8">
