@@ -5,8 +5,10 @@ import { EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint } from '../map/geojson';
 import { MapView } from '../map/MapView';
+import { useStations } from '../stations/api';
+import { byAttention, statementWords } from '../stations/model';
 import { useDates, useForecast } from './api';
-import { areaPolygons, cardDates, chanceWords, dayWord, levelRank, recordWords, shareText, type Action, type Area } from './model';
+import { areaPolygons, burningWords, cardDates, chanceWords, dayWord, levelRank, recordWords, shareText, type Action, type Area } from './model';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Ranger: tomorrow in my area. One card per area of the ranger's community, highest level first, with what to do, the places to check and a message to forward. */
@@ -37,8 +39,9 @@ export function CardPage() {
       {quiet.length > 0 && (
         <details className="rounded-rq border border-line bg-surface p-3" open={showNone} onToggle={e => setShowNone((e.target as HTMLDetailsElement).open)}>
           <summary className="min-h-11 cursor-pointer font-semibold">{tt('forecast.n_none', '{{n}} areas with no rating', { n: quiet.length })}</summary>
-          <ul className="mt-2 space-y-1 text-sm">{quiet.map(a => <li key={a.id}>{a.name} · {a.state} · {chanceWords(a.chance, tt)}</li>)}</ul>
+          <ul className="mt-2 space-y-1 text-sm">{quiet.map(a => <li key={a.id}>{a.name} · {a.state} · {chanceWords(a.chance, tt)}{burningWords(a, tt) ? ` · ${burningWords(a, tt)}` : ''}</li>)}</ul>
         </details>)}
+      <StationPanel />
       <p className="text-sm text-ink-muted">{tt('forecast.card_note', 'The level is the chance that a satellite detects a fire in the area on this day. It does not say where exactly or how big. A person on the ground decides.')} <Link to="/field/satellite" className="font-semibold underline">{tt('forecast.detections_near', 'Detections near me')}</Link></p>
     </div>
   );
@@ -71,5 +74,19 @@ function Card1({ area, date, actions }: { area: Area; date: string; actions: Act
       </div>
       {map && <MapView label={tt('forecast.map_of', 'Map of {{name}}', { name: area.name })} polygons={areaPolygons([area])} points={points} bounds={bounds} className="h-72" />}
     </article>
+  );
+}
+
+/** Ranger: the lookout stations in the ranger's area that need a look today (smoke up, a chainsaw, silent). Nothing is shown when all is normal. */
+function StationPanel() {
+  const tt = useTt(); const q = useStations();
+  const need = byAttention(q.data?.items ?? []).filter(s => s.statement && s.statement.tone !== 'ok').slice(0, 4);
+  if (!need.length) return null;
+  return (
+    <section aria-label={tt('forecast.stations_panel', 'Lookout stations')} className="rounded-rq border border-line bg-surface p-3">
+      <h2 className="font-bold">{tt('forecast.stations_panel', 'Lookout stations')}</h2>
+      <ul className="mt-1 space-y-1 text-sm">{need.map(s => <li key={s.id}><Link to={`/field/stations/${s.id}`} className="font-semibold underline">{s.name}</Link>: {statementWords(s, tt)}</li>)}</ul>
+      <Link to="/field/stations" className="mt-1 inline-block text-sm font-semibold underline">{tt('forecast.all_stations', 'All stations')}</Link>
+    </section>
   );
 }

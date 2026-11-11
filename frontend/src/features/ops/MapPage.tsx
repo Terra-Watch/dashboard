@@ -20,6 +20,8 @@ import { communityBox, useCommunities } from '../../lib/community';
 import { useOpsSettings, useIncidents, useOpsRegion, type Incident } from './useOps';
 import { basemapStyle, satelliteStyle } from '../map/style';
 import { readMapColors, isDark } from '../map/colors';
+import { useStations } from '../stations/api';
+import { statementWords, symbolOf } from '../stations/model';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -77,6 +79,8 @@ export function OpsMapPage() {
   const [riskHighOnly, setRiskHighOnly] = useState(false);
   const [showWind, setShowWind] = useState(true);
   const [showBearings, setShowBearings] = useState(true);
+  const [showStations, setShowStations] = useState(true);
+  const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
@@ -161,8 +165,9 @@ export function OpsMapPage() {
   const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.community_slug === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
   const points: MapPoint[] = useMemo(() => [
     ...shown.filter(item => item.status === 'reported' ? layers.has('reports') : layers.has('incidents')).map(item => ({ id: `i${item.id}`, lat: item.latitude!, lon: item.longitude!, symbol: SYMBOL_OF_RUNG[rungOfStatus(item.status)], label: `#${item.id}` })),
+    ...(showStations ? (stations.data?.items ?? []).filter(x => (!region || true) && x.latitude != null).map(x => ({ id: `t${x.id}`, lat: x.latitude, lon: x.longitude, symbol: symbolOf(x), label: x.name })) : []),
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
-  ], [shown, signals.data, layers]);
+  ], [shown, signals.data, layers, showStations, stations.data, region]);
   const riskCells = useMemo(() => {
     if (!layers.has('risk_forecast') || !riskEnabled || !riskForecast.data?.features) return [];
     return riskForecast.data.features.map(f => ({
@@ -183,6 +188,7 @@ export function OpsMapPage() {
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
+  const selectedStation = selected?.startsWith('t') ? stations.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
   const selectedSignal = selected?.startsWith('s') ? signals.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
 
   return (
@@ -200,6 +206,10 @@ export function OpsMapPage() {
         <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
           <input type="checkbox" checked={showWind} onChange={(e) => setShowWind(e.target.checked)} className="h-4 w-4" />
           <span>{t('map.wind_flow', 'Animated wind')}</span>
+        </label>
+        <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
+          <input type="checkbox" checked={showStations} onChange={(e) => setShowStations(e.target.checked)} className="h-4 w-4" />
+          <span>{t('map.stations', 'Lookout stations')}</span>
         </label>
         <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
           <input type="checkbox" checked={showBearings} onChange={(e) => setShowBearings(e.target.checked)} className="h-4 w-4" />
@@ -237,7 +247,13 @@ export function OpsMapPage() {
             </section>)}
         </div>
         <div className="space-y-3">
-          <Legend kinds={['signal', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />
+          <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />
+          {selectedStation && (
+            <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
+              <h2 className="text-xl">{selectedStation.name}</h2>
+              <p className="mt-2">{statementWords(selectedStation, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>
+              <p className="mt-2"><Link to={`/ops/stations/${selectedStation.id}`} className="font-semibold underline">{t('map.station_open', 'Open the station')}</Link></p>
+            </section>)}
           {selectedSignal && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
               <h2 className="text-xl"><RungBadge rung="signal" age={ageText(selectedSignal.acq_datetime)} /></h2>
@@ -249,7 +265,7 @@ export function OpsMapPage() {
 
       <section aria-labelledby="map-list-title" className={view === 'map' ? 'sr-only' : ''} data-testid="map-list">
           <h2 id="map-list-title" className="mb-2 text-xl">{t('map.same_items', 'The same items as a list')}</h2>
-          {!points.length ? <p className="text-ink-muted">{t('map.none', 'Nothing in this view.')}</p> : <ul className="space-y-2">{points.map(point => <li key={point.id}><button type="button" onClick={() => { setSelected(point.id); setView('map'); }} className="flex min-h-11 w-full items-center gap-3 rounded-rq border border-line bg-surface px-3 text-left">{point.id.startsWith('i') ? `#${point.id.slice(1)} · ${t(`rung.${rungOfStatus(incidents.data?.find(item => item.id === Number(point.id.slice(1)))?.status)}`)}` : `${t('rung.signal')} · ${ageText(signals.data?.items.find(item => `s${item.id}` === point.id)?.acq_datetime)}`}</button></li>)}</ul>}
+          {!points.length ? <p className="text-ink-muted">{t('map.none', 'Nothing in this view.')}</p> : <ul className="space-y-2">{points.map(point => <li key={point.id}><button type="button" onClick={() => { setSelected(point.id); setView('map'); }} className="flex min-h-11 w-full items-center gap-3 rounded-rq border border-line bg-surface px-3 text-left">{point.id.startsWith('t') ? (point.label ?? point.id) : point.id.startsWith('i') ? `#${point.id.slice(1)} · ${t(`rung.${rungOfStatus(incidents.data?.find(item => item.id === Number(point.id.slice(1)))?.status)}`)}` : `${t('rung.signal')} · ${ageText(signals.data?.items.find(item => `s${item.id}` === point.id)?.acq_datetime)}`}</button></li>)}</ul>}
       </section>
       <p className="text-sm text-ink-muted">{t('map.communities', 'Communities:')} {(communities.data?.items ?? []).map(c => c.name).join(', ')}.</p>
     </div>

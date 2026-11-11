@@ -97,3 +97,11 @@ class AreaForecastTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BurningNowTests(unittest.TestCase):
+    def test_counts_by_group_and_ignores_outside_forest(self):
+        from app.routers.area_forecast import attach_burning
+        areas = [{"id": 40170}, {"id": 40171}]
+        attach_burning(areas, [(40170, "likely", 3), (40170, "unconfirmed", 2), (40170, "outside_forest", 9), (99, "likely", 1)])
+        self.assertEqual(areas[0]["burning_now"], {"likely": 3, "unconfirmed": 2}); self.assertNotIn("burning_now", areas[1])

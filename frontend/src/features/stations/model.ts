@@ -77,3 +77,19 @@ export const byAttention = (items: Station[]): Station[] => [...items].sort((a, 
   const ra = a.statement ? (a.statement.tone === 'check' ? 4 : RANK[a.statement.tone]) : 0; const rb = b.statement ? (b.statement.tone === 'check' ? 4 : RANK[b.statement.tone]) : 0;
   return rb - ra || a.name.localeCompare(b.name);
 });
+
+export const LOW_BATTERY_MV = 3500; export const WEAK_RSSI = -110; export const WEAK_SNR = -5;
+export type Fix = 'silent' | 'late' | 'battery' | 'signal' | 'position';
+
+/** What a technician should look at for this station: not reporting, low battery, weak link, or a reported position far from the registered one. Empty when nothing. */
+export function maintenance(s: Station & { reported?: { offset_km: number } | null }): Fix[] {
+  const out: Fix[] = [];
+  if (s.status === 'offline' || s.status === 'never') out.push('silent'); else if (s.status === 'late') out.push('late');
+  if (s.battery_mv !== null && s.battery_mv < LOW_BATTERY_MV) out.push('battery');
+  if ((s.rssi !== null && s.rssi < WEAK_RSSI) || (s.snr !== null && s.snr < WEAK_SNR)) out.push('signal');
+  if (s.reported && s.reported.offset_km > 1) out.push('position');
+  return out;
+}
+
+export const fixWords = (f: Fix, t: T): string => f === 'silent' ? t('stations.fix_silent', 'Not reporting') : f === 'late' ? t('stations.fix_late', 'Late') : f === 'battery' ? t('stations.fix_battery', 'Battery low')
+  : f === 'signal' ? t('stations.fix_signal', 'Weak radio link') : t('stations.fix_position', 'Not where it is registered');

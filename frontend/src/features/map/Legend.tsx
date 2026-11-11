@@ -11,6 +11,9 @@ const ITEMS: Array<{ kind: SymbolKind; label: string; hint: string }> = [
   { kind: 'closed', label: 'Closed', hint: 'Finished, kept for the record.' },
   { kind: 'officer', label: 'Officer', hint: 'A Range Officer who chose to share their position.' },
   { kind: 'task', label: 'Task place', hint: 'The place you are going to.' },
+  { kind: 'station_ok', label: 'Station, normal', hint: 'A lookout station that is reporting and reads normal.' },
+  { kind: 'station_high', label: 'Station, smoke up', hint: 'Smoke particles well above its normal. A prompt to look, not a fire.' },
+  { kind: 'station_off', label: 'Station, not reporting', hint: 'Silent. Treat it as a gap, not as quiet.' },
   { kind: 'me', label: 'You', hint: 'Your position when you tapped locate.' },
 ];
 

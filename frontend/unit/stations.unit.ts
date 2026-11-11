@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ageLabel, byAttention, counts, statementWords, isHigh, soundName, symbolOf, type Station } from '../src/features/stations/model.ts';
+import { ageLabel, byAttention, maintenance, counts, statementWords, isHigh, soundName, symbolOf, type Station } from '../src/features/stations/model.ts';
 
 const st = (o: Partial<Station>) => ({ status: 'online', pm25: 10, pm25_vs_normal: 1, ...o }) as Station;
 
@@ -14,4 +14,10 @@ test('statements read plainly and checks come first', () => {
   const c = st({ name: 'C', status: 'offline', age_s: 7200, statement: { key: 'silent', params: { age_s: 7200 }, tone: 'gap' } });
   assert.deepEqual(byAttention([a, c, b]).map(s => s.name), ['B', 'C', 'A']);
   assert.match(statementWords(b, t), /30 minutes/); assert.match(statementWords(c, t), /Silent for 2 h/); assert.match(statementWords(a, t), /normal/);
+});
+test('maintenance lists what a technician should visit for', () => {
+  assert.deepEqual(maintenance(st({ battery_mv: 3300, rssi: -118, snr: 2 } as Partial<Station>)), ['battery', 'signal']);
+  assert.deepEqual(maintenance(st({ status: 'offline', battery_mv: 3900, rssi: -90, snr: 5 } as Partial<Station>)), ['silent']);
+  assert.deepEqual(maintenance(st({ battery_mv: 3900, rssi: -90, snr: 5, reported: { offset_km: 3 } } as unknown as Partial<Station>)), ['position']);
+  assert.deepEqual(maintenance(st({ battery_mv: null, rssi: null, snr: null } as Partial<Station>)), []);
 });

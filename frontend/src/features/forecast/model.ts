@@ -9,7 +9,7 @@ export type Look = { cell_id: number; lat: number; lon: number; chance: number; 
 export type Area = {
   id: number; name: string; state: string; lat: number; lon: number; bbox: [number, number, number, number]; cells: number;
   chance: number; expected_fires: number; usual_fires: number | null; usual_chance: number | null; level: LevelId; reliable: boolean;
-  change?: number; look?: Look[]; fire_detected?: boolean;
+  change?: number; look?: Look[]; fire_detected?: boolean; burning_now?: { likely?: number; known_source?: number; unconfirmed?: number };
 };
 export type Action = { id: string; min_chance: number; text: string };
 export type Yesterday = { date: string; areas_with_fire: number; in_high_or_extreme: number; areas_rated_high_or_extreme: number; of_those_with_fire: number };
@@ -48,6 +48,15 @@ export function usualWords(a: Area, t: T): string | null {
   if (!v) return null;
   const word = v === 'below' ? t('forecast.vs_below', 'below usual') : v === 'usual' ? t('forecast.vs_usual', 'about usual') : v === 'above' ? t('forecast.vs_above', 'above usual') : t('forecast.vs_far_above', 'far above usual');
   return t('forecast.usual_line', '{{word}} for this week (usual: {{u}})', { word, u: (a.usual_fires as number).toFixed(1) });
+}
+
+/** What the satellite has seen in the area in the last 24 hours, from the detection groups. null when nothing. Likely detections first; the others only as a note. */
+export function burningWords(a: Area, t: T): string | null {
+  const b = a.burning_now; if (!b) return null;
+  const likely = b.likely ?? 0, other = (b.unconfirmed ?? 0) + (b.known_source ?? 0);
+  if (!likely && !other) return null;
+  return likely ? t('forecast.burning_likely', 'Burning now: {{n}} likely fire detections by satellite in the last 24 hours{{more}}.', { n: likely, more: other ? t('forecast.burning_more', ', and {{m}} more not confirmed', { m: other }) : '' })
+    : t('forecast.burning_other', 'Satellite: {{m}} detections in the last 24 hours, none likely to be a forest fire.', { m: other });
 }
 
 export function changeWords(a: Area, t: T): string | null {

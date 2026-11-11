@@ -55,7 +55,35 @@ def _scoped(body: dict, user: dict) -> dict:
     levels = [lv["id"] for lv in body["levels"]]
     out = {**body, "areas": areas, "scope": scope, "summary": {k: sum(1 for a in areas if a["level"] == k) for k in levels}, "areas_scored": len(areas)}
     out.pop("outcome", None)
+    _burning(body, areas)
     return out
+
+
+def attach_burning(areas: list[dict], rows) -> None:
+    """rows: (block id, group, count) of satellite detections in the last 24 hours. Adds burning_now = {likely, known_source, unconfirmed} to the areas that have any; outside-forest ones are not counted."""
+    by: dict[int, dict] = {}
+    for b, grp, n in rows:
+        if grp in ("likely", "known_source", "unconfirmed"):
+            by.setdefault(int(b), {})[grp] = by.get(int(b), {}).get(grp, 0) + int(n)
+    for a in areas:
+        if a["id"] in by:
+            a["burning_now"] = by[a["id"]]
+
+
+def _burning(body: dict, areas: list[dict]) -> None:
+    """Live forecasts only (a replay day is archived). Never fails the forecast: with no database or no quality table the areas simply carry no count."""
+    if body.get("mode") != "live" or not areas:
+        return
+    try:
+        from sqlalchemy import text
+        from ..database.session import engine
+        with engine.connect() as db:
+            rows = db.execute(text("""SELECT floor(h.latitude/0.5)::int*1000 + floor(h.longitude/0.5)::int AS b, COALESCE(q.grp,'unconfirmed') AS g, count(*) FROM resq_hotspots h
+                LEFT JOIN resq_hotspot_quality q ON q.satellite=h.satellite AND q.acq_datetime=h.acq_datetime AND q.latitude=h.latitude AND q.longitude=h.longitude
+                WHERE h.acq_datetime >= now() - interval '24 hours' GROUP BY 1,2""")).all()
+        attach_burning(areas, rows)
+    except Exception:
+        return
 
 
 def _writable_root() -> Path:

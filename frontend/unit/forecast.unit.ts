@@ -50,3 +50,10 @@ test('days are named against the reader\'s own calendar day, and a ranger is off
   assert.deepEqual(cardDates(['2026-11-11', '2026-11-12', '2026-11-13'], '2026-11-13', now), ['2026-11-12', '2026-11-13']);
   assert.deepEqual(cardDates(['2026-11-13'], '2026-11-13', now), ['2026-11-13']); assert.deepEqual(cardDates(['2025-03-14', '2025-03-15'], '2025-03-15', now), ['2025-03-15']);
 });
+
+test('burning now words put likely detections first and stay silent without any', async () => {
+  const { burningWords } = await import('../src/features/forecast/model.ts');
+  const t = (_k: string, d: string, o?: Record<string, unknown>) => d.replace(/\{\{(\w+)\}\}/g, (_m, k) => String(o?.[k] ?? ''));
+  const a = (b?: object) => ({ burning_now: b }) as never;
+  assert.equal(burningWords(a(), t), null); assert.match(burningWords(a({ likely: 3, unconfirmed: 2 }), t)!, /3 likely.*2 more/); assert.match(burningWords(a({ unconfirmed: 4 }), t)!, /none likely/);
+});

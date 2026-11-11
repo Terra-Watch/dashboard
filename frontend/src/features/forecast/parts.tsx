@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { actionsFor, chanceWords, changeWords, levelName, placeLine, seasonNote, usualWords, type Action, type Area, type LevelId } from './model';
+import { actionsFor, burningWords, chanceWords, changeWords, levelName, placeLine, seasonNote, usualWords, type Action, type Area, type LevelId } from './model';
 
 export type Tt = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
 /** Translation with an English fallback, in the shape the helpers in model.ts take. */
@@ -32,8 +32,8 @@ export function ActionList({ area, actions }: { area: Area; actions: Action[] })
 }
 
 export function Reasons({ area }: { area: Area }) {
-  const tt = useTt(); const lines = [usualWords(area, tt), changeWords(area, tt), seasonNote(area, tt)].filter(Boolean) as string[];
-  return lines.length ? <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">{lines.map(x => <li key={x}>{x}</li>)}</ul> : null;
+  const tt = useTt(); const burning = burningWords(area, tt); const lines = [usualWords(area, tt), changeWords(area, tt), seasonNote(area, tt)].filter(Boolean) as string[];
+  return burning || lines.length ? <div>{burning && <p className="text-sm font-semibold">{burning}</p>}<ul className="list-disc space-y-0.5 pl-5 text-sm text-ink-muted">{lines.map(x => <li key={x}>{x}</li>)}</ul></div> : null;
 }
 
 export function LookList({ area, limit = 5 }: { area: Area; limit?: number }) {

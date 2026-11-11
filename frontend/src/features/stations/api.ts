@@ -20,3 +20,6 @@ export function useCreateCheck(id: number) {
   return useMutation({ mutationFn: (note: string) => api<{ created: boolean; incident_id: number }>(`/api/stations/${id}/check`, { method: 'POST', json: { note } }),
     onSuccess: () => { void client.invalidateQueries({ queryKey: ['station-nearby', id] }); void client.invalidateQueries({ queryKey: ['incidents'] }); } });
 }
+
+export type UnknownNode = { node_id: number; first_heard: string; last_heard: string; heard: number; reported_lat: number | null; reported_lon: number | null };
+export const useUnknownNodes = (enabled = true) => useQuery({ queryKey: ['stations-unknown'], retry: false, enabled, refetchInterval: 60_000, queryFn: () => api<{ items: UnknownNode[] }>('/api/stations/unknown') });
