@@ -2,7 +2,7 @@
 # Final steps after PR #7 is merged. Run from the website folder:  sh forecast/finish_setup.sh
 # 1 post today's run to production  2 drop the old date pin and redeploy  3 create the state release  4 start the daily workflow once
 set -eu
-R=Terra-Watch/dashboard; STATE=${STATE:-/tmp/state.tar.gz}; RUN=${RUN:-../wildfire-ml-v4/live_state/runs/2026-11-01}
+R=Terra-Watch/dashboard; STATE=${STATE:-/tmp/state.tar.gz}; RUN=${RUN:-../wildfire-ignition-forecasting/live_state/runs/2026-11-01}
 export RISK_INGEST_TOKEN=$(cat ~/.terrawatch/risk_ingest_token)
 echo "waiting for the production deployment of main..."
 until npx --yes vercel@latest ls 2>/dev/null | head -8 | grep -q "Ready"; do sleep 20; done

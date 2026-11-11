@@ -1,10 +1,10 @@
 """Parity check of live/detection_quality.py against the dataset's own features (c07) and scores (c09) for one month of detections, with everything earlier as history.
-Needs wildfire-datasets-v4 (dataset/detections_forest.parquet, audit/false_detections/*). Run: fire-spread/.venv/bin/python website/forecast/tests/check_detection_quality.py [YYYY-MM]"""
+Needs terrawatch-datasets (dataset/detections_forest.parquet, audit/false_detections/*). Run: fire-spread/.venv/bin/python website/forecast/tests/check_detection_quality.py [YYYY-MM]"""
 import os, sys, time
 import numpy as np, pandas as pd, joblib
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.insert(0, os.path.join(ROOT, "website/forecast/live")); import detection_quality as Q
-V4 = f"{ROOT}/wildfire-datasets-v4"; A = f"{V4}/audit/false_detections"
+V4 = f"{ROOT}/terrawatch-datasets"; A = f"{V4}/audit/false_detections"
 month = sys.argv[1] if len(sys.argv) > 1 else "2025-03"
 d = pd.read_parquet(f"{V4}/dataset/detections_forest.parquet"); d["rid"] = np.arange(len(d))
 d = d.merge(pd.read_parquet(f"{A}/detection_attributes.parquet"), on="rid", how="left").merge(pd.read_parquet(f"{A}/industrial_flags.parquet"), on="rid", how="left")

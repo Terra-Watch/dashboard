@@ -1,4 +1,4 @@
-"""Quality filter for live fire detections: the same classifier and the same features as the dataset (wildfire-datasets-v4/scripts/c07 and c09).
+"""Quality filter for live fire detections: the same classifier and the same features as the dataset (terrawatch-datasets/scripts/c07 and c09).
 
 A detection gets p_scar, the chance that a burned scar follows within 1 km (-2 to +10 days). Detections with p_scar below `hide` are dropped before the fire-history channels
 are built, exactly as in the training data. The features use past and same-pass information only, so they exist for a detection on the day it arrives.

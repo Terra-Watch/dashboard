@@ -1,9 +1,9 @@
 """Fire-history channels for the live job.
 
 A detection becomes a fire-day of its 0.1 degree cell (cell_id = round(lat*10)*1000 + round(lon*10)). A forest fire-day also needs
->= 50 % of the 3x3-pixel footprint inside the forest-land mask, exactly as in wildfire-datasets-v4/scripts/f01 and f02.
+>= 50 % of the 3x3-pixel footprint inside the forest-land mask, exactly as in terrawatch-datasets/scripts/f01 and f02.
 The store is a parquet of (cell_id, date, forest): one row per cell-day with a detection; `forest` is True when a forest detection exists that day.
-It starts from the dataset's detections (wildfire-ml-v4/src/live/init_fire_store.py) and is extended with NASA FIRMS rows by refresh_fire.py.
+It starts from the dataset's detections (wildfire-ignition-forecasting/scripts/live/init_fire_store.py) and is extended with NASA FIRMS rows by refresh_fire.py.
 
 shortcut: the polygon rule the dataset applies to Andhra Pradesh and Uttarakhand cells is not applied here, so about 0.2 % of cells differ
 from the dataset on a given day (checked on 2025-03-15 .. 2025-11-30); apply it before relying on those two states.

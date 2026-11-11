@@ -1,6 +1,6 @@
 # Forest boundary layers for the app: plan
 
-Status: **PLAN ONLY** (2026-10-28). Nothing has been downloaded into `website/`, no app code or config changed. Written after the forecasting dataset (`wildfire-datasets-v4/`) switched its definition of forest from tree cover to forest boundaries. Tags: **[V]** verified in this project; **[S]** from a secondary source or the layer names only; **[?]** to confirm.
+Status: **PLAN ONLY** (2026-10-28). Nothing has been downloaded into `website/`, no app code or config changed. Written after the forecasting dataset (`terrawatch-datasets/`) switched its definition of forest from tree cover to forest boundaries. Tags: **[V]** verified in this project; **[S]** from a secondary source or the layer names only; **[?]** to confirm.
 
 ## 1. Why
 - The app ranks "forest cells" (docs/PRODUCT_RULES.md). The dataset behind the next models now defines a forest cell as at least 20% of the 0.1 degree cell inside forest boundaries (reserved + protected + other forest). The app's forest mask must be the same set of cells, or the ranking covers different cells from the ones the models learn from.
@@ -24,15 +24,15 @@ Public compilation "india-geodata", release tag `environment/forests` (published
 The app already serves maps with MapLibre GL and a self-hosted PMTiles basemap, so these files fit its map stack [V from ORG_README.md].
 
 ## 3. What we know about quality (from the dataset work)
-- Cross-check with official FSI data [V]: pixels the FSI fuel-load rasters class Low, Moderate or High lie 98-100% inside the boundary union in all four delivered divisions (Amrabad, Bastar-Indravati, Melghat, Similipal). Class 0 is mostly inside (84-99%); class 15 only partly (17-71%). `wildfire-datasets-v4/audit/fsi_fuel_vs_forest_mask.csv`.
-- Coverage is uneven by state [V, `wildfire-datasets-v4/audit/legal_forest_by_state.csv`]: good in Madhya Pradesh, Chhattisgarh, Telangana, Uttarakhand, Himachal Pradesh, Jharkhand; thin in the North-East, Odisha, Uttar Pradesh, Bihar, West Bengal. **A missing boundary must never be shown or read as "not forest".**
+- Cross-check with official FSI data [V]: pixels the FSI fuel-load rasters class Low, Moderate or High lie 98-100% inside the boundary union in all four delivered divisions (Amrabad, Bastar-Indravati, Melghat, Similipal). Class 0 is mostly inside (84-99%); class 15 only partly (17-71%). `terrawatch-datasets/audit/fsi_fuel_vs_forest_mask.csv`.
+- Coverage is uneven by state [V, `terrawatch-datasets/audit/legal_forest_by_state.csv`]: good in Madhya Pradesh, Chhattisgarh, Telangana, Uttarakhand, Himachal Pradesh, Jharkhand; thin in the North-East, Odisha, Uttar Pradesh, Bihar, West Bengal. **A missing boundary must never be shown or read as "not forest".**
 - The union covers about 0.67 million km2 for all India [V]; a secondary source quotes 7.67 lakh km2 recorded forest area [S].
 
 ## 4. Phases (each needs the user's go-ahead before work starts)
 | Phase | What | Depends on |
 |---|---|---|
 | P0 Terms and provenance | confirm licence and redistribution terms with the original owners (especially beat boundaries); ask FSI to confirm the layers or supply authoritative recorded forest boundaries (North-East, Odisha) | none |
-| P1 Forecast mask alignment | the app does not build its own mask (section 8): it serves the research model's cells. Replace that cell set by the dataset's boundary-based cells (`wildfire-datasets-v4/dataset/cells_forest_*.parquet`, 0.1 degree cells, about 11 km) together with the new models; decide how to handle the grid change (app cells are 5 km); re-check the rank bands (top 1%, 5%, 15%) on the new cell set | trained models in the new ML folder and their audit |
+| P1 Forecast mask alignment | the app does not build its own mask (section 8): it serves the research model's cells. Replace that cell set by the dataset's boundary-based cells (`terrawatch-datasets/dataset/cells_forest_*.parquet`, 0.1 degree cells, about 11 km) together with the new models; decide how to handle the grid change (app cells are 5 km); re-check the rank bands (top 1%, 5%, 15%) on the new cell set | trained models in the new ML folder and their audit |
 | P2 Forest land overlay | add SOI_Forests / RFA as a role-allowed map layer with a source note and the "advisory" footer | P0 |
 | P3 Ranger units | add beats, ranges, divisions, circles; map each user's region scope to a unit; check the scoping server-side | P0, backend change in `backend/app` (region scope) |
 | P4 Offline pack | include the unit and forest layers in the Range Officer's offline regional map | P2, P3 |

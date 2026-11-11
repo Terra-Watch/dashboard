@@ -18,17 +18,17 @@ A run that still fails exits non-zero, so GitHub emails the repository's watcher
 1. **Secrets** (Settings > Secrets and variables > Actions): `DATABASE_URL` (the production database), `FIRMS_MAP_KEY`, `RISK_BUNDLE_PUBLIC_KEY` (the public key printed by `make_bundle.py`; the bundle is refused if it is signed by any other key).
 2. **State release.** The job keeps its model bundle, weather and fire stores and past runs in a release called `forecast-state`, so it never depends on a personal computer. Create it once from a prepared state folder:
    ```
-   tar -czf state.tar.gz -C wildfire-ml-v4/live_state bundle detections.parquet fire.parquet weather.parquet forest_mask.npz quality verification.csv runs
+   tar -czf state.tar.gz -C wildfire-ignition-forecasting/live_state bundle detections.parquet fire.parquet weather.parquet forest_mask.npz quality verification.csv runs
    gh release create forecast-state state.tar.gz --title "forecast state" --notes "model bundle and stores for the daily forecast job"
    ```
-   (`init_detection_store.py` and `make_bundle.py` in `wildfire-ml-v4/src/live/` build those files from the dataset and the finished study runs. `quality/` holds `classifier_v2.joblib`, `hide.json` and `industrial_sources.geojsonseq` from `wildfire-datasets-v4/audit/false_detections/`.)
+   (`init_detection_store.py` and `make_bundle.py` in `wildfire-ignition-forecasting/scripts/live/` build those files from the dataset and the finished study runs. `quality/` holds `classifier_v2.joblib`, `hide.json` and `industrial_sources.geojsonseq` from `terrawatch-datasets/audit/false_detections/`.)
 3. Run the workflow once by hand and check the map's status line.
 4. Then switch off the backup run on the Mac: `launchctl bootout gui/$(id -u)/com.terrawatch.dailyforecast`.
 
 ## Local run
 
 ```
-WORK=wildfire-ml-v4/live_state python forecast/live/run_daily.py 2026-11-01
+WORK=wildfire-ignition-forecasting/live_state python forecast/live/run_daily.py 2026-11-01
 ```
 
 ## The quality filter
@@ -39,7 +39,7 @@ Checks: `tests/check_detection_quality.py` (features equal the dataset's for a m
 
 ## Checks
 
-`python -m unittest discover -s forecast/tests` (no data needed). The bundle golden test and the fire-history parity test need the study data and live in `wildfire-ml-v4/tests/`.
+`python -m unittest discover -s forecast/tests` (no data needed). The bundle golden test and the fire-history parity test need the study data and live in `wildfire-ignition-forecasting/tests/`.
 
 ## What to know
 

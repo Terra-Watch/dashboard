@@ -1,5 +1,5 @@
 """GFS block (the 8 forecast channels) from the NOAA open-data bucket on AWS (noaa-gfs-bdp-pds): the 06 UTC run of day d, hours 18..42, bilinear to the cell centres.
-Copied from wildfire-datasets-v4/scripts/g04_gfs_aws.py (the arithmetic the model was trained on) with the dataset-only helpers removed. Needs eccodes."""
+Copied from terrawatch-datasets/scripts/20_gfs_pull_aws.py (the arithmetic the model was trained on) with the dataset-only helpers removed. Needs eccodes."""
 import calendar, os, sys, time
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np, pandas as pd, requests, eccodes

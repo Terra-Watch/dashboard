@@ -53,7 +53,7 @@ risk-model-<id>-<version>/
 
 - The bundle is stored privately (the private model repo or the project bucket), fetched by hash, and never committed to git.
 - Switching the served model is a change of `RISK_MODEL_BUNDLE` and a new run. Rolling back is the old value.
-- The training code that made the bundle stays in `wildfire-ml-v4`. Production only loads it.
+- The training code that made the bundle stays in `wildfire-ignition-forecasting`. Production only loads it.
 
 ## 4. Production inputs
 
