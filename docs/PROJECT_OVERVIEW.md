@@ -1,21 +1,27 @@
 # TerraWatch
 
-TerraWatch is a wildfire operations platform for India. It connects the people who see a fire, the people who decide what to do about it, and the people who go to the place. It is built around one idea: a fire claim moves up a ladder of certainty, and only people move it up.
+TerraWatch is early warning and response for forest fires in India, for forest departments. It forecasts where a fire is likely, sorts satellite detections into real fires and false ones, follows the fires that are burning, and puts the next action in front of a person. The one-page description is the root README (`../../README.md`).
+
+**Status (2026-11-11).** This file was written for the first version of the product, built around citizens sending reports for staff to verify. Section 1 is rewritten for the product as it is now. Sections 2 onward describe the check workflow (the ladder, assignments, field observations, notices, the citizen screens) and are still accurate for those screens. Citizen reporting is now a secondary input. The newer screens are described in `../../docs/20-forecast-for-rangers-and-control-room.md`, `../../docs/21-lookout-stations-use-and-ui.md`, `../../docs/22-satellite-detection-groups-and-stations.md` and `../../docs/23-active-fires-redesign.md`.
+
+**Retired:** the scenario planner (the what-if simulator with typed wind and rate-of-spread; section 5 and the scenario lines elsewhere) was removed in November 2026 and the old four-band risk map was replaced by the calibrated forecast. `/app/whatif` redirects to Past fires.
+
+The rule is unchanged: software suggests, people decide.
 
 ---
 
 ## 1. What TerraWatch does
 
-| Need | How TerraWatch meets it |
+| Question | How TerraWatch meets it |
 |---|---|
-| A citizen sees smoke or fire | They report it in a few taps, with place, time and photos, and follow it until it is closed |
-| Staff must decide what is real | Every claim lands in a queue with its evidence; a person verifies it |
-| Someone must go and look | A Range Officer is assigned, accepts, visits, and records what they find, even with no network |
-| The public needs to know | Official notices are written by one person and approved by a second; verified areas appear on a public map, coarsened and delayed |
-| Shifts change | Handover notes carry open questions from one shift to the next |
-| Planning ahead | A scenario planner draws how far a fire could reach under the numbers a planner types |
+| Where is a fire likely tomorrow? | The fire forecast: a calibrated chance for each 55 km area, a level, what is usual for the week, places to look and what to do. A card for the ranger, a board for the control room. |
+| Is something burning, and is it real? | Satellite detections, each kept and sorted into likely fire, unconfirmed, known heat source or outside forest. Lookout stations add smoke and sound as ground evidence. |
+| Which fires matter now? | Active fires: fires built from the detections, with size, growth, the side they grew toward and the nearest villages, ordered by who needs attention first. |
+| What do we do? | Send a crew (a check in the queue), warn villages, and close or confirm a fire from the ground. A check is verified, assigned, visited and closed with a reason, also offline. |
+| Did we get it right? | Yesterday's forecast against what was detected; the spread outlook against what burned on past fires. |
+| The public and shifts | Notices written by one person and approved by a second; handover notes between shifts; reports and notices for citizens (secondary). |
 
-Three roles, one application, one sign-in, one colour system and one logo. Languages: English, Hindi (हिन्दी), Odia (ଓଡ଼ିଆ). Light, dark and system themes. Installable on a phone.
+Roles: Ranger, Control Room, Admin, and Citizen (secondary), one application and one sign-in. Languages: English, Hindi (हिन्दी), Odia (ଓଡ଼ିଆ). Light, dark and system themes. Installable on a phone.
 
 ---
 

@@ -1,6 +1,9 @@
-# Daily fire forecast job (cloud)
+# Forecast and hotspot jobs (cloud)
 
-Scores every forest cell for tomorrow once a day and loads the run into the dashboard database (`forecast_runs`, `cell_scores`). The map reads it through `/api/risk/geojson` and `/api/risk/status`.
+Two jobs fill the product. Both run in GitHub Actions; they post to the backend with the shared ingest secret.
+
+1. **Daily forecast** (`daily-forecast.yml`). Scores every forest cell for tomorrow once a day (mean of five XGBoost seeds), loads the cell run into the dashboard database (`forecast_runs`, `cell_scores`, read through `/api/risk/status`), then turns the scores into the **area forecast** the product shows: calibrated chances, 0.5 degree areas, levels, what is usual for the week and the places to look (`area_forecast.py`, `area_forecast_job.py`, `post_area_forecast.py`). The area forecast is posted to `POST /api/area-forecast/runs`. The calibration and the areas come from `wildfire-ignition-forecasting/results/forecast_levels.json` and `named_places.parquet` (written by `scripts/13_forecast_levels.py` and `14_named_places.py` there). `verify_forecasts.py` scores each finished day against what the satellite then saw, and that record is shown on the forecast board.
+2. **Hotspots** (`hotspots.yml`, every 3 hours). Ingests FIRMS detections (`post_hotspots.py`) and sorts each into a group (`detection_groups.py`, `post_hotspot_quality.py`): likely, unconfirmed, known heat source, outside forest. The groups go to `POST /api/feeds/hotspots/quality`. Nothing is deleted. Active fires on the dashboard are built from these detections.
 
 ```
 .github/workflows/daily-forecast.yml   11:40 UTC every day, or run by hand (Actions > daily-forecast > Run workflow)
@@ -11,7 +14,7 @@ forecast/live/vendor/                  the dataset feature code the model was tr
 
 Everything comes from open sources without a key (Open-Meteo, NOAA GFS on AWS); only NASA FIRMS needs the free `FIRMS_MAP_KEY`.
 Every network call is retried again and again (up to 2 hours per call, 90 minutes for the GFS run to appear), then the whole run is retried 6 times, 20 minutes apart.
-A run that still fails exits non-zero, so GitHub emails the repository's watchers; the map then shows "stale" after 36 hours.
+A run that still fails exits non-zero, so GitHub emails the repository's watchers; the forecast pages then show "stale" after 36 hours.
 
 ## One-time setup (needs someone with admin rights on this repository)
 
