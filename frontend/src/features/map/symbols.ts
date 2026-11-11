@@ -17,6 +17,14 @@ export function drawSymbol(kind: SymbolKind, colors: MapColors, pixelRatio = 2):
       const draw = () => path(() => { ctx.moveTo(c, 4); ctx.lineTo(SIZE - 4, c); ctx.lineTo(c, SIZE - 4); ctx.lineTo(4, c); ctx.closePath(); });
       halo(draw); draw(); ctx.fillStyle = colors.surface; ctx.fill(); ctx.setLineDash([3, 2]); ctx.lineWidth = 2.5; ctx.strokeStyle = colors.unconfirmed; ctx.stroke(); break;
     }
+    case 'signal_likely': { // solid ember diamond: a detection the quality check rates as likely fire
+      const draw = () => path(() => { ctx.moveTo(c, 3); ctx.lineTo(SIZE - 3, c); ctx.lineTo(c, SIZE - 3); ctx.lineTo(3, c); ctx.closePath(); });
+      halo(draw); draw(); ctx.fillStyle = colors.ember; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = colors.text; ctx.stroke(); break;
+    }
+    case 'signal_source': { // small grey square: a known heat source or a detection outside forest
+      const draw = () => path(() => ctx.rect(c - 4, c - 4, 8, 8));
+      halo(draw); draw(); ctx.fillStyle = colors.muted; ctx.fill(); break;
+    }
     case 'report': { // violet hollow circle: a person says so, not yet checked
       const draw = () => path(() => ctx.arc(c, c, 8, 0, Math.PI * 2));
       halo(draw); draw(); ctx.fillStyle = colors.surface; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = colors.unconfirmed; ctx.stroke(); break;

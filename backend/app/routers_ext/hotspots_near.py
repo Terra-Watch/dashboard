@@ -25,11 +25,11 @@ def hotspots_near(lat: float = Query(ge=-90, le=90), lon: float = Query(ge=-180,
         if not scopes: return {'label': SATELLITE_LABEL, 'items': []}
         where.append('(state IS NULL OR state = ANY(:scopes))'); params['scopes'] = scopes
     with engine.connect() as db:
-        rows = db.execute(text(f"SELECT id,satellite,acq_datetime,latitude,longitude,frp,confidence,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes FROM resq_hotspots WHERE {' AND '.join(where)}"), params).mappings().all()
+        rows = db.execute(text(f"SELECT id,satellite,acq_datetime,latitude,longitude,frp,confidence,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes,(SELECT q.grp FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_group,(SELECT q.p_scar FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_p,(SELECT q.reasons FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_reasons FROM resq_hotspots WHERE {' AND '.join(where)}"), params).mappings().all()
     items = []
     for r in rows:
         km = geo.distance_km(lat, lon, r['latitude'], r['longitude'])
         if km <= radius_km: items.append({'id': r['id'], 'satellite': r['satellite'], 'acq_datetime': r['acq_datetime'].isoformat(), 'latitude': r['latitude'], 'longitude': r['longitude'], 'frp': r['frp'],
-                                          'confidence': r['confidence'], 'age_minutes': r['age_minutes'], 'distance_km': round(km, 1), 'bearing': geo.compass_point(geo.bearing_deg(lat, lon, r['latitude'], r['longitude']))})
+                                          'confidence': r['confidence'], 'age_minutes': r['age_minutes'], 'quality_group': r['quality_group'], 'quality_p': r['quality_p'], 'quality_reasons': r['quality_reasons'], 'distance_km': round(km, 1), 'bearing': geo.compass_point(geo.bearing_deg(lat, lon, r['latitude'], r['longitude']))})
     items.sort(key=lambda x: x['distance_km'])
     return {'label': SATELLITE_LABEL, 'items': items[:200]}

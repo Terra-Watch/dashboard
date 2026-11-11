@@ -6,7 +6,7 @@ import { EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { MapView } from '../map/MapView';
 import { boundsOf, type MapPoint } from '../map/geojson';
 import { useStations } from './api';
-import { counts, fmt, isHigh, symbolOf, type Station } from './model';
+import { byAttention, counts, fmt, isHigh, statementWords, symbolOf, type Station } from './model';
 import { SoundChip, StatusChip } from './parts';
 
 /** All lookout stations in the person's area: a list with status first, and a map. Readings are from sensors, not people. */
@@ -16,7 +16,7 @@ export function OpsStationsPage() {
   const [state, setState] = useState(''); const [status, setStatus] = useState(''); const [selected, setSelected] = useState<string | null>(null);
   const all = q.data?.items ?? [];
   const states = useMemo(() => [...new Set(all.map(s => s.state))].sort(), [all]);
-  const items = useMemo(() => all.filter(s => (!state || s.state === state) && (!status || (status === 'offline' ? s.status === 'offline' || s.status === 'never' : s.status === status))), [all, state, status]);
+  const items = useMemo(() => byAttention(all).filter(s => (!state || s.state === state) && (!status || (status === 'offline' ? s.status === 'offline' || s.status === 'never' : s.status === status))), [all, state, status]);
   const c = counts(all);
   const points: MapPoint[] = useMemo(() => items.map(s => ({ id: String(s.id), lat: s.latitude, lon: s.longitude, symbol: symbolOf(s), label: s.name })), [items]);
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]), [points]);
@@ -53,6 +53,7 @@ function StationRow({ s, active }: { s: Station; active: boolean }) {
   return (
     <Link to={`/ops/stations/${s.id}`} className={`block rounded-rq border p-3 hover:bg-surface-2 ${active ? 'border-action ring-2 ring-action' : 'border-line bg-surface'}`}>
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
+      {s.statement && <p className={`mt-1 text-sm ${s.statement.tone === 'check' ? 'font-semibold' : ''}`}>{s.statement.tone === 'check' ? '▲ ' : s.statement.tone === 'gap' ? '○ ' : ''}{statementWords(s, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
       {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
       <p className="mt-1 text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · PM10 {fmt(s.pm10)} · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}
         {isHigh(s) && <span className="ml-2 rounded border border-warn bg-warn-tint px-1.5 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>

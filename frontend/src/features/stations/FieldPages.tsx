@@ -9,7 +9,8 @@ import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page'
 import { LocateButton, usePosition } from '../field/Position';
 import { Chart } from './Chart';
 import { useStation, useStations } from './api';
-import { ageLabel, fmt, isHigh, type Station } from './model';
+import { ageLabel, byAttention, fmt, isHigh, statementWords, type Station } from './model';
+import { DEFAULT_ON, byGroup, groupCounts, groupName, groupOf, reasonWords, visible, type Group } from '../ops/satelliteGroups';
 import { Readings, SoundChip, Sounds, StatusChip } from './parts';
 
 /** Stations near the ranger, nearest first. Read-only. The position is taken only when the ranger taps. */
@@ -35,6 +36,7 @@ function Row({ s }: { s: Station }) {
   return (
     <Link to={`/field/stations/${s.id}`} className="block rounded-rq border border-line bg-surface p-3 active:bg-surface-2">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
+      {s.statement && <p className="mt-1 text-sm">{statementWords(s, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
       {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
       {s.distance_km !== undefined && <p className="text-sm font-semibold">{s.distance_km} km {s.bearing}</p>}
       <p className="text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}{isHigh(s) && <span className="ml-2 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>
@@ -65,14 +67,16 @@ export function FieldStationPage() {
   );
 }
 
-type Near = { id: number; satellite: string; frp: number | null; age_minutes: number; distance_km: number; bearing: string; confidence: string };
+type Near = { id: number; satellite: string; frp: number | null; age_minutes: number; distance_km: number; bearing: string; confidence: string; quality_group?: Group | null; quality_reasons?: string[] | null };
 
 /** Satellite detections near the ranger. Heat seen from space; nobody has checked it. */
 export function FieldSatellitePage() {
   const { t } = useTranslation();
-  const { position } = usePosition(); const [hours, setHours] = useState(24);
+  const { position } = usePosition(); const [hours, setHours] = useState(24); const [all, setAll] = useState(false);
+  const tt = (k: string, d: string) => t(k, d) as string;
   const q = useQuery({ queryKey: ['field-satellite', position?.lat.toFixed(2), position?.lon.toFixed(2), hours], enabled: !!position, retry: false, refetchInterval: 300_000,
     queryFn: () => api<{ label: string; items: Near[] }>(`/api/hotspots/near?lat=${position!.lat}&lon=${position!.lon}&radius_km=40&since_hours=${hours}`) });
+  const items = q.data?.items ?? []; const counts = groupCounts(items); const shown = byGroup(all ? items : visible(items, DEFAULT_ON));
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle title={t('field.satellite', 'Satellite detections near you')} subtitle={q.data?.label ?? t('ops.satellite.subtitle', 'Heat seen from space. No person has checked it.')} actions={<LocateButton />} />
@@ -81,9 +85,11 @@ export function FieldSatellitePage() {
       {q.isError && <LoadError message={t('field.satellite_failed', 'The detections could not be loaded.')} onRetry={() => void q.refetch()} />}
       {q.isLoading && <Skeleton lines={3} />}
       {q.data && q.data.items.length === 0 && <EmptyState title={t('field.satellite_none', 'No detections near you in this window.')} />}
-      <ul className="space-y-2">{(q.data?.items ?? []).map(i => (
-        <li key={i.id} className="rounded-rq border border-line bg-surface p-3"><p className="font-bold">{i.distance_km} km {i.bearing}</p>
-          <p className="text-sm text-ink-muted">{t('field.satellite_row', { age: ageLabel(i.age_minutes * 60), mw: fmt(i.frp, 0), defaultValue: '{{age}} ago · fire power {{mw}} MW' })}</p></li>))}</ul>
+      {counts.known_source + counts.outside_forest > 0 && <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={all} onChange={e => setAll(e.target.checked)} className="h-4 w-4" />{t('sat.show_sources', { n: counts.known_source + counts.outside_forest, defaultValue: 'Also show {{n}} known heat sources and detections outside forest' })}</label>}
+      <ul className="space-y-2">{shown.map(i => (
+        <li key={i.id} className="rounded-rq border border-line bg-surface p-3"><p className="font-bold">{i.distance_km} km {i.bearing}{i.quality_group ? <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-xs font-semibold">{groupName(groupOf(i), tt)}</span> : null}</p>
+          <p className="text-sm text-ink-muted">{t('field.satellite_row', { age: ageLabel(i.age_minutes * 60), mw: fmt(i.frp, 0), defaultValue: '{{age}} ago · fire power {{mw}} MW' })}</p>
+          {i.quality_group && reasonWords(i.quality_reasons, tt).length > 0 && <p className="text-xs text-ink-muted">{reasonWords(i.quality_reasons, tt).join(' · ')}</p>}</li>))}</ul>
     </div>
   );
 }

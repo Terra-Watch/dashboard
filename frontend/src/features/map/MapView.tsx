@@ -240,7 +240,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
     });
     map.on('dblclick', (event: ClickEvent) => { handlers.current.onMapDoubleClick?.(event.lngLat.lat, event.lngLat.lng); });
     map.on('mousemove', (event: ClickEvent) => { if (map.getLayer(POINTS)) map.getCanvas().style.cursor = map.queryRenderedFeatures(event.point, { layers: [POINTS] }).length ? 'pointer' : handlers.current.onMapClick ? 'crosshair' : ''; });
-    const restyle = () => { colors = { ...readMapColors(), ...overrideRef.current }; colorsRef.current = colors; for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind); map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); setEpoch(n => n + 1); }); map.setStyle((externalRef.current ?? basemapStyle(colors, isDark())) as StyleSpecification); };
+    const restyle = () => { colors = { ...readMapColors(), ...overrideRef.current }; colorsRef.current = colors; for (const kind of ['signal', 'signal_likely', 'signal_source', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind); map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); setEpoch(n => n + 1); }); map.setStyle((externalRef.current ?? basemapStyle(colors, isDark())) as StyleSpecification); };
     window.addEventListener('tw-theme', restyle);
     const mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', restyle);
     return () => { window.removeEventListener('tw-theme', restyle); mq.removeEventListener('change', restyle); map.remove(); mapRef.current = null; };
@@ -291,7 +291,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
     applied.current = { style: externalBasemapStyle, override: colorsOverride };
     const colors: MapColors = { ...readMapColors(), ...colorsOverride };
     colorsRef.current = colors;
-    for (const kind of ['signal', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind);
+    for (const kind of ['signal', 'signal_likely', 'signal_source', 'report', 'verified', 'responding', 'contained', 'closed', 'officer', 'task', 'me']) if (map.hasImage(kind)) map.removeImage(kind);
     // Listen first: a style with only raster sources can finish loading before the next line runs.
     map.once('style.load', () => { install(map, colors); setReady(false); setReady(true); setEpoch(n => n + 1); });
     map.setStyle((externalBasemapStyle ?? basemapStyle(colors, isDark())) as StyleSpecification);

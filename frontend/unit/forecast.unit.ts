@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { actionsFor, areaPolygons, chanceWords, levelName, levelRank, recordWords, shareText, toneOf, usualWords, vsUsual, type Action, type Area } from '../src/features/forecast/model.ts';
+import { actionsFor, areaPolygons, cardDates, chanceWords, dayWord, levelName, levelRank, recordWords, shareText, toneOf, usualWords, vsUsual, type Action, type Area } from '../src/features/forecast/model.ts';
 
 const t = (_k: string, fallback: string, o: Record<string, unknown> = {}) => fallback.replace(/\{\{(\w+)\}\}/g, (_m, k) => String(o[k] ?? ''));
 const area = (o: Partial<Area> = {}): Area => ({ id: 1, name: 'near Kendu', state: 'OD', lat: 20.2, lon: 85.2, bbox: [85, 20, 85.5, 20.5], cells: 10, chance: 0.62, expected_fires: 3.1, usual_fires: 1.2, usual_chance: 0.4, level: 'extreme', reliable: true, ...o });
@@ -42,4 +42,11 @@ test('the share text carries the date, level, places and the actions that are on
 test('yesterday record says how many High or Extreme areas had a fire, and is silent without data', () => {
   assert.equal(recordWords(undefined, t), null);
   assert.match(recordWords({ date: '2025-03-14', areas_with_fire: 295, in_high_or_extreme: 282, areas_rated_high_or_extreme: 367, of_those_with_fire: 282 }, t) as string, /282 of the 367 areas rated High or Extreme, and 282 of the 295/);
+});
+
+test('days are named against the reader\'s own calendar day, and a ranger is offered today and tomorrow when both exist', () => {
+  const now = new Date(2026, 10, 12, 7, 0);
+  assert.equal(dayWord('2026-11-12', t, now), 'Today'); assert.equal(dayWord('2026-11-13', t, now), 'Tomorrow'); assert.equal(dayWord('2026-11-11', t, now), '2026-11-11');
+  assert.deepEqual(cardDates(['2026-11-11', '2026-11-12', '2026-11-13'], '2026-11-13', now), ['2026-11-12', '2026-11-13']);
+  assert.deepEqual(cardDates(['2026-11-13'], '2026-11-13', now), ['2026-11-13']); assert.deepEqual(cardDates(['2025-03-14', '2025-03-15'], '2025-03-15', now), ['2025-03-15']);
 });

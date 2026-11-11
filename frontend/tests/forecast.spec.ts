@@ -56,7 +56,7 @@ test.describe('Fire forecast: ranger card', () => {
     await signedInAs(page, 'range_officer', 'Ranger Das'); await mock(page, small);
     await page.setViewportSize({ width: 390, height: 900 });
     await page.goto('/field/forecast');
-    await expect(page.getByRole('heading', { name: 'Tomorrow in my area' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /in my area/ })).toBeVisible();
     const card = page.locator('article').first();
     await expect(card.getByText('Extreme')).toBeVisible();
     await expect(card.getByRole('heading', { name: 'Do today' })).toBeVisible();

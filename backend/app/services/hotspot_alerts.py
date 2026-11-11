@@ -1,6 +1,6 @@
 """Tell staff when satellite detections gather in one place.
 
-A cluster is CLUSTER_MIN or more detections in the same 0.1 degree forest cell (about 11 km) within the last WINDOW_HOURS hours. Only detections inside the forest cells
+A cluster is CLUSTER_MIN or more detections (not counting those the quality job marked as a known heat source or outside forest) in the same 0.1 degree forest cell (about 11 km) within the last WINDOW_HOURS hours. Only detections inside the forest cells
 the forecast covers are considered, so the state of a cluster is the state of that cell (not a guess from a bounding box). Each cluster is announced once per UTC day, to the
 staff whose scope covers its state (the same people who are told about incidents there).
 """
@@ -18,7 +18,9 @@ KIND = "satellite_cluster"
 _CLUSTERS = text("""
     WITH h AS (
       SELECT (round(latitude*10)::bigint*1000 + round(longitude*10)::bigint) AS cell_id, max(acq_datetime) AS latest, count(*) AS n, max(frp) AS max_frp
-      FROM resq_hotspots WHERE acq_datetime >= now() - make_interval(hours => :hours) GROUP BY 1 HAVING count(*) >= :min_count)
+      FROM resq_hotspots WHERE acq_datetime >= now() - make_interval(hours => :hours)
+        AND NOT EXISTS (SELECT 1 FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude AND q.grp IN ('known_source','outside_forest'))
+      GROUP BY 1 HAVING count(*) >= :min_count)
     SELECT h.cell_id, h.latest, h.n, h.max_frp, c.state FROM h JOIN cells c ON c.id = h.cell_id
 """)
 

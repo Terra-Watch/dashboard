@@ -26,6 +26,20 @@ test.describe('Satellite detections page', () => {
     await expect(page.getByText('No clusters in this window.')).toBeVisible();
   });
 
+  test('sorts detections into groups, keeps known sources one tap away and says why', async ({ page }) => {
+    const graded = [{ ...items[0], quality_group: 'likely', quality_p: 0.62, quality_reasons: [] }, { ...items[1], quality_group: 'unconfirmed', quality_p: 0.04, quality_reasons: ['isolated_weak'] },
+      { ...items[2], quality_group: 'known_source', quality_p: 0.01, quality_reasons: ['industrial_near'] }, { ...items[3], quality_group: 'outside_forest', quality_p: null, quality_reasons: ['outside_forest'] }, items[4]];
+    await page.route('**/api/hotspots**', route => route.fulfill(json({ items: graded, truncated: false, freshness, label: 'Satellite signal, not confirmed by a person' })));
+    await page.goto('/ops/satellite');
+    await expect(page.getByLabel(/Likely fire/)).toBeChecked();
+    await expect(page.getByLabel(/Known heat source/)).not.toBeChecked();
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(4);                 // header + likely + unconfirmed + one not yet sorted; the known source and the outside-forest one are counted, not listed
+    await page.getByLabel(/Known heat source/).check();
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(5);
+    await page.getByRole('table').getByRole('row').nth(2).getByRole('button').click();
+    await expect(page.getByRole('status').filter({ hasText: 'Unconfirmed' })).toContainText('alone and weak');
+  });
+
   test('no serious accessibility violations', async ({ page }) => {
     await page.goto('/ops/satellite');
     await expect(page.getByRole('table')).toBeVisible();

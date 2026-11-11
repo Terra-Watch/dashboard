@@ -9,7 +9,7 @@ import { Card, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { ageText } from '../../ui/ladder';
 import { Chart } from './Chart';
 import { useCreateCheck, useNearby, useStation } from './api';
-import { fmt, ageLabel } from './model';
+import { fmt, ageLabel, statementWords } from './model';
 import { Readings, Sounds, StatusChip } from './parts';
 
 /** One station: current readings against its own normal, trend, link health, what else is near it, and the way to turn it into a check. */
@@ -29,6 +29,7 @@ export function OpsStationPage() {
       <Link to="/ops/stations" className="inline-flex min-h-11 items-center font-semibold underline">{t('stations.back', 'All stations')}</Link>
       <PageTitle title={s.name} subtitle={q.data!.label} actions={<StatusChip s={s} />} />
       <p className="text-sm text-ink-muted">{s.state} · {t('stations.node', { n: s.node_id, defaultValue: 'node {{n}}' })} · {s.latitude.toFixed(4)}, {s.longitude.toFixed(4)} · {t('stations.interval', { n: s.expected_interval_s, defaultValue: 'reports every {{n}} s' })}</p>
+      {s.statement && s.statement.tone !== 'ok' && s.statement.tone !== 'gap' && <Notice kind={s.statement.tone === 'check' ? 'warning' : 'info'}>{statementWords(s, (k, d, o) => t(k, { defaultValue: d, ...o }))}</Notice>}
       {(s.status === 'late' || s.status === 'offline' || s.status === 'never') && <Notice kind="warning" title={t('stations.silent_title', 'This station is not reporting')}>{s.status === 'never' ? t('stations.never_msg', 'Nothing has been heard from it yet.') : t('stations.silent_msg', { age: ageLabel(s.age_s), defaultValue: 'Last heard {{age}} ago. Treat it as not reporting, not as quiet.' })}</Notice>}
       <Sounds items={q.data!.sounds} />
       <Readings s={s} />

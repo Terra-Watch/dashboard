@@ -15,7 +15,7 @@ from ..core.permissions import scope_clause
 from ..core.regions import state_at
 from ..core.security import require_csrf, require_roles
 from ..database.session import engine
-from ..services import audit_log, communities, stations as st
+from ..services import audit_log, communities, station_rules as rules, stations as st
 from ..services.alert_service import generate_alert
 from ..services.recipients import incident_staff_recipients
 
@@ -91,24 +91,39 @@ async def ingest(request: Request) -> dict:
 
 
 def _sound_alert(station_id: int, sound: dict) -> None:
-    """Tell the staff of the station's area what its sound classifier heard. It is a prompt to check, not a confirmed event."""
+    """Tell the staff of the station's area what its sound classifier heard, once per check (station_rules.should_notify), with the evidence beside it. A prompt to check, not a confirmed event."""
     with engine.connect() as db:
         s = db.execute(text('SELECT name,state,community_id,latitude,longitude FROM resq_stations WHERE id=:i'), {'i': station_id}).mappings().first()
-        cid = communities.at_point(db, s['latitude'], s['longitude']) if s and s['community_id'] is None else (s['community_id'] if s else None)
-    if not s: return
+        if not s: return
+        cid = communities.at_point(db, s['latitude'], s['longitude']) if s['community_id'] is None else s['community_id']
+        same = db.execute(text("SELECT count(*) FROM resq_station_sounds WHERE station_id=:i AND kind=:k AND received_at >= now() - make_interval(mins => :m)"),
+                          {'i': station_id, 'k': sound['kind'], 'm': rules.CHAINSAW_WINDOW_MIN}).scalar() or 0
+        near = db.execute(text("SELECT count(*) FROM resq_hotspots WHERE acq_datetime >= now() - interval '24 hours' AND latitude BETWEEN :a AND :b AND longitude BETWEEN :c AND :d"),
+                          {'a': s['latitude'] - 0.1, 'b': s['latitude'] + 0.1, 'c': s['longitude'] - 0.1, 'd': s['longitude'] + 0.1}).scalar() or 0
+        row = db.execute(text(_LIST.format(clause='TRUE') + ' AND s.id=:sid'), {'sid': station_id}).mappings().first()
+    smoke = False
+    if row and row['pm25'] is not None and row['pm25_normal']: smoke = row['pm25'] >= rules.RISE_RATIO * float(row['pm25_normal'])
+    # a chainsaw is announced on its Nth detection only, so a long session is one notification; a blast or fire on its first in the window
+    if not rules.should_notify(sound['kind'], int(same), smoke, int(near)) or (sound['kind'] == 'chainsaw' and same != rules.CHAINSAW_REPEAT) or (sound['kind'] != 'chainsaw' and same > 1): return
     what = {'chainsaw': 'a chainsaw', 'blast': 'a gunshot or blast', 'fire': 'an open fire crackling'}.get(sound['kind'], 'an unusual sound')
+    evidence = (' Smoke at the station is up.' if smoke else '') + (f' {near} satellite detection(s) within about 10 km in the last day.' if near else '')
     for rid in incident_staff_recipients(s['state'], community_id=cid):
-        generate_alert(kind='station_sound', message=f"Station '{s['name']}' heard what sounds like {what} ({sound['confidence']} % sure). A sound classifier, not a person: check it.",
+        generate_alert(kind='station_sound', message=f"Station '{s['name']}' heard what sounds like {what} ({sound['confidence']} % sure).{evidence} A sound classifier, not a person: check it.",
                        state=s['state'], severity='warning', entity_type='station', entity_id=str(station_id), user_id=rid)
 
 
 _LIST = '''SELECT s.id,s.node_id,s.name,s.latitude,s.longitude,s.state,s.community_id,s.kind,s.expected_interval_s,s.installed_at,s.notes,s.reported_lat,s.reported_lon,s.reported_at,
-       l.received_at AS last_heard,ls.kind AS sound_kind,ls.confidence AS sound_confidence,ls.received_at AS sound_at,l.temp_c,l.humidity_pct,l.pm25,l.pm10,l.battery_mv,l.rssi,l.snr,l.hops,l.flags,b.base AS pm25_normal
+       l.received_at AS last_heard,ls.kind AS sound_kind,ls.confidence AS sound_confidence,ls.received_at AS sound_at,l.temp_c,l.humidity_pct,l.pm25,l.pm10,l.battery_mv,l.rssi,l.snr,l.hops,l.flags,b.base AS pm25_normal,h.held AS held_min,rs.recent AS sounds_recent
   FROM resq_stations s
   LEFT JOIN LATERAL (SELECT * FROM resq_station_readings r WHERE r.station_id=s.id ORDER BY r.received_at DESC LIMIT 1) l ON TRUE
   LEFT JOIN LATERAL (SELECT kind,confidence,received_at FROM resq_station_sounds x WHERE x.station_id=s.id AND x.received_at >= now() - interval '6 hours' ORDER BY x.received_at DESC LIMIT 1) ls ON TRUE
-  LEFT JOIN LATERAL (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY pm25) AS base FROM resq_station_readings r
-        WHERE r.station_id=s.id AND r.pm25 IS NOT NULL AND r.received_at >= now() - interval '24 hours' AND r.received_at < now() - interval '15 minutes') b ON TRUE
+  LEFT JOIN LATERAL (SELECT CASE WHEN count(*) >= 12 THEN percentile_cont(0.5) WITHIN GROUP (ORDER BY pm25) END AS base FROM resq_station_readings r
+        WHERE r.station_id=s.id AND r.pm25 IS NOT NULL AND r.received_at >= now() - interval '7 days' AND r.received_at < now() - interval '15 minutes'
+          AND ((extract(hour FROM r.received_at)::int - extract(hour FROM now())::int + 24) % 24) IN (0,1,23)) b ON TRUE
+  LEFT JOIN LATERAL (SELECT COALESCE(extract(epoch FROM now() - max(received_at))/60, 180) AS held FROM resq_station_readings r
+        WHERE r.station_id=s.id AND r.pm25 IS NOT NULL AND r.received_at >= now() - interval '3 hours' AND r.pm25 < 2 * COALESCE(b.base, 1e9)) h ON TRUE
+  LEFT JOIN LATERAL (SELECT json_agg(json_build_object('k', kind, 'a', round((extract(epoch FROM now() - received_at)/60)::numeric, 1)) ORDER BY received_at DESC) AS recent FROM resq_station_sounds x
+        WHERE x.station_id=s.id AND x.received_at >= now() - interval '2 hours') rs ON TRUE
  WHERE s.active AND ({clause})'''
 
 
@@ -116,6 +131,7 @@ def _shape(r, lat=None, lon=None) -> dict:
     d = dict(r); now = datetime.now(timezone.utc)
     d['status'] = st.status_of(d['last_heard'], d['expected_interval_s'], now)
     d['age_s'] = int((now - d['last_heard']).total_seconds()) if d['last_heard'] else None
+    d['held_min'] = int(d['held_min'] or 0); d['sounds_recent'] = d['sounds_recent'] or []
     base = d.pop('pm25_normal'); d['pm25_normal'] = round(float(base), 1) if base is not None else None
     d['pm25_vs_normal'] = round(d['pm25'] / base, 2) if d['pm25'] is not None and base and base >= 1 else None
     sk, sc, sa = d.pop('sound_kind', None), d.pop('sound_confidence', None), d.pop('sound_at', None)
@@ -129,12 +145,23 @@ def _shape(r, lat=None, lon=None) -> dict:
     return d
 
 
+def _annotate(items: list[dict], others: list[dict] | None = None) -> None:
+    """Add the plain statement of each station (docs/21): smoke against the station's own normal and its neighbours within 50 km, then sounds, then silence."""
+    pool = items + [o for o in (others or []) if o['id'] not in {i['id'] for i in items}]
+    for d in items:
+        ratios = [o['pm25_vs_normal'] for o in pool if o['id'] != d['id'] and o['status'] == 'online' and o['pm25_vs_normal'] is not None
+                  and st.distance_km(d['latitude'], d['longitude'], o['latitude'], o['longitude']) <= rules.HAZE_KM]
+        held = d.pop('held_min'); smoke = rules.smoke_state(d['pm25'] if d['status'] == 'online' else None, d['pm25_normal'], d['humidity_pct'], held, ratios)
+        sounds = [(x['k'], x['a']) for x in d.pop('sounds_recent')]
+        d['smoke'] = smoke; d['statement'] = rules.statement(d, smoke, held, sounds)
+
+
 @router.get('/stations')
 def list_stations(lat: float | None = Query(None, ge=-90, le=90), lon: float | None = Query(None, ge=-180, le=180), limit: int = Query(200, ge=1, le=500),
                   user: dict = Depends(require_roles(*STAFF, *FIELD))) -> dict:
     clause, params = scope_clause(user, 's.state', 's.community_id', include_uncovered=True)
     with engine.connect() as db: rows = db.execute(text(_LIST.format(clause=clause) + ' ORDER BY s.name'), params).mappings().all()
-    items = [_shape(r, lat, lon) for r in rows]
+    items = [_shape(r, lat, lon) for r in rows]; _annotate(items)
     if lat is not None and lon is not None: items.sort(key=lambda d: d['distance_km'])
     return {'label': LABEL, 'items': items[:limit]}
 
@@ -157,13 +184,16 @@ def station(station_id: int, hours: int = Query(24, ge=1, le=168), lat: float | 
             user: dict = Depends(require_roles(*STAFF, *FIELD))) -> dict:
     with engine.connect() as db:
         r = _one(db, station_id, user)
+        clause, params = scope_clause(user, 's.state', 's.community_id', include_uncovered=True)
+        others = [_shape(o) for o in db.execute(text(_LIST.format(clause=clause) + ' AND s.id <> :sid'), {**params, 'sid': station_id}).mappings().all()]
         b = max(int(hours * 3600 / 300), 1)
         pts = db.execute(text('''SELECT to_timestamp(floor(extract(epoch FROM received_at)/:b)*:b) AS t, avg(pm25) AS pm25, avg(pm10) AS pm10, avg(temp_c) AS temp_c, avg(humidity_pct) AS humidity_pct
             FROM resq_station_readings WHERE station_id=:id AND received_at >= now() - make_interval(hours => :h) GROUP BY 1 ORDER BY 1'''), {'b': b, 'id': station_id, 'h': hours}).mappings().all()
     with engine.connect() as db:
         sounds = db.execute(text('''SELECT received_at,kind,confidence FROM resq_station_sounds WHERE station_id=:id AND received_at >= now() - interval '24 hours' ORDER BY received_at DESC LIMIT 20'''), {'id': station_id}).mappings().all()
+    shaped = _shape(r, lat, lon); _annotate([shaped], others)
     series = [{'t': p['t'].isoformat(), **{k: (round(float(p[k]), 1) if p[k] is not None else None) for k in ('pm25', 'pm10', 'temp_c', 'humidity_pct')}} for p in pts]
-    return {'label': LABEL, 'station': _shape(r, lat, lon), 'hours': hours, 'series': series, 'sounds': [{'at': x['received_at'].isoformat(), 'kind': x['kind'], 'confidence': x['confidence']} for x in sounds]}
+    return {'label': LABEL, 'station': shaped, 'hours': hours, 'series': series, 'sounds': [{'at': x['received_at'].isoformat(), 'kind': x['kind'], 'confidence': x['confidence']} for x in sounds]}
 
 
 @router.get('/stations/{station_id}/nearby')

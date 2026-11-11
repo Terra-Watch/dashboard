@@ -8,6 +8,8 @@ on:
 concurrency:
   group: satellite-detections
   cancel-in-progress: false
+permissions:
+  contents: read
 jobs:
   post:
     runs-on: ubuntu-latest
@@ -22,3 +24,21 @@ jobs:
           RISK_INGEST_URL: ${{ secrets.RISK_INGEST_URL }}
           RISK_INGEST_TOKEN: ${{ secrets.RISK_INGEST_TOKEN }}
         run: python forecast/live/post_hotspots.py
+      # Sort the same detections into quality groups (likely fire, unconfirmed, known heat source, outside forest) with the forecast job's history and classifier. A failure here never stops the
+      # post above and never hides a detection: without groups the dashboard shows them as it always did (docs/22-satellite-detection-groups-and-stations.md).
+      - name: Download forecast state
+        continue-on-error: true
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mkdir -p forecast/state
+          gh release download forecast-state --pattern state.tar.gz --dir /tmp
+          tar -xzf /tmp/state.tar.gz -C forecast/state
+      - name: Group the detections
+        continue-on-error: true
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          RISK_INGEST_URL: ${{ secrets.RISK_INGEST_URL }}
+          RISK_INGEST_TOKEN: ${{ secrets.RISK_INGEST_TOKEN }}
+        run: |
+          pip install -r forecast/requirements.txt
+          python forecast/live/post_hotspot_quality.py --state forecast/state --cells forecast/state/bundle/cells.parquet --url "${RISK_INGEST_URL%%/api/*}/api/feeds/hotspots/quality"

@@ -13,7 +13,7 @@ from ..core.permissions import user_scopes
 from ..core.security import current_redesign_user, require_csrf, require_roles
 from ..database.session import engine
 from .. import risk_settings
-from ..services import audit_log, hotspot_alerts
+from ..services import audit_log, hotspot_alerts, hotspot_quality
 from ..services.feeds import SATELLITE_LABEL, FeedError, freshness
 from ..services.feeds import firms, weather
 
@@ -22,7 +22,7 @@ STAFF_ROLES = ('control_room_operator', 'incident_commander', 'officer')
 MAX_ROWS = 5000
 ACTIVE = ('assigned', 'accepted', 'in_progress')
 
-_COLS = 'id,satellite,acq_datetime,latitude,longitude,frp,confidence,(SELECT c.state FROM cells c WHERE c.id = round(latitude*10)::bigint*1000 + round(longitude*10)::bigint) AS forest_state,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes'
+_COLS = 'id,satellite,acq_datetime,latitude,longitude,frp,confidence,(SELECT c.state FROM cells c WHERE c.id = round(latitude*10)::bigint*1000 + round(longitude*10)::bigint) AS forest_state,floor(extract(epoch from (now()-acq_datetime))/60)::int AS age_minutes,(SELECT q.grp FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_group,(SELECT q.p_scar FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_p,(SELECT q.reasons FROM resq_hotspot_quality q WHERE q.satellite=resq_hotspots.satellite AND q.acq_datetime=resq_hotspots.acq_datetime AND q.latitude=resq_hotspots.latitude AND q.longitude=resq_hotspots.longitude) AS quality_reasons'
 
 
 def _items(rows) -> list[dict]:
@@ -130,6 +130,22 @@ async def ingest_hotspots(request: Request, satellite: str = Query(..., pattern=
         raise HTTPException(status_code=422, detail=str(exc)) from None
     inserted = firms.upsert(rows)
     return {'received': len(rows), 'inserted': inserted, **hotspot_alerts.alert_clusters(engine)}
+
+
+class QualityBody(BaseModel):
+    items: list[dict] = Field(max_length=hotspot_quality.MAX_ITEMS)
+
+
+@router.post('/feeds/hotspots/quality')
+def ingest_quality(body: QualityBody, x_ingest_token: str | None = Header(None)) -> dict:
+    """The scheduled job posts the quality group of each detection (likely, unconfirmed, known source, outside forest). Same shared secret as the hotspot ingest."""
+    expected = risk_settings.ingest_token()
+    if not expected:
+        raise HTTPException(status_code=404, detail='Not found')
+    if not x_ingest_token or not hmac.compare_digest(x_ingest_token.encode(), expected.encode()):
+        raise HTTPException(status_code=403, detail='Not allowed')
+    rows, refused = hotspot_quality.clean(body.items)
+    return {'stored': hotspot_quality.store(rows, engine), 'refused': refused}
 
 
 class RefreshRequest(BaseModel):

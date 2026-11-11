@@ -83,6 +83,20 @@ export function areaPolygons(areas: Area[], idPrefix = 'fa'): MapPolygon[] {
   });
 }
 
+/** "Today", "Tomorrow" or the date itself, against the reader's own calendar day (the forecast date is a calendar day). */
+export function dayWord(date: string, t: T, now: Date = new Date()): string {
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return date === iso(now) ? t('forecast.today', 'Today') : date === iso(tomorrow) ? t('forecast.tomorrow', 'Tomorrow') : date;
+}
+
+/** The dates to offer a ranger: today and tomorrow when the forecast has them, else just the newest. */
+export function cardDates(dates: string[], latest: string, now: Date = new Date()): string[] {
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const want = [iso(now), iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1))].filter(d => dates.includes(d));
+  return want.length ? want : [latest];
+}
+
 export const bearingWord = (b: string | null): string => b ?? '';
 
 export function placeLine(p: NonNullable<Place>): string {
