@@ -10,7 +10,7 @@ import { boundsOf } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { satelliteStyle, whatifTerrainStyle } from '../map/style';
 import { ForecastTabs } from '../forecast/BoardPage';
-import { BAND_ORDER, bandPolygons, burnedPolygons, compareWords, overallWords, footprintPolygons, placePoints, roadLines, type Overlay, type Run, type Summary } from '../firespread/model';
+import { BAND_ORDER, bandPolygons, burnedPolygons, compareWords, fireTitle, overallWords, footprintPolygons, placePoints, roadLines, type Overlay, type Run, type Summary } from '../firespread/model';
 import { HEAT_STOPS, OUTLOOK_VIEWS, horizonKeys, readDarkTokens, readView, safeStorage, satelliteConfig, writeView, type OutlookViewId } from './view';
 
 const SATELLITE = satelliteConfig(import.meta.env as Record<string, string | boolean | undefined>);
@@ -90,8 +90,8 @@ export function OutlookPage() {
           <section aria-label={tt('outlook.fires', 'Fires')}>
             <ul className="flex gap-2 overflow-x-auto pb-1">{fires.map(f => (
               <li key={f.event} className="shrink-0"><button type="button" aria-pressed={f.event === fire?.event} onClick={() => { setEvent(f.event); setShowBurned(false); setPicked(null); }} className={`min-h-11 rounded-rq border px-3 py-2 text-left ${f.event === fire?.event ? 'border-action bg-action/10' : 'border-line'}`}>
-                <span className="block font-semibold">{f.state ?? `${f.lat.toFixed(2)}°N`}</span>
-                <span className="block text-sm text-ink-muted">{tt('outlook.detections', '{{count}} satellite detections', { count: f.n_detections })} · {formatWhen(f.last_detection)}</span>
+                <span className="block font-semibold">{fireTitle(f, tt)}</span>
+                <span className="block text-sm text-ink-muted">{f.state ? `${f.state} · ` : ''}{tt('outlook.detections', '{{count}} satellite detections', { count: f.n_detections })} · {formatWhen(f.last_detection)}</span>
               </button></li>))}</ul>
           </section>
           {fire && (
@@ -151,7 +151,8 @@ export function OutlookPage() {
                   </Card>)}
                 <Card title={tt('outlook.about', 'This fire')}>
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                    <dt className="text-ink-muted">{tt('outlook.where', 'Place')}</dt><dd className="font-semibold">{fire.state ?? '-'}</dd>
+                    <dt className="text-ink-muted">{tt('outlook.where', 'Place')}</dt><dd className="font-semibold">{fire.place ? `${fire.place.name} (${tt(`outlook.kind.${fire.place.kind}`, fire.place.kind)}, ${fire.place.distance_km} km ${tt(`outlook.dir.${fire.place.bearing}`, fire.place.bearing)})` : `${fire.lat.toFixed(3)}°N ${fire.lon.toFixed(3)}°E`}</dd>
+                    <dt className="text-ink-muted">{tt('outlook.state', 'State')}</dt><dd className="font-semibold">{fire.state ?? '-'}</dd>
                     <dt className="text-ink-muted">{tt('outlook.seen', 'Detections')}</dt><dd className="font-semibold">{fire.n_detections}</dd>
                     <dt className="text-ink-muted">{tt('outlook.last', 'Last seen')}</dt><dd className="font-semibold">{formatWhen(fire.last_detection)}</dd>
                     <dt className="text-ink-muted">{tt('outlook.power', 'Fire power')}</dt><dd className="font-semibold">{Math.round(fire.frp_sum)} MW</dd>

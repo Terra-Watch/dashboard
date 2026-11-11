@@ -6,7 +6,7 @@ export type Place = { name: string; kind: string; band: number; distance_km: num
 export type Affected = { bands: Record<string, BandFacts>; places: { by_band: Record<string, Record<string, number>> }; nearest_settlement: Place | null; roads_in_bands: number; road_names: string[]; models: number };
 export type Horizon = { file: string; burned_file?: string; places_file?: string; roads_file?: string; cells_scored: number; bands: Record<string, number>; summary?: Summary; affected?: Affected };
 export type Check = { burned_km2: number; top_band_km2: number; top_band_capture: number; top_band_precision: number; nearest_capture: number; three_bands_km2: number; three_bands_capture: number };
-export type Fire = { check?: Check; event: string; lat: number; lon: number; state?: string; n_detections: number; first_detection: string; last_detection: string; frp_sum: number; overlay_file?: string; horizons?: Record<string, Horizon> };
+export type Fire = { check?: Check; place?: { name: string; kind: string; distance_km: number; bearing: string } | null; event: string; lat: number; lon: number; state?: string; n_detections: number; first_detection: string; last_detection: string; frp_sum: number; overlay_file?: string; horizons?: Record<string, Horizon> };
 /** The ranking as a heat picture and a hillshade picture (data URLs), with the corners they are placed at: top-left, top-right, bottom-right, bottom-left, each [lon, lat]. */
 export type Overlay = { coordinates: [[number, number], [number, number], [number, number], [number, number]]; heat: string; terrain: string };
 export type Overall = { fires: number; burned_km2_median: number; top_band_km2_median: number; top_band_capture_median: number; nearest_capture_median: number; share_capture_80: number; share_capture_under_30: number; share_better_than_nearest: number; three_bands_km2_median: number; three_bands_capture_median: number };
@@ -66,4 +66,9 @@ export function overallWords(o: Overall, t: T): string[] {
     t('outlook.all_spread', 'It covered 80% or more of what burned in {{hi}}% of the fires and under 30% in {{lo}}%, mostly large fires that burned more than the band holds. It did better than nearest-first in {{better}}% of the fires.', { hi: pct(o.share_capture_80), lo: pct(o.share_capture_under_30), better: pct(o.share_better_than_nearest) }),
     t('outlook.all_three', 'The three bands together (about {{b3}} km²) covered {{c3}}% of what burned, but that area is several times what a typical fire burns, so it is a ranking and not a forecast of the burned area.', { b3: o.three_bands_km2_median, c3: pct(o.three_bands_capture_median) }),
   ];
+}
+
+/** The fire's name: the nearest named place ("near Bussapur"), else the coordinates. The state is a separate fact, never the place. */
+export function fireTitle(f: Pick<Fire, 'place' | 'lat' | 'lon'>, t: T): string {
+  return f.place ? t('outlook.near', 'near {{name}}', { name: f.place.name }) : `${f.lat.toFixed(2)}°N ${f.lon.toFixed(2)}°E`;
 }
