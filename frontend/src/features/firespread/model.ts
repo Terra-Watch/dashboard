@@ -5,9 +5,11 @@ export type BandFacts = { area_km2: number; people: number; cover: Record<string
 export type Place = { name: string; kind: string; band: number; distance_km: number; bearing: string; lon: number; lat: number };
 export type Affected = { bands: Record<string, BandFacts>; places: { by_band: Record<string, Record<string, number>> }; nearest_settlement: Place | null; roads_in_bands: number; road_names: string[]; models: number };
 export type Horizon = { file: string; burned_file?: string; places_file?: string; roads_file?: string; cells_scored: number; bands: Record<string, number>; summary?: Summary; affected?: Affected };
-export type Fire = { event: string; lat: number; lon: number; state?: string; n_detections: number; first_detection: string; last_detection: string; frp_sum: number; horizons?: Record<string, Horizon> };
+export type Fire = { event: string; lat: number; lon: number; state?: string; n_detections: number; first_detection: string; last_detection: string; frp_sum: number; overlay_file?: string; horizons?: Record<string, Horizon> };
+/** The ranking as a heat picture and a hillshade picture (data URLs), with the corners they are placed at: top-left, top-right, bottom-right, bottom-left, each [lon, lat]. */
+export type Overlay = { coordinates: [[number, number], [number, number], [number, number], [number, number]]; heat: string; terrain: string };
 export type Skill = { horizons: Record<string, { model_iou: number; baseline_iou: number; model_direction_auc: number; baseline_direction_auc: number; cases: number }>; source?: string };
-export type Run = { run: string; mode: 'replay' | 'live'; at: string; model_tag?: string; fires: Fire[]; note: string; skill: Skill | null };
+export type Run = { run: string; mode: 'replay' | 'live'; at: string; model_tag?: string; outlook?: string; fires: Fire[]; note: string; skill: Skill | null };
 type Ring = Array<[number, number]>;
 type Bands = { features: Array<{ properties: { band: number }; geometry: { type: string; coordinates: Ring[][] } }> };
 

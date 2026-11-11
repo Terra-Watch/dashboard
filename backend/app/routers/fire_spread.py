@@ -1,6 +1,8 @@
-"""Fire spread: where the next cells of an active fire are most likely to burn, ranked in bands. Serves, read-only, the files written by fire-spread/scripts/34_score_active.py
-(runtime_data/fire_spread/<run>/events.json, <event>_<H>h.geojson, <event>_pixels.geojson, and skill.json with the measured validation numbers).
-It is a ranking of cells within 8 km of the fire, not a calibrated probability and not wind-driven; every response carries that note."""
+"""Fire spread: where the next cells of an active fire are most likely to burn, ranked. Serves, read-only, the files written by fire-spread/scripts/62_outlook_run.py
+(runtime_data/fire_spread/<run>/events.json, <event>_<H>h.geojson, <event>_pixels.geojson, <event>_overlay.json, and skill.json with the measured validation numbers).
+It is a ranking of cells within 8 km of the fire, not a calibrated probability, not a timing and not wind-driven; every response carries that note.
+A run lists the look-ahead it holds per fire (`horizons`). Current runs hold one outlook, stored under 48: the 24 h and 48 h models rank the cells almost
+identically, so one map is served; the 24 key is still accepted for older runs."""
 import json
 import os
 import re
@@ -79,6 +81,12 @@ def latest(user: dict = Depends(require_risk_roles(*ROLES))):
 @router.get("/{run}/{event}/pixels")
 def pixels(run: str, event: str, user: dict = Depends(require_risk_roles(*ROLES))):
     return _json(_event_files(run, event, user) / f"{event}_pixels.geojson")
+
+
+@router.get("/{run}/{event}/overlay")
+def overlay(run: str, event: str, user: dict = Depends(require_risk_roles(*ROLES))):
+    """The ranking as a heat picture and a hillshade picture (data URLs) with the four corner coordinates they are placed at. Absent in older runs."""
+    return _json(_event_files(run, event, user) / f"{event}_overlay.json")
 
 
 @router.get("/{run}/{event}/burned/{horizon}")

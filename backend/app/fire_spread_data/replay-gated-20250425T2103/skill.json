@@ -1,4 +1,0 @@
-{"source": "gated U-Net, mean of three seeds, 250 test fires (2025), cells within 8 km of the fire; reference: ranking cells by distance to the fire",
- "horizons": {
-  "24": {"model_iou": 0.227, "baseline_iou": 0.113, "model_direction_auc": 0.792, "baseline_direction_auc": 0.600, "cases": 250},
-  "48": {"model_iou": 0.235, "baseline_iou": 0.122, "model_direction_auc": 0.799, "baseline_direction_auc": 0.599, "cases": 250}}}

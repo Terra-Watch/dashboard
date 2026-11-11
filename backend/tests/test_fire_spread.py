@@ -35,6 +35,7 @@ class FireSpreadTests(unittest.TestCase):
             json.dump({"type": "FeatureCollection", "features": []}, open(run / f"{e}_pixels.geojson", "w"))
             json.dump({"type": "FeatureCollection", "features": [], "burned": True}, open(run / f"{e}_burned_48h.geojson", "w"))
             json.dump({"type": "FeatureCollection", "features": []}, open(run / f"{e}_places_48h.geojson", "w"))
+            json.dump({"coordinates": [[0, 1], [1, 1], [1, 0], [0, 0]], "heat": "data:image/webp;base64,AA==", "terrain": "data:image/webp;base64,AA=="}, open(run / f"{e}_overlay.json", "w"))
         json.dump({"own": True}, open(run / "skill.json", "w"))
         cls._env = patch.dict(os.environ, {"FIRE_SPREAD_DIR": str(root)})
         cls._env.start()
@@ -89,6 +90,12 @@ class FireSpreadTests(unittest.TestCase):
         self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/places/48").status_code, 200)
         self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/roads/48").status_code, 404)       # no such file written
         self.assertEqual(c.get("/api/fire-spread/replay-20250312T1200/a1/layer/secrets/48").status_code, 404)      # only places and roads
+
+    def test_the_overlay_pictures_are_served_only_for_a_visible_fire(self):
+        body = self.client().get("/api/fire-spread/replay-20250312T1200/a1/overlay").json()
+        self.assertEqual(len(body["coordinates"]), 4)
+        self.assertTrue(body["heat"].startswith("data:image/"))
+        self.assertEqual(self.client().get("/api/fire-spread/replay-20250312T1200/zz/overlay").status_code, 404)
 
     def test_a_role_without_risk_access_is_refused(self):
         self.assertEqual(self.client("citizen").get("/api/fire-spread/runs/latest").status_code, 403)
