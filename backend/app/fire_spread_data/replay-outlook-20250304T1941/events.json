@@ -1,0 +1,523 @@
+{
+ "run": "replay-outlook-20250304T1941",
+ "mode": "replay",
+ "at": "2025-03-04 19:41:08.571428+00:00",
+ "model_tag": "gated-unet-6models",
+ "outlook": "next 1 to 2 days",
+ "issued": "2026-11-11T17:30:03.247812+00:00",
+ "fires": [
+  {
+   "event": "replay-2025-058426-1",
+   "case": "2025-058426_1",
+   "state": "Karn\u0101taka",
+   "lat": 14.24572,
+   "lon": 77.29009,
+   "n_detections": 5,
+   "first_detection": "2025-02-03 07:21:00+00:00",
+   "last_detection": "2025-02-03 07:21:00+00:00",
+   "frp_sum": 12.6,
+   "overlay_file": "replay-2025-058426-1_overlay.json",
+   "horizons": {
+    "48": {
+     "file": "replay-2025-058426-1_48h.geojson",
+     "burned_file": "replay-2025-058426-1_burned_48h.geojson",
+     "places_file": "replay-2025-058426-1_places_48h.geojson",
+     "roads_file": "replay-2025-058426-1_roads_48h.geojson",
+     "cells_scored": 22710,
+     "weather_source": "hist",
+     "bands": {
+      "3": 666,
+      "2": 1331,
+      "1": 2661
+     },
+     "summary": {
+      "bearing_deg": 322,
+      "bearing": "NW",
+      "cover": "shrub",
+      "cover_share": 0.74,
+      "uphill_share": 1.0,
+      "slope_deg": 17.7
+     },
+     "affected": {
+      "bands": {
+       "3": {
+        "area_km2": 6.7,
+        "people": 2430,
+        "cover": {
+         "tree": 0.01,
+         "shrub": 0.83,
+         "grass": 0.15,
+         "crop": 0.01,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "2": {
+        "area_km2": 13.3,
+        "people": 4840,
+        "cover": {
+         "tree": 0.01,
+         "shrub": 0.69,
+         "grass": 0.1,
+         "crop": 0.2,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "1": {
+        "area_km2": 26.6,
+        "people": 9740,
+        "cover": {
+         "tree": 0.01,
+         "shrub": 0.4,
+         "grass": 0.07,
+         "crop": 0.51,
+         "built": 0.0,
+         "water": 0.0
+        }
+       }
+      },
+      "places": {
+       "by_band": {
+        "3": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "2": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "1": {
+         "village": 1,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        }
+       }
+      },
+      "nearest_settlement": {
+       "name": "Bommaganahalli",
+       "kind": "village",
+       "lon": 77.292987,
+       "lat": 14.2214431,
+       "band": 1,
+       "distance_km": 2.8,
+       "bearing": "S"
+      },
+      "roads_in_bands": 6,
+      "road_names": [],
+      "models": 6
+     }
+    }
+   },
+   "check": {
+    "burned_km2": 6.2,
+    "top_band_km2": 6.7,
+    "top_band_capture": 0.79,
+    "top_band_precision": 0.74,
+    "nearest_capture": 0.55,
+    "three_bands_km2": 20.0,
+    "three_bands_capture": 1.0
+   }
+  },
+  {
+   "event": "replay-2025-002622-0",
+   "case": "2025-002622_0",
+   "state": "Andhra Pradesh",
+   "lat": 15.12223625,
+   "lon": 78.646085,
+   "n_detections": 8,
+   "first_detection": "2025-02-11 08:16:45+00:00",
+   "last_detection": "2025-02-11 08:16:45+00:00",
+   "frp_sum": 45.9,
+   "overlay_file": "replay-2025-002622-0_overlay.json",
+   "horizons": {
+    "48": {
+     "file": "replay-2025-002622-0_48h.geojson",
+     "burned_file": "replay-2025-002622-0_burned_48h.geojson",
+     "places_file": "replay-2025-002622-0_places_48h.geojson",
+     "roads_file": "replay-2025-002622-0_roads_48h.geojson",
+     "cells_scored": 23331,
+     "weather_source": "hist",
+     "bands": {
+      "3": 684,
+      "2": 1367,
+      "1": 2735
+     },
+     "summary": {
+      "bearing_deg": 343,
+      "bearing": "N",
+      "cover": "shrub",
+      "cover_share": 0.46,
+      "uphill_share": 1.0,
+      "slope_deg": 3.9
+     },
+     "affected": {
+      "bands": {
+       "3": {
+        "area_km2": 6.8,
+        "people": 2470,
+        "cover": {
+         "tree": 0.34,
+         "shrub": 0.64,
+         "grass": 0.02,
+         "crop": 0.01,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "2": {
+        "area_km2": 13.7,
+        "people": 4970,
+        "cover": {
+         "tree": 0.49,
+         "shrub": 0.36,
+         "grass": 0.07,
+         "crop": 0.08,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "1": {
+        "area_km2": 27.4,
+        "people": 10010,
+        "cover": {
+         "tree": 0.76,
+         "shrub": 0.18,
+         "grass": 0.02,
+         "crop": 0.04,
+         "built": 0.0,
+         "water": 0.0
+        }
+       }
+      },
+      "places": {
+       "by_band": {
+        "3": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "2": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "1": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        }
+       }
+      },
+      "nearest_settlement": {
+       "name": "Dorakottalu",
+       "kind": "village",
+       "lon": 78.6610669,
+       "lat": 15.1221599,
+       "band": 0,
+       "distance_km": 1.6,
+       "bearing": "E"
+      },
+      "roads_in_bands": 22,
+      "road_names": [
+       "Allagadda - Ahobilam Road"
+      ],
+      "models": 6
+     }
+    }
+   },
+   "check": {
+    "burned_km2": 4.1,
+    "top_band_km2": 6.8,
+    "top_band_capture": 0.95,
+    "top_band_precision": 0.57,
+    "nearest_capture": 0.34,
+    "three_bands_km2": 20.5,
+    "three_bands_capture": 1.0
+   }
+  },
+  {
+   "event": "replay-2025-003557-2",
+   "case": "2025-003557_2",
+   "state": "Telang\u0101na",
+   "lat": 18.180375714285713,
+   "lon": 80.06128785714284,
+   "n_detections": 14,
+   "first_detection": "2025-02-15 19:50:00+00:00",
+   "last_detection": "2025-02-15 19:50:00+00:00",
+   "frp_sum": 23.0,
+   "overlay_file": "replay-2025-003557-2_overlay.json",
+   "horizons": {
+    "48": {
+     "file": "replay-2025-003557-2_48h.geojson",
+     "burned_file": "replay-2025-003557-2_burned_48h.geojson",
+     "places_file": "replay-2025-003557-2_places_48h.geojson",
+     "roads_file": "replay-2025-003557-2_roads_48h.geojson",
+     "cells_scored": 25377,
+     "weather_source": "hist",
+     "bands": {
+      "3": 744,
+      "2": 1487,
+      "1": 2974
+     },
+     "summary": {
+      "bearing_deg": 289,
+      "bearing": "W",
+      "cover": "tree",
+      "cover_share": 0.75,
+      "uphill_share": 1.0,
+      "slope_deg": 8.6
+     },
+     "affected": {
+      "bands": {
+       "3": {
+        "area_km2": 7.4,
+        "people": 2720,
+        "cover": {
+         "tree": 0.82,
+         "shrub": 0.02,
+         "grass": 0.14,
+         "crop": 0.01,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "2": {
+        "area_km2": 14.9,
+        "people": 5440,
+        "cover": {
+         "tree": 0.71,
+         "shrub": 0.04,
+         "grass": 0.16,
+         "crop": 0.08,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "1": {
+        "area_km2": 29.7,
+        "people": 10880,
+        "cover": {
+         "tree": 0.57,
+         "shrub": 0.04,
+         "grass": 0.18,
+         "crop": 0.16,
+         "built": 0.0,
+         "water": 0.05
+        }
+       }
+      },
+      "places": {
+       "by_band": {
+        "3": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "2": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "1": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        }
+       }
+      },
+      "nearest_settlement": {
+       "name": "Bussapur",
+       "kind": "village",
+       "lon": 80.078292,
+       "lat": 18.1786233,
+       "band": 0,
+       "distance_km": 1.9,
+       "bearing": "E"
+      },
+      "roads_in_bands": 12,
+      "road_names": [
+       "NH163"
+      ],
+      "models": 6
+     }
+    }
+   },
+   "check": {
+    "burned_km2": 2.0,
+    "top_band_km2": 7.4,
+    "top_band_capture": 0.99,
+    "top_band_precision": 0.27,
+    "nearest_capture": 0.27,
+    "three_bands_km2": 22.3,
+    "three_bands_capture": 1.0
+   }
+  },
+  {
+   "event": "replay-2025-007851-2",
+   "case": "2025-007851_2",
+   "state": "Odisha",
+   "lat": 20.390109166666665,
+   "lon": 82.5369525,
+   "n_detections": 12,
+   "first_detection": "2025-03-04 19:41:08.571428+00:00",
+   "last_detection": "2025-03-04 19:41:08.571428+00:00",
+   "frp_sum": 27.9,
+   "overlay_file": "replay-2025-007851-2_overlay.json",
+   "horizons": {
+    "48": {
+     "file": "replay-2025-007851-2_48h.geojson",
+     "burned_file": "replay-2025-007851-2_burned_48h.geojson",
+     "places_file": "replay-2025-007851-2_places_48h.geojson",
+     "roads_file": "replay-2025-007851-2_roads_48h.geojson",
+     "cells_scored": 26712,
+     "weather_source": "hist",
+     "bands": {
+      "3": 783,
+      "2": 1565,
+      "1": 3131
+     },
+     "summary": {
+      "bearing_deg": 185,
+      "bearing": "S",
+      "cover": "tree",
+      "cover_share": 0.92,
+      "uphill_share": 1.0,
+      "slope_deg": 13.3
+     },
+     "affected": {
+      "bands": {
+       "3": {
+        "area_km2": 7.8,
+        "people": 2860,
+        "cover": {
+         "tree": 0.92,
+         "shrub": 0.01,
+         "grass": 0.06,
+         "crop": 0.02,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "2": {
+        "area_km2": 15.7,
+        "people": 5720,
+        "cover": {
+         "tree": 0.92,
+         "shrub": 0.01,
+         "grass": 0.07,
+         "crop": 0.0,
+         "built": 0.0,
+         "water": 0.0
+        }
+       },
+       "1": {
+        "area_km2": 31.3,
+        "people": 11380,
+        "cover": {
+         "tree": 0.93,
+         "shrub": 0.01,
+         "grass": 0.05,
+         "crop": 0.0,
+         "built": 0.0,
+         "water": 0.0
+        }
+       }
+      },
+      "places": {
+       "by_band": {
+        "3": {
+         "village": 1,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "2": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        },
+        "1": {
+         "village": 0,
+         "town": 0,
+         "school": 0,
+         "health": 0,
+         "worship": 0,
+         "fire_station": 0,
+         "police": 0
+        }
+       }
+      },
+      "nearest_settlement": {
+       "name": "Chhuipani",
+       "kind": "village",
+       "lon": 82.5448751,
+       "lat": 20.3838543,
+       "band": 3,
+       "distance_km": 1.1,
+       "bearing": "SE"
+      },
+      "roads_in_bands": 6,
+      "road_names": [],
+      "models": 6
+     }
+    }
+   },
+   "check": {
+    "burned_km2": 37.5,
+    "top_band_km2": 7.8,
+    "top_band_capture": 0.16,
+    "top_band_precision": 0.79,
+    "nearest_capture": 0.08,
+    "three_bands_km2": 23.5,
+    "three_bands_capture": 0.41
+   }
+  }
+ ],
+ "note": "A ranking of the cells within 8 km of the fire for the next one to two days, not a probability and not a timing. Wind is not used. Archived fires from 2025, scored as they would have been at the time. Places and roads from OpenStreetMap (fetched when the run was made; the January 2021 extract where the service was busy); population from WorldPop 2019-2020."
+}

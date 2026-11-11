@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { fireName, firePolygons, happenedWords, nearestWords, statusLine, warnText, type Fire } from '../src/features/fires/model.ts';
+import { compareWords, overallWords } from '../src/features/firespread/model.ts';
 import { km } from '../src/features/fires/geo.ts';
 
 const t = (_k: string, d: string, o?: Record<string, unknown>) => d.replace(/\{\{(\w+)\}\}/g, (_m, k) => String(o?.[k] ?? ''));
@@ -22,3 +23,14 @@ test('map pieces: the newest look is drawn amber, earlier ones red, and replayin
   assert.deepEqual(firePolygons(fp, 2).map(p => p.tone), ['fire', 'fire', 'grew']); assert.deepEqual(firePolygons(fp, 1).map(p => p.tone), ['fire', 'grew']); assert.deepEqual(firePolygons(fp, 0).map(p => p.tone), ['fire']);
 });
 test('distance', () => { assert.ok(Math.abs(km(20, 80, 20.1, 80) - 11.13) < 0.05); });
+
+test('the comparison says how much burned was covered, against nearest-first, and says plainly when a fire is bigger than the band', () => {
+  const good = compareWords({ burned_km2: 4.1, top_band_km2: 6.8, top_band_capture: 0.95, top_band_precision: 0.57, nearest_capture: 0.34, three_bands_km2: 20.5, three_bands_capture: 1 }, t);
+  assert.match(good[0], /Of the 4.1 km² that burned, the top band \(6.8 km²\) covers 95%/); assert.match(good[0], /nearest the fire first.*34%/); assert.match(good[1], /57% of the top band burned/);
+  const big = compareWords({ burned_km2: 37.5, top_band_km2: 7.8, top_band_capture: 0.16, top_band_precision: 0.79, nearest_capture: 0.08, three_bands_km2: 23.5, three_bands_capture: 0.41 }, t);
+  assert.match(big[0], /A large fire: 37.5 km² burned/); assert.match(big[0], /covers 16%.*41%/);
+});
+test('the overall note includes how often it fell short', () => {
+  const w = overallWords({ fires: 244, burned_km2_median: 1.9, top_band_km2_median: 6.8, top_band_capture_median: 0.75, nearest_capture_median: 0.5, share_capture_80: 0.45, share_capture_under_30: 0.2, share_better_than_nearest: 0.7, three_bands_km2_median: 20.4, three_bands_capture_median: 1 }, t);
+  assert.match(w[0], /all 244 test fires/); assert.match(w[0], /covered 75%.*50%/); assert.match(w[1], /80% or more of what burned in 45%.*under 30% in 20%.*better than nearest-first in 70%/); assert.match(w[2], /ranking and not a forecast/);
+});

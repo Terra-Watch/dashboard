@@ -10,7 +10,7 @@ import { boundsOf } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { satelliteStyle, whatifTerrainStyle } from '../map/style';
 import { ForecastTabs } from '../forecast/BoardPage';
-import { BAND_ORDER, bandPolygons, burnedPolygons, footprintPolygons, placePoints, roadLines, type Overlay, type Run, type Summary } from '../firespread/model';
+import { BAND_ORDER, bandPolygons, burnedPolygons, compareWords, overallWords, footprintPolygons, placePoints, roadLines, type Overlay, type Run, type Summary } from '../firespread/model';
 import { HEAT_STOPS, OUTLOOK_VIEWS, horizonKeys, readDarkTokens, readView, safeStorage, satelliteConfig, writeView, type OutlookViewId } from './view';
 
 const SATELLITE = satelliteConfig(import.meta.env as Record<string, string | boolean | undefined>);
@@ -31,8 +31,8 @@ export function OutlookPage() {
   const tt = (k: string, d: string, o?: Record<string, unknown>) => t(k, { defaultValue: d, ...o }) as string;
   const [event, setEvent] = useState<string | null>(null);
   const [wanted, setWanted] = useState<number | null>(null);
-  const [showBurned, setShowBurned] = useState(false);
-  const [outlines, setOutlines] = useState(false);
+  const [showBurned, setShowBurned] = useState(true);       // the page is for comparing the outlook with what burned
+  const [outlines, setOutlines] = useState(true);
   const [view, setView] = useState<OutlookViewId>(() => readView(safeStorage(), !!SATELLITE));
   useEffect(() => { writeView(safeStorage(), view); }, [view]);
   const [showPlaces, setShowPlaces] = useState(true);
@@ -82,8 +82,9 @@ export function OutlookPage() {
     <div className="mx-auto max-w-6xl space-y-4">
       <ForecastTabs current="spread" />
       <PageTitle title={tt('outlook.title', 'Spread outlook')} subtitle={tt('outlook.subtitle', 'Archived fires scored by the model, to check how well it ranks where a fire spreads.')} />
-      <Notice kind="info">{tt('outlook.past_note', 'This page checks the model on past fires. The coloured area is much larger than what usually burns, so it is a ranking, not a forecast of the burned area. For fires burning now, use Active fires.')} <Link to="/ops/fires" className="font-semibold underline">{tt('outlook.to_fires', 'Active fires')}</Link></Notice>
+      <Notice kind="info">{tt('outlook.examples_note', 'Four archived fires from 2025, picked to show how to read the outlook: three where it matched well and one large fire where it did not. They are examples, not a random sample; the box below covers every test fire. For fires burning now, use')} <Link to="/ops/fires" className="font-semibold underline">{tt('outlook.to_fires', 'Active fires')}</Link>.</Notice>
       {replay && <Notice kind="warning">{tt('outlook.replay', 'These are archived fires from {{when}}, scored as they would have been then. The live outlook is not running yet.', { when: formatWhen(run.data.at) })}</Notice>}
+      {run.data.skill?.check && <Card title={tt('outlook.all_title', 'How the outlook did on every test fire')}>{overallWords(run.data.skill.check, tt).map((x, i) => <p key={i} className={i ? 'mt-1 text-sm text-ink-muted' : 'text-sm'}>{x}</p>)}</Card>}
       {fires.length === 0 ? <EmptyState title={tt('outlook.no_fires', 'No active fires in this run.')} /> : (
         <>
           <section aria-label={tt('outlook.fires', 'Fires')}>
@@ -127,6 +128,12 @@ export function OutlookPage() {
                   {!SATELLITE && <p className="mt-1 text-xs text-ink-muted">{tt('outlook.sat_off', 'Satellite imagery is not set up for this site.')}</p>}
                 </div>
                 <MapView label={tt('outlook.map', 'Likely next areas around the selected fire')} polygons={polygons} points={points} lines={lines} selectedId={picked} onSelect={id => setPicked(id && id.includes('-pl') ? id : null)} bounds={bounds} basemapStyle={style} colorsOverride={tokens?.mapColors} imageOverlay={imageOverlay} terrainOverlay={terrainOverlay} className="h-[62vh] min-h-96" />
+                {fire.check && (
+                  <div className="rounded-panel border border-line bg-surface p-4" data-testid="compare">
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">{tt('outlook.cmp_title', 'The outlook against what burned')}</h2>
+                    {compareWords(fire.check, tt).map((x, i) => <p key={i} className={i ? 'mt-1 text-sm text-ink-muted' : 'mt-1 text-lg font-semibold'}>{x}</p>)}
+                    <p className="mt-2 text-xs text-ink-muted">{tt('outlook.cmp_key', 'On the map: the outlined area is the top band, the dashed line is what burned within 48 hours (satellite burned-area map), the small squares are villages and towns.')}</p>
+                  </div>)}
                 {(bands.isLoading || pixels.isLoading) && <Skeleton lines={1} />}
                 {bands.error && <LoadError message={(bands.error as Error).message} onRetry={() => void bands.refetch()} retryLabel={tt('citizen.retry', 'Try again')} />}
               </div>

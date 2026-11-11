@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { json, signedInAs } from './helpers';
 
-const RUN = '../backend/runtime_data/fire_spread/replay-outlook-20250425T2103';
+const RUN = '../backend/runtime_data/fire_spread/replay-outlook-20250304T1941';
 const events = JSON.parse(readFileSync(`${RUN}/events.json`, 'utf8'));
 const skill = JSON.parse(readFileSync(`${RUN}/skill.json`, 'utf8'));
 const file = (name: string) => JSON.parse(readFileSync(`${RUN}/${name}`, 'utf8'));
@@ -24,7 +24,9 @@ test.describe('Spread outlook', () => {
   test('gives a one-line answer for the next one to two days, draws a heat picture, and shows what burned for an archived fire', async ({ page }) => {
     await page.goto('/ops/outlook');
     await expect(page.getByRole('heading', { name: 'Spread outlook' })).toBeVisible();
-    await expect(page.getByText(/archived fires/)).toBeVisible();
+    await expect(page.getByText(/archived fires/).first()).toBeVisible();
+    await expect(page.getByTestId('compare')).toContainText('The outlook against what burned');
+    await expect(page.getByText(/Across all 244 test fires/)).toBeVisible();
     await expect(page.getByTestId('answer')).toContainText('Most likely to spread toward the');
     await expect(page.getByText('Next 1 to 2 days')).toBeVisible();
     await expect(page.getByRole('button', { name: '24 h' })).toHaveCount(0);            // one outlook, no horizon switch

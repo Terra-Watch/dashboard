@@ -1,0 +1,24 @@
+{
+ "source": "gated U-Net, the 24 h and 48 h models averaged (three seeds each), 250 test fires (2025), cells within 8 km of the fire, scored against what burned within 48 h; reference: ranking cells by distance to the fire",
+ "horizons": {
+  "48": {
+   "model_iou": 0.248,
+   "baseline_iou": 0.123,
+   "model_direction_auc": 0.812,
+   "baseline_direction_auc": 0.599,
+   "cases": 250
+  }
+ },
+ "check": {
+  "fires": 244,
+  "burned_km2_median": 1.9,
+  "top_band_km2_median": 6.8,
+  "top_band_capture_median": 0.75,
+  "nearest_capture_median": 0.5,
+  "share_capture_80": 0.45,
+  "share_capture_under_30": 0.2,
+  "share_better_than_nearest": 0.7,
+  "three_bands_km2_median": 20.4,
+  "three_bands_capture_median": 1.0
+ }
+}
