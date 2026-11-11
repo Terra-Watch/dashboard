@@ -42,7 +42,7 @@ export function CardPage() {
           <ul className="mt-2 space-y-1 text-sm">{quiet.map(a => <li key={a.id}>{a.name} · {a.state} · {chanceWords(a.chance, tt)}{burningWords(a, tt) ? ` · ${burningWords(a, tt)}` : ''}</li>)}</ul>
         </details>)}
       <StationPanel />
-      <p className="text-sm text-ink-muted">{tt('forecast.card_note', 'The level is the chance that a satellite detects a fire in the area on this day. It does not say where exactly or how big. A person on the ground decides.')} <Link to="/field/satellite" className="font-semibold underline">{tt('forecast.detections_near', 'Detections near me')}</Link></p>
+      <p className="text-sm text-ink-muted">{tt('forecast.card_note', 'The level is the chance that a satellite detects a fire in the area on this day. It does not say where exactly or how big. A person on the ground decides.')} <Link to="/field/fires" className="font-semibold underline">{tt('forecast.fires_near', 'Fires near me')}</Link> · <Link to="/field/satellite" className="font-semibold underline">{tt('forecast.detections_near', 'Detections near me')}</Link></p>
     </div>
   );
 }

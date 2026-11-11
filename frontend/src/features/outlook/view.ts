@@ -1,7 +1,7 @@
 /** Which map look the Spread outlook uses (dark terrain, light, satellite), how the choice is remembered, and the colours of the dark views. The pure parts are unit tested. */
 export type OutlookViewId = 'dark' | 'light' | 'satellite';
-export const OUTLOOK_VIEWS: readonly OutlookViewId[] = ['dark', 'light', 'satellite'];
-export const DEFAULT_VIEW: OutlookViewId = 'dark';
+export const OUTLOOK_VIEWS: readonly OutlookViewId[] = ['light', 'dark', 'satellite'];
+export const DEFAULT_VIEW: OutlookViewId = 'light';   // dark terrain is opt-in: it was too heavy as the first thing a person sees
 export const VIEW_KEY = 'tw_outlook_view';
 /** Satellite tiles above this zoom are not requested unless VITE_SATELLITE_MAX_ZOOM says otherwise. */
 export const SATELLITE_MAX_ZOOM = 13;

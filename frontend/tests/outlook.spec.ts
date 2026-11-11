@@ -28,7 +28,7 @@ test.describe('Spread outlook', () => {
     await expect(page.getByTestId('answer')).toContainText('Most likely to spread toward the');
     await expect(page.getByText('Next 1 to 2 days')).toBeVisible();
     await expect(page.getByRole('button', { name: '24 h' })).toHaveCount(0);            // one outlook, no horizon switch
-    await expect(page.getByRole('radio', { name: 'Dark terrain' })).toBeChecked();      // the default look
+    await expect(page.getByRole('radio', { name: 'Light' })).toBeChecked();             // the default look: dark terrain is opt-in
     await expect(page.getByRole('radio', { name: 'Satellite' })).toBeVisible();          // enabled when the build sets up a tile source
     await page.getByLabel('Show what actually burned').check();
     await expect(page.getByText(/times as often as simply choosing/)).toBeVisible();

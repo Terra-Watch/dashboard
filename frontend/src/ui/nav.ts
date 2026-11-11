@@ -84,8 +84,8 @@ export function activeItem(role: ProductRole, path: string): NavItem | undefined
   if (own) return own;
   if (role === 'citizen' && path.startsWith('/citizen/reports')) return NAV.citizen[0];                                                 // a citizen's own reports are reached from the home screen
   if (role === 'control_room' && path.startsWith('/ops/incidents')) return NAV.control_room[0];
-  if (role === 'control_room' && path.startsWith('/ops/outlook')) return NAV.control_room.find(item => item.id === 'forecast');                    // the spread outlook is the second tab of the forecast
-  if (role === 'field' && path.startsWith('/field/satellite')) return NAV.field.find(item => item.id === 'forecast');                          // detections near me are linked from the forecast
+  if (role === 'control_room' && (path.startsWith('/ops/outlook') || path.startsWith('/ops/fires'))) return NAV.control_room.find(item => item.id === 'forecast');                    // active fires and past fires are tabs of the forecast
+  if (role === 'field' && (path.startsWith('/field/satellite') || path.startsWith('/field/fires'))) return NAV.field.find(item => item.id === 'forecast');                          // fires and detections near me are linked from the forecast
   if (role === 'field' && path.startsWith('/field/tasks')) return NAV.field[0];
   return undefined;
 }

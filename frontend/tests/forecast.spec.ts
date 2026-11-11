@@ -41,7 +41,7 @@ test.describe('Fire forecast: control-room board', () => {
   test('has the two tabs and no accessibility violations', async ({ page }) => {
     await signedInAs(page, 'control_room_operator', 'Desk Rao'); await mock(page);
     await page.goto('/ops/forecast');
-    await expect(page.getByRole('link', { name: 'Fires burning now' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Active fires' })).toBeVisible();
     await expect(page.locator('tbody tr').first()).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.filter(v => v.impact === 'critical' || v.impact === 'serious')).toEqual([]);

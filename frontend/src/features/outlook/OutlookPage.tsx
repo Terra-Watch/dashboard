@@ -81,7 +81,8 @@ export function OutlookPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <ForecastTabs current="spread" />
-      <PageTitle title={tt('outlook.title', 'Spread outlook')} subtitle={tt('outlook.subtitle', 'Where an active fire is most likely to spread next.')} />
+      <PageTitle title={tt('outlook.title', 'Spread outlook')} subtitle={tt('outlook.subtitle', 'Archived fires scored by the model, to check how well it ranks where a fire spreads.')} />
+      <Notice kind="info">{tt('outlook.past_note', 'This page checks the model on past fires. The coloured area is much larger than what usually burns, so it is a ranking, not a forecast of the burned area. For fires burning now, use Active fires.')} <Link to="/ops/fires" className="font-semibold underline">{tt('outlook.to_fires', 'Active fires')}</Link></Notice>
       {replay && <Notice kind="warning">{tt('outlook.replay', 'These are archived fires from {{when}}, scored as they would have been then. The live outlook is not running yet.', { when: formatWhen(run.data.at) })}</Notice>}
       {fires.length === 0 ? <EmptyState title={tt('outlook.no_fires', 'No active fires in this run.')} /> : (
         <>

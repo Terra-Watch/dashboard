@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from .core.config import API_ORIGINS
 from .database.session import engine, init_db
-from .routers import area_forecast, auth, citizen, community, fire_spread, operations, redesign, risk, workflow
+from .routers import active_fires, area_forecast, auth, citizen, community, fire_spread, operations, redesign, risk, workflow
 from .routers_ext import routers as extension_routers
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ app.include_router(workflow.router)
 app.include_router(operations.router)
 app.include_router(risk.router)
 app.include_router(fire_spread.router)
+app.include_router(active_fires.router)
 app.include_router(area_forecast.router)
 app.include_router(redesign.router)
 for extension_router in extension_routers():

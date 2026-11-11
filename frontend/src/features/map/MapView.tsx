@@ -52,7 +52,7 @@ function installExtras(map: MapLibreMap, colors: MapColors) {
     map.addLayer({ id: `${LINES}-${tone}-line`, type: 'line', source: LINES, filter, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': s.color, 'line-width': s.width, ...(s.dash ? { 'line-dasharray': s.dash } : {}) } });
   }
 }
-const TONES = ['cell', 'advisory', 'warning', 'envelope', 'band', 'observed'] as const;
+const TONES = ['cell', 'advisory', 'warning', 'envelope', 'band', 'observed', 'fire', 'grew'] as const;
 
 function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string; fill: number; dash?: number[]; width: number } {
   switch (tone) {
@@ -62,6 +62,8 @@ function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string;
     case 'envelope': return { color: c.unconfirmed, fill: 0.1, dash: [3, 2], width: 2 };
     case 'band': return { color: c.unconfirmed, fill: 0, dash: [1, 2], width: 1.5 };
     case 'observed': return { color: c.text, fill: 0, width: 2.5 };
+    case 'fire': return { color: c.danger, fill: 0.7, width: 1 };                   // the fire so far: solid red
+    case 'grew': return { color: c.warn, fill: 0.9, width: 1.5 };                  // what the newest pass added: amber, clearly apart from the red
   }
 }
 

@@ -10,13 +10,14 @@ import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, levelRank, rec
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Control-room tabs: tomorrow's forecast and the outlook for fires that are burning now. */
-export function ForecastTabs({ current }: { current: 'forecast' | 'spread' }) {
+export function ForecastTabs({ current }: { current: 'forecast' | 'fires' | 'spread' }) {
   const tt = useTt();
   const cls = (on: boolean) => `min-h-11 inline-flex items-center rounded-rq px-4 font-semibold ${on ? 'bg-ink text-surface' : 'border border-control'}`;
   return (
     <nav aria-label={tt('forecast.tabs', 'Forecast views')} className="mb-3 flex gap-2">
       <Link to="/ops/forecast" aria-current={current === 'forecast' ? 'page' : undefined} className={cls(current === 'forecast')}>{tt('forecast.tab_forecast', 'Tomorrow')}</Link>
-      <Link to="/ops/outlook" aria-current={current === 'spread' ? 'page' : undefined} className={cls(current === 'spread')}>{tt('forecast.tab_spread', 'Fires burning now')}</Link>
+      <Link to="/ops/fires" aria-current={current === 'fires' ? 'page' : undefined} className={cls(current === 'fires')}>{tt('forecast.tab_fires', 'Active fires')}</Link>
+      <Link to="/ops/outlook" aria-current={current === 'spread' ? 'page' : undefined} className={cls(current === 'spread')}>{tt('forecast.tab_past', 'Past fires')}</Link>
     </nav>
   );
 }

@@ -62,6 +62,10 @@ export function drawSymbol(kind: SymbolKind, colors: MapColors, pixelRatio = 2):
       else { ctx.fillStyle = kind === 'station_ok' ? colors.ok : kind === 'station_late' ? colors.warn : colors.danger; ctx.fill(); }
       break;
     }
+    case 'village': { // white ring with a dark centre: a named village or town (light disc, dark centre)
+      const draw = () => path(() => ctx.arc(c, c, 6, 0, Math.PI * 2));
+      halo(draw); draw(); ctx.fillStyle = colors.text; ctx.fill(); path(() => ctx.arc(c, c, 2.5, 0, Math.PI * 2)); ctx.fillStyle = colors.surface; ctx.fill(); break;
+    }
     case 'me': { // blue dot with a white ring: where I am
       path(() => ctx.arc(c, c, 11, 0, Math.PI * 2)); ctx.fillStyle = colors.surface; ctx.fill();
       path(() => ctx.arc(c, c, 7, 0, Math.PI * 2)); ctx.fillStyle = colors.action; ctx.fill(); break;

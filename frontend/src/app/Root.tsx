@@ -43,6 +43,9 @@ const OpsMapPage = lazy(() => import('../features/ops/MapPage').then(m => ({ def
 const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({ default: m.OpsFieldPage })));
 const OpsIncidentPage = lazy(() => import('../features/ops/IncidentPage').then(m => ({ default: m.OpsIncidentPage })));
 const NoticesPage = lazy(() => import('../features/ops/NoticesPage').then(m => ({ default: m.NoticesPage })));
+const FiresBoardPage = lazy(() => import('../features/fires/BoardPage').then(m => ({ default: m.FiresBoardPage })));
+const FirePage = lazy(() => import('../features/fires/FirePage').then(m => ({ default: m.FirePage })));
+const FieldFiresPage = lazy(() => import('../features/fires/FieldPage').then(m => ({ default: m.FieldFiresPage })));
 const OutlookPage = lazy(() => import('../features/outlook/OutlookPage').then(m => ({ default: m.OutlookPage })));
 const BoardPage = lazy(() => import('../features/forecast/BoardPage').then(m => ({ default: m.BoardPage })));
 const CardPage = lazy(() => import('../features/forecast/CardPage').then(m => ({ default: m.CardPage })));
@@ -105,6 +108,8 @@ export function Root() {
           <Route path="map" element={<OpsMapPage />} />
           <Route path="satellite" element={<SatellitePage />} />
           <Route path="forecast" element={<BoardPage />} />
+          <Route path="fires" element={<FiresBoardPage />} />
+          <Route path="fires/:id" element={<FirePage />} />
           <Route path="outlook" element={<OutlookPage />} />
           <Route path="fire-spread" element={<Navigate to="/ops/outlook" replace />} />
           <Route path="stations" element={<OpsStationsPage />} />
@@ -124,6 +129,7 @@ export function Root() {
           <Route path="forecast" element={<CardPage />} />
           <Route path="map" element={<FieldMapPage />} />
           <Route path="capture" element={<CapturePage />} />
+          <Route path="fires" element={<FieldFiresPage />} />
           <Route path="stations" element={<FieldStationsPage />} />
           <Route path="stations/:id" element={<FieldStationPage />} />
           <Route path="satellite" element={<FieldSatellitePage />} />

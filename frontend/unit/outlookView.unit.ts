@@ -11,12 +11,12 @@ test('a run with one outlook has one key, an older run with two keeps both in or
 });
 
 test('the map view defaults to dark terrain and a saved satellite choice needs satellite to be set up', () => {
-  assert.equal(readView(null, false), 'dark');
+  assert.equal(readView(null, false), 'light');
   assert.equal(readView(store({ [VIEW_KEY]: 'light' }), false), 'light');
-  assert.equal(readView(store({ [VIEW_KEY]: 'satellite' }), false), 'dark');
+  assert.equal(readView(store({ [VIEW_KEY]: 'satellite' }), false), 'light');
   assert.equal(readView(store({ [VIEW_KEY]: 'satellite' }), true), 'satellite');
   const s = store(); writeView(s, 'light'); assert.equal(readView(s, false), 'light');
-  assert.equal(readView({ getItem: () => { throw new Error('blocked'); }, setItem: () => {} }, true), 'dark');
+  assert.equal(readView({ getItem: () => { throw new Error('blocked'); }, setItem: () => {} }, true), 'light');
 });
 
 test('satellite needs the opt-in, a tile address and an attribution', () => {
