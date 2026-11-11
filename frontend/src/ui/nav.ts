@@ -30,7 +30,7 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'map', path: '/ops/map', icon: 'map', labelKey: 'nav.map' },
     { id: 'stations', path: '/ops/stations', icon: 'radio-tower', labelKey: 'nav.stations' },
     { id: 'satellite', path: '/ops/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
-    { id: 'outlook', path: '/ops/outlook', icon: 'flame', labelKey: 'nav.outlook' },
+    { id: 'forecast', path: '/ops/forecast', icon: 'flame', labelKey: 'nav.forecast' },
     { id: 'field', path: '/ops/field', icon: 'radio', labelKey: 'nav.field' },
     { id: 'notices', path: '/ops/notices', icon: 'megaphone', labelKey: 'nav.notices' },
   ],
@@ -38,8 +38,8 @@ export const NAV: Record<ProductRole, NavItem[]> = {
     { id: 'tasks', path: '/field/tasks', icon: 'list-todo', labelKey: 'nav.tasks' },
     { id: 'map', path: '/field/map', icon: 'map', labelKey: 'nav.map' },
     { id: 'capture', path: '/field/capture', icon: 'camera', labelKey: 'nav.capture', primary: true },
+    { id: 'forecast', path: '/field/forecast', icon: 'flame', labelKey: 'nav.forecast' },
     { id: 'stations', path: '/field/stations', icon: 'radio-tower', labelKey: 'nav.stations' },
-    { id: 'satellite', path: '/field/satellite', icon: 'satellite', labelKey: 'nav.satellite' },
     { id: 'notices', path: '/field/notices', icon: 'megaphone', labelKey: 'nav.notices' },
     { id: 'me', path: '/field/me', icon: 'user', labelKey: 'nav.me' },
   ],
@@ -84,6 +84,8 @@ export function activeItem(role: ProductRole, path: string): NavItem | undefined
   if (own) return own;
   if (role === 'citizen' && path.startsWith('/citizen/reports')) return NAV.citizen[0];                                                 // a citizen's own reports are reached from the home screen
   if (role === 'control_room' && path.startsWith('/ops/incidents')) return NAV.control_room[0];
+  if (role === 'control_room' && path.startsWith('/ops/outlook')) return NAV.control_room.find(item => item.id === 'forecast');                    // the spread outlook is the second tab of the forecast
+  if (role === 'field' && path.startsWith('/field/satellite')) return NAV.field.find(item => item.id === 'forecast');                          // detections near me are linked from the forecast
   if (role === 'field' && path.startsWith('/field/tasks')) return NAV.field[0];
   return undefined;
 }

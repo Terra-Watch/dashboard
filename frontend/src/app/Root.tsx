@@ -44,6 +44,8 @@ const OpsFieldPage = lazy(() => import('../features/ops/FieldPage').then(m => ({
 const OpsIncidentPage = lazy(() => import('../features/ops/IncidentPage').then(m => ({ default: m.OpsIncidentPage })));
 const NoticesPage = lazy(() => import('../features/ops/NoticesPage').then(m => ({ default: m.NoticesPage })));
 const OutlookPage = lazy(() => import('../features/outlook/OutlookPage').then(m => ({ default: m.OutlookPage })));
+const BoardPage = lazy(() => import('../features/forecast/BoardPage').then(m => ({ default: m.BoardPage })));
+const CardPage = lazy(() => import('../features/forecast/CardPage').then(m => ({ default: m.CardPage })));
 const OpsLayout = lazy(() => import('../features/ops/OpsLayout').then(m => ({ default: m.OpsLayout })));
 const QueuePage = lazy(() => import('../features/ops/QueuePage').then(m => ({ default: m.QueuePage })));
 const CapturePage = lazy(() => import('../features/field/CapturePage').then(m => ({ default: m.CapturePage })));
@@ -102,6 +104,7 @@ export function Root() {
           <Route path="incidents/:id" element={<OpsIncidentPage />} />
           <Route path="map" element={<OpsMapPage />} />
           <Route path="satellite" element={<SatellitePage />} />
+          <Route path="forecast" element={<BoardPage />} />
           <Route path="outlook" element={<OutlookPage />} />
           <Route path="fire-spread" element={<Navigate to="/ops/outlook" replace />} />
           <Route path="stations" element={<OpsStationsPage />} />
@@ -118,6 +121,7 @@ export function Root() {
           <Route index element={<Navigate to="tasks" replace />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="tasks/:id" element={<TaskDetailPage />} />
+          <Route path="forecast" element={<CardPage />} />
           <Route path="map" element={<FieldMapPage />} />
           <Route path="capture" element={<CapturePage />} />
           <Route path="stations" element={<FieldStationsPage />} />

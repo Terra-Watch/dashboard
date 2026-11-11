@@ -46,7 +46,7 @@ test('the raised primary button sits in the middle of the bottom bar, and every 
     const at = bar.findIndex(item => 'primary' in item && item.primary);
     if (at >= 0) assert.equal(at, (bar.length - 1) / 2, `${role}: the primary action must be the middle item of an odd-sized bar`);
   }
-  assert.deepEqual(NAV.field.map(item => item.id), ['tasks', 'map', 'capture', 'stations', 'satellite', 'notices', 'me']);
+  assert.deepEqual(NAV.field.map(item => item.id), ['tasks', 'map', 'capture', 'forecast', 'stations', 'notices', 'me']);
   assert.equal(profilePath('citizen'), '/citizen/account');
   assert.equal(profilePath('field'), '/field/me');
   assert.equal(profilePath('control_room'), '/ops/me');
@@ -58,11 +58,13 @@ test('with more than five destinations the phone bar keeps four and the capture 
   for (const role of ['control_room', 'field'] as const) assert.ok(NAV[role].length > 5);
   assert.ok(NAV.field.slice(0, 4).some(item => item.primary), 'ranger capture button must be one of the first four');
   assert.deepEqual(NAV.control_room.slice(0, 4).map(i => i.id), ['queue', 'map', 'stations', 'satellite']);
-  assert.deepEqual(NAV.field.map(i => i.id).slice(0, 5), ['tasks', 'map', 'capture', 'stations', 'satellite']);
+  assert.deepEqual(NAV.field.map(i => i.id).slice(0, 5), ['tasks', 'map', 'capture', 'forecast', 'stations']);
 });
 
-test('the control room lists the spread outlook and the old what-if page is gone', () => {
-  assert.ok(NAV.control_room.some(item => item.id === 'outlook' && item.path === '/ops/outlook'));
+test('the control room lists the fire forecast, with the spread outlook as its second tab, and the old what-if page is gone', () => {
+  assert.ok(NAV.control_room.some(item => item.id === 'forecast' && item.path === '/ops/forecast'));
+  assert.equal(activeItem('control_room', '/ops/outlook')?.id, 'forecast');
+  assert.equal(activeItem('field', '/field/satellite')?.id, 'forecast');
   assert.ok(!NAV.control_room.some(item => item.path.includes('whatif')));
   assert.equal(roleOfPath('/ops/outlook'), 'control_room');
 });

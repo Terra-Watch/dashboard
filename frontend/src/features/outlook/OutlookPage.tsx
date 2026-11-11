@@ -9,6 +9,7 @@ import { formatWhen } from '../citizen/format';
 import { boundsOf } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { satelliteStyle, whatifTerrainStyle } from '../map/style';
+import { ForecastTabs } from '../forecast/BoardPage';
 import { BAND_ORDER, bandPolygons, burnedPolygons, footprintPolygons, placePoints, roadLines, type Overlay, type Run, type Summary } from '../firespread/model';
 import { HEAT_STOPS, OUTLOOK_VIEWS, horizonKeys, readDarkTokens, readView, safeStorage, satelliteConfig, writeView, type OutlookViewId } from './view';
 
@@ -79,6 +80,7 @@ export function OutlookPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4">
+      <ForecastTabs current="spread" />
       <PageTitle title={tt('outlook.title', 'Spread outlook')} subtitle={tt('outlook.subtitle', 'Where an active fire is most likely to spread next.')} />
       {replay && <Notice kind="warning">{tt('outlook.replay', 'These are archived fires from {{when}}, scored as they would have been then. The live outlook is not running yet.', { when: formatWhen(run.data.at) })}</Notice>}
       {fires.length === 0 ? <EmptyState title={tt('outlook.no_fires', 'No active fires in this run.')} /> : (

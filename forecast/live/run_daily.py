@@ -37,8 +37,12 @@ def once(day):
     gfs = f"{WORK}/gfs/gfs_{compact}.npz"
     run(PY, f"{HERE}/score_daily.py", "--day", day, "--bundle", BUNDLE, "--weather", f"{WORK}/weather.parquet", "--fire", f"{WORK}/fire.parquet",
         *(["--gfs", gfs] if os.path.exists(gfs) else []), "--out", out)
+    levels = os.environ.get("AREA_LEVELS")                                                          # the area forecast: calibration and areas fitted on 2024 (wildfire-ignition-forecasting/scripts/13_forecast_levels.py)
+    if levels and os.path.exists(levels):
+        run(PY, f"{HERE}/area_forecast_job.py", out, "--cells", cells, "--fire", f"{WORK}/fire.parquet", "--levels", levels, *(["--places", os.environ["AREA_PLACES"]] if os.environ.get("AREA_PLACES") else []), optional=True)
     if os.environ.get("RISK_INGEST_URL") and os.environ.get("RISK_INGEST_TOKEN"):  # normal route: the dashboard stores it, no database password leaves its host
         run(PY, f"{HERE}/post_run.py", out, os.environ["RISK_INGEST_URL"])
+        if os.path.exists(f"{out}/area_forecast.json") and os.environ.get("AREA_FORECAST_URL"): run(PY, f"{HERE}/post_area_forecast.py", out, os.environ["AREA_FORECAST_URL"], optional=True)
     else:
         run(PY_WEB, "-m", "inference.import_live_run", out, cwd=BACKEND)
 

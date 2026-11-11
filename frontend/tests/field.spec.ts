@@ -26,7 +26,7 @@ test.describe('Range Officer', () => {
     await expect(page.getByRole('heading', { name: 'This area is for Range Officers.' })).toBeVisible();
   });
 
-  test('tasks are grouped, navigation has five destinations with Capture raised in the middle', async ({ page, context }) => {
+  test('tasks are grouped, navigation has four destinations and More, with Capture raised in the middle', async ({ page, context }) => {
     await page.route('**/api/ranger/assignments', route => route.fulfill(json({ items: TASKS })));
     await context.grantPermissions(['geolocation']); await context.setGeolocation({ latitude: 20.3, longitude: 85.8 });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -34,8 +34,8 @@ test.describe('Range Officer', () => {
     await expect(page.getByRole('heading', { name: 'Waiting for your answer' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Your active tasks' })).toBeVisible();
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    await expect(nav.getByRole('link')).toHaveCount(5);
-    await expect(nav.getByRole('link').nth(2)).toHaveText(/Capture/);          // the raised button is the middle of five
+    await expect(nav.getByRole('link')).toHaveCount(4);                          // Tasks, Map, Capture, Fire forecast; the rest are under More
+    await expect(nav.getByRole('link').nth(2)).toHaveText(/Capture/);          // the raised button is the middle of five (four links and More)
     await expect(nav.getByRole('link', { name: 'Tasks' })).toHaveAttribute('aria-current', 'page');
     await expect(nav.getByRole('link', { name: 'Capture' })).toBeVisible();
     await page.getByRole('button', { name: 'Show distance from me' }).click();

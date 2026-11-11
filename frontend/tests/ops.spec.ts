@@ -263,7 +263,7 @@ test.describe('Control Room', () => {
     await page.goto('/ops/queue');
     const rail = page.getByRole('navigation', { name: 'Main navigation' }).first();
     await expect(rail.getByRole('link')).toHaveCount(7);
-    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Spread outlook', 'Field', 'Notices']);
+    expect((await rail.getByRole('link').allInnerTexts()).map(x => x.trim())).toEqual(['Queue', 'Map', 'Stations', 'Satellite', 'Fire forecast', 'Field', 'Notices']);
     await expect(rail.getByRole('link', { name: 'Queue' })).toHaveAttribute('aria-current', 'page');
   });
 

@@ -1,0 +1,83 @@
+{
+ "mode": "replay",
+ "levels": [
+  {
+   "id": "none",
+   "min_chance": 0.0
+  },
+  {
+   "id": "moderate",
+   "min_chance": 0.1
+  },
+  {
+   "id": "high",
+   "min_chance": 0.3
+  },
+  {
+   "id": "extreme",
+   "min_chance": 0.6
+  }
+ ],
+ "dates": [
+  {
+   "date": "2025-03-14",
+   "summary": {
+    "none": 204,
+    "moderate": 83,
+    "high": 90,
+    "extreme": 277
+   },
+   "bytes": 433467
+  },
+  {
+   "date": "2025-03-15",
+   "summary": {
+    "none": 208,
+    "moderate": 97,
+    "high": 84,
+    "extreme": 265
+   },
+   "bytes": 432658
+  },
+  {
+   "date": "2025-04-12",
+   "summary": {
+    "none": 378,
+    "moderate": 119,
+    "high": 96,
+    "extreme": 60
+   },
+   "bytes": 336180
+  },
+  {
+   "date": "2025-05-20",
+   "summary": {
+    "none": 645,
+    "moderate": 8,
+    "high": 1,
+    "extreme": 0
+   },
+   "bytes": 173469
+  },
+  {
+   "date": "2025-07-15",
+   "summary": {
+    "none": 654,
+    "moderate": 0,
+    "high": 0,
+    "extreme": 0
+   },
+   "bytes": 165666
+  },
+  {
+   "date": "2025-12-10",
+   "summary": {
+    "none": 635,
+    "moderate": 11,
+    "high": 5,
+    "extreme": 3
+   },
+   "bytes": 179394
+  }
+ ]
+}
