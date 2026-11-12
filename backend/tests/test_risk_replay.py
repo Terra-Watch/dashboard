@@ -297,7 +297,7 @@ class RiskGeojsonEndpointTests(unittest.TestCase):
 
     def test_production_bundle_serves_data_for_demo_date(self):
         """Verify the production bundle (not fixture) serves data for the
-        hardcoded demo date.  Uses the real backend/models/risk/ bundle.
+        demo date (2025-03-18, the final model's replay).  Uses the real backend/models/risk/ bundle.
         Skips if the bundle is absent (no data on this machine)."""
         prod_bundle = BACKEND / "models" / "risk"
         if not prod_bundle.exists():
@@ -306,12 +306,14 @@ class RiskGeojsonEndpointTests(unittest.TestCase):
                              {"RISK_MODEL_BUNDLE": str(prod_bundle)}):
             _clear_cache()
             resp = self.client.get("/api/risk/geojson",
-                                   params={"target": "2024-03-10"})
+                                   params={"target": "2025-03-18"})
         _clear_cache()
         self.assertEqual(resp.status_code, 200)
-        features = resp.json()["features"]
+        body = resp.json(); features = body["features"]
         self.assertGreater(len(features), 0,
-                           "Production bundle must serve data for 2024-03-10")
+                           "Production bundle must serve data for 2025-03-18")
+        self.assertEqual(body["run"]["model_id"], "xgboost-nextday-forest")           # the final model, not the older 2023 to 2024 replay
+        self.assertTrue({"AS", "AR", "TR", "MZ", "MN"} <= {f["properties"]["state"] for f in features})   # the north-east is covered
 
 
 class BandTests(unittest.TestCase):
