@@ -7,6 +7,9 @@ accounts (citizen, ranger, control room, admin) and writes generated credentials
 
 from __future__ import annotations
 
+# the 17 states of the forecast model (the north-east included), so a local demo shows every area; the older list was OD, CG, TS, MP, MH, JH
+STATES = ("AP", "AR", "AS", "CG", "HP", "JH", "KA", "MH", "MN", "MP", "MZ", "OD", "SK", "TN", "TR", "TS", "UK")
+
 import argparse
 import os
 import secrets
@@ -102,7 +105,7 @@ def main() -> int:
                 {"user_id": user_id},
             )
             if role != "citizen":
-                for state in ("OD", "CG", "TS", "MP", "MH", "JH"):
+                for state in STATES:
                     db.execute(
                         text("""INSERT INTO resq_user_scopes (user_id,state)
                             VALUES (:user_id,:state) ON CONFLICT DO NOTHING"""),
