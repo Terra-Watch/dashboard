@@ -189,7 +189,7 @@ export function forestName(step: number, t: T): string {
   return step >= 0.8 ? t('forecast.forest_80', 'Forest land 80% or more') : step >= 0.5 ? t('forecast.forest_50', 'Forest land 50% or more') : t('forecast.forest_any', 'All forest cells (20% or more)');
 }
 
-/** One forest cell of the model's grid (about 10 km), as the risk replay serves it. */
+/** One forest cell of the model's grid (about 11 km), as the risk replay serves it. */
 export type DayCell = { lat: number; lon: number; forest: number | null; state?: string };
 
 /** The forecast drawn where the model actually scored: every forest cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).

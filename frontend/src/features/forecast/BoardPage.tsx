@@ -92,7 +92,7 @@ export function BoardPage() {
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-3">
           <MapView label={tt('forecast.map', 'Forecast areas')} polygons={polygons} points={points} bounds={bounds} className="h-[58vh] min-h-96" />
-          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each shaded square is a forest cell (about 10 km) that the model scored, shaded by the level of the 55 km area it sits in; a dashed square is in a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red diamond is a forest square (about 10 km) where a fire was actually detected that day.')}</p>
+          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each shaded square is a forest cell (about 11 km) that the model scored, shaded by the level of the 55 km area it sits in; a dashed square is in a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red diamond is a forest square (about 11 km) where a fire was actually detected that day.')}</p>
           {archived && <ForecastLegend forest={showForest} />}
           {weak.length > 0 && <Notice kind="info">{tt('forecast.weak_states', 'Less reliable in: {{states}}.', { states: weak.join(', ') })}</Notice>}
         </div>
