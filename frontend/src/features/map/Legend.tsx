@@ -95,6 +95,7 @@ export function ForecastLegend({ cells = false }: { cells?: boolean }) {
         {cells && <li className="flex flex-col gap-1 border-t border-line pt-2"><span className="font-semibold">{t('map.fl.cells', 'Forest cells (model rank)')}</span>
           <span className="block text-xs text-ink-muted">{t('map.fl.cells_hint', 'One circle per forest cell (about 11 km, at least 20% forest land), shaded by where the model ranked it that day. Model output, not observed fire.')}</span>
           <ul className="mt-1 space-y-1">{RISK_BANDS.map(item => <li key={item.band} className="flex items-center gap-2"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" className="shrink-0"><circle cx="8" cy="8" r="7" fill="var(--tw-text)" opacity="0.85" /><circle cx="8" cy="8" r="6" fill={`var(--tw-${item.color})`} opacity="0.7" stroke="var(--tw-surface)" strokeWidth="2" /></svg><span className="text-xs">{t(`map.risk_band.${item.band.toLowerCase().replace(' ', '_')}`, item.label)}</span></li>)}</ul></li>}
+        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.boxes_note', 'A box is the 55 km area the chance is worked out for. The model scores only the forest cells inside it (roughly half of a box is not forest and is not scored); the box is drawn square, so it also covers land that was not scored. Switch on Forest cells to see which squares were scored.')}</li>
         <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.none', 'No box: the area was not rated (under 10%).')}</li></ul>
     </section>
   );
