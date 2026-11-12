@@ -58,6 +58,7 @@ class DomainTests(unittest.TestCase):
                 validate_duration(bad)
 
 
+@unittest.skipUnless(runner.LOOKUP.exists(), "needs the wild-fire-simulation checkout (Cell2Fire lookup table), which lives outside this repository")
 class RunnerTests(unittest.TestCase):
     def test_coordinates_and_duration_reach_cell2fire_inputs_and_manifest(self):
         per_lat, per_lon = metres_per_degree(ORIGIN_LATITUDE)

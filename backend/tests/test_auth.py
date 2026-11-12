@@ -384,6 +384,7 @@ class RouteCoverageTests(SetUpDB):
         ('POST', '/api/auth/refresh'),
         ('POST', '/api/auth/invites/{token}/accept'),
         ('POST', '/api/auth/password-reset/{token}/complete'),
+        ('POST', '/api/risk/runs'),   # the daily job; authenticated by the shared ingest secret (constant-time compare), not by a user
     }
 
     # These routes are read-only and deliberately accept either signed token
@@ -392,6 +393,7 @@ class RouteCoverageTests(SetUpDB):
     RISK_READ_COMPAT = {
         ('GET', '/api/risk/daily'),
         ('GET', '/api/risk/geojson'),
+        ('GET', '/api/risk/status'),
     }
 
     def test_every_redesign_risk_and_auth_route_requires_auth_unless_allowlisted(self):

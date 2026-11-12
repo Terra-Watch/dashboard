@@ -1,5 +1,5 @@
 """Focused tests for the optional, pre-classified high-risk GeoJSON filter."""
-from datetime import date
+from datetime import date, datetime
 import json
 import sys
 import unittest
@@ -26,6 +26,10 @@ def feature(cell_id: int, band: str) -> dict[str, object]:
         "geometry": {"type": "Point", "coordinates": [cell_id, 0]},
         "properties": {"cell_id": cell_id, "band": band},
     }
+
+
+RUN_ROW = {"id": 17, "mode": "live", "model_id": "m", "model_version": "1", "status": "complete",
+           "issued_at": datetime(2024, 3, 10, 12, 0), "coverage": None, "bands": None, "degraded": None}
 
 
 def database_row(cell_id: int, band: str) -> dict[str, object]:
@@ -162,7 +166,8 @@ class RiskBandFilterTests(unittest.TestCase):
         rows = [database_row(1, "Low"), database_row(2, "High"), database_row(3, "Very high")]
         db = MagicMock()
         db.execute.side_effect = [
-            SimpleNamespace(scalar=lambda: 17),
+            SimpleNamespace(mappings=lambda: SimpleNamespace(first=lambda: RUN_ROW)),   # the run for the date
+            SimpleNamespace(scalar=lambda: "text"),                                    # cells.geom holds GeoJSON text, not PostGIS
             SimpleNamespace(mappings=lambda: SimpleNamespace(all=lambda: rows)),
         ]
         connection = MagicMock()
@@ -184,7 +189,8 @@ class RiskBandFilterTests(unittest.TestCase):
         rows = [database_row(5, "Moderate"), database_row(2, "High")]
         db = MagicMock()
         db.execute.side_effect = [
-            SimpleNamespace(scalar=lambda: 17),
+            SimpleNamespace(mappings=lambda: SimpleNamespace(first=lambda: RUN_ROW)),   # the run for the date
+            SimpleNamespace(scalar=lambda: "text"),                                    # cells.geom holds GeoJSON text, not PostGIS
             SimpleNamespace(mappings=lambda: SimpleNamespace(all=lambda: rows)),
         ]
         connection = MagicMock()
