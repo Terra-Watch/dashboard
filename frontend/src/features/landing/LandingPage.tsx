@@ -17,7 +17,6 @@ import { Capabilities } from './Capabilities';
 import { Evidence } from './Evidence';
 import { Features, Principles } from './Features';
 import { FlowSteps } from './FlowSteps';
-import { PrivacyMap } from './PrivacyMap';
 
 export function LandingPage() {
   const { t } = useTranslation();
@@ -65,7 +64,6 @@ export function LandingPage() {
         <Community />
         <Reveal><Features /></Reveal>
         <Reveal><Principles /></Reveal>
-        <Reveal><PrivacyMap /></Reveal>
         <Reveal><DataAnswers /></Reveal>
       </main>
 

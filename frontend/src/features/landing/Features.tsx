@@ -29,7 +29,7 @@ const DEFAULTS: Record<string, string> = {
   'room.fires': 'Active fires|Fires built from detections: size, growth, the side it grew toward and the nearest villages. Send a crew, warn villages, or mark a fire handled, out or not a forest fire.',
   'room.assign': 'Assign and track officers|See who accepted or declined and what each officer recorded.',
   'room.notices': 'Notices with a second approver|Public notices go out only after another person approves them. Community posts are moderated here.',
-  'room.outlook': 'Spread outlook|For a burning fire: the cells most likely to burn in 24 and 48 hours, in three bands. Tested on 250 fires the model had never seen.',
+  'room.outlook': 'Spread outlook|For a burning fire: the cells most likely to burn in the next one to two days, in three bands. Tested on 250 fires the model had never seen.',
   'monitor.stations': 'Station list and map|Every lookout station in your area with its latest readings. A silent station shows as a gap, never as quiet.',
   'monitor.smoke': 'Smoke judged against its own normal|Fine particles against the station’s own median for that hour and against stations within 50 km, with humidity to discount fog. It never confirms a fire.',
   'monitor.mesh': 'Radio relay through deep forest|Stations pass packets through relays to a gateway where there is no mobile signal. In simulation 95 to 98% of reports arrive after the busiest relay fails. A field test is next.',
@@ -81,7 +81,7 @@ export function Features() {
 
 const RULES = [
   ['people_decide', 'People decide, software only suggests', 'A model never verifies, assigns, dispatches or announces. Model output never changes a status, an assignment or a notice.'],
-  ['public_delay', 'The public sees less, and later', 'Unchecked reports, names and exact places are never public. A verified fire appears only as a coarse area, after a delay.'],
+  ['nothing_hidden', 'Nothing is hidden, everything has a reason', 'Every satellite detection is kept and shown in a group with its reason in words. A group helps staff choose where to look; it never removes a detection.'],
   ['scoped', 'Access stops at your state', 'Staff see only the states they are assigned to, and every access is written to an audit log.'],
 ] as const;
 
@@ -93,7 +93,7 @@ export function Principles() {
       <h2 id="rules-title" className="text-3xl md:text-4xl">{t('landing.v2.rules_title', 'How it stays trustworthy')}</h2>
       <ul className="mt-6 grid gap-8 md:grid-cols-3">
         {RULES.map(([id, title, body]) => (
-          <li key={id}><p className="text-xl font-bold leading-snug">{t(`landing.v${id === 'people_decide' ? 5 : 2}.rules.${id}.title`, title)}</p><p className="mt-2 opacity-80">{t(`landing.v${id === 'people_decide' ? 5 : 2}.rules.${id}.body`, body)}</p></li>
+          <li key={id}><p className="text-xl font-bold leading-snug">{t(`landing.v${id === 'people_decide' || id === 'nothing_hidden' ? 5 : 2}.rules.${id}.title`, title)}</p><p className="mt-2 opacity-80">{t(`landing.v${id === 'people_decide' || id === 'nothing_hidden' ? 5 : 2}.rules.${id}.body`, body)}</p></li>
         ))}
       </ul>
     </section>

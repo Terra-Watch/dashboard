@@ -12,13 +12,12 @@ const POINT: Record<string, string> = { N: 'north', NE: 'north-east', E: 'east',
 const GROUND: Record<string, string> = { tree: 'forest', shrub: 'scrub', grass: 'grassland', crop: 'farmland' };
 const SCALE_KM = 2;
 
-/** One archived fire from the spread outlook, as the Control Room sees it: the answer in a sentence, the three bands, the roads and places around, Real model output; 24 or 48 hours; what actually burned on request. */
+/** One archived fire from the spread outlook, as the Control Room sees it: the answer in a sentence, the three bands, the roads and places around, Real model output; what actually burned on request. */
 export function OutlookSnapshot() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  const [h, setH] = useState<'24' | '48'>('24');
-  const [showBurned, setShowBurned] = useState(false);
-  const d = OUTLOOK.horizons[h]; const [cx, cy] = OUTLOOK.centre;
+    const [showBurned, setShowBurned] = useState(false);
+  const d = OUTLOOK; const [cx, cy] = OUTLOOK.centre;
   const rad = (d.bearingDeg * Math.PI) / 180; const len = 24; const ax = cx + Math.sin(rad) * len, ay = cy - Math.cos(rad) * len;
   const scale = (SCALE_KM / (2 * OUTLOOK.halfKm)) * 100;
   const where = t(`outlook.dir.${d.bearing}`, POINT[d.bearing]); const ground = t(`outlook.ground.${d.cover}`, GROUND[d.cover]);
@@ -27,13 +26,10 @@ export function OutlookSnapshot() {
   return (
     <figure className="min-w-0 rounded-2xl border border-line bg-surface p-4">
       <p className="text-lg font-semibold leading-snug" aria-live="polite">{sentence}</p>
-      <div role="group" aria-label={t('outlook.horizon', 'Look ahead')} className="mt-3 inline-flex rounded-rq border border-control p-1">
-        {(['24', '48'] as const).map(x => <button key={x} type="button" aria-pressed={h === x} onClick={() => setH(x)} className={`min-h-11 rounded-rq px-4 font-semibold ${h === x ? 'bg-ink text-surface' : ''}`}>{x} h</button>)}
-      </div>
       <svg viewBox="0 0 100 100" role="img" aria-label={t('landing.v4.outlook.alt', 'Map of one archived forest fire in {{state}} with three bands of cells most likely to burn next, roads and a nearby village', { state: OUTLOOK.state })} className="mt-3 w-full rounded-xl bg-[var(--tw-map-land)]">
         <path d={OUTLOOK.roads} fill="none" stroke="var(--tw-text-muted)" strokeWidth="0.35" opacity="0.55" strokeLinecap="round" />
         {LAYERS.map(({ band, fill, opacity }, i) => (
-          <motion.path key={`${h}-${band}`} d={(d.bands as Record<number, string>)[band]} fill={fill} initial={reduce ? false : { opacity: 0 }} animate={{ opacity }} transition={{ duration: 0.45, delay: i * 0.12, ease: 'easeOut' }} />
+          <motion.path key={band} d={(d.bands as Record<number, string>)[band]} fill={fill} initial={reduce ? false : { opacity: 0 }} animate={{ opacity }} transition={{ duration: 0.45, delay: i * 0.12, ease: 'easeOut' }} />
         ))}
         {showBurned && <path d={d.burned} fill="none" stroke="var(--tw-unconfirmed, #555)" strokeWidth="0.6" strokeDasharray="1.6 1" />}
         <path d={OUTLOOK.footprint} fill="none" stroke="var(--tw-text, #111)" strokeWidth="0.9" />
@@ -46,7 +42,7 @@ export function OutlookSnapshot() {
         {[[3, 'Most likely'], [2, 'Likely'], [1, 'Possible']].map(([b, label]) => <li key={b} className="flex items-center gap-2"><span aria-hidden="true" className="size-3.5 rounded-sm" style={{ background: LAYERS[(b as number) - 1].fill, opacity: LAYERS[(b as number) - 1].opacity }} />{t(`outlook.band${b}`, label as string)}</li>)}
         <li className="ml-auto"><label className="inline-flex min-h-11 items-center gap-2"><input type="checkbox" checked={showBurned} onChange={e => setShowBurned(e.target.checked)} className="h-4 w-4" />{t('landing.v4.outlook.burned', 'Show what actually burned')}</label></li>
       </ul>
-      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v5.outlook.caption', 'An archived fire in {{state}}, scored as it would have been then. The arrow points toward the most likely band; the dark outline is the fire at the start. Roads and village from OpenStreetMap.', { state: OUTLOOK.state })}</figcaption>
+      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v5.outlook.caption3', 'An archived fire in {{state}}, scored as it would have been then, for the next one to two days. The arrow points toward the most likely band; the dark outline is the fire at the start. Across 244 test fires of 2025 the top band held a median 75% of what burned; this is one of the closer matches. Roads and villages from OpenStreetMap.', { state: OUTLOOK.state })}</figcaption>
     </figure>
   );
 }

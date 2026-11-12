@@ -33,17 +33,6 @@ test.describe('landing page', () => {
     expect(await page.locator('body').innerText()).not.toMatch(/ladder|authentic|edited or AI/i);
   });
 
-  test('public and staff views of the map differ: unchecked items appear only to staff', async ({ page }) => {
-    await page.goto('/');
-    const map = page.getByTestId('privacy-map');
-    await expect(map.getByText('Coarse public area', { exact: true })).toBeVisible();
-    await expect(map.getByText('Unchecked report', { exact: true })).toHaveCount(0);
-    await map.getByRole('button', { name: 'Staff view' }).click();
-    await expect(map.getByText('Unchecked report', { exact: true })).toBeVisible();
-    await expect(map.getByText('Satellite signal', { exact: true })).toBeVisible();
-    await expect(map.getByText('Coarse public area', { exact: true })).toHaveCount(0);
-  });
-
   test('language switch changes the page and the document language', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Language', exact: true }).click();
@@ -61,7 +50,6 @@ test.describe('landing page', () => {
       for (const viewport of [{ width: 360, height: 640 }, { width: 1280, height: 800 }]) {
         await page.setViewportSize(viewport);
         await page.goto('/');
-        await page.getByTestId('privacy-map').scrollIntoViewIfNeeded();
         await page.getByRole('heading', { name: 'How one fire moves through TerraWatch' }).scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
@@ -77,7 +65,6 @@ test('the landing page shows the spread outlook picture and the evidence numbers
   await expect(page.getByRole('heading', { name: 'Know where an active fire is likely to go next' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Tested before it is shown' })).toBeVisible();
   await expect(page.getByText('17', { exact: true }).first()).toBeVisible();
-  await page.getByRole('button', { name: '48 h' }).click();
   await page.getByLabel('Show what actually burned').check();
   for (const [i, name] of ['See where wildfire is likely tomorrow', 'Tested before it is shown', 'See where fire is most likely tomorrow', 'Know where an active fire is likely to go next', 'Lookout stations that watch the forest between satellite passes', 'What TerraWatch does'].entries()) {
     const h = page.getByRole('heading', { name }).first(); await h.scrollIntoViewIfNeeded(); await page.waitForTimeout(1800);
