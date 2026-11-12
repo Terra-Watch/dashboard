@@ -51,7 +51,7 @@
     "colorjs.io": "^0.7.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.8.0",
+    "typescript": "^7.0.2",
     "vite": "^7.1.7"
   }
 }
