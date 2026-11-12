@@ -1,31 +1,135 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="frontend/public/brand/logo-on-dark.svg">
+  <img src="frontend/public/brand/logo.svg" alt="TerraWatch" height="64">
+</picture>
+
 # TerraWatch dashboard
 
-The product of TerraWatch: early warning and response for forest fires in India, for forest departments. It forecasts where a fire is likely tomorrow, sorts satellite detections into real fires and false ones, follows the fires that are burning, and puts the next action in front of a person. What the whole project is: the [root README](../README.md).
+The web application of [TerraWatch](https://github.com/Terra-Watch): forest fire forecast, spread outlook and monitoring for India's forest departments.
 
-Roles share one application and one sign-in: **Ranger** (field crew, range officer), **Control Room** (operator, incident commander), **Admin**, and **Citizen** (a secondary input: reports and notices).
+[**Live site**](https://terra-watch-tawny.vercel.app) &nbsp;·&nbsp; [Product rules](docs/PRODUCT_RULES.md) &nbsp;·&nbsp; [Architecture](docs/ARCHITECTURE.md) &nbsp;·&nbsp; [Where is it](docs/WHERE_IS_IT.md)
 
-Rule: software suggests, people decide. A model never verifies, assigns, dispatches or announces. Anything that becomes an action goes through a person into an ordinary check. The incident ladder (Signal, Report, Verified, Responding, Contained, Closed) is how a check is handled once someone opens it. The product rules are in `docs/PRODUCT_RULES.md`; `docs/PROJECT_OVERVIEW.md` describes the check workflow and the screens.
+<img alt="React 19" src="https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB">
+<img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
+<img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white">
+<img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-0F172A?logo=tailwindcss&logoColor=38BDF8">
+<img alt="MapLibre GL" src="https://img.shields.io/badge/MapLibre_GL-396CB2?logo=maplibre&logoColor=white">
+<img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
+<img alt="PostGIS" src="https://img.shields.io/badge/PostgreSQL_+_PostGIS-4169E1?logo=postgresql&logoColor=white">
+<img alt="Playwright" src="https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white">
+<img alt="PWA" src="https://img.shields.io/badge/PWA-offline-5A0FC8?logo=pwa&logoColor=white">
 
-## What is in it
+<img src="docs/readme/map.png" alt="The control-room map for Odisha on 10 March 2025: forest cells shaded by forecast level, detected fires as diamonds, and the legend" width="94%">
+
+<sub>The control-room map in demo mode: the forecast issued for 10 March 2025 over Odisha, with the fires the satellite detected that day.</sub>
+
+</div>
+
+---
+
+One application and one sign-in for four roles: **Ranger** (field crew, range officer), **Control Room** (operator, incident commander), **Admin**, and **Citizen** (a secondary input: reports and notices). It runs in English, Hindi and Odia, and the ranger pages work offline.
+
+> **The rule the whole product follows:** software suggests, people decide. A model never verifies, assigns, dispatches or announces. Anything that becomes an action goes through a person into an ordinary check.
+
+## What you see
+
+### Fire forecast
+
+<table>
+<tr>
+<td width="56%" valign="top"><img src="docs/readme/board.png" alt="The forecast board for Odisha, 10 March 2025"></td>
+<td width="44%" valign="top">
+
+Tomorrow's chance of a detected fire in each 55 km forest area, as a level with the places to look, what is usual for the week, suggested actions and yesterday's record.
+
+The banner on this archived day reads: 41 areas rated High or Extreme, 31 of them had a fire, 2 fires were rated lower (missed), 10 rated areas had no fire (false alarms).
+
+<img src="docs/readme/levels.png" alt="Share of area-days with a detected fire per level in 2025: None 0.7%, Moderate 17.2%, High 41.5%, Extreme 80.7%">
+
+`backend/app/routers/area_forecast.py` · `frontend/src/features/forecast` · the daily job in `forecast/`
+
+</td>
+</tr>
+</table>
+
+### Past fires: the spread outlook
+
+<table>
+<tr>
+<td width="44%" valign="top">
+
+For a burning fire, the forest cells within 8 km ranked in three bands for the next one to two days, with the people, villages and roads in each band, checked against what the satellite later saw burned.
+
+Across 244 test fires of 2025 a typical fire burned 1.9 km², and the top band covered 75% of it. Choosing the nearest cells first covered 50%.
+
+It shows archived fires. It is a ranking of where, not a forecast of when.
+
+`backend/app/routers/fire_spread.py` · `frontend/src/features/outlook` · runs come from [fire-spread-model](https://github.com/Terra-Watch/fire-spread-model)
+
+</td>
+<td width="56%" valign="top"><img src="docs/readme/past.png" alt="The Past fires page: a fire near Bussapur, Telangana, with three bands, what burned, and the people and villages in each band"></td>
+</tr>
+</table>
+
+### Everything else
 
 | Part | What it shows or does | Where |
 |---|---|---|
-| Fire forecast | Tomorrow's chance of a fire detected in each 55 km area, a level (none 0 %, moderate 10 %, high 30 %, extreme 60 %), what is usual for the week, places to look, suggested actions, and yesterday's record. Ranger card (today and tomorrow) and control-room board. | `backend/app/routers/area_forecast.py`, `features/forecast`; the daily job in `forecast/` |
-| Satellite | Every VIIRS detection, sorted into likely fire, unconfirmed, known heat source and outside forest, with the reason in words. Nothing is hidden; groups can be switched on. | `routers_ext/feeds.py`, `services/hotspot_quality.py`, `features/ops/SatellitePage.tsx`, `features/ops/satelliteGroups.ts`; `forecast/live/post_hotspot_quality.py` |
-| Active fires | Fires built from the detections (linked at 1 km and 36 h): size, looks, growth, the side it grew toward, nearest named places, who is on it. A board ordered by who needs attention, a fire page with a replay, a ranger list. Send a crew (a check in the queue), warn villages, mark handled, out or not a forest fire. | `routers/active_fires.py`, `services/active_fires.py`, `services/places.py`, `features/fires` |
-| Past fires | The spread outlook checked against what burned: four archived fires and the result on every 2025 test fire. Not for live work. | `routers/fire_spread.py`, `features/outlook`, `features/firespread`; runs come from `../fire-spread` |
-| Stations | Lookout stations: one sentence per station (smoke against its own normal and its neighbours, haze, fog, sound repeats, silence), a map layer, a Network view for maintenance, a panel on the ranger card, one alert per check. | `routers_ext/stations.py`, `services/station_rules.py`, `features/stations`; hardware in `../node-firmware`, `../gateway-firmware` |
-| Checks and field work | A check (from a fire, a station, a report or a phone call) is verified, assigned and closed with a reason; rangers accept, visit and record what they find, also offline. | `routers/operations.py`, `workflow.py`, `features/ops`, `features/field`, `features/incidents` |
-| Notices | Official notices written by one person and approved by a second. | `routers_ext/notices.py` |
-| Citizen reports and community | Citizens may send reports (place, time, photos) and read notices and the community. A secondary input. | `features/citizen`, `features/community`, `routers/citizen.py` |
+| **Satellite** | Every VIIRS detection, sorted into likely fire, unconfirmed, known heat source and outside forest, with the reason in words. Nothing is hidden; groups can be switched on. | `routers_ext/feeds.py`, `services/hotspot_quality.py`, `features/ops/SatellitePage.tsx` |
+| **Active fires** | Fires built from detections (linked at 1 km and 36 h): size, growth, the side it grew toward, nearest named places, who is on it. A board ordered by who needs attention, a fire page with a replay. Send a crew, warn villages, mark handled, out or not a forest fire. | `routers/active_fires.py`, `services/active_fires.py`, `features/fires` |
+| **Stations** | One sentence per lookout station (smoke against its own normal and its neighbours, haze, fog, sound repeats, silence), a map layer, a Network view for maintenance. | `routers_ext/stations.py`, `services/station_rules.py`, `features/stations` |
+| **Checks and field work** | A check (from a fire, a station, a report or a phone call) is verified, assigned and closed with a reason. Rangers accept, visit and record what they find, also offline. | `routers/operations.py`, `workflow.py`, `features/ops`, `features/field` |
+| **Notices** | Official notices written by one person and approved by a second. | `routers_ext/notices.py` |
+| **Citizen reports and community** | Reports with place, time and photos; notices; community spaces. | `features/citizen`, `features/community`, `routers/citizen.py` |
 
-Retired: the old fire risk map of four relative bands and the scenario planner (what-if simulator). `/app/whatif` and `/ops/fire-spread` redirect to Past fires.
+Retired: the old four-band fire risk map and the what-if simulator. `/app/whatif` and `/ops/fire-spread` redirect to Past fires.
 
-Not built yet: a live "where it may spread next" for active fires, a growth chance, alerts when a fire grows or comes near a village (`../docs/23-active-fires-redesign.md`).
+## How the data flows
+
+```mermaid
+flowchart LR
+  subgraph JOBS["GitHub Actions"]
+    D["daily-forecast.yml<br/>11:40 UTC"]
+    H["hotspots.yml<br/>every 3 h"]
+  end
+  FIRMS["NASA FIRMS"] --> H
+  FIRMS --> D
+  WX["Weather: ERA5-Land, GFS"] --> D
+  D -- "POST /api/area-forecast/runs" --> API
+  H -- "POST /api/feeds/hotspots/quality" --> API
+  GW["LoRa gateway"] -- "station_bridge.py" --> API
+  SP["fire-spread run folder"] --> API
+  API["FastAPI"] <--> DB[("PostGIS")]
+  API --> WEB["React PWA"]
+  WEB --> R["Ranger"]
+  WEB --> C["Control room"]
+  WEB --> Z["Citizen"]
+```
+
+- **Daily forecast.** Fetches fire history and weather, scores every forest cell with five XGBoost seeds, calibrates the scores into chances and builds the 0.5 degree areas. The forecast pages show "stale" when the newest run is old.
+- **Hotspots.** Ingests FIRMS detections, scores each one and posts its group. Until the quality job has run, a detection has no group and is shown as unconfirmed.
+- **Active fires** are computed from the detections when the page is read (cached for a minute).
+- **Demo (archive).** A read-only deployment shows six archived scenes, one state on one day of 2025 (Odisha 10 Mar, Assam 4 Mar, Tamil Nadu 10 Mar, Karnataka 5 Feb, Uttarakhand 18 Feb, Chhattisgarh 24 Apr), with what the forecast got right and wrong. A live forecast never carries the detected-fire fields.
+
+Setup, secrets and details of the jobs: [`forecast/README.md`](forecast/README.md). The models themselves: [wildfire-ignition-forecasting](https://github.com/Terra-Watch/wildfire-ignition-forecasting).
+
+## Tech stack
+
+| Layer | What |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Radix UI, TanStack Query, React Router 7, Motion |
+| Maps | MapLibre GL, PMTiles, Protomaps basemap, H3 |
+| Languages | i18next: English, Hindi (Devanagari), Odia |
+| Offline | Service worker and web manifest (PWA); field records are queued and a retry is stored once |
+| Backend | FastAPI, SQLAlchemy 2, psycopg 3, PyJWT, Argon2, web push |
+| Database | PostgreSQL with PostGIS |
+| Geo and imagery | shapely, pyproj, h3, Pillow, OpenCV |
+| Tests | pytest (662 tests), Playwright with axe-core (130 browser tests), unit tests, bundle budget and i18n checks |
+| Deploy and jobs | Vercel, Docker Compose for local PostGIS, GitHub Actions for the two data jobs |
 
 ## Run locally
-
-Create local environment files from the checked-in examples and keep credentials out of the repository:
 
 ```bash
 cp backend/.env.example backend/.env
@@ -50,7 +154,7 @@ npm install
 npm run dev                   # http://localhost:5173
 ```
 
-Local accounts for the roles are created by a script that generates new passwords on every run. Run it only against the loopback database:
+Local accounts are created by a script that generates new passwords on every run. Run it only against the loopback database:
 
 ```bash
 cd backend
@@ -58,31 +162,47 @@ cd backend
 cat .dev-credentials          # ignored by git, mode 600
 ```
 
-It creates a Citizen, a Ranger and a Control Room account (the citizen account is only needed to try the secondary report flow). Use `/citizen/login` for Citizen and `/staff/login` for Ranger or Control Room; the server picks the permitted workspace after sign-in.
+It creates a Citizen, a Ranger and a Control Room account. Use `/citizen/login` for Citizen and `/staff/login` for Ranger or Control Room; the server picks the permitted workspace after sign-in.
 
-## Forecast and detection data
+<details>
+<summary><b>Model files and replay data</b></summary>
 
-Two jobs fill the product, both in GitHub Actions (setup, secrets and the state release: `forecast/README.md`).
-- **Daily forecast** (`daily-forecast.yml`, 11:40 UTC): fetches fire history and weather, scores every forest cell with five XGBoost seeds, calibrates the scores into chances, builds the 0.5 degree areas and posts them to `POST /api/area-forecast/runs` (and the cell run to `forecast_runs` and `cell_scores`). The forecast pages show "stale" when the newest run is old. Replay days shipped with the code (`backend/app/area_forecast_data`) are what a read-only deployment shows. The control-room Fire forecast board opens on the **Archive (demo)**: six demo **scenes** (one state on one day: Odisha 10 Mar, Assam 4 Mar, Tamil Nadu 10 Mar, Karnataka 5 Feb, Uttarakhand 18 Feb, Chhattisgarh 24 Apr 2025), served by `GET /api/area-forecast/archive/dates` (with `scenes` and `typical`) and `/archive/{date}`. A scene is small enough to read: the map zooms to the state, and the page says what the forecast got right and wrong there (areas rated High or Extreme that had a fire, fires rated lower = missed, rated areas with no fire = false alarms). They were chosen by `wildfire-ignition-forecasting/scripts/16_archive_pick.py scenes` for agreement (precision and recall of at least 0.7, with at least one miss and one false alarm so both kinds of difference show); the page also says how a typical active day of 2025 did (62 % of High or Extreme areas had a fire, 80 % of areas with a fire were rated High or Extreme). The forecast is drawn on the forest cells the model scored (shaded by the level of their 55 km area) with the fires actually detected as red diamonds; forest cells alone and the 55 km outlines are switchable. The control-room Map has the same **Demo (archive)** mode with the same scenes. A live forecast never carries the detected-fire fields. Detections are per forest square (about 11 km), not exact points. The map's ignition-risk layer replays the same final model: `backend/models/risk` is written by `wildfire-ignition-forecasting/scripts/17_risk_replay_bundle.py` (five-seed mean on the 2025 test year, 7,148 forest cells, 17 states including all of the north-east; the older 2023 to 2024 bundle for six states is kept beside it as `models/risk_legacy_2023_2024`; `backend/models/` is not in git, so rebuild it on each machine). In the demo the forecast is drawn on the forest cells the model scored, shaded by their area's level; the forest cells also show on their own (no rating, no fire), and the 55 km area outlines are optional. The Map and the forecast board can limit fire squares and risk cells to the more forested ones (forest land 50% or more, 80% or more; every scored cell has at least 20%). Pin a replay day with `RISK_FORECAST_DATE=2025-03-18` when there is no live run. The control-room Map has the same **Demo (archive)** mode, with the forecast boxes and the fires switchable and its own key. Switch to **Live** with the buttons, or build with `VITE_FORECAST_VIEW=live` to open on live. A live forecast never carries the detected-fire fields. Detections are per 0.5 degree area, not exact places.
-- **Hotspots** (`hotspots.yml`, every 3 h): ingests FIRMS detections, scores each one and posts its group to `POST /api/feeds/hotspots/quality`. Until the quality job has run, a detection has no group and is shown as unconfirmed.
+- `backend/models/` is not in git; rebuild it on each machine. The map's risk layer replays the final model: `backend/models/risk` is written by `wildfire-ignition-forecasting/scripts/17_risk_replay_bundle.py` (five-seed mean on the 2025 test year, 7,148 forest cells, 17 states).
+- Pin a replay day with `RISK_FORECAST_DATE=2025-03-18` when there is no live run. Build with `VITE_FORECAST_VIEW=live` to open on the live view instead of the archive.
+- Replay days shipped with the code are in `backend/app/area_forecast_data`. The demo scenes were chosen by `wildfire-ignition-forecasting/scripts/16_archive_pick.py scenes`.
+- The Past fires page serves, read-only, the run folder written by `fire-spread/scripts/62_outlook_run.py`. The shipped run is in `backend/app/fire_spread_data/`; a newer one in `backend/runtime_data/fire_spread/` (or `FIRE_SPREAD_DIR`) wins.
+- Tables are created by `backend/app/schemas_ext/`; each module is idempotent and runs at start.
 
-Active fires are computed from `resq_hotspots` and `resq_hotspot_quality` when the page is read (cached for a minute); marks are kept in `resq_fire_marks`. Tables are created by `backend/app/schemas_ext/` (each module is idempotent and runs at start).
-
-## Past fires data
-
-The backend serves, read-only, the run folder written by `../fire-spread/scripts/62_outlook_run.py` (`events.json`, `<event>_48h.geojson`, burned and places files, `skill.json`). The shipped run is in `backend/app/fire_spread_data/`; a newer one in `backend/runtime_data/fire_spread/` (or `FIRE_SPREAD_DIR`) wins. Access: range officer, control room operator, incident commander. Every response carries the note that this is a ranking.
+</details>
 
 ## Tests
 
 ```bash
-cd backend && pytest                       # backend suite (needs PostgreSQL, see docs/)
+cd backend && pytest                       # needs PostgreSQL, see docs/
 cd frontend && npm run test:unit           # palette check and unit tests
-cd frontend && npx playwright test         # browser tests (forecast, fires, stations, satellite, map, field, ops, languages, PWA, ...)
+cd frontend && npx playwright test         # forecast, fires, stations, satellite, map, field, ops, languages, PWA
 cd frontend && npm run build && npm run budget && npm run i18n
 ```
 
-Limits to know: the live camera and compass were tried on a desktop browser only, not on a real phone (`docs/WHERE_IS_IT.md`); the fire-evidence assessor is experimental and switched off by default (`docs/fire_evidence_integration.md`).
+## Safety and privacy
+
+- Access is limited by state and community on the server, and every state change is written to an audit log.
+- Official notices need two people: one writes, one approves.
+- Emergency numbers, thresholds and retention periods come from configuration, never from built-in defaults.
+- Stored photos have their location data removed; faces in public copies are blurred.
+- A missing dot on a map is never evidence that there is no fire, and the views say so.
+
+## Known limits
+
+- The spread outlook is not live: it shows archived 2025 fires. A live "where it may spread next" for active fires is planned in the docs, not built.
+- The camera and compass were tried on a desktop browser only, not on a real phone.
+- The fire-evidence assessor for citizen photos is experimental and switched off by default ([docs](docs/fire_evidence_integration.md)).
+- `npm run budget` currently fails: the bundle is over its size budget.
 
 ## More
 
-`docs/ARCHITECTURE.md` (structure), `docs/WHERE_IS_IT.md` (where each feature lives), `docs/STATIONS_DESIGN.md`, `docs/FORECAST_PRODUCTION_PLAN.md`, `docs/FOREST_BOUNDARY_LAYERS_PLAN.md`, `docs/SCIENTIFIC_VALIDATION_GATE.md`.
+[`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) (the check workflow and the screens) · [`docs/STATIONS_DESIGN.md`](docs/STATIONS_DESIGN.md) · [`docs/STATIONS_BRIDGE_SETUP.md`](docs/STATIONS_BRIDGE_SETUP.md) · [`docs/FORECAST_PRODUCTION_PLAN.md`](docs/FORECAST_PRODUCTION_PLAN.md) · [`docs/SCIENTIFIC_VALIDATION_GATE.md`](docs/SCIENTIFIC_VALIDATION_GATE.md)
+
+---
+
+<sub>Part of <a href="https://github.com/Terra-Watch">TerraWatch</a>: <a href="https://github.com/Terra-Watch/wildfire-ignition-forecasting">forecast</a> · <a href="https://github.com/Terra-Watch/fire-spread-model">spread outlook</a> · <a href="https://github.com/Terra-Watch/acoustic-ml">sound classifier</a> · <a href="https://github.com/Terra-Watch/node-firmware">station</a> · <a href="https://github.com/Terra-Watch/relay-firmware">relay</a> · <a href="https://github.com/Terra-Watch/gateway-firmware">gateway</a> · <a href="https://github.com/Terra-Watch/terrawatch-datasets">datasets</a>. Basemap and places © OpenStreetMap contributors.</sub>
