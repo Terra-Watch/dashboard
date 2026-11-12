@@ -4,11 +4,26 @@ updates:
     directory: "/"
     schedule: { interval: "monthly" }
     open-pull-requests-limit: 3
+    groups:
+      all-updates:
+        patterns: ["*"]
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule: { interval: "monthly" }
     open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      all-updates:
+        patterns: ["*"]
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule: { interval: "monthly" }
     open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      all-updates:
+        patterns: ["*"]
