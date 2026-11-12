@@ -11,7 +11,7 @@ const STEPS: Array<{ id: string; Icon: LucideIcon; title: string; text: string }
 const EXTRAS: Array<{ id: string; Icon: LucideIcon; text: string }> = [
   { id: 'offline', Icon: WifiOff, text: 'No signal? Your report waits on your phone and is sent later.' },
   { id: 'follow', Icon: Route, text: 'Follow your report and read why it was closed.' },
-  { id: 'notices', Icon: Bell, text: 'See official notices and verified fire areas near you.' },
+  { id: 'notices', Icon: Bell, text: 'See official notices and emergency contacts for your area.' },
   { id: 'community', Icon: MessagesSquare, text: 'Ask neighbours in a moderated community.' },
 ];
 
@@ -37,7 +37,7 @@ export function Citizens() {
         ))}
       </ol>
       <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-        {EXTRAS.map(({ id, Icon, text }) => <li key={id} className="flex items-center gap-3"><Icon aria-hidden="true" className="shrink-0 text-action" size={22} strokeWidth={1.75} /><span>{t(`landing.v3.citizens.${id}`, text)}</span></li>)}
+        {EXTRAS.map(({ id, Icon, text }) => <li key={id} className="flex items-center gap-3"><Icon aria-hidden="true" className="shrink-0 text-action" size={22} strokeWidth={1.75} /><span>{t(`landing.${id === 'notices' ? 'v5' : 'v3'}.citizens.${id}`, text)}</span></li>)}
       </ul>
       <Link to="/login?next=/citizen/report" className="inline-flex min-h-12 items-center rounded-rq bg-action px-6 text-lg font-bold text-on-action transition duration-200 hover:-translate-y-0.5 hover:bg-action-strong active:translate-y-0">{t('landing.hero.report')}</Link>
     </section>

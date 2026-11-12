@@ -16,7 +16,7 @@ import { DataAnswers } from './DataAnswers';
 import { Capabilities } from './Capabilities';
 import { Evidence } from './Evidence';
 import { Features, Principles } from './Features';
-import { LadderPlayer } from './LadderPlayer';
+import { FlowSteps } from './FlowSteps';
 import { PrivacyMap } from './PrivacyMap';
 
 export function LandingPage() {
@@ -49,7 +49,7 @@ export function LandingPage() {
         <section aria-labelledby="hero-title" className="max-w-3xl">
           <motion.p {...rise(0)} className="text-sm font-bold uppercase tracking-wide text-action">{t('landing.v4.hero_kicker', 'Wildfire forecast and spread outlook for India’s forests')}</motion.p>
           <motion.h1 id="hero-title" {...rise(0.1)} className="mt-3 text-4xl leading-tight md:text-6xl">{t('landing.v4.hero_title', 'See where wildfire is likely tomorrow, and where a fire will go next.')}</motion.h1>
-          <motion.p {...rise(0.25)} className="mt-5 text-lg leading-relaxed text-ink-muted md:text-xl">{t('landing.v4.hero_body', 'TerraWatch ranks the forest areas of 17 states by their chance of fire the next day and shows today’s satellite detections beside it. For an active fire it ranks the cells most likely to burn in the next 24 and 48 hours. Lookout stations watch the forest between satellite passes, and reports and photo checks take staff from forecast to response. People decide; software only suggests.')}</motion.p>
+          <motion.p {...rise(0.25)} className="mt-5 text-lg leading-relaxed text-ink-muted md:text-xl">{t('landing.v5.hero_body', 'TerraWatch gives forest staff the chance of a fire in each 55 km forest area of 17 states for the next day, and sorts every satellite detection into a likely fire, an unconfirmed one, a known heat source or one outside forest. For a burning fire it ranks the cells most likely to burn in the next one to two days. Lookout stations with smoke sensors and a sound classifier watch the forest between satellite passes. A person decides what to do; software only suggests.')}</motion.p>
           <motion.div {...rise(0.35)} className="mt-7 flex flex-wrap gap-3">
             <a href="#forecast" className="inline-flex min-h-12 items-center rounded-rq bg-action px-6 text-lg font-bold text-on-action transition duration-200 hover:-translate-y-0.5 hover:bg-action-strong active:translate-y-0">{t('landing.v3.hero_forecast', 'Explore the forecast')}</a>
             <Link to="/login?next=/citizen/report" className="inline-flex min-h-12 items-center rounded-rq border border-control px-6 text-lg font-semibold text-ink transition duration-200 hover:-translate-y-0.5 hover:bg-surface-2 active:translate-y-0">{t('landing.hero.report')}</Link>
@@ -60,7 +60,7 @@ export function LandingPage() {
 
         <Evidence />
         <Capabilities />
-        <Reveal><div id="how" className="scroll-mt-20"><LadderPlayer /></div></Reveal>
+        <Reveal><div id="how" className="scroll-mt-20"><FlowSteps /></div></Reveal>
         <Reveal><Citizens /></Reveal>
         <Community />
         <Reveal><Features /></Reveal>

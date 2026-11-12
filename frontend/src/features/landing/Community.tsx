@@ -13,7 +13,7 @@ const POSTING: Array<{ id: string; Icon: LucideIcon; title: string; text: string
   { id: 'report', Icon: Flag, title: 'Report anything wrong', text: 'Anyone can report a post. Moderators can remove it or mute the author.' },
 ];
 
-/** How the citizen community is split into spaces, how posting works and how photos are checked. */
+/** How the citizen community is split into spaces, how posting works and how photos are handled. */
 export function Community() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
@@ -53,12 +53,12 @@ export function Community() {
 
         <motion.div {...fade(1)} className="rounded-2xl border border-line bg-surface p-6">
           <span className="flex size-12 items-center justify-center rounded-full bg-ok-tint text-ink"><ShieldCheck aria-hidden="true" size={24} strokeWidth={1.75} /></span>
-          <h3 className="mt-4 text-2xl md:text-3xl">{t('landing.v3.auth_title', 'Photos are checked for authenticity')}</h3>
-          <p className="mt-2 text-lg text-ink-muted">{t('landing.v3.auth_body', 'Every photo is checked for signs that it was edited, made by AI or reused from somewhere else, before other people see it.')}</p>
+          <h3 className="mt-4 text-2xl md:text-3xl">{t('landing.v5.photo_title', 'Photos are cleaned before others see them')}</h3>
+          <p className="mt-2 text-lg text-ink-muted">{t('landing.v5.photo_body', 'Stored photos have their location data removed, and faces are blurred in public copies.')}</p>
           <ul className="mt-4 flex flex-wrap gap-2">
-            {[['edited', 'Possibly edited'], ['ai', 'Possibly AI-made'], ['reused', 'Reused picture'], ['clear', 'No concern found']].map(([id, label]) => <li key={id} className="rounded-full border border-line bg-surface-2 px-3 py-1 text-sm font-semibold">{t(`landing.v3.auth.${id}`, label)}</li>)}
+            {[['location', 'Location removed'], ['faces', 'Faces blurred'], ['moderator', 'Moderator review']].map(([id, label]) => <li key={id} className="rounded-full border border-line bg-surface-2 px-3 py-1 text-sm font-semibold">{t(`landing.v5.photo.${id}`, label)}</li>)}
           </ul>
-          <p className="mt-4 text-ink-muted">{t('landing.v3.auth_note', 'Anything that raises a concern is held for a moderator. “No concern found” is not proof that a photo is real or where it was taken, so a person always makes the final call.')}</p>
+          <p className="mt-4 text-ink-muted">{t('landing.v5.photo_note', 'Moderators can hold or remove a post. A person makes every call.')}</p>
         </motion.div>
       </div>
     </section>

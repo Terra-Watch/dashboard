@@ -22,26 +22,15 @@ test.describe('landing page', () => {
     expect(await page.locator('body').innerText()).not.toMatch(/\bdemo(nstration)?s?\b|\bexperiment/i);
   });
 
-  test('the ladder player steps through every rung and shows who acts, what staff see and what the public sees', async ({ page }) => {
+  test('the flow shows the five steps of one fire, each with its question', async ({ page }) => {
     await page.goto('/');
-    const player = page.getByTestId('ladder-player');
-    await player.getByRole('button', { name: /Verified/ }).click();
-    await expect(player.getByText('Control Room staff check the evidence and decide it is real.')).toBeVisible();
-    await expect(player.getByText('A coarse area and a delayed time, if public sharing is approved.')).toBeVisible();
-    await player.getByRole('button', { name: 'Next step' }).click();
-    await expect(player.getByText('A Range Officer accepts the task, goes to the place and records what they see.')).toBeVisible();
-    await player.getByRole('button', { name: /Satellite signal/ }).click();
-    await expect(player.getByText('A satellite sensor sees heat. No person has looked yet.')).toBeVisible();
-    await expect(player.getByText('Nothing yet.')).toBeVisible();
-  });
-
-  test('auto-play exists, but not for people who prefer reduced motion', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.reload();
-    await expect(page.getByRole('button', { name: 'Play' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Next step' })).toBeVisible();
+    const flow = page.getByTestId('flow-steps');
+    await expect(flow.getByRole('heading', { name: 'How one fire moves through TerraWatch' })).toBeVisible();
+    for (const [title, question] of [['Forecast', 'Where is a fire likely tomorrow?'], ['Satellite', 'Is this detection a real fire?'], ['Active fires', 'Which fires matter now?'], ['Action', 'What do we do?'], ['Record', 'Was it right?']]) {
+      await expect(flow.getByRole('heading', { name: title, exact: true })).toBeVisible();
+      await expect(flow.getByText(question)).toBeVisible();
+    }
+    expect(await page.locator('body').innerText()).not.toMatch(/ladder|authentic|edited or AI/i);
   });
 
   test('public and staff views of the map differ: unchecked items appear only to staff', async ({ page }) => {
@@ -73,7 +62,7 @@ test.describe('landing page', () => {
         await page.setViewportSize(viewport);
         await page.goto('/');
         await page.getByTestId('privacy-map').scrollIntoViewIfNeeded();
-        await page.getByRole('heading', { name: 'Follow a report' }).scrollIntoViewIfNeeded();
+        await page.getByRole('heading', { name: 'How one fire moves through TerraWatch' }).scrollIntoViewIfNeeded();
         await page.waitForTimeout(700);
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         const serious = result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical');

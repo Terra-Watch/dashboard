@@ -12,7 +12,7 @@ const POINT: Record<string, string> = { N: 'north', NE: 'north-east', E: 'east',
 const GROUND: Record<string, string> = { tree: 'forest', shrub: 'scrub', grass: 'grassland', crop: 'farmland' };
 const SCALE_KM = 2;
 
-/** One archived fire from the spread outlook, as the Control Room sees it: the answer in a sentence, the three bands, the roads and places around, and the people in each band. Real model output; 24 or 48 hours; what actually burned on request. */
+/** One archived fire from the spread outlook, as the Control Room sees it: the answer in a sentence, the three bands, the roads and places around, Real model output; 24 or 48 hours; what actually burned on request. */
 export function OutlookSnapshot() {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
@@ -46,10 +46,7 @@ export function OutlookSnapshot() {
         {[[3, 'Most likely'], [2, 'Likely'], [1, 'Possible']].map(([b, label]) => <li key={b} className="flex items-center gap-2"><span aria-hidden="true" className="size-3.5 rounded-sm" style={{ background: LAYERS[(b as number) - 1].fill, opacity: LAYERS[(b as number) - 1].opacity }} />{t(`outlook.band${b}`, label as string)}</li>)}
         <li className="ml-auto"><label className="inline-flex min-h-11 items-center gap-2"><input type="checkbox" checked={showBurned} onChange={e => setShowBurned(e.target.checked)} className="h-4 w-4" />{t('landing.v4.outlook.burned', 'Show what actually burned')}</label></li>
       </ul>
-      <dl className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-        {(['3', '2', '1'] as const).map(b => <div key={b} className="rounded-rq bg-surface-2 px-2 py-2"><dt className="text-ink-muted">{t(`outlook.band${b}`, ['', 'Possible', 'Likely', 'Most likely'][Number(b)])}</dt><dd className="font-bold">{d.people[b].toLocaleString()} <span className="font-normal text-ink-muted">{t('landing.v4.outlook.people', 'people')}</span></dd></div>)}
-      </dl>
-      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v4.outlook.caption2', 'An archived fire in {{state}}, scored as it would have been then. The arrow points toward the most likely band; the dark outline is the fire at the start. Roads and village from OpenStreetMap, people from a 1 km population grid.', { state: OUTLOOK.state })}</figcaption>
+      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v5.outlook.caption', 'An archived fire in {{state}}, scored as it would have been then. The arrow points toward the most likely band; the dark outline is the fire at the start. Roads and village from OpenStreetMap.', { state: OUTLOOK.state })}</figcaption>
     </figure>
   );
 }
