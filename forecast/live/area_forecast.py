@@ -84,6 +84,7 @@ def build(day, scores, levels, places=None, previous=None, detected=None, mode="
         out["outcome"] = {"areas_with_fire": len(hit), "in_high_or_extreme": sum(1 for b in hit if b in rated and rated[b]["level"] in ("high", "extreme")), "areas_rated_high_or_extreme": len(flagged),
                           "of_those_with_fire": sum(1 for a in flagged if a["id"] in hit)}
         for a in areas: a["fire_detected"] = a["id"] in hit
+        fc = s.loc[s.cell_id.isin(set(detected.cell_id)), ["lat", "lon"]]; out["fire_cells"] = [[round(float(r.lat), 2), round(float(r.lon), 2)] for r in fc.itertuples()]   # where the fires were, to a forest square (about 11 km)
     if previous and previous.get("outcome"): out["yesterday"] = {"date": previous["date"], **previous["outcome"]}
     return out
 

@@ -57,19 +57,21 @@ class AreaForecastTests(unittest.TestCase):
     def test_the_archive_shows_what_was_detected_and_the_live_routes_never_do(self):
         with tempfile.TemporaryDirectory() as tmp:
             d = day("2025-03-15"); d["areas"][0]["fire_detected"] = True; d["areas"][1]["fire_detected"] = True
+            d["areas"][0]["id"], d["areas"][1]["id"] = 40170, 60156   # block ids of the two fire squares below
+            d["fire_cells"] = [[20.25, 85.25], [30.15, 78.15]]; (Path(tmp) / "index.json").write_text(json.dumps({"typical": {"active_days": 9}}))
             (Path(tmp) / "2025-03-15.json").write_text(json.dumps(d))
             with patch.object(area_forecast, "_archive_root", return_value=Path(tmp)):
                 c = self.client()
-                self.assertEqual(c.get("/api/area-forecast/archive/dates").json(), {"dates": ["2025-03-15"], "latest": "2025-03-15", "mode": "replay"})
+                self.assertEqual(c.get("/api/area-forecast/archive/dates").json(), {"dates": ["2025-03-15"], "latest": "2025-03-15", "mode": "replay", "typical": {"active_days": 9}})
                 body = c.get("/api/area-forecast/archive/2025-03-15").json()
                 self.assertEqual(body["outcome"], {"areas_with_fire": 2, "in_high_or_extreme": 1, "areas_rated_high_or_extreme": 1, "of_those_with_fire": 1})
-                self.assertTrue(all(a["fire_detected"] for a in body["areas"]))
+                self.assertTrue(all(a["fire_detected"] for a in body["areas"])); self.assertEqual(len(body["fire_cells"]), 2)
                 with patch.object(area_forecast, "ranger_communities", return_value=None), patch.object(area_forecast, "user_scopes", return_value={"UK"}):
                     scoped = self.client("control_room_operator").get("/api/area-forecast/archive/2025-03-15").json()
-                self.assertEqual(scoped["outcome"], {"areas_with_fire": 1, "in_high_or_extreme": 0, "areas_rated_high_or_extreme": 0, "of_those_with_fire": 0})   # only the areas the person may see
+                self.assertEqual(scoped["outcome"], {"areas_with_fire": 1, "in_high_or_extreme": 0, "areas_rated_high_or_extreme": 0, "of_those_with_fire": 0}); self.assertEqual(scoped["fire_cells"], [[30.15, 78.15]])   # only the areas the person may see
                 self.assertEqual(c.get("/api/area-forecast/archive/2025-03-16").status_code, 404)
         live = self.client().get("/api/area-forecast/2025-03-14").json()
-        self.assertNotIn("outcome", live); self.assertTrue(all("fire_detected" not in a for a in live["areas"]))
+        self.assertNotIn("outcome", live); self.assertNotIn("fire_cells", live); self.assertTrue(all("fire_detected" not in a for a in live["areas"]))
 
     def test_a_person_scoped_to_a_state_sees_only_its_areas_and_counts_follow(self):
         with patch.object(area_forecast, "ranger_communities", return_value=None), patch.object(area_forecast, "user_scopes", return_value={"OD"}):

@@ -20,44 +20,54 @@
  ],
  "dates": [
   {
-   "date": "2025-03-14",
+   "date": "2025-02-24",
    "summary": {
-    "none": 204,
-    "moderate": 83,
-    "high": 90,
-    "extreme": 277
+    "none": 235,
+    "moderate": 182,
+    "high": 120,
+    "extreme": 117
    },
-   "bytes": 433467
+   "bytes": 427122
   },
   {
-   "date": "2025-03-15",
+   "date": "2025-03-06",
    "summary": {
-    "none": 208,
-    "moderate": 97,
-    "high": 84,
-    "extreme": 265
+    "none": 189,
+    "moderate": 110,
+    "high": 111,
+    "extreme": 241
    },
-   "bytes": 432658
+   "bytes": 457192
   },
   {
-   "date": "2025-04-12",
+   "date": "2025-03-18",
    "summary": {
-    "none": 378,
-    "moderate": 119,
-    "high": 96,
-    "extreme": 60
+    "none": 199,
+    "moderate": 88,
+    "high": 95,
+    "extreme": 268
    },
-   "bytes": 336180
+   "bytes": 456693
   },
   {
-   "date": "2025-05-20",
+   "date": "2025-03-28",
    "summary": {
-    "none": 645,
-    "moderate": 8,
-    "high": 1,
-    "extreme": 0
+    "none": 146,
+    "moderate": 101,
+    "high": 77,
+    "extreme": 329
    },
-   "bytes": 173469
+   "bytes": 487139
+  },
+  {
+   "date": "2025-04-25",
+   "summary": {
+    "none": 335,
+    "moderate": 111,
+    "high": 70,
+    "extreme": 138
+   },
+   "bytes": 365321
   },
   {
    "date": "2025-07-15",
@@ -67,17 +77,13 @@
     "high": 0,
     "extreme": 0
    },
-   "bytes": 165666
-  },
-  {
-   "date": "2025-12-10",
-   "summary": {
-    "none": 635,
-    "moderate": 11,
-    "high": 5,
-    "extreme": 3
-   },
-   "bytes": 179394
+   "bytes": 165682
   }
- ]
+ ],
+ "typical": {
+  "active_days": 96,
+  "min_fire_areas": 40,
+  "high_or_extreme_had_fire": 0.62,
+  "fire_rated_high_or_extreme": 0.8
+ }
 }

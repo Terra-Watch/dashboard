@@ -12,7 +12,7 @@ import { cellCentre } from '../map/geojson';
 import { WindLayer, type MapInstance } from '../map/WindLayer';
 import type { WindGrid } from '../map/windField';
 import { IncidentPreview } from '../incidents/IncidentPreview';
-import { Legend } from '../map/Legend';
+import { ForecastLegend, Legend } from '../map/Legend';
 import { MapView } from '../map/MapView';
 import { SYMBOL_OF_RUNG, boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { TIME_WINDOWS, canShow, minutesSinceMidnight, withinHours, type LayerId, type TimeWindow } from '../map/profiles';
@@ -22,6 +22,8 @@ import { basemapStyle, satelliteStyle } from '../map/style';
 import { readMapColors, isDark } from '../map/colors';
 import { useStations } from '../stations/api';
 import { statementWords, symbolOf } from '../stations/model';
+import { useDates, useForecast } from '../forecast/api';
+import { areaPolygons, fireMarks, outcomeWords, typicalWords } from '../forecast/model';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -82,6 +84,11 @@ export function OpsMapPage() {
   const [showStations, setShowStations] = useState(true);
   const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
+  // Demo: an archived day of 2025 with the fires the satellite actually detected that day, in place of live items.
+  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
+  const demoDates = useDates('archive');
+  const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-18') ? '2025-03-18' : demoDates.data.latest) : null) : null;
+  const demoForecast = useForecast(demoDay, 'archive');
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
   // Satellite basemap toggle
@@ -163,7 +170,7 @@ export function OpsMapPage() {
   });
 
   const shown = useMemo(() => (incidents.data ?? []).filter(item => (!region || item.community_slug === region) && item.latitude != null && item.longitude != null && (item.status === 'closed' ? false : withinHours(item.created_at, hours))), [incidents.data, region, hours]);
-  const points: MapPoint[] = useMemo(() => [
+  const livePoints: MapPoint[] = useMemo(() => [
     ...shown.filter(item => item.status === 'reported' ? layers.has('reports') : layers.has('incidents')).map(item => ({ id: `i${item.id}`, lat: item.latitude!, lon: item.longitude!, symbol: SYMBOL_OF_RUNG[rungOfStatus(item.status)], label: `#${item.id}` })),
     ...(showStations ? (stations.data?.items ?? []).filter(x => (!region || true) && x.latitude != null).map(x => ({ id: `t${x.id}`, lat: x.latitude, lon: x.longitude, symbol: symbolOf(x), label: x.name })) : []),
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
@@ -184,8 +191,11 @@ export function OpsMapPage() {
     ...bearings.data.wedges.map(w => ({ id: `bw${w.incident_id}`, ring: w.coords, tone: 'envelope' as const })),
     ...bearings.data.areas.map((a, i) => ({ id: `ba${i}`, ring: a.coords, tone: 'warning' as const, label: t('map.bearing_area', { count: a.count, km: a.area_km2, defaultValue: '{{count}} reports point here (about {{km}} km²)' }) })),
   ] : [], [bearings.data, showBearings, t]);
-  const polygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
-  const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
+  const livePolygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
+  const demoFire = demo ? demoForecast.data : undefined;
+  const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire) : []) : livePoints), [demo, demoFire, showFires, livePoints]);
+  const polygons = useMemo<MapPolygon[]>(() => (demo ? (demoFire && showForecast ? areaPolygons(demoFire.areas) : []) : livePolygons), [demo, demoFire, showForecast, livePolygons]);
+  const bounds = useMemo(() => boundsOf(demo ? [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }] : points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
   const selectedStation = selected?.startsWith('t') ? stations.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
@@ -195,6 +205,15 @@ export function OpsMapPage() {
     <div className="mx-auto max-w-7xl space-y-3">
       <PageTitle title={t('nav.map')} subtitle={chosen ? chosen.name : t('ops.all_communities', 'All communities')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
       <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.mode', 'Data')}</p><div role="group" aria-label={t('map.mode', 'Data')} className="inline-flex rounded-rq border border-control p-1">{([false, true] as const).map(on => <button key={String(on)} type="button" aria-pressed={demo === on} onClick={() => { setDemo(on); setSelected(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${demo === on ? 'bg-ink text-surface' : ''}`}>{on ? t('map.mode_demo', 'Demo (archive)') : t('map.mode_live', 'Live')}</button>)}</div></div>
+        {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => setDemoDate(e.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
+        {demo && <><label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForecast} onChange={e => setShowForecast(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forecast', 'Forecast (model output)')}</span></label>
+          <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_fires', 'Fires detected')}</span></label></>}
+        {demo && <div className="space-y-1 sm:col-span-2 xl:col-span-4" role="status">
+          <p className="rounded-rq border border-line px-3 py-2 text-sm">{t('map.demo_note', 'Demo: a past day of 2025. Boxes are the forecast areas as they would have been rated the day before; red diamonds are forest squares (about 11 km) where the satellite then actually detected a fire. Live items are hidden.')}</p>
+          {demoDates.isError || demoForecast.isError ? <Notice kind="warning">{t('map.demo_off', 'The archive could not be loaded.')}</Notice> : demoFire && <p className="text-sm">{outcomeWords(demoFire.outcome, demoFire.date, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
+          {typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o })) && <p className="text-sm text-ink-muted">{typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
+        </div>}
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.preset', 'What to show')}</p><div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex max-w-full rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div></div>
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.window', 'Time window')}</p><div role="group" aria-label={t('map.window', 'Time window')} className="inline-flex max-w-full rounded-rq border border-control p-1">{TIME_WINDOWS.map(item => <button key={item} type="button" aria-pressed={hours === item} onClick={() => setHours(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${hours === item ? 'bg-action text-on-action' : ''}`}>{item ? `${item} h` : t('map.today', 'Today')}</button>)}</div></div>
         {satelliteEnabled && (
@@ -239,7 +258,7 @@ export function OpsMapPage() {
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
         <div className={`relative ${view === 'list' ? 'hidden lg:block' : ''}`}>
-          <MapView onMapReady={setMapInstance} label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
+          <MapView onMapReady={setMapInstance} label={t('nav.map')} points={points} polygons={polygons} riskCells={demo ? [] : riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
           {selectedIncident && (
             <section aria-label={t('map.selected', 'Selected')} data-testid="selected" className="absolute inset-x-2 bottom-2 z-10 max-h-[85%] overflow-auto rounded-panel border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:left-3 md:w-[26rem]">
               <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
@@ -247,7 +266,7 @@ export function OpsMapPage() {
             </section>)}
         </div>
         <div className="space-y-3">
-          <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />
+          {demo ? <ForecastLegend /> : <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />}
           {selectedStation && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
               <h2 className="text-xl">{selectedStation.name}</h2>
@@ -265,7 +284,7 @@ export function OpsMapPage() {
 
       <section aria-labelledby="map-list-title" className={view === 'map' ? 'sr-only' : ''} data-testid="map-list">
           <h2 id="map-list-title" className="mb-2 text-xl">{t('map.same_items', 'The same items as a list')}</h2>
-          {!points.length ? <p className="text-ink-muted">{t('map.none', 'Nothing in this view.')}</p> : <ul className="space-y-2">{points.map(point => <li key={point.id}><button type="button" onClick={() => { setSelected(point.id); setView('map'); }} className="flex min-h-11 w-full items-center gap-3 rounded-rq border border-line bg-surface px-3 text-left">{point.id.startsWith('t') ? (point.label ?? point.id) : point.id.startsWith('i') ? `#${point.id.slice(1)} · ${t(`rung.${rungOfStatus(incidents.data?.find(item => item.id === Number(point.id.slice(1)))?.status)}`)}` : `${t('rung.signal')} · ${ageText(signals.data?.items.find(item => `s${item.id}` === point.id)?.acq_datetime)}`}</button></li>)}</ul>}
+          {!points.length ? <p className="text-ink-muted">{t('map.none', 'Nothing in this view.')}</p> : <ul className="space-y-2">{points.slice(0, 300).map(point => <li key={point.id}><button type="button" onClick={() => { setSelected(point.id); setView('map'); }} className="flex min-h-11 w-full items-center gap-3 rounded-rq border border-line bg-surface px-3 text-left">{point.id.startsWith('seen-') ? `${t('map.fire_seen', 'Fire detected')} · ${point.lat.toFixed(2)}, ${point.lon.toFixed(2)}` : point.id.startsWith('t') ? (point.label ?? point.id) : point.id.startsWith('i') ? `#${point.id.slice(1)} · ${t(`rung.${rungOfStatus(incidents.data?.find(item => item.id === Number(point.id.slice(1)))?.status)}`)}` : `${t('rung.signal')} · ${ageText(signals.data?.items.find(item => `s${item.id}` === point.id)?.acq_datetime)}`}</button></li>)}</ul>}
       </section>
       <p className="text-sm text-ink-muted">{t('map.communities', 'Communities:')} {(communities.data?.items ?? []).map(c => c.name).join(', ')}.</p>
     </div>

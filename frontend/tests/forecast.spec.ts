@@ -5,15 +5,16 @@ import { json, signedInAs } from './helpers';
 
 const DIR = '../backend/app/area_forecast_data';
 const day = (d: string) => ({ ...JSON.parse(readFileSync(`${DIR}/${d}.json`, 'utf8')), scope: 'all' });
-const march = day('2025-03-15');
-const dates = ['2025-03-14', '2025-03-15', '2025-04-12', '2025-05-20', '2025-07-15', '2025-12-10'];
+const march = day('2025-03-18');
+const dates = ['2025-02-24', '2025-03-06', '2025-03-18', '2025-03-28', '2025-04-25', '2025-07-15'];
+const typical = { active_days: 96, min_fire_areas: 40, high_or_extreme_had_fire: 0.62, fire_rated_high_or_extreme: 0.8 };
 const shot = (name: string) => (process.env.SHOTDIR ? { path: `${process.env.SHOTDIR}/${name}.png`, fullPage: true } : undefined);
 
 async function mock(page: import('@playwright/test').Page, body: unknown = march) {
-  await page.route('**/api/area-forecast/dates', r => r.fulfill(json({ dates, latest: '2025-03-15', mode: 'replay' })));
+  await page.route('**/api/area-forecast/dates', r => r.fulfill(json({ dates, latest: '2025-03-18', mode: 'replay' })));
   await page.route('**/api/area-forecast/latest', r => r.fulfill(json(body)));
-  await page.route(/\/api\/area-forecast\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(d === '2025-03-15' ? body : day(d))); });
-  await page.route('**/api/area-forecast/archive/dates', r => r.fulfill(json({ dates, latest: '2025-12-10', mode: 'replay' })));
+  await page.route(/\/api\/area-forecast\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(d === '2025-03-18' ? body : day(d))); });
+  await page.route('**/api/area-forecast/archive/dates', r => r.fulfill(json({ dates, latest: '2025-07-15', mode: 'replay', typical })));
   await page.route(/\/api\/area-forecast\/archive\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(day(d))); });
   await page.route('**/api/notices**', r => r.fulfill(json({ items: [] })));
 }
@@ -25,9 +26,11 @@ test.describe('Fire forecast: control-room board', () => {
     await page.goto('/ops/forecast');
     await expect(page.getByRole('heading', { name: 'Fire forecast' })).toBeVisible();
     await expect(page.getByText(/Archive demo: a past day of 2025/)).toBeVisible();      // the board opens on the archive, not on the live forecast
-    await expect(page.getByText(/Yesterday \(2025-03-14\)/)).toBeVisible();
-    await expect(page.getByText(/What was detected on 2025-03-15: a fire was seen by satellite in 288 areas/)).toBeVisible();
+    await expect(page.getByText(/Yesterday \(2025-03-17\)/)).toBeVisible();
+    await expect(page.getByText(/What was detected on 2025-03-18: a fire was seen by satellite in 342 areas/)).toBeVisible();
+    await expect(page.getByText(/On a typical active day of 2025 \(the 96 days/)).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Fire detected' })).toBeVisible();
+    await expect(page.getByTestId('legend').getByText('Rated, less reliable here')).toBeVisible();
     await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
     const first = page.locator('tbody tr').first();
     await expect(first.getByText('Extreme')).toBeVisible();

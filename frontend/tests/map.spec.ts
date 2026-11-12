@@ -16,6 +16,29 @@ test.describe('Control Room map', () => {
     await page.route('**/api/notices**', route => route.fulfill(json({ items: [] })));
   });
 
+  test('demo mode shows an archived day with the fires actually detected, and hides the live items', async ({ page }) => {
+    const area = (id: number, level: string, fire: boolean) => ({ id, name: `near A${id}`, state: 'OD', lat: 20.25, lon: 85.75 + (id - 40171) * 0.5, bbox: [85.5 + (id - 40171) * 0.5, 20, 86 + (id - 40171) * 0.5, 20.5], cells: 10, chance: 0.5, expected_fires: 1, usual_fires: 1, usual_chance: 0.3, level, reliable: true, fire_detected: fire });
+    const day = { date: '2025-03-18', mode: 'replay', issued_at: '2025-03-17T05:00:00+00:00', levels: [], actions: [], label: '', model: {}, week_of_year: 12, areas: [area(40171, 'extreme', true), area(40172, 'none', true)]   /* ids are 0.5-degree blocks: floor(lat/0.5)*1000 + floor(lon/0.5) */, summary: { none: 1, moderate: 0, high: 0, extreme: 1 }, areas_scored: 2, scope: 'all', note: '',
+      outcome: { areas_with_fire: 2, in_high_or_extreme: 1, areas_rated_high_or_extreme: 1, of_those_with_fire: 1 }, fire_cells: [[20.25, 85.75], [20.35, 85.75], [20.25, 86.25]] };
+    await page.route('**/api/area-forecast/archive/dates', route => route.fulfill(json({ dates: ['2025-03-18'], latest: '2025-03-18', mode: 'replay' })));
+    await page.route('**/api/area-forecast/archive/2025-03-18', route => route.fulfill(json(day)));
+    await page.goto('/ops/map');
+    await page.getByRole('button', { name: 'Demo (archive)' }).click();
+    await expect(page.getByText(/Demo: a past day of 2025/)).toBeVisible();
+    await expect(page.getByText(/What was detected on 2025-03-18: a fire was seen by satellite in 2 areas/)).toBeVisible();
+    const map = page.getByTestId('map');
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20000 });
+    const key = page.getByTestId('legend');
+    await expect(key.getByText('Fire detected')).toBeVisible(); await expect(key.getByText('Extreme (60% or more)')).toBeVisible(); await expect(key.getByText('Satellite signal')).toHaveCount(0);   // the live symbols are not in the demo key
+    await expect(map).toHaveAttribute('data-points', '3');          // the three fire squares; no incident, station or live signal
+    await page.getByLabel('Fires detected').uncheck();
+    await expect(map).toHaveAttribute('data-points', '0');           // the forecast boxes alone; the model output can be read without the fires on top
+    await page.getByLabel('Fires detected').check();
+    await page.getByRole('button', { name: 'Live', exact: true }).click();
+    await expect(map).not.toHaveAttribute('data-points', '3');
+    await expect(page.getByTestId('legend').getByText('Satellite signal')).toBeVisible();
+  });
+
   test('the satellite chip says what is true: layer off in the Field view, not "not connected"', async ({ page }) => {
     await page.goto('/ops/map');
     await expect(page.getByText(/Satellite · 10 min/)).toBeVisible();

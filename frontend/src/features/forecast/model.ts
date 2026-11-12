@@ -1,6 +1,6 @@
 /** Area forecast: the shapes the API returns and the small pure helpers both pages share (tested in unit/forecast.unit.ts).
  *  A level comes from the calibrated chance that a fire is detected in the area tomorrow. It is not a ranking of areas against each other. */
-import type { MapPolygon } from '../map/geojson';
+import type { MapPoint, MapPolygon } from '../map/geojson';
 
 export type LevelId = 'none' | 'moderate' | 'high' | 'extreme';
 export const LEVELS: readonly LevelId[] = ['extreme', 'high', 'moderate', 'none'];
@@ -16,7 +16,7 @@ export type Yesterday = { date: string; areas_with_fire: number; in_high_or_extr
 export type Outcome = Omit<Yesterday, 'date'>;
 export type Forecast = {
   date: string; mode: 'live' | 'replay'; issued_at: string; levels: Array<{ id: LevelId; min_chance: number }>; actions: Action[]; label: string; model: Record<string, unknown>;
-  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday; outcome?: Outcome;
+  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday; outcome?: Outcome; fire_cells?: Array<[number, number]>;
 };
 
 type T = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
@@ -144,4 +144,24 @@ export function outcomeWords(o: Outcome | undefined, date: string, t: T): string
 export function fireSeenWords(a: Area, t: T): string | null {
   if (a.fire_detected === undefined) return null;
   return a.fire_detected ? t('forecast.fire_seen', 'A fire was detected in this area that day.') : t('forecast.fire_not_seen', 'No fire was detected in this area that day.');
+}
+
+const blockOf = (lat: number, lon: number): number => Math.floor(lat / 0.5) * 1000 + Math.floor(lon / 0.5);
+
+/** Marks for the forest squares where a fire was actually detected on an archived day. `areas` limits them to some areas (a state filter); with no cells in the file, one mark per area with a fire. */
+export function fireMarks(f: Pick<Forecast, 'areas' | 'fire_cells'>, areas: Area[] = f.areas): MapPoint[] {
+  if (f.fire_cells?.length) {
+    const ids = new Set(areas.map(a => a.id));
+    return f.fire_cells.filter(([la, lo]) => ids.has(blockOf(la, lo))).map(([lat, lon], i) => ({ id: `seen-${i}`, lat, lon, symbol: 'signal_likely' as const }));
+  }
+  return areas.filter(a => a.fire_detected).map(a => ({ id: `seen-${a.id}`, lat: a.lat, lon: a.lon, symbol: 'signal_likely' as const }));
+}
+
+export type Typical = { active_days: number; min_fire_areas: number; high_or_extreme_had_fire: number; fire_rated_high_or_extreme: number };
+
+/** The example days are chosen because the forecast and the detections agree well; this says how a typical active day did, so they are not read as typical. */
+export function typicalWords(x: Typical | undefined, t: T): string | null {
+  if (!x) return null;
+  return t('forecast.typical', 'These days were chosen because the forecast and the detections agree well. On a typical active day of 2025 (the {{n}} days with at least {{min}} areas with a fire), {{p}}% of the High or Extreme areas had a fire and {{r}}% of the areas with a fire were rated High or Extreme.', {
+    n: x.active_days, min: x.min_fire_areas, p: Math.round(100 * x.high_or_extreme_had_fire), r: Math.round(100 * x.fire_rated_high_or_extreme) });
 }

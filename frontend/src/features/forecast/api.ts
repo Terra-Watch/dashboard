@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../app/http';
-import type { Forecast } from './model';
+import type { Forecast, Typical } from './model';
 
-export type Dates = { dates: string[]; latest: string; mode: 'live' | 'replay' };
+export type Dates = { dates: string[]; latest: string; mode: 'live' | 'replay'; typical?: Typical };
 
 /** The dates that have a forecast, and the forecast for one of them (the newest when none is chosen). */
 export type Source = 'live' | 'archive';

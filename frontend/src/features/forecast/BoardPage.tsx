@@ -6,7 +6,8 @@ import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { useDates, useForecast, type Source } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, fireSeenWords, levelRank, outcomeWords, recordWords, type Area, type LevelId } from './model';
+import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, fireMarks, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type LevelId } from './model';
+import { ForecastLegend } from '../map/Legend';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Control-room tabs: tomorrow's forecast and the outlook for fires that are burning now. */
@@ -23,7 +24,7 @@ export function ForecastTabs({ current }: { current: 'forecast' | 'fires' | 'spr
 }
 
 /** The archived day a demo opens on: a busy day, so the forecast and what was detected can be compared. */
-const DEMO_DAY = '2025-03-15';
+const DEMO_DAY = '2025-03-18';
 /** Demo builds show the archive; set VITE_FORECAST_VIEW=live to open on the live forecast. */
 const DEFAULT_SOURCE: Source = import.meta.env.VITE_FORECAST_VIEW === 'live' ? 'live' : 'archive';
 
@@ -44,7 +45,7 @@ export function BoardPage() {
   const polygons = useMemo<MapPolygon[]>(() => [...areaPolygons(rows), ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen]);
   const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
   // On an archived day: a mark in every area where a fire was actually detected, whatever level it was given.
-  const seen = useMemo<MapPoint[]>(() => (archived ? all.filter(a => a.fire_detected && (!state || a.state === state)).map(a => ({ id: `seen-${a.id}`, lat: a.lat, lon: a.lon, symbol: 'signal_likely' as const })) : []), [all, archived, state]);
+  const seen = useMemo<MapPoint[]>(() => (archived && f ? fireMarks(f, all.filter(a => !state || a.state === state)) : []), [f, all, archived, state]);
   const points = useMemo(() => [...seen, ...looks], [seen, looks]);
   const bounds = useMemo(() => boundsOf(chosen ? [{ lat: chosen.bbox[1], lon: chosen.bbox[0] }, { lat: chosen.bbox[3], lon: chosen.bbox[2] }] : rows.length ? rows.flatMap(a => [{ lat: a.bbox[1], lon: a.bbox[0] }, { lat: a.bbox[3], lon: a.bbox[2] }]) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]), [rows, chosen]);
   const weak = useMemo(() => [...new Set(rows.filter(a => !a.reliable && a.level !== 'none').map(a => a.state))].sort(), [rows]);
@@ -60,6 +61,7 @@ export function BoardPage() {
         {(['archive', 'live'] as const).map(k => <button key={k} type="button" aria-pressed={source === k} onClick={() => { setSource(k); setDate(null); setSel(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${source === k ? 'bg-ink text-surface' : 'border border-control'}`}>{k === 'archive' ? tt('forecast.src_archive', 'Archive (demo)') : tt('forecast.src_live', 'Live')}</button>)}
       </div>
       {archived && <Notice kind="info">{tt('forecast.archive_note', 'Archive demo: a past day of 2025, shown as it would have been issued the day before, next to the fires the satellite then actually detected. It is not tomorrow\'s forecast.')}</Notice>}
+      {archived && typicalWords(dates.data?.typical, tt) && <p className="text-sm text-ink-muted">{typicalWords(dates.data?.typical, tt)}</p>}
       {outcomeWords(f.outcome, f.date, tt) && <Notice kind="success">{outcomeWords(f.outcome, f.date, tt)}</Notice>}
       {!archived && f.mode === 'replay' && <Notice kind="warning">{tt('forecast.replay', 'This is an archived day from 2025, shown as it would have been issued. It is not tomorrow\'s forecast.')}</Notice>}
       <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
@@ -75,7 +77,8 @@ export function BoardPage() {
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-3">
           <MapView label={tt('forecast.map', 'Forecast areas')} polygons={polygons} points={points} bounds={bounds} className="h-[58vh] min-h-96" />
-          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each box is an area of about 55 km. Filled boxes are rated Moderate or above; a dashed box is a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red satellite mark means a fire was actually detected in that area that day (the area, not the exact place).')}</p>
+          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each box is an area of about 55 km. Filled boxes are rated Moderate or above; a dashed box is a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red diamond is a forest square (about 11 km) where a fire was actually detected that day.')}</p>
+          {archived && <ForecastLegend />}
           {weak.length > 0 && <Notice kind="info">{tt('forecast.weak_states', 'Less reliable in: {{states}}.', { states: weak.join(', ') })}</Notice>}
         </div>
         <div className="space-y-3">

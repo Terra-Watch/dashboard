@@ -66,7 +66,10 @@ def _scoped(body: dict, user: dict, archive: bool = False) -> dict:
         flagged = [a for a in areas if a["level"] in ("high", "extreme")]; hit = [a for a in areas if a.get("fire_detected")]
         out["outcome"] = {"areas_with_fire": len(hit), "in_high_or_extreme": sum(1 for a in hit if a["level"] in ("high", "extreme")),
                           "areas_rated_high_or_extreme": len(flagged), "of_those_with_fire": sum(1 for a in flagged if a.get("fire_detected"))}
+        blocks = {a["id"] for a in areas}   # the fire squares inside the areas this person may see (block id as in forecast/live/area_forecast.block_of)
+        out["fire_cells"] = [c for c in body.get("fire_cells", []) if int(c[0] // 0.5) * 1000 + int(c[1] // 0.5) in blocks]
     else:
+        out.pop("fire_cells", None)
         for a in areas: a.pop("fire_detected", None)
     _burning(body, areas)
     return out
@@ -144,7 +147,12 @@ def archive_dates(user: dict = Depends(require_risk_roles(*ROLES))):
     ds = _dates(_archive_root())
     if not ds:
         raise HTTPException(status_code=404, detail="No archived forecast is available")
-    return {"dates": ds, "latest": ds[-1], "mode": "replay"}
+    out = {"dates": ds, "latest": ds[-1], "mode": "replay"}
+    try:   # how the forecast did on a typical active day of 2025, so the example days are not read as typical
+        typical = json.loads((_archive_root() / "index.json").read_text()).get("typical")
+    except (OSError, ValueError):
+        typical = None
+    return {**out, "typical": typical} if typical else out
 
 
 @router.get("/archive/{date}")

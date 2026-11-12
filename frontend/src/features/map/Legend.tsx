@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SymbolKind } from './geojson';
 
@@ -29,6 +29,7 @@ export function SymbolSwatch({ kind }: { kind: SymbolKind }) {
   return (
     <svg aria-hidden="true" width="22" height="22" viewBox="0 0 28 28" className="shrink-0">
       {kind === 'signal' && <path d="M14 4 24 14 14 24 4 14Z" fill={stroke('surface')} stroke={stroke('unconfirmed')} strokeWidth="2.5" strokeDasharray="3 2" />}
+      {kind === 'signal_likely' && <path d="M14 3 25 14 14 25 3 14Z" fill={stroke('ember')} stroke={stroke('text')} strokeWidth="2" />}
       {kind === 'report' && <circle cx="14" cy="14" r="8" fill={stroke('surface')} stroke={stroke('unconfirmed')} strokeWidth="3" />}
       {kind === 'verified' && <circle cx="14" cy="14" r="9" fill={stroke('danger')} />}
       {kind === 'responding' && <><circle cx="14" cy="14" r="12" fill="none" stroke={stroke('warn')} strokeWidth="2" /><circle cx="14" cy="14" r="7" fill={stroke('warn')} /></>}
@@ -68,6 +69,30 @@ export function Legend({ kinds, showRisk = false }: { kinds: SymbolKind[]; showR
           </li>
         )}
       </ul>}
+    </section>
+  );
+}
+
+/** Boxes drawn exactly as the map draws the forecast tones (MapView toneStyle), so the key matches the map. */
+function Box({ color, fill, dash, width }: { color: string; fill: number; dash?: string; width: number }) {
+  return <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" className="shrink-0"><path d="M3 3H19V19H3Z" fill={`var(--tw-${color})`} fillOpacity={fill} stroke={`var(--tw-${color})`} strokeWidth={width} strokeDasharray={dash} /></svg>;
+}
+
+/** The key for an archived day: the model's output as boxes, and what was actually detected as red diamonds. Shapes and words, never colour alone. */
+export function ForecastLegend() {
+  const { t } = useTranslation();
+  const rows: Array<{ swatch: ReactNode; label: string; hint: string }> = [
+    { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Solid red box. The forecast gave this area a chance of 6 in 10 or more.') },
+    { swatch: <Box color="danger" fill={0.14} dash="2 2" width={2.5} />, label: t('map.fl.high', 'High (30% to 60%)'), hint: t('map.fl.high_hint', 'Dashed red box.') },
+    { swatch: <Box color="warn" fill={0.16} dash="2 2" width={2} />, label: t('map.fl.moderate', 'Moderate (10% to 30%)'), hint: t('map.fl.moderate_hint', 'Dashed amber box.') },
+    { swatch: <Box color="unconfirmed" fill={0.1} dash="3 2" width={2} />, label: t('map.fl.weak', 'Rated, less reliable here'), hint: t('map.fl.weak_hint', 'Dashed grey-violet box: a state where the forecast has been less reliable. It may be Moderate, High or Extreme.') },
+    { swatch: <SymbolSwatch kind="signal_likely" />, label: t('map.fl.fire', 'Fire detected'), hint: t('map.fl.fire_hint', 'What actually happened: a forest square (about 11 km) where the satellite detected a fire that day. Not the forecast.') },
+  ];
+  return (
+    <section aria-label={t('map.legend', 'Legend')} className="rounded-rq border border-line bg-surface p-3 text-sm" data-testid="legend">
+      <h2 className="min-h-8 font-bold">{t('map.legend', 'Legend')}</h2>
+      <ul className="mt-1 space-y-2">{rows.map((r, i) => <li key={i} className="flex items-start gap-2">{r.swatch}<span><span className="font-semibold">{r.label}</span><span className="block text-ink-muted">{r.hint}</span></span></li>)}
+        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.none', 'No box: the area was not rated (under 10%).')}</li></ul>
     </section>
   );
 }
