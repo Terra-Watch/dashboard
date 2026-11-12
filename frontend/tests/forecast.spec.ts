@@ -13,6 +13,8 @@ async function mock(page: import('@playwright/test').Page, body: unknown = march
   await page.route('**/api/area-forecast/dates', r => r.fulfill(json({ dates, latest: '2025-03-15', mode: 'replay' })));
   await page.route('**/api/area-forecast/latest', r => r.fulfill(json(body)));
   await page.route(/\/api\/area-forecast\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(d === '2025-03-15' ? body : day(d))); });
+  await page.route('**/api/area-forecast/archive/dates', r => r.fulfill(json({ dates, latest: '2025-12-10', mode: 'replay' })));
+  await page.route(/\/api\/area-forecast\/archive\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(day(d))); });
   await page.route('**/api/notices**', r => r.fulfill(json({ items: [] })));
 }
 
@@ -22,8 +24,11 @@ test.describe('Fire forecast: control-room board', () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto('/ops/forecast');
     await expect(page.getByRole('heading', { name: 'Fire forecast' })).toBeVisible();
-    await expect(page.getByText(/archived day from 2025/)).toBeVisible();
+    await expect(page.getByText(/Archive demo: a past day of 2025/)).toBeVisible();      // the board opens on the archive, not on the live forecast
     await expect(page.getByText(/Yesterday \(2025-03-14\)/)).toBeVisible();
+    await expect(page.getByText(/What was detected on 2025-03-15: a fire was seen by satellite in 288 areas/)).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Fire detected' })).toBeVisible();
+    await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
     const first = page.locator('tbody tr').first();
     await expect(first.getByText('Extreme')).toBeVisible();
     await first.getByRole('button').click();
@@ -32,6 +37,10 @@ test.describe('Fire forecast: control-room board', () => {
     await expect(page.getByText(/Where to look/)).toBeVisible();
     await page.waitForTimeout(2500);
     await page.screenshot(shot('board'));
+    await expect(page.getByText('A fire was detected in this area that day.')).toBeVisible();
+    await page.getByLabel('Only areas where a fire was detected').check();
+    await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
+    await page.getByLabel('Only areas where a fire was detected').uncheck();
     await page.getByLabel('Forecast for').selectOption('2025-07-15');
     await expect(page.getByText('No area is rated Moderate or above')).toBeVisible();      // the monsoon: nothing is red
     await page.getByLabel('Show areas with no rating').check();

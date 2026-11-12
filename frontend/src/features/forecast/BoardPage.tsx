@@ -5,8 +5,8 @@ import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page'
 import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
-import { useDates, useForecast } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, levelRank, recordWords, type Area, type LevelId } from './model';
+import { useDates, useForecast, type Source } from './api';
+import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, fireSeenWords, levelRank, outcomeWords, recordWords, type Area, type LevelId } from './model';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Control-room tabs: tomorrow's forecast and the outlook for fires that are burning now. */
@@ -22,35 +22,52 @@ export function ForecastTabs({ current }: { current: 'forecast' | 'fires' | 'spr
   );
 }
 
+/** The archived day a demo opens on: a busy day, so the forecast and what was detected can be compared. */
+const DEMO_DAY = '2025-03-15';
+/** Demo builds show the archive; set VITE_FORECAST_VIEW=live to open on the live forecast. */
+const DEFAULT_SOURCE: Source = import.meta.env.VITE_FORECAST_VIEW === 'live' ? 'live' : 'archive';
+
 /** Control-room forecast board: the areas of a division on a map and in a table, with the level, the chance, what is usual, and what to do. */
 export function BoardPage() {
   const tt = useTt();
-  const dates = useDates();
+  const [source, setSource] = useState<Source>(DEFAULT_SOURCE);
+  const dates = useDates(source);
   const [date, setDate] = useState<string | null>(null);
-  const q = useForecast(date);
-  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [sel, setSel] = useState<number | null>(null);
+  const day = date ?? (source === 'archive' && dates.data ? (dates.data.dates.includes(DEMO_DAY) ? DEMO_DAY : dates.data.latest) : null);
+  const q = useForecast(day, source);
+  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [onlyFire, setOnlyFire] = useState(false); const [sel, setSel] = useState<number | null>(null);
   const f = q.data; const all = f?.areas ?? [];
+  const archived = !!f?.outcome;
   const states = useMemo(() => [...new Set(all.map(a => a.state))].sort(), [all]);
-  const rows = useMemo(() => all.filter(a => (!state || a.state === state) && (showNone || a.level !== 'none')).sort((a, b) => levelRank(b.level) - levelRank(a.level) || b.chance - a.chance), [all, state, showNone]);
+  const rows = useMemo(() => all.filter(a => (!state || a.state === state) && (onlyFire ? a.fire_detected : showNone || a.level !== 'none')).sort((a, b) => levelRank(b.level) - levelRank(a.level) || b.chance - a.chance), [all, state, showNone, onlyFire]);
   const chosen = rows.find(a => a.id === sel) ?? null;
   const polygons = useMemo<MapPolygon[]>(() => [...areaPolygons(rows), ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen]);
-  const points = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
+  const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
+  // On an archived day: a mark in every area where a fire was actually detected, whatever level it was given.
+  const seen = useMemo<MapPoint[]>(() => (archived ? all.filter(a => a.fire_detected && (!state || a.state === state)).map(a => ({ id: `seen-${a.id}`, lat: a.lat, lon: a.lon, symbol: 'signal_likely' as const })) : []), [all, archived, state]);
+  const points = useMemo(() => [...seen, ...looks], [seen, looks]);
   const bounds = useMemo(() => boundsOf(chosen ? [{ lat: chosen.bbox[1], lon: chosen.bbox[0] }, { lat: chosen.bbox[3], lon: chosen.bbox[2] }] : rows.length ? rows.flatMap(a => [{ lat: a.bbox[1], lon: a.bbox[0] }, { lat: a.bbox[3], lon: a.bbox[2] }]) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]), [rows, chosen]);
   const weak = useMemo(() => [...new Set(rows.filter(a => !a.reliable && a.level !== 'none').map(a => a.state))].sort(), [rows]);
 
-  if (dates.isLoading || q.isLoading) return <div className="mx-auto max-w-6xl"><Skeleton lines={5} /></div>;
+  if (dates.isLoading || q.isLoading || (source === 'archive' && !f && !dates.isError)) return <div className="mx-auto max-w-6xl"><Skeleton lines={5} /></div>;
   if (dates.isError || q.isError || !f) return <div className="mx-auto max-w-3xl space-y-3"><ForecastTabs current="forecast" /><EmptyState title={tt('forecast.none', 'No fire forecast is available yet')}>{tt('forecast.none_hint', 'The forecast job has not issued a run for your area.')}</EmptyState></div>;
   const summary = f.summary;
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <PageTitle title={tt('forecast.board_title', 'Fire forecast')} subtitle={tt('forecast.board_sub', 'The chance that a fire is detected in each forest area on the chosen day, and what to do about it.')} />
       <ForecastTabs current="forecast" />
-      {f.mode === 'replay' && <Notice kind="warning">{tt('forecast.replay', 'This is an archived day from 2025, shown as it would have been issued. It is not tomorrow\'s forecast.')}</Notice>}
+      <div role="group" aria-label={tt('forecast.source', 'Forecast source')} className="flex gap-2">
+        {(['archive', 'live'] as const).map(k => <button key={k} type="button" aria-pressed={source === k} onClick={() => { setSource(k); setDate(null); setSel(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${source === k ? 'bg-ink text-surface' : 'border border-control'}`}>{k === 'archive' ? tt('forecast.src_archive', 'Archive (demo)') : tt('forecast.src_live', 'Live')}</button>)}
+      </div>
+      {archived && <Notice kind="info">{tt('forecast.archive_note', 'Archive demo: a past day of 2025, shown as it would have been issued the day before, next to the fires the satellite then actually detected. It is not tomorrow\'s forecast.')}</Notice>}
+      {outcomeWords(f.outcome, f.date, tt) && <Notice kind="success">{outcomeWords(f.outcome, f.date, tt)}</Notice>}
+      {!archived && f.mode === 'replay' && <Notice kind="warning">{tt('forecast.replay', 'This is an archived day from 2025, shown as it would have been issued. It is not tomorrow\'s forecast.')}</Notice>}
       <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
         {LEVELS.filter(l => l !== 'none').map(l => <span key={l} className="inline-flex items-center gap-1.5"><LevelChip level={l} /><b className="tabular-nums">{summary[l]}</b></span>)}
         <span className="text-sm text-ink-muted">{tt('forecast.n_none', '{{n}} areas with no rating', { n: summary.none })}</span>
-        <label className="ml-auto text-sm">{tt('forecast.date', 'Forecast for')} <select value={date ?? f.date} onChange={e => { setDate(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{(dates.data?.dates ?? [f.date]).map(d => <option key={d} value={d}>{dayWord(d, tt) === d ? d : `${dayWord(d, tt)} · ${d}`}</option>)}</select></label>
+        <label className="ml-auto text-sm">{tt('forecast.date', 'Forecast for')} <select value={day ?? f.date} onChange={e => { setDate(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{(dates.data?.dates ?? [f.date]).map(d => <option key={d} value={d}>{dayWord(d, tt) === d ? d : `${dayWord(d, tt)} · ${d}`}</option>)}</select></label>
         <label className="text-sm">{tt('forecast.state', 'State')} <select value={state} onChange={e => { setState(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2"><option value="">{tt('forecast.all', 'All')}</option>{states.map(s => <option key={s}>{s}</option>)}</select></label>
+        {archived && <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={onlyFire} onChange={e => { setOnlyFire(e.target.checked); setSel(null); }} className="h-4 w-4" />{tt('forecast.only_fire', 'Only areas where a fire was detected')}</label>}
         <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showNone} onChange={e => setShowNone(e.target.checked)} className="h-4 w-4" />{tt('forecast.show_none', 'Show areas with no rating')}</label>
       </div>
       <p className="text-sm text-ink-muted">{tt('forecast.issued', 'Issued {{when}} · model {{model}} · week {{week}} of the year', { when: formatWhen(f.issued_at), model: String(f.model?.id ?? ''), week: f.week_of_year })}{f.scope !== 'all' ? ` · ${tt('forecast.scope_' + f.scope, f.scope === 'community' ? 'your communities only' : 'your states only')}` : ''}</p>
@@ -58,7 +75,7 @@ export function BoardPage() {
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-3">
           <MapView label={tt('forecast.map', 'Forecast areas')} polygons={polygons} points={points} bounds={bounds} className="h-[58vh] min-h-96" />
-          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each box is an area of about 55 km. Filled boxes are rated Moderate or above; a dashed box is a state where the forecast is less reliable. Squares are not the exact place of a fire.')}</p>
+          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each box is an area of about 55 km. Filled boxes are rated Moderate or above; a dashed box is a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red satellite mark means a fire was actually detected in that area that day (the area, not the exact place).')}</p>
           {weak.length > 0 && <Notice kind="info">{tt('forecast.weak_states', 'Less reliable in: {{states}}.', { states: weak.join(', ') })}</Notice>}
         </div>
         <div className="space-y-3">
@@ -66,7 +83,7 @@ export function BoardPage() {
             <div className="max-h-[46vh] overflow-auto rounded-rq border border-line">
               <table className="w-full text-sm">
                 <caption className="sr-only">{tt('forecast.table', 'Areas by level, highest first')}</caption>
-                <thead className="sticky top-0 bg-surface-2 text-left"><tr><th className="p-2">{tt('forecast.col_area', 'Area')}</th><th className="p-2">{tt('forecast.col_level', 'Level')}</th><th className="p-2 text-right">{tt('forecast.col_chance', 'Chance')}</th><th className="p-2 text-right">{tt('forecast.col_expected', 'Fire spots')}</th><th className="p-2 text-right">{tt('forecast.col_usual', 'Usual')}</th></tr></thead>
+                <thead className="sticky top-0 bg-surface-2 text-left"><tr><th className="p-2">{tt('forecast.col_area', 'Area')}</th><th className="p-2">{tt('forecast.col_level', 'Level')}</th><th className="p-2 text-right">{tt('forecast.col_chance', 'Chance')}</th><th className="p-2 text-right">{tt('forecast.col_expected', 'Fire spots')}</th><th className="p-2 text-right">{tt('forecast.col_usual', 'Usual')}</th>{archived && <th className="p-2 text-right">{tt('forecast.col_seen', 'Fire detected')}</th>}</tr></thead>
                 <tbody>{rows.slice(0, 200).map(a => (
                   <tr key={a.id} className={`border-t border-line ${a.id === chosen?.id ? 'bg-action/10' : ''}`}>
                     <td className="p-2"><button type="button" aria-pressed={a.id === chosen?.id} onClick={() => setSel(a.id === sel ? null : a.id)} className="min-h-11 text-left font-semibold underline-offset-2 hover:underline">{a.name}<span className="block text-xs font-normal text-ink-muted">{a.state}{changeWords(a, tt) ? ` · ${changeWords(a, tt)}` : ''}</span></button></td>
@@ -74,6 +91,7 @@ export function BoardPage() {
                     <td className="p-2 text-right tabular-nums">{Math.round(a.chance * 100)}%</td>
                     <td className="p-2 text-right tabular-nums">{a.expected_fires.toFixed(1)}</td>
                     <td className="p-2 text-right tabular-nums text-ink-muted">{a.usual_fires === null ? '-' : a.usual_fires.toFixed(1)}</td>
+                    {archived && <td className="p-2 text-right">{a.fire_detected ? <b>{tt('forecast.yes', 'Yes')}</b> : <span className="text-ink-muted">{tt('forecast.no', 'No')}</span>}</td>}
                   </tr>))}</tbody>
               </table>
             </div>)}
@@ -99,6 +117,7 @@ function Detail({ area, actions }: { area: Area; actions: NonNullable<ReturnType
     <Card title={area.name} headingLevel={3}>
       <div className="flex flex-wrap items-center gap-3"><LevelChip level={area.level as LevelId} big /><span className="text-lg font-bold">{chanceWords(area.chance, tt)}</span><span className="text-sm text-ink-muted">{tt('forecast.detail_chance', 'chance of a fire detected here on this day')}</span></div>
       <p className="mt-2 text-sm">{tt('forecast.detail_expected', 'About {{n}} fire spots expected out of {{c}} forest squares.', { n: area.expected_fires.toFixed(1), c: area.cells })}</p>
+      {fireSeenWords(area, tt) && <p className={`mt-2 text-sm ${area.fire_detected ? 'font-bold' : 'text-ink-muted'}`}>{fireSeenWords(area, tt)}</p>}
       <div className="mt-2"><Reasons area={area} /></div>
       <div className="mt-3"><WeakNote area={area} /></div>
       <div className="mt-3"><h3 className="text-sm font-bold">{tt('forecast.do_today', 'Do today')}</h3><ActionList area={area} actions={actions} /></div>

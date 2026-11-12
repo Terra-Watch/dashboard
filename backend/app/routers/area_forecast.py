@@ -28,22 +28,29 @@ def _root() -> Path:
     return local if local.is_dir() and any(local.glob("2*.json")) else Path(__file__).resolve().parents[1] / "area_forecast_data"
 
 
-def _dates() -> list[str]:
-    root = _root()
+def _archive_root() -> Path:
+    """The archived days of 2025, replayed from the stored model predictions and shipped with the code. Used for demos and for checking the forecast against what was detected."""
+    return Path(__file__).resolve().parents[1] / "area_forecast_data"
+
+
+def _dates(root: Path | None = None) -> list[str]:
+    root = root or _root()
     return sorted(p.stem for p in root.glob("*.json") if _DATE.match(p.stem)) if root.is_dir() else []
 
 
-def _load(date: str) -> dict:
-    if not _DATE.match(date) or date not in _dates():
+def _load(date: str, root: Path | None = None) -> dict:
+    root = root or _root()
+    if not _DATE.match(date) or date not in _dates(root):
         raise HTTPException(status_code=404, detail="No forecast for that date")
     try:
-        return json.loads((_root() / f"{date}.json").read_text())
+        return json.loads((root / f"{date}.json").read_text())
     except (OSError, ValueError):
         raise HTTPException(status_code=404, detail="No forecast for that date") from None
 
 
-def _scoped(body: dict, user: dict) -> dict:
-    """Keep the areas the person may see. Counts in the summary are recomputed for what is kept."""
+def _scoped(body: dict, user: dict, archive: bool = False) -> dict:
+    """Keep the areas the person may see. Counts in the summary are recomputed for what is kept. An archived day also carries what was actually detected that day
+    (per area `fire_detected`, and the outcome counts, recomputed for the areas kept); a live forecast never does."""
     if user["role"] == "admin":
         scope, areas = "all", body["areas"]
     else:
@@ -55,6 +62,12 @@ def _scoped(body: dict, user: dict) -> dict:
     levels = [lv["id"] for lv in body["levels"]]
     out = {**body, "areas": areas, "scope": scope, "summary": {k: sum(1 for a in areas if a["level"] == k) for k in levels}, "areas_scored": len(areas)}
     out.pop("outcome", None)
+    if archive and body.get("mode") == "replay":
+        flagged = [a for a in areas if a["level"] in ("high", "extreme")]; hit = [a for a in areas if a.get("fire_detected")]
+        out["outcome"] = {"areas_with_fire": len(hit), "in_high_or_extreme": sum(1 for a in hit if a["level"] in ("high", "extreme")),
+                          "areas_rated_high_or_extreme": len(flagged), "of_those_with_fire": sum(1 for a in flagged if a.get("fire_detected"))}
+    else:
+        for a in areas: a.pop("fire_detected", None)
     _burning(body, areas)
     return out
 
@@ -123,6 +136,20 @@ def dates(user: dict = Depends(require_risk_roles(*ROLES))):
     if not ds:
         raise HTTPException(status_code=404, detail="No forecast is available yet")
     return {"dates": ds, "latest": ds[-1], "mode": _load(ds[-1]).get("mode")}
+
+
+@router.get("/archive/dates")
+def archive_dates(user: dict = Depends(require_risk_roles(*ROLES))):
+    """The archived days available for a demo, newest last."""
+    ds = _dates(_archive_root())
+    if not ds:
+        raise HTTPException(status_code=404, detail="No archived forecast is available")
+    return {"dates": ds, "latest": ds[-1], "mode": "replay"}
+
+
+@router.get("/archive/{date}")
+def archive_by_date(date: str, user: dict = Depends(require_risk_roles(*ROLES))):
+    return _scoped(_load(date, _archive_root()), user, archive=True)
 
 
 @router.get("/latest")

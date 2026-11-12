@@ -13,9 +13,10 @@ export type Area = {
 };
 export type Action = { id: string; min_chance: number; text: string };
 export type Yesterday = { date: string; areas_with_fire: number; in_high_or_extreme: number; areas_rated_high_or_extreme: number; of_those_with_fire: number };
+export type Outcome = Omit<Yesterday, 'date'>;
 export type Forecast = {
   date: string; mode: 'live' | 'replay'; issued_at: string; levels: Array<{ id: LevelId; min_chance: number }>; actions: Action[]; label: string; model: Record<string, unknown>;
-  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday;
+  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday; outcome?: Outcome;
 };
 
 type T = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
@@ -128,4 +129,19 @@ export function recordWords(y: Yesterday | undefined, t: T): string | null {
   if (!y || !y.areas_rated_high_or_extreme) return null;
   return t('forecast.record', 'Yesterday ({{date}}): a fire was detected in {{hit}} of the {{n}} areas rated High or Extreme, and {{found}} of the {{all}} areas with a fire were rated High or Extreme.', {
     date: y.date, hit: y.of_those_with_fire, n: y.areas_rated_high_or_extreme, found: y.in_high_or_extreme, all: y.areas_with_fire });
+}
+
+/** An archived day: what the satellite actually detected, against the levels the forecast gave. null when the day has no outcome (a live forecast). */
+export function outcomeWords(o: Outcome | undefined, date: string, t: T): string | null {
+  if (!o) return null;
+  const share = o.areas_rated_high_or_extreme ? Math.round(100 * o.of_those_with_fire / o.areas_rated_high_or_extreme) : null;
+  const missed = o.areas_with_fire - o.in_high_or_extreme;
+  return t('forecast.outcome', 'What was detected on {{date}}: a fire was seen by satellite in {{all}} areas. Of the {{n}} areas rated High or Extreme, {{hit}} had a fire{{share}}; {{missed}} areas with a fire were rated lower.', {
+    date, all: o.areas_with_fire, n: o.areas_rated_high_or_extreme, hit: o.of_those_with_fire, share: share === null ? '' : ` (${share}%)`, missed });
+}
+
+/** One line for an area on an archived day. */
+export function fireSeenWords(a: Area, t: T): string | null {
+  if (a.fire_detected === undefined) return null;
+  return a.fire_detected ? t('forecast.fire_seen', 'A fire was detected in this area that day.') : t('forecast.fire_not_seen', 'No fire was detected in this area that day.');
 }
