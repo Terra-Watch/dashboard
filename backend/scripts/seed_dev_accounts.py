@@ -25,6 +25,7 @@ REPO = BACKEND.parent
 sys.path.insert(0, str(BACKEND))
 load_dotenv(BACKEND / ".env")
 
+from app.core.regions import state_names  # noqa: E402
 from app.core.security import hash_password_argon2  # noqa: E402
 from app.database.session import engine  # noqa: E402
 
@@ -105,7 +106,7 @@ def main() -> int:
                 {"user_id": user_id},
             )
             if role != "citizen":
-                for state in STATES:
+                for state in (sorted(state_names()) if role == "control_room_operator" else STATES):   # the control room sees every state and union territory
                     db.execute(
                         text("""INSERT INTO resq_user_scopes (user_id,state)
                             VALUES (:user_id,:state) ON CONFLICT DO NOTHING"""),
