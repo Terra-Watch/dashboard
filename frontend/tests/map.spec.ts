@@ -91,6 +91,10 @@ test.describe('Control Room map', () => {
     const map = page.getByTestId('map');
     await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20000 });
     await expect(map).toHaveAttribute('data-points', '3');
+    await page.getByLabel('State').selectOption('');                           // the state filter on its own: all states of the day
+    await expect(page.getByLabel('Scene')).toHaveValue('');
+    await page.getByLabel('State').selectOption('OD');                         // back to a state that is a scene: the scene is selected again
+    await expect(page.getByLabel('Scene')).toHaveValue('s1');
     await page.getByLabel('Scene').selectOption('s2');                         // Assam: no area of the fixture is in it, so nothing is drawn
     await expect(map).toHaveAttribute('data-points', '0');
     await page.getByLabel('Scene').selectOption('');                           // the whole country again
