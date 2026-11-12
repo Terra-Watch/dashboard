@@ -18,8 +18,8 @@ test('no translation is empty and none contains a stray script', () => {
 });
 
 test('Hindi text is Devanagari and Odia text is Odia, apart from numbers, units and names', () => {
-  for (const [key, text] of Object.entries(hi)) if (/[A-Za-z]{4,}/.test(text.replace(/\{\{\w+\}\}/g, '').replace(/NASA FIRMS|Copernicus ERA5|OpenStreetMap|Protomaps|Wi-Fi|MB|ERA5|Enter/g, ''))) assert.fail(`hi ${key} still has English words: ${text}`);
-  for (const [key, text] of Object.entries(or)) if (/[A-Za-z]{4,}/.test(text.replace(/\{\{\w+\}\}/g, '').replace(/NASA FIRMS|Copernicus ERA5|OpenStreetMap|Protomaps|Wi-Fi|MB|ERA5|Enter/g, ''))) assert.fail(`or ${key} still has English words: ${text}`);
+  for (const [key, text] of Object.entries(hi)) if (/[A-Za-z]{4,}/.test(text.replace(/\{\{\w+\}\}/g, '').replace(/NASA FIRMS|NASA|MODIS|VIIRS|Copernicus ERA5|OpenStreetMap|Protomaps|Wi-Fi|MB|ERA5|Enter/g, ''))) assert.fail(`hi ${key} still has English words: ${text}`);
+  for (const [key, text] of Object.entries(or)) if (/[A-Za-z]{4,}/.test(text.replace(/\{\{\w+\}\}/g, '').replace(/NASA FIRMS|NASA|MODIS|VIIRS|Copernicus ERA5|OpenStreetMap|Protomaps|Wi-Fi|MB|ERA5|Enter/g, ''))) assert.fail(`or ${key} still has English words: ${text}`);
 });
 
 test('placeholders are the same in both languages', () => {
