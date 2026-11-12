@@ -46,6 +46,6 @@ Checks: `tests/check_detection_quality.py` (features equal the dataset's for a m
 
 ## What to know
 
-- Vegetation is a seasonal average (no free live source). On the 2025 test year this cost 0.002 AUPRC (0.4728 to 0.4709); see `docs/12-open-meteo-weather-gap-check.md`.
+- Vegetation is a seasonal average (no free live source). On the 2025 test year this cost 0.0017 AUPRC (0.5193 to 0.5176, re-run 2026-11-12); see `docs/12-open-meteo-weather-gap-check.md`.
 - Open-Meteo's free API is for non-commercial use; fine for a public demo, not for a paid service.
 - `forecast/state/verification.csv` gains one row per finished day: the forecast scored against the fire the satellite then saw. This is the silent-period check.
