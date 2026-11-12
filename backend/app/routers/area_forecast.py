@@ -148,11 +148,11 @@ def archive_dates(user: dict = Depends(require_risk_roles(*ROLES))):
     if not ds:
         raise HTTPException(status_code=404, detail="No archived forecast is available")
     out = {"dates": ds, "latest": ds[-1], "mode": "replay"}
-    try:   # how the forecast did on a typical active day of 2025, so the example days are not read as typical
-        typical = json.loads((_archive_root() / "index.json").read_text()).get("typical")
+    try:   # the demo scenes (one state on one day, small enough to read) and how a typical active day of 2025 did, so the examples are not read as typical
+        index = json.loads((_archive_root() / "index.json").read_text())
     except (OSError, ValueError):
-        typical = None
-    return {**out, "typical": typical} if typical else out
+        index = {}
+    return {**out, **{k: index[k] for k in ("scenes", "typical") if index.get(k)}}
 
 
 @router.get("/archive/{date}")

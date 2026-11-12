@@ -162,7 +162,7 @@ export type Typical = { active_days: number; min_fire_areas: number; high_or_ext
 /** The example days are chosen because the forecast and the detections agree well; this says how a typical active day did, so they are not read as typical. */
 export function typicalWords(x: Typical | undefined, t: T): string | null {
   if (!x) return null;
-  return t('forecast.typical', 'These days were chosen because the forecast and the detections agree well. On a typical active day of 2025 (the {{n}} days with at least {{min}} areas with a fire), {{p}}% of the High or Extreme areas had a fire and {{r}}% of the areas with a fire were rated High or Extreme.', {
+  return t('forecast.typical', 'These scenes were chosen because the forecast and the detections agree well in them. On a typical active day of 2025 (the {{n}} days with at least {{min}} areas with a fire), {{p}}% of the High or Extreme areas had a fire and {{r}}% of the areas with a fire were rated High or Extreme.', {
     n: x.active_days, min: x.min_fire_areas, p: Math.round(100 * x.high_or_extreme_had_fire), r: Math.round(100 * x.fire_rated_high_or_extreme) });
 }
 
@@ -190,7 +190,7 @@ export function forestName(step: number, t: T): string {
 }
 
 /** One forest cell of the model's grid (about 10 km), as the risk replay serves it. */
-export type DayCell = { lat: number; lon: number; forest: number | null };
+export type DayCell = { lat: number; lon: number; forest: number | null; state?: string };
 
 /** The forecast drawn where the model actually scored: every forest cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).
  *  Cells are on a grid of about 0.09 degrees, so a square of 0.09 degrees is drawn around each centre. */
@@ -204,7 +204,23 @@ export function cellPolygons(cells: DayCell[], areas: Area[], minForest = 0, idP
 }
 
 /** Every forest cell the model scores, on its own: no rating and no fire needed. */
-export function forestPolygons(cells: DayCell[], minForest = 0, idPrefix = 'fo', side = 0.09): MapPolygon[] {
+export function forestPolygons(cells: DayCell[], minForest = 0, state = '', idPrefix = 'fo', side = 0.09): MapPolygon[] {
   const h = side / 2;
-  return cells.filter(c => (c.forest ?? 1) >= minForest).map((c, i) => ({ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone: 'forest' as const }));
+  return cells.filter(c => (c.forest ?? 1) >= minForest && (!state || c.state === state)).map((c, i) => ({ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone: 'forest' as const }));
+}
+
+/** A demo scene: one state on one archived day, small enough to read on a map. */
+export type Scene = { id: string; date: string; state: string; label: string; rated: number; fire: number; hit: number; missed: number; false_alarms: number };
+
+/** What the forecast got right and wrong in the areas shown (one state, or all). Needs an archived day (areas carry fire_detected). */
+export function sceneWords(areas: Area[], label: string, t: T): string | null {
+  const rated = areas.filter(a => a.level === 'high' || a.level === 'extreme'); const fire = areas.filter(a => a.fire_detected);
+  if (!areas.length || areas[0].fire_detected === undefined) return null;
+  const hit = rated.filter(a => a.fire_detected).length;
+  return t('forecast.scene', '{{label}}: {{rated}} areas were rated High or Extreme and {{hit}} of them had a fire; {{missed}} of the {{fire}} areas with a fire were rated lower (missed), and {{fa}} rated High or Extreme had no fire (false alarms).', {
+    label, rated: rated.length, hit, fire: fire.length, missed: fire.length - hit, fa: rated.length - hit });
+}
+
+export function areaBounds(areas: Area[]): Array<{ lat: number; lon: number }> {
+  return areas.flatMap(a => [{ lat: a.bbox[1], lon: a.bbox[0] }, { lat: a.bbox[3], lon: a.bbox[2] }]);
 }

@@ -35,7 +35,9 @@ test.describe('Control Room map', () => {
     await expect(key.getByText('Fire detected')).toBeVisible(); await expect(key.getByText('Extreme (60% or more)')).toBeVisible(); await expect(key.getByText('Satellite signal')).toHaveCount(0);   // the live symbols are not in the demo key
     await expect(page.getByText('Forecast for tomorrow')).toHaveCount(0);   // the live risk controls are hidden in the demo
     // the forecast is drawn on the forest cells, shaded by their area's level: the two cells inside the Extreme area, none for the unrated area or for the cell outside any area
-    await expect(map).toHaveAttribute('data-polygons', '5');         // the three forest cells with nothing on them, and the two shaded by the Extreme area
+    await expect(map).toHaveAttribute('data-polygons', '2');         // the two forest cells shaded by the Extreme area; the plain forest cells are off by default
+    await page.getByLabel('Forest cells', { exact: true }).check();
+    await expect(map).toHaveAttribute('data-polygons', '5');         // plus the three forest cells with nothing on them
     await page.getByLabel('Forecast (model output)').uncheck(); await page.getByLabel('Fires detected').uncheck();
     await expect(map).toHaveAttribute('data-polygons', '3');         // the forest cells stand on their own: no model output, no fire
     await expect(key.getByText('Forest cell', { exact: true })).toBeVisible();
@@ -72,6 +74,27 @@ test.describe('Control Room map', () => {
     await page.getByRole('button', { name: 'Live', exact: true }).click();
     await expect(map).not.toHaveAttribute('data-points', '3');
     await expect(page.getByTestId('legend').getByText('Satellite signal')).toBeVisible();
+  });
+
+  test('demo scenes: one state on one day, with what the forecast got right and wrong there', async ({ page }) => {
+    const area = (id: number, level: string, fire: boolean) => ({ id, name: `near A${id}`, state: 'OD', lat: 20.25, lon: 85.75 + (id - 40171) * 0.5, bbox: [85.5 + (id - 40171) * 0.5, 20, 86 + (id - 40171) * 0.5, 20.5], cells: 10, chance: 0.5, expected_fires: 1, usual_fires: 1, usual_chance: 0.3, level, reliable: true, fire_detected: fire });
+    const day = { date: '2025-03-18', mode: 'replay', issued_at: '2025-03-17T05:00:00+00:00', levels: [], actions: [], label: '', model: {}, week_of_year: 12, areas: [area(40171, 'extreme', true), area(40172, 'none', true)]   /* ids are 0.5-degree blocks: floor(lat/0.5)*1000 + floor(lon/0.5) */, summary: { none: 1, moderate: 0, high: 0, extreme: 1 }, areas_scored: 2, scope: 'all', note: '',
+      outcome: { areas_with_fire: 2, in_high_or_extreme: 1, areas_rated_high_or_extreme: 1, of_those_with_fire: 1 }, fire_cells: [[20.25, 85.75, 1.0], [20.35, 85.75, 0.55], [20.25, 86.25, 0.3]] };
+    await page.route('**/api/area-forecast/archive/dates', route => route.fulfill(json({ dates: ['2025-03-18'], latest: '2025-03-18', mode: 'replay', scenes: [{ id: 's1', date: '2025-03-18', state: 'OD', label: 'Odisha · 18 Mar 2025', rated: 1, fire: 2, hit: 1, missed: 1, false_alarms: 0 }, { id: 's2', date: '2025-03-18', state: 'AS', label: 'Assam · 18 Mar 2025', rated: 0, fire: 0, hit: 0, missed: 0, false_alarms: 0 }] })));
+    await page.route('**/api/area-forecast/archive/2025-03-18', route => route.fulfill(json(day)));
+    await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: null, exposure_radii_km: null, scenario_enabled: false, risk_forecast_enabled: true })));
+    const cell = (id: number, band: string, forest: number) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [85.75, 20.25 + id * 0.1] }, properties: { cell_id: id, state: 'OD', rank_percentile: 90, band, forest_frac: forest } });
+    await page.route('**/api/risk/geojson**', route => route.fulfill(json({ type: 'FeatureCollection', features: [cell(1, 'High', 1.0), cell(2, 'Low', 0.6), cell(3, 'Low', 0.25)] })));
+    await page.goto('/ops/map');
+    await page.getByRole('button', { name: 'Demo (archive)' }).click();
+    await expect(page.getByText(/Odisha · 18 Mar 2025: 1 areas were rated High or Extreme and 1 of them had a fire; 1 of the 2 areas with a fire were rated lower \(missed\), and 0 rated High or Extreme had no fire/)).toBeVisible();   // opens on the first scene
+    const map = page.getByTestId('map');
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20000 });
+    await expect(map).toHaveAttribute('data-points', '3');
+    await page.getByLabel('Scene').selectOption('s2');                         // Assam: no area of the fixture is in it, so nothing is drawn
+    await expect(map).toHaveAttribute('data-points', '0');
+    await page.getByLabel('Scene').selectOption('');                           // the whole country again
+    await expect(map).toHaveAttribute('data-points', '3');
   });
 
   test('the satellite chip says what is true: layer off in the Field view, not "not connected"', async ({ page }) => {

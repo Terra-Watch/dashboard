@@ -58,11 +58,11 @@ class AreaForecastTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             d = day("2025-03-15"); d["areas"][0]["fire_detected"] = True; d["areas"][1]["fire_detected"] = True
             d["areas"][0]["id"], d["areas"][1]["id"] = 40170, 60156   # block ids of the two fire squares below
-            d["fire_cells"] = [[20.25, 85.25], [30.15, 78.15]]; (Path(tmp) / "index.json").write_text(json.dumps({"typical": {"active_days": 9}}))
+            d["fire_cells"] = [[20.25, 85.25], [30.15, 78.15]]; (Path(tmp) / "index.json").write_text(json.dumps({"typical": {"active_days": 9}, "scenes": [{"id": "2025-03-15-OD", "date": "2025-03-15", "state": "OD"}]}))
             (Path(tmp) / "2025-03-15.json").write_text(json.dumps(d))
             with patch.object(area_forecast, "_archive_root", return_value=Path(tmp)):
                 c = self.client()
-                self.assertEqual(c.get("/api/area-forecast/archive/dates").json(), {"dates": ["2025-03-15"], "latest": "2025-03-15", "mode": "replay", "typical": {"active_days": 9}})
+                self.assertEqual(c.get("/api/area-forecast/archive/dates").json(), {"dates": ["2025-03-15"], "latest": "2025-03-15", "mode": "replay", "scenes": [{"id": "2025-03-15-OD", "date": "2025-03-15", "state": "OD"}], "typical": {"active_days": 9}})
                 body = c.get("/api/area-forecast/archive/2025-03-15").json()
                 self.assertEqual(body["outcome"], {"areas_with_fire": 2, "in_high_or_extreme": 1, "areas_rated_high_or_extreme": 1, "of_those_with_fire": 1})
                 self.assertTrue(all(a["fire_detected"] for a in body["areas"])); self.assertEqual(len(body["fire_cells"]), 2)

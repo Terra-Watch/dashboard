@@ -20,64 +20,122 @@
  ],
  "dates": [
   {
-   "date": "2025-02-24",
+   "date": "2025-02-05",
    "summary": {
-    "none": 235,
-    "moderate": 182,
-    "high": 120,
-    "extreme": 117
+    "none": 449,
+    "moderate": 135,
+    "high": 41,
+    "extreme": 27
    },
-   "bytes": 427122
+   "bytes": 292626
   },
   {
-   "date": "2025-03-06",
+   "date": "2025-02-18",
    "summary": {
-    "none": 189,
-    "moderate": 110,
+    "none": 281,
+    "moderate": 172,
     "high": 111,
-    "extreme": 241
+    "extreme": 88
    },
-   "bytes": 457192
+   "bytes": 397657
   },
   {
-   "date": "2025-03-18",
+   "date": "2025-03-04",
    "summary": {
-    "none": 199,
-    "moderate": 88,
-    "high": 95,
-    "extreme": 268
+    "none": 198,
+    "moderate": 123,
+    "high": 131,
+    "extreme": 201
    },
-   "bytes": 456693
+   "bytes": 446558
   },
   {
-   "date": "2025-03-28",
+   "date": "2025-03-10",
    "summary": {
-    "none": 146,
+    "none": 176,
+    "moderate": 98,
+    "high": 141,
+    "extreme": 237
+   },
+   "bytes": 464808
+  },
+  {
+   "date": "2025-04-24",
+   "summary": {
+    "none": 343,
     "moderate": 101,
-    "high": 77,
-    "extreme": 329
+    "high": 82,
+    "extreme": 124
    },
-   "bytes": 487139
+   "bytes": 361563
+  }
+ ],
+ "scenes": [
+  {
+   "id": "2025-03-10-OD",
+   "date": "2025-03-10",
+   "state": "OD",
+   "label": "Odisha \u00b7 10 Mar 2025",
+   "rated": 41,
+   "fire": 33,
+   "hit": 31,
+   "missed": 2,
+   "false_alarms": 10
   },
   {
-   "date": "2025-04-25",
-   "summary": {
-    "none": 335,
-    "moderate": 111,
-    "high": 70,
-    "extreme": 138
-   },
-   "bytes": 365321
+   "id": "2025-03-04-AS",
+   "date": "2025-03-04",
+   "state": "AS",
+   "label": "Assam \u00b7 4 Mar 2025",
+   "rated": 17,
+   "fire": 16,
+   "hit": 14,
+   "missed": 2,
+   "false_alarms": 3
   },
   {
-   "date": "2025-07-15",
-   "summary": {
-    "none": 654,
-    "moderate": 0,
-    "high": 0,
-    "extreme": 0
-   },
-   "bytes": 165682
+   "id": "2025-03-10-TN",
+   "date": "2025-03-10",
+   "state": "TN",
+   "label": "Tamil Nadu \u00b7 10 Mar 2025",
+   "rated": 12,
+   "fire": 12,
+   "hit": 10,
+   "missed": 2,
+   "false_alarms": 2
+  },
+  {
+   "id": "2025-02-05-KA",
+   "date": "2025-02-05",
+   "state": "KA",
+   "label": "Karnataka \u00b7 5 Feb 2025",
+   "rated": 19,
+   "fire": 17,
+   "hit": 16,
+   "missed": 1,
+   "false_alarms": 3
+  },
+  {
+   "id": "2025-02-18-UK",
+   "date": "2025-02-18",
+   "state": "UK",
+   "label": "Uttarakhand \u00b7 18 Feb 2025",
+   "rated": 12,
+   "fire": 12,
+   "hit": 11,
+   "missed": 1,
+   "false_alarms": 1
+  },
+  {
+   "id": "2025-04-24-CG",
+   "date": "2025-04-24",
+   "state": "CG",
+   "label": "Chhattisgarh \u00b7 24 Apr 2025",
+   "rated": 21,
+   "fire": 19,
+   "hit": 17,
+   "missed": 2,
+   "false_alarms": 4
   }
  ],
  "typical": {

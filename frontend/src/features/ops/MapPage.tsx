@@ -23,7 +23,7 @@ import { readMapColors, isDark } from '../map/colors';
 import { useStations } from '../stations/api';
 import { statementWords, symbolOf } from '../stations/model';
 import { useDates, useForecast } from '../forecast/api';
-import { COMPARE, FOREST_STEPS, areaPolygons, cellPolygons, compareName, forestPolygons, forestName, fireMarks, matchesCompare, outcomeWords, typicalWords, type Compare } from '../forecast/model';
+import { COMPARE, FOREST_STEPS, areaBounds, areaPolygons, sceneWords, cellPolygons, compareName, forestPolygons, forestName, fireMarks, matchesCompare, outcomeWords, typicalWords, type Compare } from '../forecast/model';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -85,9 +85,12 @@ export function OpsMapPage() {
   const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   // Demo: an archived day of 2025 with the fires the satellite actually detected that day, in place of live items.
-  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showCells, setShowCells] = useState(false); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showCells, setShowCells] = useState(false); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(false); const [demoState, setDemoState] = useState(''); const [sceneId, setSceneId] = useState<string | null>(null); const [demoDate, setDemoDate] = useState<string | null>(null);
   const demoDates = useDates('archive');
-  const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-18') ? '2025-03-18' : demoDates.data.latest) : null) : null;
+  const scenes = demo ? demoDates.data?.scenes ?? [] : [];
+  // the demo opens on the first scene: one state on one day, small enough to read
+  useEffect(() => { if (demo && scenes.length && sceneId === null) { setSceneId(scenes[0].id); setDemoDate(scenes[0].date); setDemoState(scenes[0].state); } }, [demo, scenes, sceneId]);
+  const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-10') ? '2025-03-10' : demoDates.data.latest) : null) : null;
   const demoForecast = useForecast(demoDay, 'archive');
   // the model's rank for every forest cell of the demo day (the same replay as the area boxes), drawn as the risk circles
   const demoCells = useQuery({ queryKey: ['demo-cells', demoDay], retry: false, enabled: demo && demoDay !== null && settings.data?.risk_forecast_enabled === true,
@@ -181,14 +184,14 @@ export function OpsMapPage() {
   const riskCells = useMemo(() => {
     const source = demo ? (showCells ? demoCells.data : undefined) : (layers.has('risk_forecast') && riskEnabled ? riskForecast.data : undefined);
     if (!source?.features) return [];
-    return source.features.filter(f => (f.properties.forest_frac ?? 1) >= forest).map(f => ({
+    return source.features.filter(f => (f.properties.forest_frac ?? 1) >= forest && (!demo || !demoState || f.properties.state === demoState)).map(f => ({
       id: f.properties.cell_id,
       ...cellCentre(f.geometry),
       rank_percentile: f.properties.rank_percentile,
       band: f.properties.band,
       state: f.properties.state,
     }));
-  }, [demo, showCells, demoCells.data, layers, riskEnabled, riskForecast.data, forest]);
+  }, [demo, demoState, showCells, demoCells.data, layers, riskEnabled, riskForecast.data, forest]);
   type Bearings = { label: string; wedges: Array<{ incident_id: number; coords: Array<[number, number]> }>; areas: Array<{ incident_ids: number[]; count: number; area_km2: number; coords: Array<[number, number]> }> };
   const bearings = useQuery({ queryKey: ['report-bearings', 6], retry: false, staleTime: 30_000, refetchInterval: 60_000, enabled: showBearings, queryFn: () => api<Bearings>('/api/bearings?since_hours=6') });
   const bearingPolygons: MapPolygon[] = useMemo(() => showBearings && bearings.data ? [
@@ -197,17 +200,17 @@ export function OpsMapPage() {
   ] : [], [bearings.data, showBearings, t]);
   const livePolygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
   const demoFire = demo ? demoForecast.data : undefined;
-  const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire, demoFire.areas.filter(a => matchesCompare(a, compare)), forest) : []) : livePoints), [demo, demoFire, showFires, compare, forest, livePoints]);
+  const demoAreas = useMemo(() => (demoFire ? demoFire.areas.filter(a => (!demoState || a.state === demoState) && matchesCompare(a, compare)) : []), [demoFire, compare, demoState]);
+  const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire, demoAreas, forest) : []) : livePoints), [demo, demoFire, showFires, demoAreas, forest, livePoints]);
   // the forecast where the model scored: forest cells shaded by their area's level; the 55 km outlines are optional, and are the fallback when the cells are not available
-  const demoAreas = useMemo(() => (demoFire ? demoFire.areas.filter(a => matchesCompare(a, compare)) : []), [demoFire, compare]);
-  const demoCellList = useMemo(() => (demoCells.data?.features ?? []).map(f => ({ ...cellCentre(f.geometry), forest: f.properties.forest_frac ?? null })), [demoCells.data]);
+  const demoCellList = useMemo(() => (demoCells.data?.features ?? []).map(f => ({ ...cellCentre(f.geometry), forest: f.properties.forest_frac ?? null, state: f.properties.state })), [demoCells.data]);
   const polygons = useMemo<MapPolygon[]>(() => {
     if (!demo) return livePolygons;
     if (!demoFire && !demoCellList.length) return [];
     const cells = demoCellList.length ? cellPolygons(demoCellList, demoAreas, forest) : [];
-    return [...(showForest ? forestPolygons(demoCellList, forest) : []), ...(showForecast ? (cells.length ? cells : areaPolygons(demoAreas)) : []), ...(showOutlines && cells.length ? areaPolygons(demoAreas) : [])];
+    return [...(showForest ? forestPolygons(demoCellList, forest, demoState) : []), ...(showForecast ? (cells.length ? cells : areaPolygons(demoAreas)) : []), ...(showOutlines && cells.length ? areaPolygons(demoAreas) : [])];
   }, [demo, demoFire, demoAreas, demoCellList, showForecast, showOutlines, showForest, forest, livePolygons]);
-  const bounds = useMemo(() => boundsOf(demo ? [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }] : points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
+  const bounds = useMemo(() => boundsOf(demo ? (demoState && demoAreas.length ? areaBounds(demoAreas) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]) : points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
   const selectedStation = selected?.startsWith('t') ? stations.data?.items.find(item => item.id === Number(selected.slice(1))) : undefined;
@@ -218,7 +221,8 @@ export function OpsMapPage() {
       <PageTitle title={t('nav.map')} subtitle={chosen ? chosen.name : t('ops.all_communities', 'All communities')} actions={<div role="group" aria-label={t('map.view', 'View')} className="inline-flex rounded-rq border border-control p-1">{(['map', 'list'] as const).map(item => <button key={item} type="button" aria-pressed={view === item} onClick={() => setView(item)} className={`min-h-11 rounded-rq px-4 font-semibold ${view === item ? 'bg-action text-on-action' : ''}`}>{item === 'map' ? t('map.map', 'Map') : t('map.list', 'List')}</button>)}</div>} />
       <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.mode', 'Data')}</p><div role="group" aria-label={t('map.mode', 'Data')} className="inline-flex rounded-rq border border-control p-1">{([false, true] as const).map(on => <button key={String(on)} type="button" aria-pressed={demo === on} onClick={() => { setDemo(on); setSelected(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${demo === on ? 'bg-ink text-surface' : ''}`}>{on ? t('map.mode_demo', 'Demo (archive)') : t('map.mode_live', 'Live')}</button>)}</div></div>
-        {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => setDemoDate(e.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
+        {demo && scenes.length > 0 && <label className="mt-5 text-sm">{t('forecast.scene_pick', 'Scene')} <select value={sceneId ?? ''} onChange={e => { const sc = scenes.find(x => x.id === e.target.value); setSceneId(e.target.value); if (sc) { setDemoDate(sc.date); setDemoState(sc.state); } else setDemoState(''); setSelected(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{scenes.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}<option value="">{t('forecast.scene_all', 'Whole country')}</option></select></label>}
+        {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => { setDemoDate(e.target.value); setSceneId(''); setDemoState(''); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
         {(demo || (layers.has('risk_forecast') && riskEnabled)) && <label className="mt-5 text-sm">{t('map.forest_cells', 'Forest cells')} <select value={forest} onChange={e => setForest(Number(e.target.value))} className="min-h-11 rounded-rq border border-control bg-surface px-2">{FOREST_STEPS.map(x => <option key={x} value={x}>{forestName(x, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
         {demo && <label className="mt-5 text-sm">{t('forecast.compare', 'Compare')} <select value={compare} onChange={e => setCompare(e.target.value as Compare)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
         {demo && <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForest} onChange={e => setShowForest(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forest', 'Forest cells')}</span></label>}
@@ -229,7 +233,7 @@ export function OpsMapPage() {
         {demo && <div className="space-y-1 sm:col-span-2 xl:col-span-4" role="status">
           <p className="rounded-rq border border-line px-3 py-2 text-sm">{t('map.demo_note', 'Demo: a past day of 2025. The shaded squares are the forest cells the model scored, shaded by the level of their 55 km area as it was rated the day before; red diamonds are forest squares (about 10 km) where the satellite then actually detected a fire. Live items are hidden.')}</p>
           {demoCells.isError && showCells && <Notice kind="warning">{t('map.demo_cells_off', 'The forest cells could not be loaded (the risk layer may be switched off on this server).')}</Notice>}
-          {demoDates.isError || demoForecast.isError ? <Notice kind="warning">{t('map.demo_off', 'The archive could not be loaded.')}</Notice> : demoFire && <p className="text-sm">{outcomeWords(demoFire.outcome, demoFire.date, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
+          {demoDates.isError || demoForecast.isError ? <Notice kind="warning">{t('map.demo_off', 'The archive could not be loaded.')}</Notice> : demoFire && <p className="text-sm">{(demoState && sceneWords(demoFire.areas.filter(x => x.state === demoState), scenes.find(x => x.id === sceneId)?.label ?? `${demoState} · ${demoFire.date}`, (k, d, o) => t(k, { defaultValue: d, ...o }))) || outcomeWords(demoFire.outcome, demoFire.date, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
           {typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o })) && <p className="text-sm text-ink-muted">{typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
         </div>}
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.preset', 'What to show')}</p><div role="group" aria-label={t('map.preset', 'What to show')} className="inline-flex max-w-full rounded-rq border border-control p-1">{PRESETS.map(item => <button key={item.id} type="button" aria-pressed={preset === item.id} onClick={() => setPreset(item.id)} className={`min-h-11 rounded-rq px-4 font-semibold ${preset === item.id ? 'bg-action text-on-action' : ''}`}>{t(`map.preset.${item.id}`, item.label)}</button>)}</div></div>

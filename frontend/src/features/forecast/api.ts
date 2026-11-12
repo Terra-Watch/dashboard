@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../app/http';
-import type { DayCell, Forecast, Typical } from './model';
+import type { DayCell, Forecast, Scene, Typical } from './model';
 
-export type Dates = { dates: string[]; latest: string; mode: 'live' | 'replay'; typical?: Typical };
+export type Dates = { dates: string[]; latest: string; mode: 'live' | 'replay'; typical?: Typical; scenes?: Scene[] };
 
 /** The dates that have a forecast, and the forecast for one of them (the newest when none is chosen). */
 export type Source = 'live' | 'archive';
@@ -15,7 +15,7 @@ export const useForecast = (date: string | null, source: Source = 'live') => use
 export const useDayCells = (day: string | null, enabled: boolean) => useQuery({
   queryKey: ['area-forecast', 'cells', day], retry: false, enabled: enabled && day !== null, staleTime: 10 * 60_000,
   queryFn: async (): Promise<DayCell[]> => {
-    const g = await api<{ features: Array<{ geometry: { coordinates: [number, number] }; properties: { forest_frac?: number } }> }>(`/api/risk/geojson?target=${day}`);
-    return g.features.map(f => ({ lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], forest: f.properties.forest_frac ?? null }));
+    const g = await api<{ features: Array<{ geometry: { coordinates: [number, number] }; properties: { forest_frac?: number; state?: string } }> }>(`/api/risk/geojson?target=${day}`);
+    return g.features.map(f => ({ lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], forest: f.properties.forest_frac ?? null, state: f.properties.state }));
   },
 });

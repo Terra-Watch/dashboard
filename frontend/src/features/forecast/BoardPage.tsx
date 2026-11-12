@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
@@ -6,7 +6,7 @@ import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { useDates, useDayCells, useForecast, type Source } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, cellPolygons, compareName, forestPolygons, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
+import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, areaBounds, sceneWords, cellPolygons, compareName, forestPolygons, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
 import { ForecastLegend } from '../map/Legend';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
@@ -24,7 +24,7 @@ export function ForecastTabs({ current }: { current: 'forecast' | 'fires' | 'spr
 }
 
 /** The archived day a demo opens on: a busy day, so the forecast and what was detected can be compared. */
-const DEMO_DAY = '2025-03-18';
+const DEMO_DAY = '2025-03-10';
 /** Demo builds show the archive; set VITE_FORECAST_VIEW=live to open on the live forecast. */
 const DEFAULT_SOURCE: Source = import.meta.env.VITE_FORECAST_VIEW === 'live' ? 'live' : 'archive';
 
@@ -33,10 +33,13 @@ export function BoardPage() {
   const tt = useTt();
   const [source, setSource] = useState<Source>(DEFAULT_SOURCE);
   const dates = useDates(source);
-  const [date, setDate] = useState<string | null>(null);
+  const [date, setDate] = useState<string | null>(null); const [sceneId, setSceneId] = useState<string | null>(null);
+  const scenes = source === 'archive' ? dates.data?.scenes ?? [] : [];
+  // the demo opens on the first scene: one state on one day, small enough to read
+  useEffect(() => { if (source === 'archive' && scenes.length && sceneId === null) { setSceneId(scenes[0].id); setDate(scenes[0].date); setState(scenes[0].state); } }, [source, scenes, sceneId]);
   const day = date ?? (source === 'archive' && dates.data ? (dates.data.dates.includes(DEMO_DAY) ? DEMO_DAY : dates.data.latest) : null);
   const q = useForecast(day, source);
-  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showBoxes, setShowBoxes] = useState(true); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(true); const [showFires, setShowFires] = useState(true); const [sel, setSel] = useState<number | null>(null);
+  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showBoxes, setShowBoxes] = useState(true); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(false); const [showFires, setShowFires] = useState(true); const [sel, setSel] = useState<number | null>(null);
   const f = q.data; const all = f?.areas ?? [];
   const archived = !!f?.outcome;
   const dayCells = useDayCells(day, archived);
@@ -46,8 +49,8 @@ export function BoardPage() {
   // the forecast where the model scored: forest cells shaded by their area's level; the 55 km outlines are optional, and the fallback when the cells are not available
   const forecastShapes = useMemo<MapPolygon[]>(() => {
     const cells = dayCells.data?.length ? cellPolygons(dayCells.data, rows, forest) : [];
-    return [...(archived && showForest && dayCells.data?.length ? forestPolygons(dayCells.data, forest) : []), ...(showBoxes ? (cells.length ? cells : areaPolygons(rows)) : []), ...(archived && showOutlines && cells.length ? areaPolygons(rows) : [])];
-  }, [dayCells.data, rows, forest, showBoxes, showOutlines, showForest, archived]);
+    return [...(archived && showForest && dayCells.data?.length ? forestPolygons(dayCells.data, forest, state) : []), ...(showBoxes ? (cells.length ? cells : areaPolygons(rows)) : []), ...(archived && showOutlines && cells.length ? areaPolygons(rows) : [])];
+  }, [dayCells.data, rows, forest, state, showBoxes, showOutlines, showForest, archived]);
   const polygons = useMemo<MapPolygon[]>(() => [...forecastShapes, ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen, forecastShapes]);
   const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
   // On an archived day: a mark in every area where a fire was actually detected, whatever level it was given.
@@ -64,16 +67,17 @@ export function BoardPage() {
       <PageTitle title={tt('forecast.board_title', 'Fire forecast')} subtitle={tt('forecast.board_sub', 'The chance that a fire is detected in each forest area on the chosen day, and what to do about it.')} />
       <ForecastTabs current="forecast" />
       <div role="group" aria-label={tt('forecast.source', 'Forecast source')} className="flex gap-2">
-        {(['archive', 'live'] as const).map(k => <button key={k} type="button" aria-pressed={source === k} onClick={() => { setSource(k); setDate(null); setSel(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${source === k ? 'bg-ink text-surface' : 'border border-control'}`}>{k === 'archive' ? tt('forecast.src_archive', 'Archive (demo)') : tt('forecast.src_live', 'Live')}</button>)}
+        {(['archive', 'live'] as const).map(k => <button key={k} type="button" aria-pressed={source === k} onClick={() => { setSource(k); setDate(null); setSceneId(null); setState(''); setSel(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${source === k ? 'bg-ink text-surface' : 'border border-control'}`}>{k === 'archive' ? tt('forecast.src_archive', 'Archive (demo)') : tt('forecast.src_live', 'Live')}</button>)}
       </div>
       {archived && <Notice kind="info">{tt('forecast.archive_note', 'Archive demo: a past day of 2025, shown as it would have been issued the day before, next to the fires the satellite then actually detected. It is not tomorrow\'s forecast.')}</Notice>}
       {archived && typicalWords(dates.data?.typical, tt) && <p className="text-sm text-ink-muted">{typicalWords(dates.data?.typical, tt)}</p>}
-      {outcomeWords(f.outcome, f.date, tt) && <Notice kind="success">{outcomeWords(f.outcome, f.date, tt)}</Notice>}
+      {archived && state && sceneWords(all.filter(a => a.state === state), `${state} · ${f.date}`, tt) ? <Notice kind="success">{sceneWords(all.filter(a => a.state === state), `${scenes.find(x => x.id === sceneId)?.label ?? `${state} · ${f.date}`}`, tt)}</Notice> : outcomeWords(f.outcome, f.date, tt) && <Notice kind="success">{outcomeWords(f.outcome, f.date, tt)}</Notice>}
       {!archived && f.mode === 'replay' && <Notice kind="warning">{tt('forecast.replay', 'This is an archived day from 2025, shown as it would have been issued. It is not tomorrow\'s forecast.')}</Notice>}
       <div className="flex flex-wrap items-center gap-2" role="status" aria-live="polite">
         {LEVELS.filter(l => l !== 'none').map(l => <span key={l} className="inline-flex items-center gap-1.5"><LevelChip level={l} /><b className="tabular-nums">{summary[l]}</b></span>)}
         <span className="text-sm text-ink-muted">{tt('forecast.n_none', '{{n}} areas with no rating', { n: summary.none })}</span>
-        <label className="ml-auto text-sm">{tt('forecast.date', 'Forecast for')} <select value={day ?? f.date} onChange={e => { setDate(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{(dates.data?.dates ?? [f.date]).map(d => <option key={d} value={d}>{dayWord(d, tt) === d ? d : `${dayWord(d, tt)} · ${d}`}</option>)}</select></label>
+        {archived && scenes.length > 0 && <label className="text-sm">{tt('forecast.scene_pick', 'Scene')} <select value={sceneId ?? ''} onChange={e => { const sc = scenes.find(x => x.id === e.target.value); setSceneId(e.target.value); setSel(null); if (sc) { setDate(sc.date); setState(sc.state); } else setState(''); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{scenes.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}<option value="">{tt('forecast.scene_all', 'Whole country')}</option></select></label>}
+        <label className="ml-auto text-sm">{tt('forecast.date', 'Forecast for')} <select value={day ?? f.date} onChange={e => { setDate(e.target.value); setSceneId(''); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{(dates.data?.dates ?? [f.date]).map(d => <option key={d} value={d}>{dayWord(d, tt) === d ? d : `${dayWord(d, tt)} · ${d}`}</option>)}</select></label>
         <label className="text-sm">{tt('forecast.state', 'State')} <select value={state} onChange={e => { setState(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2"><option value="">{tt('forecast.all', 'All')}</option>{states.map(s => <option key={s}>{s}</option>)}</select></label>
         {archived && <label className="text-sm">{tt('forecast.compare', 'Compare')} <select value={compare} onChange={e => { setCompare(e.target.value as Compare); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, tt)}</option>)}</select></label>}
         {archived && <label className="text-sm">{tt('forecast.forest_cells', 'Fire squares')} <select value={forest} onChange={e => setForest(Number(e.target.value))} className="min-h-11 rounded-rq border border-control bg-surface px-2">{FOREST_STEPS.map(x => <option key={x} value={x}>{forestName(x, tt)}</option>)}</select></label>}
