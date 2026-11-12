@@ -305,7 +305,7 @@ export function MapView({ label, points = [], polygons = [], riskCells = [], sel
 
   return (
     <div className={`relative overflow-hidden rounded-panel border border-line ${className}`}>
-      <div ref={host} role="region" aria-label={label} aria-describedby="map-help" tabIndex={0} style={{ position: 'absolute', inset: 0 }} data-testid="map" data-ready={ready} data-points={pointData.features.length} data-polygons={polygonData.features.length} />
+      <div ref={host} role="region" aria-label={label} aria-describedby="map-help" tabIndex={0} style={{ position: 'absolute', inset: 0 }} data-testid="map" data-ready={ready} data-points={pointData.features.length} data-risk-cells={riskCells.length} data-polygons={polygonData.features.length} />
       <p id="map-help" className="sr-only">{t('map.help', 'Arrow keys move the map. Plus and minus zoom. The same information is listed beside the map.')}</p>
       {failed && <div role="alert" className="absolute inset-x-3 top-3 rounded-rq border border-warn bg-warn-tint p-3 text-sm text-ink">{t('map.failed', 'The map background could not be loaded. The list beside the map still works.')}</div>}
       {children}

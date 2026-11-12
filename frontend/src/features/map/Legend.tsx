@@ -79,7 +79,7 @@ function Box({ color, fill, dash, width }: { color: string; fill: number; dash?:
 }
 
 /** The key for an archived day: the model's output as boxes, and what was actually detected as red diamonds. Shapes and words, never colour alone. */
-export function ForecastLegend() {
+export function ForecastLegend({ cells = false }: { cells?: boolean }) {
   const { t } = useTranslation();
   const rows: Array<{ swatch: ReactNode; label: string; hint: string }> = [
     { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Solid red box. The forecast gave this area a chance of 6 in 10 or more.') },
@@ -92,6 +92,9 @@ export function ForecastLegend() {
     <section aria-label={t('map.legend', 'Legend')} className="rounded-rq border border-line bg-surface p-3 text-sm" data-testid="legend">
       <h2 className="min-h-8 font-bold">{t('map.legend', 'Legend')}</h2>
       <ul className="mt-1 space-y-2">{rows.map((r, i) => <li key={i} className="flex items-start gap-2">{r.swatch}<span><span className="font-semibold">{r.label}</span><span className="block text-ink-muted">{r.hint}</span></span></li>)}
+        {cells && <li className="flex flex-col gap-1 border-t border-line pt-2"><span className="font-semibold">{t('map.fl.cells', 'Forest cells (model rank)')}</span>
+          <span className="block text-xs text-ink-muted">{t('map.fl.cells_hint', 'One circle per forest cell (about 11 km, at least 20% forest land), shaded by where the model ranked it that day. Model output, not observed fire.')}</span>
+          <ul className="mt-1 space-y-1">{RISK_BANDS.map(item => <li key={item.band} className="flex items-center gap-2"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" className="shrink-0"><circle cx="8" cy="8" r="7" fill="var(--tw-text)" opacity="0.85" /><circle cx="8" cy="8" r="6" fill={`var(--tw-${item.color})`} opacity="0.7" stroke="var(--tw-surface)" strokeWidth="2" /></svg><span className="text-xs">{t(`map.risk_band.${item.band.toLowerCase().replace(' ', '_')}`, item.label)}</span></li>)}</ul></li>}
         <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.none', 'No box: the area was not rated (under 10%).')}</li></ul>
     </section>
   );

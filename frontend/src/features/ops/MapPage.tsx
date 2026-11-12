@@ -85,10 +85,13 @@ export function OpsMapPage() {
   const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   // Demo: an archived day of 2025 with the fires the satellite actually detected that day, in place of live items.
-  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [demoDate, setDemoDate] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showCells, setShowCells] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
   const demoDates = useDates('archive');
   const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-18') ? '2025-03-18' : demoDates.data.latest) : null) : null;
   const demoForecast = useForecast(demoDay, 'archive');
+  // the model's rank for every forest cell of the demo day (the same replay as the area boxes), drawn as the risk circles
+  const demoCells = useQuery({ queryKey: ['demo-cells', demoDay], retry: false, enabled: demo && demoDay !== null && settings.data?.risk_forecast_enabled === true,
+    queryFn: () => api<{ features: Array<{ geometry: { type: string; coordinates: any }; properties: { cell_id: number; state: string; rank_percentile: number; band: string; forest_frac?: number } }> }>(`/api/risk/geojson?target=${demoDay}`) });
   const layers = new Set(PRESETS.find(item => item.id === preset)!.layers.filter(layer => canShow('control_room', layer)));
 
   // Satellite basemap toggle
@@ -176,15 +179,16 @@ export function OpsMapPage() {
     ...(layers.has('signals') ? (signals.data?.items ?? []).map(item => ({ id: `s${item.id}`, lat: item.latitude, lon: item.longitude, symbol: 'signal' as const, ageMinutes: item.age_minutes })) : []),
   ], [shown, signals.data, layers, showStations, stations.data, region]);
   const riskCells = useMemo(() => {
-    if (!layers.has('risk_forecast') || !riskEnabled || !riskForecast.data?.features) return [];
-    return riskForecast.data.features.filter(f => (f.properties.forest_frac ?? 1) >= forest).map(f => ({
+    const source = demo ? (showCells ? demoCells.data : undefined) : (layers.has('risk_forecast') && riskEnabled ? riskForecast.data : undefined);
+    if (!source?.features) return [];
+    return source.features.filter(f => (f.properties.forest_frac ?? 1) >= forest).map(f => ({
       id: f.properties.cell_id,
       ...cellCentre(f.geometry),
       rank_percentile: f.properties.rank_percentile,
       band: f.properties.band,
       state: f.properties.state,
     }));
-  }, [layers, riskEnabled, riskForecast.data, forest]);
+  }, [demo, showCells, demoCells.data, layers, riskEnabled, riskForecast.data, forest]);
   type Bearings = { label: string; wedges: Array<{ incident_id: number; coords: Array<[number, number]> }>; areas: Array<{ incident_ids: number[]; count: number; area_km2: number; coords: Array<[number, number]> }> };
   const bearings = useQuery({ queryKey: ['report-bearings', 6], retry: false, staleTime: 30_000, refetchInterval: 60_000, enabled: showBearings, queryFn: () => api<Bearings>('/api/bearings?since_hours=6') });
   const bearingPolygons: MapPolygon[] = useMemo(() => showBearings && bearings.data ? [
@@ -209,10 +213,12 @@ export function OpsMapPage() {
         {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => setDemoDate(e.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
         {(demo || (layers.has('risk_forecast') && riskEnabled)) && <label className="mt-5 text-sm">{t('map.forest_cells', 'Forest cells')} <select value={forest} onChange={e => setForest(Number(e.target.value))} className="min-h-11 rounded-rq border border-control bg-surface px-2">{FOREST_STEPS.map(x => <option key={x} value={x}>{forestName(x, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
         {demo && <label className="mt-5 text-sm">{t('forecast.compare', 'Compare')} <select value={compare} onChange={e => setCompare(e.target.value as Compare)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
+        {demo && <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showCells} onChange={e => setShowCells(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_cells', 'Forest cells (model rank)')}</span></label>}
         {demo && <><label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForecast} onChange={e => setShowForecast(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forecast', 'Forecast (model output)')}</span></label>
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_fires', 'Fires detected')}</span></label></>}
         {demo && <div className="space-y-1 sm:col-span-2 xl:col-span-4" role="status">
           <p className="rounded-rq border border-line px-3 py-2 text-sm">{t('map.demo_note', 'Demo: a past day of 2025. Boxes are the forecast areas as they would have been rated the day before; red diamonds are forest squares (about 11 km) where the satellite then actually detected a fire. Live items are hidden.')}</p>
+          {demoCells.isError && showCells && <Notice kind="warning">{t('map.demo_cells_off', 'The forest cells could not be loaded (the risk layer may be switched off on this server).')}</Notice>}
           {demoDates.isError || demoForecast.isError ? <Notice kind="warning">{t('map.demo_off', 'The archive could not be loaded.')}</Notice> : demoFire && <p className="text-sm">{outcomeWords(demoFire.outcome, demoFire.date, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
           {typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o })) && <p className="text-sm text-ink-muted">{typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
         </div>}
@@ -237,16 +243,16 @@ export function OpsMapPage() {
           <span>{t('map.bearings', 'Where reports point')}</span>
         </label>
         {showBearings && bearings.data && <p role="status" className="text-sm text-ink-muted sm:col-span-2 xl:col-span-4">{bearings.data.wedges.length === 0 ? t('map.bearings_none', 'No recent reports with a direction.') : `${t('map.bearings_count', { count: bearings.data.wedges.length, areas: bearings.data.areas.length, defaultValue: '{{count}} recent reports with a direction, {{areas}} areas where they agree.' })} ${bearings.data.label}`}</p>}
-        {layers.has('risk_forecast') && riskEnabled && (
+        {!demo && layers.has('risk_forecast') && riskEnabled && (
           <div role="group" aria-label={t('map.risk_day', 'Forecast day')} className="mt-5 inline-flex rounded-rq border border-control p-1">{(['today', 'tomorrow'] as const).map(d => <button key={d} type="button" aria-pressed={riskDay === d} onClick={() => setRiskDay(d)} className={`min-h-11 rounded-rq px-4 font-semibold ${riskDay === d ? 'bg-action text-on-action' : ''}`}>{d === 'today' ? t('map.risk_today', 'Forecast for today') : t('map.risk_tomorrow', 'Forecast for tomorrow')}</button>)}</div>
         )}
-        {layers.has('risk_forecast') && riskEnabled && (
+        {!demo && layers.has('risk_forecast') && riskEnabled && (
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm">
             <input type="checkbox" checked={riskHighOnly} onChange={(e) => setRiskHighOnly(e.target.checked)} className="h-4 w-4" />
             <span>{t('map.risk_high_only', 'High risk only')}</span>
           </label>
         )}
-        {layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
+        {!demo && layers.has('risk_forecast') && riskEnabled && <RiskRunChip run={riskForecast.data?.run} status={riskStatus.data} error={riskStatus.isError} />}
         <div className="flex flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4"><Chip label={t('map.satellite', 'Satellite')} freshness={signals.data?.freshness} status={!layers.has('signals') ? 'off' : signals.isError ? 'error' : signals.isLoading ? 'loading' : 'ok'} /><Link to="/ops/satellite" className="text-sm font-semibold underline">{t('map.satellite_list', 'All satellite detections')}</Link><Chip label={t('map.weather', 'Weather')} freshness={wind.data?.freshness} status={wind.isError ? 'error' : wind.isLoading ? 'loading' : 'ok'} /></div>
       </div>
       {showWind && <WindLayer map={mapInstance} grid={windGrid.data} onSatellite={basemapType === 'satellite'} />}
@@ -260,7 +266,7 @@ export function OpsMapPage() {
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
         <div className={`relative ${view === 'list' ? 'hidden lg:block' : ''}`}>
-          <MapView onMapReady={setMapInstance} label={t('nav.map')} points={points} polygons={polygons} riskCells={demo ? [] : riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
+          <MapView onMapReady={setMapInstance} label={t('nav.map')} points={points} polygons={polygons} riskCells={riskCells} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[62vh] min-h-96" basemapStyle={currentBasemapStyle} />
           {selectedIncident && (
             <section aria-label={t('map.selected', 'Selected')} data-testid="selected" className="absolute inset-x-2 bottom-2 z-10 max-h-[85%] overflow-auto rounded-panel border border-line bg-surface p-4 shadow-lg md:inset-x-auto md:left-3 md:w-[26rem]">
               <button type="button" onClick={() => setSelected(null)} aria-label={t('map.close', 'Close')} className="absolute right-2 top-2 flex size-10 items-center justify-center rounded-full border border-line bg-surface text-xl leading-none">×</button>
@@ -268,7 +274,7 @@ export function OpsMapPage() {
             </section>)}
         </div>
         <div className="space-y-3">
-          {demo ? <ForecastLegend /> : <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />}
+          {demo ? <ForecastLegend cells={showCells} /> : <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />}
           {selectedStation && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
               <h2 className="text-xl">{selectedStation.name}</h2>

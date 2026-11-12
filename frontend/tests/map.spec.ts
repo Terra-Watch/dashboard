@@ -22,6 +22,9 @@ test.describe('Control Room map', () => {
       outcome: { areas_with_fire: 2, in_high_or_extreme: 1, areas_rated_high_or_extreme: 1, of_those_with_fire: 1 }, fire_cells: [[20.25, 85.75, 1.0], [20.35, 85.75, 0.55], [20.25, 86.25, 0.3]] };
     await page.route('**/api/area-forecast/archive/dates', route => route.fulfill(json({ dates: ['2025-03-18'], latest: '2025-03-18', mode: 'replay' })));
     await page.route('**/api/area-forecast/archive/2025-03-18', route => route.fulfill(json(day)));
+    await page.route('**/api/ops/settings', route => route.fulfill(json({ corroboration: null, exposure_radii_km: null, scenario_enabled: false, risk_forecast_enabled: true })));
+    const cell = (id: number, band: string, forest: number) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [85.75, 20.25 + id * 0.1] }, properties: { cell_id: id, state: 'OD', rank_percentile: 90, band, forest_frac: forest } });
+    await page.route('**/api/risk/geojson**', route => route.fulfill(json({ type: 'FeatureCollection', features: [cell(1, 'High', 1.0), cell(2, 'Low', 0.6), cell(3, 'Low', 0.25)] })));
     await page.goto('/ops/map');
     await page.getByRole('button', { name: 'Demo (archive)' }).click();
     await expect(page.getByText(/Demo: a past day of 2025/)).toBeVisible();
@@ -30,12 +33,18 @@ test.describe('Control Room map', () => {
     await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20000 });
     const key = page.getByTestId('legend');
     await expect(key.getByText('Fire detected')).toBeVisible(); await expect(key.getByText('Extreme (60% or more)')).toBeVisible(); await expect(key.getByText('Satellite signal')).toHaveCount(0);   // the live symbols are not in the demo key
+    await expect(page.getByText('Forecast for tomorrow')).toHaveCount(0);   // the live risk controls are hidden in the demo
+    await expect(map).toHaveAttribute('data-risk-cells', '3');       // every forest cell of the day, shaded by the model's rank
+    await expect(key.getByText('Forest cells (model rank)')).toBeVisible();
+    await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0.5');   // forest land 50% or more drops the 0.25 cell as well as the 0.3 fire square
+    await expect(map).toHaveAttribute('data-risk-cells', '2');
+    await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0');
     await expect(map).toHaveAttribute('data-points', '3');          // the three fire squares; no incident, station or live signal
-    await page.getByLabel('Forest cells').selectOption('0.5');        // forest land 50% or more: the 0.3 square drops out
+    await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0.5');        // forest land 50% or more: the 0.3 square drops out
     await expect(map).toHaveAttribute('data-points', '2');
-    await page.getByLabel('Forest cells').selectOption('0.8');
+    await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0.8');
     await expect(map).toHaveAttribute('data-points', '1');
-    await page.getByLabel('Forest cells').selectOption('0');
+    await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0');
     await page.getByLabel('Compare').selectOption('hit');            // rated High or Extreme and a fire: only the first area's square
     await expect(map).toHaveAttribute('data-points', '2');
     await page.getByLabel('Compare').selectOption('missed');         // a fire in an area rated lower: the other square
