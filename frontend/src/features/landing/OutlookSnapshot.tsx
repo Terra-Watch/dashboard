@@ -60,7 +60,7 @@ export function OutlookSnapshot() {
         {[[3, 'Most likely'], [2, 'Likely'], [1, 'Possible']].map(([b, label]) => <li key={b} className="flex items-center gap-2"><span aria-hidden="true" className="size-3.5 rounded-sm" style={{ background: LAYERS[(b as number) - 1].fill, opacity: LAYERS[(b as number) - 1].opacity }} />{t(`outlook.band${b}`, label as string)}</li>)}
         <li className="flex items-center gap-2"><span aria-hidden="true" className="size-3.5 rounded-sm bg-ink opacity-80" />{t('landing.v5.outlook.legend_burned', 'Burned')}</li>
       </ul>
-      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v5.outlook.caption2', 'An archived fire in {{state}}, scored as it would have been then, for the next one to two days. The dashed line on the right is the top band. Across 244 test fires of 2025 the top band held a median 75% of what burned; this is one of the closer matches. Burned area from the MODIS product; roads and villages from OpenStreetMap.', { state: OUTLOOK.state })}</figcaption>
+      <figcaption className="mt-2 text-sm text-ink-muted">{t('landing.v5.outlook.caption2', 'An archived fire in {{state}}, scored as it would have been then, for the next one to two days. The dashed line on the right is the top band. Across 244 test fires of 2025 the top band held a median 75% of what burned; this fire is close to that. Burned area from the MODIS product; roads and villages from OpenStreetMap.', { state: OUTLOOK.state })}</figcaption>
     </figure>
   );
 }
