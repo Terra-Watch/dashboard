@@ -52,10 +52,11 @@ function installExtras(map: MapLibreMap, colors: MapColors) {
     map.addLayer({ id: `${LINES}-${tone}-line`, type: 'line', source: LINES, filter, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': s.color, 'line-width': s.width, ...(s.dash ? { 'line-dasharray': s.dash } : {}) } });
   }
 }
-const TONES = ['cell', 'advisory', 'warning', 'envelope', 'band', 'observed', 'fire', 'grew'] as const;
+const TONES = ['forest', 'cell', 'advisory', 'warning', 'envelope', 'band', 'observed', 'fire', 'grew'] as const;
 
 function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string; fill: number; dash?: number[]; width: number } {
   switch (tone) {
+    case 'forest': return { color: c.ok, fill: 0.28, width: 0.6 };                   // a forest cell the model scores, with no rating drawn on it
     case 'cell': return { color: c.danger, fill: 0.22, width: 2 };
     case 'advisory': return { color: c.warn, fill: 0.16, dash: [2, 2], width: 2 };
     case 'warning': return { color: c.danger, fill: 0.14, dash: [2, 2], width: 2.5 };

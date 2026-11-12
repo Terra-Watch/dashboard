@@ -188,3 +188,23 @@ export const FOREST_STEPS: readonly number[] = [0, 0.5, 0.8];
 export function forestName(step: number, t: T): string {
   return step >= 0.8 ? t('forecast.forest_80', 'Forest land 80% or more') : step >= 0.5 ? t('forecast.forest_50', 'Forest land 50% or more') : t('forecast.forest_any', 'All forest cells (20% or more)');
 }
+
+/** One forest cell of the model's grid (about 10 km), as the risk replay serves it. */
+export type DayCell = { lat: number; lon: number; forest: number | null };
+
+/** The forecast drawn where the model actually scored: every forest cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).
+ *  Cells are on a grid of about 0.09 degrees, so a square of 0.09 degrees is drawn around each centre. */
+export function cellPolygons(cells: DayCell[], areas: Area[], minForest = 0, idPrefix = 'fc', side = 0.09): MapPolygon[] {
+  const byBlock = new Map(areas.map(a => [a.id, a] as const)); const h = side / 2;
+  return cells.flatMap((c, i) => {
+    const a = byBlock.get(blockOf(c.lat, c.lon)); const tone = a ? toneOf(a) : null;
+    if (!tone || (c.forest ?? 1) < minForest) return [];
+    return [{ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone }];
+  });
+}
+
+/** Every forest cell the model scores, on its own: no rating and no fire needed. */
+export function forestPolygons(cells: DayCell[], minForest = 0, idPrefix = 'fo', side = 0.09): MapPolygon[] {
+  const h = side / 2;
+  return cells.filter(c => (c.forest ?? 1) >= minForest).map((c, i) => ({ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone: 'forest' as const }));
+}

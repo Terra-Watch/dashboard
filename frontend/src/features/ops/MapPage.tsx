@@ -23,7 +23,7 @@ import { readMapColors, isDark } from '../map/colors';
 import { useStations } from '../stations/api';
 import { statementWords, symbolOf } from '../stations/model';
 import { useDates, useForecast } from '../forecast/api';
-import { COMPARE, FOREST_STEPS, areaPolygons, compareName, forestName, fireMarks, matchesCompare, outcomeWords, typicalWords, type Compare } from '../forecast/model';
+import { COMPARE, FOREST_STEPS, areaPolygons, cellPolygons, compareName, forestPolygons, forestName, fireMarks, matchesCompare, outcomeWords, typicalWords, type Compare } from '../forecast/model';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -85,7 +85,7 @@ export function OpsMapPage() {
   const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   // Demo: an archived day of 2025 with the fires the satellite actually detected that day, in place of live items.
-  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showCells, setShowCells] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showCells, setShowCells] = useState(false); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
   const demoDates = useDates('archive');
   const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-18') ? '2025-03-18' : demoDates.data.latest) : null) : null;
   const demoForecast = useForecast(demoDay, 'archive');
@@ -198,7 +198,15 @@ export function OpsMapPage() {
   const livePolygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
   const demoFire = demo ? demoForecast.data : undefined;
   const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire, demoFire.areas.filter(a => matchesCompare(a, compare)), forest) : []) : livePoints), [demo, demoFire, showFires, compare, forest, livePoints]);
-  const polygons = useMemo<MapPolygon[]>(() => (demo ? (demoFire && showForecast ? areaPolygons(demoFire.areas.filter(a => matchesCompare(a, compare))) : []) : livePolygons), [demo, demoFire, showForecast, compare, livePolygons]);
+  // the forecast where the model scored: forest cells shaded by their area's level; the 55 km outlines are optional, and are the fallback when the cells are not available
+  const demoAreas = useMemo(() => (demoFire ? demoFire.areas.filter(a => matchesCompare(a, compare)) : []), [demoFire, compare]);
+  const demoCellList = useMemo(() => (demoCells.data?.features ?? []).map(f => ({ ...cellCentre(f.geometry), forest: f.properties.forest_frac ?? null })), [demoCells.data]);
+  const polygons = useMemo<MapPolygon[]>(() => {
+    if (!demo) return livePolygons;
+    if (!demoFire && !demoCellList.length) return [];
+    const cells = demoCellList.length ? cellPolygons(demoCellList, demoAreas, forest) : [];
+    return [...(showForest ? forestPolygons(demoCellList, forest) : []), ...(showForecast ? (cells.length ? cells : areaPolygons(demoAreas)) : []), ...(showOutlines && cells.length ? areaPolygons(demoAreas) : [])];
+  }, [demo, demoFire, demoAreas, demoCellList, showForecast, showOutlines, showForest, forest, livePolygons]);
   const bounds = useMemo(() => boundsOf(demo ? [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }] : points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
@@ -213,11 +221,13 @@ export function OpsMapPage() {
         {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => setDemoDate(e.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
         {(demo || (layers.has('risk_forecast') && riskEnabled)) && <label className="mt-5 text-sm">{t('map.forest_cells', 'Forest cells')} <select value={forest} onChange={e => setForest(Number(e.target.value))} className="min-h-11 rounded-rq border border-control bg-surface px-2">{FOREST_STEPS.map(x => <option key={x} value={x}>{forestName(x, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
         {demo && <label className="mt-5 text-sm">{t('forecast.compare', 'Compare')} <select value={compare} onChange={e => setCompare(e.target.value as Compare)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
-        {demo && <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showCells} onChange={e => setShowCells(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_cells', 'Forest cells (model rank)')}</span></label>}
+        {demo && <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForest} onChange={e => setShowForest(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forest', 'Forest cells')}</span></label>}
+        {demo && <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showCells} onChange={e => setShowCells(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_cells', 'Rank circles (model rank)')}</span></label>}
         {demo && <><label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForecast} onChange={e => setShowForecast(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forecast', 'Forecast (model output)')}</span></label>
+          <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showOutlines} onChange={e => setShowOutlines(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_outlines', 'Outline the 55 km areas')}</span></label>
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_fires', 'Fires detected')}</span></label></>}
         {demo && <div className="space-y-1 sm:col-span-2 xl:col-span-4" role="status">
-          <p className="rounded-rq border border-line px-3 py-2 text-sm">{t('map.demo_note', 'Demo: a past day of 2025. Boxes are the forecast areas as they would have been rated the day before; red diamonds are forest squares (about 11 km) where the satellite then actually detected a fire. Live items are hidden.')}</p>
+          <p className="rounded-rq border border-line px-3 py-2 text-sm">{t('map.demo_note', 'Demo: a past day of 2025. The shaded squares are the forest cells the model scored, shaded by the level of their 55 km area as it was rated the day before; red diamonds are forest squares (about 10 km) where the satellite then actually detected a fire. Live items are hidden.')}</p>
           {demoCells.isError && showCells && <Notice kind="warning">{t('map.demo_cells_off', 'The forest cells could not be loaded (the risk layer may be switched off on this server).')}</Notice>}
           {demoDates.isError || demoForecast.isError ? <Notice kind="warning">{t('map.demo_off', 'The archive could not be loaded.')}</Notice> : demoFire && <p className="text-sm">{outcomeWords(demoFire.outcome, demoFire.date, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
           {typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o })) && <p className="text-sm text-ink-muted">{typicalWords(demoDates.data?.typical, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
@@ -274,7 +284,7 @@ export function OpsMapPage() {
             </section>)}
         </div>
         <div className="space-y-3">
-          {demo ? <ForecastLegend cells={showCells} /> : <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />}
+          {demo ? <ForecastLegend cells={showCells} forest={showForest} /> : <Legend kinds={['signal', 'station_ok', 'station_high', 'station_off', 'report', 'verified', 'responding', 'contained']} showRisk={layers.has('risk_forecast') && riskEnabled} />}
           {selectedStation && (
             <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4" data-testid="selected">
               <h2 className="text-xl">{selectedStation.name}</h2>

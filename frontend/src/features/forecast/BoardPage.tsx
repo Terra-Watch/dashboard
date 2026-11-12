@@ -5,8 +5,8 @@ import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page'
 import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
-import { useDates, useForecast, type Source } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, compareName, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
+import { useDates, useDayCells, useForecast, type Source } from './api';
+import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, cellPolygons, compareName, forestPolygons, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
 import { ForecastLegend } from '../map/Legend';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
@@ -36,13 +36,19 @@ export function BoardPage() {
   const [date, setDate] = useState<string | null>(null);
   const day = date ?? (source === 'archive' && dates.data ? (dates.data.dates.includes(DEMO_DAY) ? DEMO_DAY : dates.data.latest) : null);
   const q = useForecast(day, source);
-  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showBoxes, setShowBoxes] = useState(true); const [showFires, setShowFires] = useState(true); const [sel, setSel] = useState<number | null>(null);
+  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [compare, setCompare] = useState<Compare>('all'); const [forest, setForest] = useState(0); const [showBoxes, setShowBoxes] = useState(true); const [showOutlines, setShowOutlines] = useState(false); const [showForest, setShowForest] = useState(true); const [showFires, setShowFires] = useState(true); const [sel, setSel] = useState<number | null>(null);
   const f = q.data; const all = f?.areas ?? [];
   const archived = !!f?.outcome;
+  const dayCells = useDayCells(day, archived);
   const states = useMemo(() => [...new Set(all.map(a => a.state))].sort(), [all]);
   const rows = useMemo(() => all.filter(a => (!state || a.state === state) && (compare !== 'all' ? matchesCompare(a, compare) : showNone || a.level !== 'none')).sort((a, b) => levelRank(b.level) - levelRank(a.level) || b.chance - a.chance), [all, state, showNone, compare]);
   const chosen = rows.find(a => a.id === sel) ?? null;
-  const polygons = useMemo<MapPolygon[]>(() => [...(showBoxes ? areaPolygons(rows) : []), ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen, showBoxes]);
+  // the forecast where the model scored: forest cells shaded by their area's level; the 55 km outlines are optional, and the fallback when the cells are not available
+  const forecastShapes = useMemo<MapPolygon[]>(() => {
+    const cells = dayCells.data?.length ? cellPolygons(dayCells.data, rows, forest) : [];
+    return [...(archived && showForest && dayCells.data?.length ? forestPolygons(dayCells.data, forest) : []), ...(showBoxes ? (cells.length ? cells : areaPolygons(rows)) : []), ...(archived && showOutlines && cells.length ? areaPolygons(rows) : [])];
+  }, [dayCells.data, rows, forest, showBoxes, showOutlines, showForest, archived]);
+  const polygons = useMemo<MapPolygon[]>(() => [...forecastShapes, ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen, forecastShapes]);
   const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
   // On an archived day: a mark in every area where a fire was actually detected, whatever level it was given.
   const seen = useMemo<MapPoint[]>(() => (archived && f && showFires ? fireMarks(f, all.filter(a => (!state || a.state === state) && matchesCompare(a, compare)), forest) : []), [f, all, archived, state, compare, showFires, forest]);
@@ -71,7 +77,9 @@ export function BoardPage() {
         <label className="text-sm">{tt('forecast.state', 'State')} <select value={state} onChange={e => { setState(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2"><option value="">{tt('forecast.all', 'All')}</option>{states.map(s => <option key={s}>{s}</option>)}</select></label>
         {archived && <label className="text-sm">{tt('forecast.compare', 'Compare')} <select value={compare} onChange={e => { setCompare(e.target.value as Compare); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, tt)}</option>)}</select></label>}
         {archived && <label className="text-sm">{tt('forecast.forest_cells', 'Fire squares')} <select value={forest} onChange={e => setForest(Number(e.target.value))} className="min-h-11 rounded-rq border border-control bg-surface px-2">{FOREST_STEPS.map(x => <option key={x} value={x}>{forestName(x, tt)}</option>)}</select></label>}
-        {archived && <><label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showBoxes} onChange={e => setShowBoxes(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_forecast', 'Forecast (model output)')}</label>
+        {archived && <><label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showForest} onChange={e => setShowForest(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_forest', 'Forest cells')}</label>
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showBoxes} onChange={e => setShowBoxes(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_forecast', 'Forecast (model output)')}</label>
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showOutlines} onChange={e => setShowOutlines(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_outlines', 'Outline the 55 km areas')}</label>
           <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_fires', 'Fires detected')}</label></>}
         <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showNone} onChange={e => setShowNone(e.target.checked)} className="h-4 w-4" />{tt('forecast.show_none', 'Show areas with no rating')}</label>
       </div>
@@ -80,8 +88,8 @@ export function BoardPage() {
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-3">
           <MapView label={tt('forecast.map', 'Forecast areas')} polygons={polygons} points={points} bounds={bounds} className="h-[58vh] min-h-96" />
-          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each box is an area of about 55 km. Filled boxes are rated Moderate or above; a dashed box is a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red diamond is a forest square (about 11 km) where a fire was actually detected that day.')}</p>
-          {archived && <ForecastLegend />}
+          <p className="text-xs text-ink-muted">{tt('forecast.map_note', 'Each shaded square is a forest cell (about 10 km) that the model scored, shaded by the level of the 55 km area it sits in; a dashed square is in a state where the forecast is less reliable. Squares are not the exact place of a fire.')}{archived && ' ' + tt('forecast.map_fire_note', 'A red diamond is a forest square (about 10 km) where a fire was actually detected that day.')}</p>
+          {archived && <ForecastLegend forest={showForest} />}
           {weak.length > 0 && <Notice kind="info">{tt('forecast.weak_states', 'Less reliable in: {{states}}.', { states: weak.join(', ') })}</Notice>}
         </div>
         <div className="space-y-3">

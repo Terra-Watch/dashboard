@@ -34,10 +34,22 @@ test.describe('Control Room map', () => {
     const key = page.getByTestId('legend');
     await expect(key.getByText('Fire detected')).toBeVisible(); await expect(key.getByText('Extreme (60% or more)')).toBeVisible(); await expect(key.getByText('Satellite signal')).toHaveCount(0);   // the live symbols are not in the demo key
     await expect(page.getByText('Forecast for tomorrow')).toHaveCount(0);   // the live risk controls are hidden in the demo
+    // the forecast is drawn on the forest cells, shaded by their area's level: the two cells inside the Extreme area, none for the unrated area or for the cell outside any area
+    await expect(map).toHaveAttribute('data-polygons', '5');         // the three forest cells with nothing on them, and the two shaded by the Extreme area
+    await page.getByLabel('Forecast (model output)').uncheck(); await page.getByLabel('Fires detected').uncheck();
+    await expect(map).toHaveAttribute('data-polygons', '3');         // the forest cells stand on their own: no model output, no fire
+    await expect(key.getByText('Forest cell', { exact: true })).toBeVisible();
+    await page.getByLabel('Forecast (model output)').check(); await page.getByLabel('Fires detected').check();
+    await expect(map).toHaveAttribute('data-risk-cells', '0');       // the rank circles are off until asked for
+    await page.getByLabel('Outline the 55 km areas').check();
+    await expect(map).toHaveAttribute('data-polygons', '6');         // plus the outline of the Extreme area
+    await page.getByLabel('Outline the 55 km areas').uncheck();
+    await page.getByLabel('Rank circles (model rank)').check();
     await expect(map).toHaveAttribute('data-risk-cells', '3');       // every forest cell of the day, shaded by the model's rank
-    await expect(key.getByText('Forest cells (model rank)')).toBeVisible();
+    await expect(key.getByText('Rank circles (model rank)')).toBeVisible();
     await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0.5');   // forest land 50% or more drops the 0.25 cell as well as the 0.3 fire square
     await expect(map).toHaveAttribute('data-risk-cells', '2');
+    await expect(map).toHaveAttribute('data-polygons', '4');         // two forest cells and the two shaded cells
     await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0');
     await expect(map).toHaveAttribute('data-points', '3');          // the three fire squares; no incident, station or live signal
     await page.getByRole('combobox', { name: /Forest cells/ }).selectOption('0.5');        // forest land 50% or more: the 0.3 square drops out
@@ -53,6 +65,10 @@ test.describe('Control Room map', () => {
     await page.getByLabel('Fires detected').uncheck();
     await expect(map).toHaveAttribute('data-points', '0');           // the forecast boxes alone; the model output can be read without the fires on top
     await page.getByLabel('Fires detected').check();
+    await page.getByLabel('Forecast (model output)').uncheck();
+    await expect(map).toHaveAttribute('data-polygons', '3');         // the forest cells remain
+    await page.getByLabel('Forest cells', { exact: true }).uncheck();
+    await expect(map).toHaveAttribute('data-polygons', '0');         // each layer switches off on its own
     await page.getByRole('button', { name: 'Live', exact: true }).click();
     await expect(map).not.toHaveAttribute('data-points', '3');
     await expect(page.getByTestId('legend').getByText('Satellite signal')).toBeVisible();

@@ -16,6 +16,8 @@ async function mock(page: import('@playwright/test').Page, body: unknown = march
   await page.route(/\/api\/area-forecast\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(d === '2025-03-18' ? body : day(d))); });
   await page.route('**/api/area-forecast/archive/dates', r => r.fulfill(json({ dates, latest: '2025-07-15', mode: 'replay', typical })));
   await page.route(/\/api\/area-forecast\/archive\/\d{4}-\d{2}-\d{2}$/, r => { const d = r.request().url().split('/').pop() as string; r.fulfill(json(day(d))); });
+  const top = march.areas[0];   // one forest cell inside the first (Extreme) area, so the forecast can be drawn on cells
+  await page.route('**/api/risk/geojson**', r => r.fulfill(json({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [top.lon, top.lat] }, properties: { cell_id: 1, state: top.state, rank_percentile: 99, band: 'Very high', forest_frac: 0.9 } }] })));
   await page.route('**/api/notices**', r => r.fulfill(json({ items: [] })));
 }
 
@@ -31,6 +33,10 @@ test.describe('Fire forecast: control-room board', () => {
     await expect(page.getByText(/On a typical active day of 2025 \(the 96 days/)).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Fire detected' })).toBeVisible();
     await expect(page.getByTestId('legend').getByText('Rated, less reliable here')).toBeVisible();
+    await expect(page.getByTestId('map')).toHaveAttribute('data-polygons', '2');       // the forest cell on its own, and the same cell shaded by its Extreme area (not the whole 55 km box)
+    await page.getByLabel('Outline the 55 km areas').check();
+    await expect(page.getByTestId('map')).not.toHaveAttribute('data-polygons', '2');   // now the outlines of the rated areas too
+    await page.getByLabel('Outline the 55 km areas').uncheck();
     await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
     const first = page.locator('tbody tr').first();
     await expect(first.getByText('Extreme')).toBeVisible();

@@ -79,24 +79,25 @@ function Box({ color, fill, dash, width }: { color: string; fill: number; dash?:
 }
 
 /** The key for an archived day: the model's output as boxes, and what was actually detected as red diamonds. Shapes and words, never colour alone. */
-export function ForecastLegend({ cells = false }: { cells?: boolean }) {
+export function ForecastLegend({ cells = false, forest = false }: { cells?: boolean; forest?: boolean }) {
   const { t } = useTranslation();
   const rows: Array<{ swatch: ReactNode; label: string; hint: string }> = [
-    { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Solid red box. The forecast gave this area a chance of 6 in 10 or more.') },
-    { swatch: <Box color="danger" fill={0.14} dash="2 2" width={2.5} />, label: t('map.fl.high', 'High (30% to 60%)'), hint: t('map.fl.high_hint', 'Dashed red box.') },
-    { swatch: <Box color="warn" fill={0.16} dash="2 2" width={2} />, label: t('map.fl.moderate', 'Moderate (10% to 30%)'), hint: t('map.fl.moderate_hint', 'Dashed amber box.') },
-    { swatch: <Box color="unconfirmed" fill={0.1} dash="3 2" width={2} />, label: t('map.fl.weak', 'Rated, less reliable here'), hint: t('map.fl.weak_hint', 'Dashed grey-violet box: a state where the forecast has been less reliable. It may be Moderate, High or Extreme.') },
+    { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Solid red squares: forest cells in an area the forecast gave a chance of 6 in 10 or more.') },
+    { swatch: <Box color="danger" fill={0.14} dash="2 2" width={2.5} />, label: t('map.fl.high', 'High (30% to 60%)'), hint: t('map.fl.high_hint', 'Dashed red squares: forest cells in an area rated 3 to 6 in 10.') },
+    { swatch: <Box color="warn" fill={0.16} dash="2 2" width={2} />, label: t('map.fl.moderate', 'Moderate (10% to 30%)'), hint: t('map.fl.moderate_hint', 'Dashed amber squares: forest cells in an area rated 1 to 3 in 10.') },
+    { swatch: <Box color="unconfirmed" fill={0.1} dash="3 2" width={2} />, label: t('map.fl.weak', 'Rated, less reliable here'), hint: t('map.fl.weak_hint', 'Dashed grey-violet squares: forest cells in a state where the forecast has been less reliable. The area may be Moderate, High or Extreme.') },
+    ...(forest ? [{ swatch: <Box color="ok" fill={0.28} width={0.8} />, label: t('map.fl.forest', 'Forest cell'), hint: t('map.fl.forest_hint', 'A forest cell the model scores (about 10 km, at least 20% forest land). Green with no colour on it: no rating, or the forecast layer is off.') }] : []),
     { swatch: <SymbolSwatch kind="signal_likely" />, label: t('map.fl.fire', 'Fire detected'), hint: t('map.fl.fire_hint', 'What actually happened: a forest square (about 11 km) where the satellite detected a fire that day. Not the forecast.') },
   ];
   return (
     <section aria-label={t('map.legend', 'Legend')} className="rounded-rq border border-line bg-surface p-3 text-sm" data-testid="legend">
       <h2 className="min-h-8 font-bold">{t('map.legend', 'Legend')}</h2>
       <ul className="mt-1 space-y-2">{rows.map((r, i) => <li key={i} className="flex items-start gap-2">{r.swatch}<span><span className="font-semibold">{r.label}</span><span className="block text-ink-muted">{r.hint}</span></span></li>)}
-        {cells && <li className="flex flex-col gap-1 border-t border-line pt-2"><span className="font-semibold">{t('map.fl.cells', 'Forest cells (model rank)')}</span>
+        {cells && <li className="flex flex-col gap-1 border-t border-line pt-2"><span className="font-semibold">{t('map.fl.cells', 'Rank circles (model rank)')}</span>
           <span className="block text-xs text-ink-muted">{t('map.fl.cells_hint', 'One circle per forest cell (about 11 km, at least 20% forest land), shaded by where the model ranked it that day. Model output, not observed fire.')}</span>
           <ul className="mt-1 space-y-1">{RISK_BANDS.map(item => <li key={item.band} className="flex items-center gap-2"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" className="shrink-0"><circle cx="8" cy="8" r="7" fill="var(--tw-text)" opacity="0.85" /><circle cx="8" cy="8" r="6" fill={`var(--tw-${item.color})`} opacity="0.7" stroke="var(--tw-surface)" strokeWidth="2" /></svg><span className="text-xs">{t(`map.risk_band.${item.band.toLowerCase().replace(' ', '_')}`, item.label)}</span></li>)}</ul></li>}
-        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.boxes_note', 'A box is the 55 km area the chance is worked out for. The model scores only the forest cells inside it (roughly half of a box is not forest and is not scored); the box is drawn square, so it also covers land that was not scored. Switch on Forest cells to see which squares were scored.')}</li>
-        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.none', 'No box: the area was not rated (under 10%).')}</li></ul>
+        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.boxes_note', 'Each square is one forest cell (about 10 km) that the model scored, shaded by the level of the 55 km area it sits in. Land that is not forest is not scored and not drawn. Switch on Outline the 55 km areas to see the areas.')}</li>
+        <li className="border-t border-line pt-2 text-ink-muted">{t('map.fl.none', 'No square: the area was not rated (under 10%).')}</li></ul>
     </section>
   );
 }
