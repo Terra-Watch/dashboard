@@ -1,5 +1,8 @@
 """Assignment lifecycle (accept -> observe (many) -> complete) and structured incident closure, on real PostgreSQL."""
 import pytest
+from sqlalchemy import text
+
+from app.database.session import engine
 
 from tests.test_fire_evidence_routes import actor, citizen_report, database, db_one, db_scalar, isolated  # noqa: F401
 
@@ -161,3 +164,17 @@ def test_a_retried_observation_is_saved_once():
     assert first.status_code == 201 and again.status_code == 200
     assert first.json()["verification"]["id"] == again.json()["verification"]["id"]
     assert db_scalar("SELECT count(*) FROM resq_field_verifications WHERE assignment_id=:a", a=aid) == 1
+
+
+def test_a_deactivated_ranger_is_neither_listed_nor_assignable():
+    control, ch, _ = actor("control_room_operator", scopes=["OD"])
+    citizen, _zh, cuid = actor("citizen"); rid = citizen_report(cuid)
+    ranger, rh, ruid = actor("field_crew")
+    listed = lambda: [x["id"] for x in control.get("/api/control-room/rangers", headers=ch).json()["items"]]
+    assert ruid in listed()
+    with engine.begin() as db:
+        db.execute(text("UPDATE resq_users SET deactivated_at=now() WHERE id=:u"), {"u": ruid})
+    assert ruid not in listed()                                                    # hidden from the roster
+    r = control.post(f"/api/control-room/incidents/{rid}/assignments", headers=ch, json={"ranger_id": ruid})
+    assert r.status_code in (404, 409, 422), r.text                                 # and not assignable
+    assert db_scalar("SELECT count(*) FROM resq_incident_assignments WHERE incident_id=:i", i=rid) == 0

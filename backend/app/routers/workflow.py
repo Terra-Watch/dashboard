@@ -52,7 +52,7 @@ def _notify_users(*, user_ids: list[int], kind: str, message: str, state: str | 
 @router.get('/control-room/rangers')
 def eligible_rangers(user: dict = Depends(_control_user)) -> dict:
     with engine.connect() as db:
-        rows = db.execute(text("SELECT u.id,u.name,u.email,u.home_state,u.community_id,(SELECT c.name FROM resq_communities c WHERE c.id=u.community_id) AS community FROM resq_users u WHERE u.role='field_crew' ORDER BY u.name")).mappings().all()
+        rows = db.execute(text("SELECT u.id,u.name,u.email,u.home_state,u.community_id,(SELECT c.name FROM resq_communities c WHERE c.id=u.community_id) AS community FROM resq_users u WHERE u.role='field_crew' AND u.deactivated_at IS NULL ORDER BY u.name")).mappings().all()
     scopes = None if user.get('role') == 'admin' else user_scopes(int(user['id']), include_uncovered=True)
     comms = None if scopes is None else community_scope(int(user['id']))
     if comms is not None and user.get('role') in CATCH_ALL_ROLES:
@@ -108,7 +108,7 @@ def create_assignment(incident_id: int, payload: IncidentAssignmentRequest, user
         if not incident:
             raise HTTPException(status_code=404, detail='Incident not found')
         require_scope(user, incident['state'], entity_type='incident', entity_id=str(incident_id))
-        ranger = db.execute(text("SELECT id,name,email,home_state FROM resq_users WHERE id=:id AND role='field_crew'"), {'id': payload.ranger_id}).mappings().first()
+        ranger = db.execute(text("SELECT id,name,email,home_state FROM resq_users WHERE id=:id AND role='field_crew' AND deactivated_at IS NULL"), {'id': payload.ranger_id}).mappings().first()
         if not ranger:
             raise HTTPException(status_code=422, detail='Assignee is not an eligible Ranger')
         if ranger['home_state'] and ranger['home_state'] != incident['state'] and user.get('role') != 'admin':
@@ -131,7 +131,7 @@ def reassign_incident(incident_id: int, assignment_id: int, payload: AssignmentR
         if not incident:
             raise HTTPException(status_code=404, detail='Incident not found')
         require_scope(user, incident['state'], entity_type='incident', entity_id=str(incident_id))
-        ranger = db.execute(text("SELECT id FROM resq_users WHERE id=:id AND role='field_crew'"), {'id': payload.ranger_id}).scalar()
+        ranger = db.execute(text("SELECT id FROM resq_users WHERE id=:id AND role='field_crew' AND deactivated_at IS NULL"), {'id': payload.ranger_id}).scalar()
         if not ranger:
             raise HTTPException(status_code=422, detail='Assignee is not an eligible Ranger')
         current = db.execute(text("SELECT id,status FROM resq_incident_assignments WHERE id=:id AND incident_id=:incident_id FOR UPDATE"), {'id': assignment_id, 'incident_id': incident_id}).mappings().first()
