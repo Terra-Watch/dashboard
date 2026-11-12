@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { actionsFor, areaPolygons, cardDates, chanceWords, dayWord, levelName, levelRank, outcomeWords, fireSeenWords, recordWords, shareText, toneOf, usualWords, vsUsual, type Action, type Area } from '../src/features/forecast/model.ts';
+import { actionsFor, areaPolygons, cardDates, chanceWords, dayWord, levelName, levelRank, outcomeWords, fireSeenWords, fireMarks, forestName, recordWords, shareText, toneOf, usualWords, vsUsual, type Action, type Area } from '../src/features/forecast/model.ts';
 
 const t = (_k: string, fallback: string, o: Record<string, unknown> = {}) => fallback.replace(/\{\{(\w+)\}\}/g, (_m, k) => String(o[k] ?? ''));
 const area = (o: Partial<Area> = {}): Area => ({ id: 1, name: 'near Kendu', state: 'OD', lat: 20.2, lon: 85.2, bbox: [85, 20, 85.5, 20.5], cells: 10, chance: 0.62, expected_fires: 3.1, usual_fires: 1.2, usual_chance: 0.4, level: 'extreme', reliable: true, ...o });
@@ -63,4 +63,10 @@ test('an archived day says what was actually detected, and a live forecast says 
   assert.match(outcomeWords({ areas_with_fire: 288, in_high_or_extreme: 267, areas_rated_high_or_extreme: 349, of_those_with_fire: 267 }, '2025-03-15', t) as string, /in 288 areas\. Of the 349 areas rated High or Extreme, 267 had a fire \(77%\); 21 areas with a fire were rated lower\./);
   assert.match(outcomeWords({ areas_with_fire: 3, in_high_or_extreme: 0, areas_rated_high_or_extreme: 0, of_those_with_fire: 0 }, '2025-03-15', t) as string, /0 had a fire; 3 areas/);
   assert.equal(fireSeenWords(area(), t), null); assert.match(fireSeenWords(area({ fire_detected: true }), t) as string, /A fire was detected/); assert.match(fireSeenWords(area({ fire_detected: false }), t) as string, /No fire was detected/);
+});
+
+test('fire squares can be limited to the more forested ones', () => {
+  const a1 = area({ id: 40171 }); const f = { areas: [a1], fire_cells: [[20.25, 85.75, 1.0], [20.35, 85.75, 0.55], [20.3, 85.8, 0.25], [20.4, 85.9]] as Array<[number, number, number?]> };
+  assert.equal(fireMarks(f, f.areas, 0).length, 4); assert.equal(fireMarks(f, f.areas, 0.5).length, 3);   // a square without a share counts as forest
+  assert.equal(fireMarks(f, f.areas, 0.8).length, 2); assert.match(forestName(0.8, t), /80% or more/); assert.match(forestName(0, t), /20% or more/);
 });

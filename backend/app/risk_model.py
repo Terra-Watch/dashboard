@@ -8,7 +8,7 @@ Replay bundle layout:
   manifest.json      model_id, model_version, states[], bands[{name, top_share}], replay_files[],
                      optional score_column (default "score")
   <replay_files>     npz with arrays cell, day (days since 1970-01-01), state, <score_column>
-  cell_centers.csv   cell, lon, lat, state (every cell in the grid; used for coverage)
+  cell_centers.csv   cell, lon, lat, state (every cell in the grid; used for coverage), optional forest_land_frac (served as forest_frac)
 """
 from __future__ import annotations
 
@@ -130,12 +130,14 @@ def daily_geojson(target: date) -> dict:
     if centers is None or ranked.empty:
         return empty
     points = centers.merge(ranked[["cell", "rank_percentile", "band"]], on="cell", how="inner")
+    has_forest = "forest_land_frac" in points.columns   # share of the cell that is forest land; lets the map filter to forest cells
     return {
         "type": "FeatureCollection",
         "run": _run(meta, target, ranked, root),
         "features": [
             {"type": "Feature", "geometry": {"type": "Point", "coordinates": [float(r.lon), float(r.lat)]},
-             "properties": {"cell_id": int(r.cell), "state": r.state, "rank_percentile": round(float(r.rank_percentile), 3), "band": r.band}}
+             "properties": {"cell_id": int(r.cell), "state": r.state, "rank_percentile": round(float(r.rank_percentile), 3), "band": r.band,
+                            **({"forest_frac": round(float(r.forest_land_frac), 2)} if has_forest else {})}}
             for r in points.itertuples()
         ],
     }

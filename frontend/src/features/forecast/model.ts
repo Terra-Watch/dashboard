@@ -16,7 +16,7 @@ export type Yesterday = { date: string; areas_with_fire: number; in_high_or_extr
 export type Outcome = Omit<Yesterday, 'date'>;
 export type Forecast = {
   date: string; mode: 'live' | 'replay'; issued_at: string; levels: Array<{ id: LevelId; min_chance: number }>; actions: Action[]; label: string; model: Record<string, unknown>;
-  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday; outcome?: Outcome; fire_cells?: Array<[number, number]>;
+  week_of_year: number; areas: Area[]; summary: Record<LevelId, number>; areas_scored: number; scope: 'all' | 'community' | 'state'; note: string; yesterday?: Yesterday; outcome?: Outcome; fire_cells?: Array<[number, number, number?]>;   // lat, lon, share of the square that is forest land
 };
 
 type T = (key: string, fallback: string, opts?: Record<string, unknown>) => string;
@@ -149,10 +149,10 @@ export function fireSeenWords(a: Area, t: T): string | null {
 const blockOf = (lat: number, lon: number): number => Math.floor(lat / 0.5) * 1000 + Math.floor(lon / 0.5);
 
 /** Marks for the forest squares where a fire was actually detected on an archived day. `areas` limits them to some areas (a state filter); with no cells in the file, one mark per area with a fire. */
-export function fireMarks(f: Pick<Forecast, 'areas' | 'fire_cells'>, areas: Area[] = f.areas): MapPoint[] {
+export function fireMarks(f: Pick<Forecast, 'areas' | 'fire_cells'>, areas: Area[] = f.areas, minForest = 0): MapPoint[] {
   if (f.fire_cells?.length) {
     const ids = new Set(areas.map(a => a.id));
-    return f.fire_cells.filter(([la, lo]) => ids.has(blockOf(la, lo))).map(([lat, lon], i) => ({ id: `seen-${i}`, lat, lon, symbol: 'signal_likely' as const }));
+    return f.fire_cells.filter(([la, lo, fo]) => ids.has(blockOf(la, lo)) && (fo ?? 1) >= minForest).map(([lat, lon], i) => ({ id: `seen-${i}`, lat, lon, symbol: 'signal_likely' as const }));
   }
   return areas.filter(a => a.fire_detected).map(a => ({ id: `seen-${a.id}`, lat: a.lat, lon: a.lon, symbol: 'signal_likely' as const }));
 }
@@ -181,4 +181,10 @@ export function matchesCompare(a: Area, c: Compare): boolean {
 }
 export function compareName(c: Compare, t: T): string {
   return c === 'fire' ? t('forecast.cmp_fire', 'Any area with a fire detected') : c === 'hit' ? t('forecast.cmp_hit', 'Rated High or Extreme, fire detected') : c === 'missed' ? t('forecast.cmp_missed', 'Fire detected, rated lower (missed)') : c === 'nofire' ? t('forecast.cmp_nofire', 'Rated High or Extreme, no fire detected') : t('forecast.cmp_all', 'All areas');
+}
+
+/** Forest cells: every scored square has at least 20 % forest land; the filter keeps the more forested ones. */
+export const FOREST_STEPS: readonly number[] = [0, 0.5, 0.8];
+export function forestName(step: number, t: T): string {
+  return step >= 0.8 ? t('forecast.forest_80', 'Forest land 80% or more') : step >= 0.5 ? t('forecast.forest_50', 'Forest land 50% or more') : t('forecast.forest_any', 'All forest cells (20% or more)');
 }

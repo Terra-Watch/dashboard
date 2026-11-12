@@ -49,6 +49,7 @@ test.describe('Fire forecast: control-room board', () => {
     await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
     await expect(page.locator('tbody tr').getByText(/Extreme|High/)).toHaveCount(0);
     await page.getByLabel('Compare').selectOption('all');
+    await page.getByLabel('Fire squares').selectOption('0.8'); await page.getByLabel('Fire squares').selectOption('0');   // the forest-cover filter for the red diamonds
     await page.getByLabel('Fires detected').uncheck(); await page.getByLabel('Forecast (model output)').uncheck();   // the two layers switch off on their own
     await page.getByLabel('Fires detected').check(); await page.getByLabel('Forecast (model output)').check();
     await page.getByLabel('Forecast for').selectOption('2025-07-15');

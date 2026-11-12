@@ -122,6 +122,14 @@ class DailyGeojsonBundleTests(unittest.TestCase):
         import shutil
         shutil.rmtree(self._tmpdir, ignore_errors=True)
 
+    def test_forest_share_is_served_only_when_the_bundle_has_it(self):
+        from app.risk_model import daily_geojson
+        self.assertNotIn("forest_frac", daily_geojson(DEMO_DATE)["features"][0]["properties"])   # the fixture grid has no forest column
+        centers = Path(self._tmpdir) / "cell_centers.csv"; frame = pd.read_csv(centers); frame["forest_land_frac"] = [0.2, 0.3, 0.5, 0.8, 1.0]; frame.to_csv(centers, index=False)
+        _clear_cache()
+        shares = sorted(f["properties"]["forest_frac"] for f in daily_geojson(DEMO_DATE)["features"])
+        self.assertEqual(shares, [0.2, 0.3, 0.5, 0.8, 1.0])
+
     def test_returns_feature_collection_type(self):
         from app.risk_model import daily_geojson
         result = daily_geojson(DEMO_DATE)
