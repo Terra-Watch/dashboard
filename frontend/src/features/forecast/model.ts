@@ -165,3 +165,20 @@ export function typicalWords(x: Typical | undefined, t: T): string | null {
   return t('forecast.typical', 'These days were chosen because the forecast and the detections agree well. On a typical active day of 2025 (the {{n}} days with at least {{min}} areas with a fire), {{p}}% of the High or Extreme areas had a fire and {{r}}% of the areas with a fire were rated High or Extreme.', {
     n: x.active_days, min: x.min_fire_areas, p: Math.round(100 * x.high_or_extreme_had_fire), r: Math.round(100 * x.fire_rated_high_or_extreme) });
 }
+
+/** On an archived day, how an area's forecast compares with what was detected. */
+export type Compare = 'all' | 'fire' | 'hit' | 'missed' | 'nofire';
+export const COMPARE: readonly Compare[] = ['all', 'fire', 'hit', 'missed', 'nofire'];
+const rated = (a: Area): boolean => a.level === 'high' || a.level === 'extreme';
+export function matchesCompare(a: Area, c: Compare): boolean {
+  switch (c) {
+    case 'fire': return !!a.fire_detected;
+    case 'hit': return rated(a) && !!a.fire_detected;          // rated High or Extreme, and a fire was detected
+    case 'missed': return !rated(a) && !!a.fire_detected;      // a fire was detected, rated lower
+    case 'nofire': return rated(a) && !a.fire_detected;        // rated High or Extreme, no fire detected
+    default: return true;
+  }
+}
+export function compareName(c: Compare, t: T): string {
+  return c === 'fire' ? t('forecast.cmp_fire', 'Any area with a fire detected') : c === 'hit' ? t('forecast.cmp_hit', 'Rated High or Extreme, fire detected') : c === 'missed' ? t('forecast.cmp_missed', 'Fire detected, rated lower (missed)') : c === 'nofire' ? t('forecast.cmp_nofire', 'Rated High or Extreme, no fire detected') : t('forecast.cmp_all', 'All areas');
+}

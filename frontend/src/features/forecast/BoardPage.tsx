@@ -6,7 +6,7 @@ import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { useDates, useForecast, type Source } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, dayWord, fireMarks, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type LevelId } from './model';
+import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, compareName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
 import { ForecastLegend } from '../map/Legend';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
@@ -36,16 +36,16 @@ export function BoardPage() {
   const [date, setDate] = useState<string | null>(null);
   const day = date ?? (source === 'archive' && dates.data ? (dates.data.dates.includes(DEMO_DAY) ? DEMO_DAY : dates.data.latest) : null);
   const q = useForecast(day, source);
-  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [onlyFire, setOnlyFire] = useState(false); const [sel, setSel] = useState<number | null>(null);
+  const [state, setState] = useState(''); const [showNone, setShowNone] = useState(false); const [compare, setCompare] = useState<Compare>('all'); const [showBoxes, setShowBoxes] = useState(true); const [showFires, setShowFires] = useState(true); const [sel, setSel] = useState<number | null>(null);
   const f = q.data; const all = f?.areas ?? [];
   const archived = !!f?.outcome;
   const states = useMemo(() => [...new Set(all.map(a => a.state))].sort(), [all]);
-  const rows = useMemo(() => all.filter(a => (!state || a.state === state) && (onlyFire ? a.fire_detected : showNone || a.level !== 'none')).sort((a, b) => levelRank(b.level) - levelRank(a.level) || b.chance - a.chance), [all, state, showNone, onlyFire]);
+  const rows = useMemo(() => all.filter(a => (!state || a.state === state) && (compare !== 'all' ? matchesCompare(a, compare) : showNone || a.level !== 'none')).sort((a, b) => levelRank(b.level) - levelRank(a.level) || b.chance - a.chance), [all, state, showNone, compare]);
   const chosen = rows.find(a => a.id === sel) ?? null;
-  const polygons = useMemo<MapPolygon[]>(() => [...areaPolygons(rows), ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen]);
+  const polygons = useMemo<MapPolygon[]>(() => [...(showBoxes ? areaPolygons(rows) : []), ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen, showBoxes]);
   const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);
   // On an archived day: a mark in every area where a fire was actually detected, whatever level it was given.
-  const seen = useMemo<MapPoint[]>(() => (archived && f ? fireMarks(f, all.filter(a => !state || a.state === state)) : []), [f, all, archived, state]);
+  const seen = useMemo<MapPoint[]>(() => (archived && f && showFires ? fireMarks(f, all.filter(a => (!state || a.state === state) && matchesCompare(a, compare))) : []), [f, all, archived, state, compare, showFires]);
   const points = useMemo(() => [...seen, ...looks], [seen, looks]);
   const bounds = useMemo(() => boundsOf(chosen ? [{ lat: chosen.bbox[1], lon: chosen.bbox[0] }, { lat: chosen.bbox[3], lon: chosen.bbox[2] }] : rows.length ? rows.flatMap(a => [{ lat: a.bbox[1], lon: a.bbox[0] }, { lat: a.bbox[3], lon: a.bbox[2] }]) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]), [rows, chosen]);
   const weak = useMemo(() => [...new Set(rows.filter(a => !a.reliable && a.level !== 'none').map(a => a.state))].sort(), [rows]);
@@ -69,7 +69,9 @@ export function BoardPage() {
         <span className="text-sm text-ink-muted">{tt('forecast.n_none', '{{n}} areas with no rating', { n: summary.none })}</span>
         <label className="ml-auto text-sm">{tt('forecast.date', 'Forecast for')} <select value={day ?? f.date} onChange={e => { setDate(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{(dates.data?.dates ?? [f.date]).map(d => <option key={d} value={d}>{dayWord(d, tt) === d ? d : `${dayWord(d, tt)} · ${d}`}</option>)}</select></label>
         <label className="text-sm">{tt('forecast.state', 'State')} <select value={state} onChange={e => { setState(e.target.value); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2"><option value="">{tt('forecast.all', 'All')}</option>{states.map(s => <option key={s}>{s}</option>)}</select></label>
-        {archived && <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={onlyFire} onChange={e => { setOnlyFire(e.target.checked); setSel(null); }} className="h-4 w-4" />{tt('forecast.only_fire', 'Only areas where a fire was detected')}</label>}
+        {archived && <label className="text-sm">{tt('forecast.compare', 'Compare')} <select value={compare} onChange={e => { setCompare(e.target.value as Compare); setSel(null); }} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, tt)}</option>)}</select></label>}
+        {archived && <><label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showBoxes} onChange={e => setShowBoxes(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_forecast', 'Forecast (model output)')}</label>
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" />{tt('forecast.layer_fires', 'Fires detected')}</label></>}
         <label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showNone} onChange={e => setShowNone(e.target.checked)} className="h-4 w-4" />{tt('forecast.show_none', 'Show areas with no rating')}</label>
       </div>
       <p className="text-sm text-ink-muted">{tt('forecast.issued', 'Issued {{when}} · model {{model}} · week {{week}} of the year', { when: formatWhen(f.issued_at), model: String(f.model?.id ?? ''), week: f.week_of_year })}{f.scope !== 'all' ? ` · ${tt('forecast.scope_' + f.scope, f.scope === 'community' ? 'your communities only' : 'your states only')}` : ''}</p>

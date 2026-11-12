@@ -23,7 +23,7 @@ import { readMapColors, isDark } from '../map/colors';
 import { useStations } from '../stations/api';
 import { statementWords, symbolOf } from '../stations/model';
 import { useDates, useForecast } from '../forecast/api';
-import { areaPolygons, fireMarks, outcomeWords, typicalWords } from '../forecast/model';
+import { COMPARE, areaPolygons, compareName, fireMarks, matchesCompare, outcomeWords, typicalWords, type Compare } from '../forecast/model';
 
 type Hotspot = { id: number; satellite: string; acq_datetime: string; latitude: number; longitude: number; frp: number | null; age_minutes: number };
 type Freshness = { source: string; fetched_at: string; age_seconds: number; stale: boolean | null };
@@ -85,7 +85,7 @@ export function OpsMapPage() {
   const stations = useStations();
   const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   // Demo: an archived day of 2025 with the fires the satellite actually detected that day, in place of live items.
-  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [demoDate, setDemoDate] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false); const [showForecast, setShowForecast] = useState(true); const [showFires, setShowFires] = useState(true); const [compare, setCompare] = useState<Compare>('all'); const [demoDate, setDemoDate] = useState<string | null>(null);
   const demoDates = useDates('archive');
   const demoDay = demo ? demoDate ?? (demoDates.data ? (demoDates.data.dates.includes('2025-03-18') ? '2025-03-18' : demoDates.data.latest) : null) : null;
   const demoForecast = useForecast(demoDay, 'archive');
@@ -193,8 +193,8 @@ export function OpsMapPage() {
   ] : [], [bearings.data, showBearings, t]);
   const livePolygons: MapPolygon[] = useMemo(() => [...bearingPolygons, ...(layers.has('advisories') ? (notices.data?.items ?? []) : []).filter(item => item.area_geojson?.coordinates?.[0]).map(item => ({ id: `n${item.id}`, ring: item.area_geojson!.coordinates[0] as Array<[number, number]>, tone: item.severity === 'warning' ? 'warning' as const : 'advisory' as const, label: item.title }))], [notices.data, layers, bearingPolygons]);
   const demoFire = demo ? demoForecast.data : undefined;
-  const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire) : []) : livePoints), [demo, demoFire, showFires, livePoints]);
-  const polygons = useMemo<MapPolygon[]>(() => (demo ? (demoFire && showForecast ? areaPolygons(demoFire.areas) : []) : livePolygons), [demo, demoFire, showForecast, livePolygons]);
+  const points = useMemo<MapPoint[]>(() => (demo ? (demoFire && showFires ? fireMarks(demoFire, demoFire.areas.filter(a => matchesCompare(a, compare))) : []) : livePoints), [demo, demoFire, showFires, compare, livePoints]);
+  const polygons = useMemo<MapPolygon[]>(() => (demo ? (demoFire && showForecast ? areaPolygons(demoFire.areas.filter(a => matchesCompare(a, compare))) : []) : livePolygons), [demo, demoFire, showForecast, compare, livePolygons]);
   const bounds = useMemo(() => boundsOf(demo ? [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }] : points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: box[1], lon: box[0] }, { lat: box[3], lon: box[2] }]), [points, box]);
 
   const selectedIncident: Incident | undefined = selected?.startsWith('i') ? incidents.data?.find(item => item.id === Number(selected.slice(1))) : undefined;
@@ -207,6 +207,7 @@ export function OpsMapPage() {
       <div className="grid gap-3 rounded-panel border border-line bg-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
         <div><p className="mb-1 text-xs font-bold uppercase tracking-wide text-ink-muted">{t('map.mode', 'Data')}</p><div role="group" aria-label={t('map.mode', 'Data')} className="inline-flex rounded-rq border border-control p-1">{([false, true] as const).map(on => <button key={String(on)} type="button" aria-pressed={demo === on} onClick={() => { setDemo(on); setSelected(null); }} className={`min-h-11 rounded-rq px-4 font-semibold ${demo === on ? 'bg-ink text-surface' : ''}`}>{on ? t('map.mode_demo', 'Demo (archive)') : t('map.mode_live', 'Live')}</button>)}</div></div>
         {demo && demoDates.data && <label className="mt-5 text-sm">{t('map.demo_day', 'Day')} <select value={demoDay ?? ''} onChange={e => setDemoDate(e.target.value)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{demoDates.data.dates.map(d => <option key={d} value={d}>{d}</option>)}</select></label>}
+        {demo && <label className="mt-5 text-sm">{t('forecast.compare', 'Compare')} <select value={compare} onChange={e => setCompare(e.target.value as Compare)} className="min-h-11 rounded-rq border border-control bg-surface px-2">{COMPARE.map(c => <option key={c} value={c}>{compareName(c, (k, d, o) => t(k, { defaultValue: d, ...o }))}</option>)}</select></label>}
         {demo && <><label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showForecast} onChange={e => setShowForecast(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_forecast', 'Forecast (model output)')}</span></label>
           <label className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-rq border border-control px-3 py-2 text-sm"><input type="checkbox" checked={showFires} onChange={e => setShowFires(e.target.checked)} className="h-4 w-4" /><span>{t('map.demo_fires', 'Fires detected')}</span></label></>}
         {demo && <div className="space-y-1 sm:col-span-2 xl:col-span-4" role="status">

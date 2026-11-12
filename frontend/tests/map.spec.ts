@@ -31,6 +31,11 @@ test.describe('Control Room map', () => {
     const key = page.getByTestId('legend');
     await expect(key.getByText('Fire detected')).toBeVisible(); await expect(key.getByText('Extreme (60% or more)')).toBeVisible(); await expect(key.getByText('Satellite signal')).toHaveCount(0);   // the live symbols are not in the demo key
     await expect(map).toHaveAttribute('data-points', '3');          // the three fire squares; no incident, station or live signal
+    await page.getByLabel('Compare').selectOption('hit');            // rated High or Extreme and a fire: only the first area's square
+    await expect(map).toHaveAttribute('data-points', '2');
+    await page.getByLabel('Compare').selectOption('missed');         // a fire in an area rated lower: the other square
+    await expect(map).toHaveAttribute('data-points', '1');
+    await page.getByLabel('Compare').selectOption('all');
     await page.getByLabel('Fires detected').uncheck();
     await expect(map).toHaveAttribute('data-points', '0');           // the forecast boxes alone; the model output can be read without the fires on top
     await page.getByLabel('Fires detected').check();

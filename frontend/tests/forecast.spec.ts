@@ -41,9 +41,16 @@ test.describe('Fire forecast: control-room board', () => {
     await page.waitForTimeout(2500);
     await page.screenshot(shot('board'));
     await expect(page.getByText('A fire was detected in this area that day.')).toBeVisible();
-    await page.getByLabel('Only areas where a fire was detected').check();
+    await page.getByLabel('Compare').selectOption('fire');
     await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
-    await page.getByLabel('Only areas where a fire was detected').uncheck();
+    await page.getByLabel('Compare').selectOption('nofire');                          // rated High or Extreme but no fire: every row says No
+    await expect(page.locator('tbody tr').first().getByText('No', { exact: true })).toBeVisible();
+    await page.getByLabel('Compare').selectOption('missed');                          // a fire, rated lower: every row says Yes and is not High or Extreme
+    await expect(page.locator('tbody tr').first().getByText('Yes')).toBeVisible();
+    await expect(page.locator('tbody tr').getByText(/Extreme|High/)).toHaveCount(0);
+    await page.getByLabel('Compare').selectOption('all');
+    await page.getByLabel('Fires detected').uncheck(); await page.getByLabel('Forecast (model output)').uncheck();   // the two layers switch off on their own
+    await page.getByLabel('Fires detected').check(); await page.getByLabel('Forecast (model output)').check();
     await page.getByLabel('Forecast for').selectOption('2025-07-15');
     await expect(page.getByText('No area is rated Moderate or above')).toBeVisible();      // the monsoon: nothing is red
     await page.getByLabel('Show areas with no rating').check();
