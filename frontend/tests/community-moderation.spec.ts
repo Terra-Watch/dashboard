@@ -15,8 +15,7 @@ async function open(page: Page, items: unknown[]) {
   await page.route('**/api/notices?limit=100', route => route.fulfill(json({ items: [] })));
   await page.route('**/api/community/moderation/queue', route => route.fulfill(json({ items })));
   await page.route('**/api/community/images/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: PNG }));
-  await page.goto('/ops/notices');
-  await page.getByRole('tab', { name: /Moderation/ }).click();
+  await page.goto('/ops/notices');   // the moderation queue sits under "Needs a person", no longer on its own tab
 }
 
 test('each media-check status has its own advisory wording, with the persistent advisory line', async ({ page }) => {
