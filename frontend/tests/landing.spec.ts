@@ -65,7 +65,8 @@ test('the landing page shows the spread outlook picture and the evidence numbers
   await expect(page.getByRole('heading', { name: 'Know where an active fire is likely to go next' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Tested before it is shown' })).toBeVisible();
   await expect(page.getByText('17', { exact: true }).first()).toBeVisible();
-  await page.getByLabel('Show what actually burned').check();
+  await expect(page.getByText(/The top band held \d+% of the/)).toBeVisible();
+  await expect(page.getByText('What the outlook ranked')).toBeVisible();
   for (const [i, name] of ['See where wildfire is likely tomorrow', 'Tested before it is shown', 'See where fire is most likely tomorrow', 'Know where an active fire is likely to go next', 'Lookout stations that watch the forest between satellite passes', 'What TerraWatch does'].entries()) {
     const h = page.getByRole('heading', { name }).first(); await h.scrollIntoViewIfNeeded(); await page.waitForTimeout(1800);
     await page.screenshot({ path: `test-results/landing-${i}.png` });
