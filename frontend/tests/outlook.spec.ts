@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { json, signedInAs } from './helpers';
 
-const RUN = '../backend/runtime_data/fire_spread/replay-outlook-20250304T1941';
+const RUN = '../backend/app/fire_spread_data/replay-outlook-20250304T1941';
 const events = JSON.parse(readFileSync(`${RUN}/events.json`, 'utf8'));
 const skill = JSON.parse(readFileSync(`${RUN}/skill.json`, 'utf8'));
 const file = (name: string) => JSON.parse(readFileSync(`${RUN}/${name}`, 'utf8'));
