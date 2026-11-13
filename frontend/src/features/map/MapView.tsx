@@ -52,11 +52,16 @@ function installExtras(map: MapLibreMap, colors: MapColors) {
     map.addLayer({ id: `${LINES}-${tone}-line`, type: 'line', source: LINES, filter, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': s.color, 'line-width': s.width, ...(s.dash ? { 'line-dasharray': s.dash } : {}) } });
   }
 }
-const TONES = ['forest', 'cell', 'advisory', 'warning', 'envelope', 'band', 'observed', 'fire', 'grew'] as const;
+const TONES = ['forest', 'wash_extreme', 'wash_high', 'wash_moderate', 'wash_weak', 'cell', 'advisory', 'warning', 'envelope', 'band', 'observed', 'fire', 'grew'] as const;
 
 function toneStyle(tone: (typeof TONES)[number], c: MapColors): { color: string; fill: number; dash?: number[]; width: number } {
   switch (tone) {
     case 'forest': return { color: c.ok, fill: 0.28, width: 0.6 };                   // a forest cell the model scores, with no rating drawn on it
+    // the forest land of cells in a rated area: a wash with a hairline edge, so a wide area reads as a warning and the cells to patrol (tone cell) stand out
+    case 'wash_extreme': return { color: c.danger, fill: 0.34, width: 0.3 };
+    case 'wash_high': return { color: c.danger, fill: 0.2, width: 0.3 };
+    case 'wash_moderate': return { color: c.warn, fill: 0.2, width: 0.3 };
+    case 'wash_weak': return { color: c.unconfirmed, fill: 0.14, width: 0.3 };
     case 'cell': return { color: c.danger, fill: 0.22, width: 2 };
     case 'advisory': return { color: c.warn, fill: 0.16, dash: [2, 2], width: 2 };
     case 'warning': return { color: c.danger, fill: 0.14, dash: [2, 2], width: 2.5 };

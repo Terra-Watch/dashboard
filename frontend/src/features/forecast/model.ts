@@ -5,7 +5,7 @@ import type { MapPoint, MapPolygon } from '../map/geojson';
 export type LevelId = 'none' | 'moderate' | 'high' | 'extreme';
 export const LEVELS: readonly LevelId[] = ['extreme', 'high', 'moderate', 'none'];
 export type Place = { name: string; kind: string; km: number; from_place: string | null } | null;
-export type Look = { cell_id: number; lat: number; lon: number; chance: number; place: Place };
+export type Look = { cell_id: number; lat: number; lon: number; chance: number; place: Place; inside?: { name: string; kind: string } | null };
 export type Area = {
   id: number; name: string; state: string; lat: number; lon: number; bbox: [number, number, number, number]; cells: number;
   chance: number; expected_fires: number; usual_fires: number | null; usual_chance: number | null; level: LevelId; reliable: boolean;
@@ -202,18 +202,26 @@ function cellRings(c: { lat: number; lon: number }, shapes: ForestShapes | undef
 
 /** The forecast drawn where the model actually scored: the forest land of every scored cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).
  *  With `shapes` the forest outline is drawn; without, a square of 0.09 degrees around each cell centre. */
+const WASH: Partial<Record<MapPolygon['tone'], MapPolygon['tone']>> = { cell: 'wash_extreme', warning: 'wash_high', advisory: 'wash_moderate', envelope: 'wash_weak' };
 export function cellPolygons(cells: DayCell[], areas: Area[], minForest = 0, idPrefix = 'fc', shapes?: ForestShapes, side = 0.09): MapPolygon[] {
   const byBlock = new Map(areas.map(a => [a.id, a] as const));
   return cells.flatMap((c, i) => {
     const a = byBlock.get(blockOf(c.lat, c.lon)); const tone = a ? toneOf(a) : null;
     if (!tone || (c.forest ?? 1) < minForest) return [];
-    return cellRings(c, shapes, side).map((ring, k) => ({ id: `${idPrefix}-${i}-${k}`, ring, tone }));
+    const wash = shapes ? WASH[tone] ?? tone : tone;      // with forest outlines the area shading is a light wash; squares keep the old tones
+    return cellRings(c, shapes, side).map((ring, k) => ({ id: `${idPrefix}-${i}-${k}`, ring, tone: wash }));
   });
 }
 
 /** Every forest cell the model scores, on its own: no rating and no fire needed. */
 export function forestPolygons(cells: DayCell[], minForest = 0, state = '', idPrefix = 'fo', shapes?: ForestShapes, side = 0.09): MapPolygon[] {
   return cells.filter(c => (c.forest ?? 1) >= minForest && (!state || c.state === state)).flatMap((c, i) => cellRings(c, shapes, side).map((ring, k) => ({ id: `${idPrefix}-${i}-${k}`, ring, tone: 'forest' as const })));
+}
+
+/** The cells to patrol: the forest land of each rated area's top cells (the `look` list), drawn strong on top of the wash. Needs the outlines; empty without. */
+export function lookPolygons(areas: Area[], shapes: ForestShapes | undefined, idPrefix = 'fl'): MapPolygon[] {
+  if (!shapes) return [];
+  return areas.flatMap(a => { const tone = toneOf(a); return !tone ? [] : (a.look ?? []).flatMap((l, i) => (shapes[cellKey(l.lat, l.lon)] ?? []).map((ring, k) => ({ id: `${idPrefix}-${a.id}-${i}-${k}`, ring, tone: tone as MapPolygon['tone'] }))); });
 }
 
 /** The forest land of one area, shaded with the area's level: what the ranger card shows instead of a 55 km box. Empty when the area has no rating or no shapes. */

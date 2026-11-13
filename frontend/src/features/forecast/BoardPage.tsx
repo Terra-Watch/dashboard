@@ -6,7 +6,7 @@ import { formatWhen } from '../citizen/format';
 import { boundsOf, type MapPoint, type MapPolygon } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { useDates, useDayCells, useForecast, useForestShapes, type Source } from './api';
-import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, areaBounds, sceneWords, cellPolygons, compareName, forestPolygons, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
+import { LEVELS, areaPolygons, chanceWords, changeWords, COMPARE, FOREST_STEPS, areaBounds, sceneWords, cellPolygons, lookPolygons, compareName, forestPolygons, forestName, dayWord, fireMarks, matchesCompare, fireSeenWords, levelRank, outcomeWords, recordWords, typicalWords, type Area, type Compare, type LevelId } from './model';
 import { ForecastLegend } from '../map/Legend';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
@@ -49,7 +49,7 @@ export function BoardPage() {
   // the forecast where the model scored: forest cells shaded by their area's level; the 55 km outlines are optional, and the fallback when the cells are not available
   const forecastShapes = useMemo<MapPolygon[]>(() => {
     const cells = dayCells.data?.length ? cellPolygons(dayCells.data, rows, forest, 'fc', shapes) : [];
-    return [...(archived && showForest && dayCells.data?.length ? forestPolygons(dayCells.data, forest, state, 'fo', shapes) : []), ...(showBoxes ? (cells.length ? cells : areaPolygons(rows)) : []), ...(archived && showOutlines && cells.length ? areaPolygons(rows) : [])];
+    return [...(archived && showForest && dayCells.data?.length ? forestPolygons(dayCells.data, forest, state, 'fo', shapes) : []), ...(showBoxes ? (cells.length ? cells : areaPolygons(rows)) : []), ...(showBoxes && cells.length && shapes ? lookPolygons(rows, shapes) : []), ...(archived && showOutlines && cells.length ? areaPolygons(rows) : [])];
   }, [dayCells.data, shapes, rows, forest, state, showBoxes, showOutlines, showForest, archived]);
   const polygons = useMemo<MapPolygon[]>(() => [...forecastShapes, ...(chosen ? [{ id: `sel-${chosen.id}`, ring: [[chosen.bbox[0], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[1]], [chosen.bbox[2], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[3]], [chosen.bbox[0], chosen.bbox[1]]] as Array<[number, number]>, tone: 'observed' as const }] : [])], [rows, chosen, forecastShapes]);
   const looks = useMemo<MapPoint[]>(() => (chosen?.look ?? []).map((l, i) => ({ id: `look-${chosen!.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task' as const, label: l.place?.name ?? String(i + 1) })), [chosen]);

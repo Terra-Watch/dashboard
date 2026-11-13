@@ -82,12 +82,12 @@ function Box({ color, fill, dash, width }: { color: string; fill: number; dash?:
 export function ForecastLegend({ cells = false, forest = false }: { cells?: boolean; forest?: boolean }) {
   const { t } = useTranslation();
   const rows: Array<{ swatch: ReactNode; label: string; hint: string }> = [
-    { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Solid red squares: forest cells in an area the forecast gave a chance of 6 in 10 or more.') },
-    { swatch: <Box color="danger" fill={0.14} dash="2 2" width={2.5} />, label: t('map.fl.high', 'High (30% to 60%)'), hint: t('map.fl.high_hint', 'Dashed red squares: forest cells in an area rated 3 to 6 in 10.') },
-    { swatch: <Box color="warn" fill={0.16} dash="2 2" width={2} />, label: t('map.fl.moderate', 'Moderate (10% to 30%)'), hint: t('map.fl.moderate_hint', 'Dashed amber squares: forest cells in an area rated 1 to 3 in 10.') },
-    { swatch: <Box color="unconfirmed" fill={0.1} dash="3 2" width={2} />, label: t('map.fl.weak', 'Rated, less reliable here'), hint: t('map.fl.weak_hint', 'Dashed grey-violet squares: forest cells in a state where the forecast has been less reliable. The area may be Moderate, High or Extreme.') },
+    { swatch: <Box color="danger" fill={0.22} width={2} />, label: t('map.fl.extreme', 'Extreme (60% or more)'), hint: t('map.fl.extreme_hint', 'Chance of a fire 6 in 10 or more. Darker red means a higher chance, not more forest. Bold outlined cells: the ones to patrol first.') },
+    { swatch: <Box color="danger" fill={0.14} dash="2 2" width={2.5} />, label: t('map.fl.high', 'High (30% to 60%)'), hint: t('map.fl.high_hint', 'Chance of a fire 3 to 6 in 10.') },
+    { swatch: <Box color="warn" fill={0.16} dash="2 2" width={2} />, label: t('map.fl.moderate', 'Moderate (10% to 30%)'), hint: t('map.fl.moderate_hint', 'Chance of a fire 1 to 3 in 10.') },
+    { swatch: <Box color="unconfirmed" fill={0.1} dash="3 2" width={2} />, label: t('map.fl.weak', 'Rated, less reliable here'), hint: t('map.fl.weak_hint', 'Pale violet: the forecast has been less reliable in this state, so the chance is shown lightly. It may be Moderate, High or Extreme.') },
     ...(forest ? [{ swatch: <Box color="ok" fill={0.28} width={0.8} />, label: t('map.fl.forest', 'Forest cell'), hint: t('map.fl.forest_hint', 'A forest cell the model scores (about 11 km, at least 20% forest land). Green with no colour on it: no rating, or the forecast layer is off.') }] : []),
-    { swatch: <SymbolSwatch kind="signal_likely" />, label: t('map.fl.fire', 'Fire detected'), hint: t('map.fl.fire_hint', 'What actually happened: a forest square (about 11 km) where the satellite detected a fire that day. Not the forecast.') },
+    { swatch: <SymbolSwatch kind="signal_likely" />, label: t('map.fl.fire', 'Fire detected'), hint: t('map.fl.fire_hint', 'What actually happened: a forest cell (about 11 km) where the satellite detected a fire that day. Not the forecast.') },
   ];
   return (
     <section aria-label={t('map.legend', 'Legend')} className="rounded-rq border border-line bg-surface p-3 text-sm" data-testid="legend">

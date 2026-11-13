@@ -50,7 +50,7 @@ def _nearest_place(idx, lat, lon, reach=PLACE_REACH_KM):
     return {"name": str(p["name"]), "kind": str(p["kind"]), "km": round(float(d), 1), "from_place": comp if d >= 0.5 else None}
 
 
-def build(day, scores, levels, places=None, previous=None, detected=None, mode="live", model=None, issued_at=None):
+def build(day, scores, levels, places=None, cell_names=None, previous=None, detected=None, mode="live", model=None, issued_at=None):
     """day: the forecast date (a date or 'YYYY-MM-DD'). scores: DataFrame cell_id, state, lat, lon, score (only for cells that could be scored).
     previous: yesterday's output dict (for the change). detected: DataFrame cell_id of the cells where a fire was detected on `day` (verification; replay only)."""
     day = pd.Timestamp(day); week = int(min(day.isocalendar().week, 52)); lv = levels["levels"]
@@ -68,7 +68,7 @@ def build(day, scores, levels, places=None, previous=None, detected=None, mode="
                                          "reliable": bool(levels["state_reliability"].get(info["state"], False))}
         if int(bid) in prev: a["change"] = round(chance - prev[int(bid)]["chance"], 3)
         if level != "none":
-            top = g.sort_values("q", ascending=False).head(TOP_CELLS); a["look"] = [{"cell_id": int(r.cell_id), "lat": round(float(r.lat), 3), "lon": round(float(r.lon), 3), "chance": round(float(r.q), 3), "place": _nearest_place(pidx, r.lat, r.lon)} for r in top.itertuples()]
+            top = g.sort_values("q", ascending=False).head(TOP_CELLS); a["look"] = [{"cell_id": int(r.cell_id), "lat": round(float(r.lat), 3), "lon": round(float(r.lon), 3), "chance": round(float(r.q), 3), "place": _nearest_place(pidx, r.lat, r.lon), "inside": (cell_names or {}).get(f"{r.lat:.1f},{r.lon:.1f}")} for r in top.itertuples()]
         areas.append(a)
     # names: the nearest named place to the centre of the area, else "<state> area"
     for a in areas:

@@ -2,7 +2,7 @@ import type { Rung } from '../../ui/ladder';
 
 export type SymbolKind = 'signal' | 'report' | 'verified' | 'responding' | 'contained' | 'closed' | 'officer' | 'me' | 'task' | 'station_ok' | 'station_late' | 'station_off' | 'station_high' | 'signal_likely' | 'signal_source' | 'village';
 export type MapPoint = { id: string; lat: number; lon: number; symbol: SymbolKind; label?: string; ageMinutes?: number };
-export type MapPolygon = { id: string; ring: Array<[number, number]>; tone: 'forest' | 'cell' | 'advisory' | 'warning' | 'envelope' | 'band' | 'observed' | 'fire' | 'grew'; hour?: number; label?: string };
+export type MapPolygon = { id: string; ring: Array<[number, number]>; tone: 'forest' | 'wash_extreme' | 'wash_high' | 'wash_moderate' | 'wash_weak' | 'cell' | 'advisory' | 'warning' | 'envelope' | 'band' | 'observed' | 'fire' | 'grew'; hour?: number; label?: string };
 export type RiskCell = { id: number; lat: number; lon: number; rank_percentile: number; band: string; state: string };
 
 export type FeatureCollection = { type: 'FeatureCollection'; features: Array<{ type: 'Feature'; id?: string | number; properties: Record<string, unknown>; geometry: { type: 'Point'; coordinates: [number, number] } | { type: 'Polygon'; coordinates: Array<Array<[number, number]>> } }> };

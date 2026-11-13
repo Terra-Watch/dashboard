@@ -10,6 +10,8 @@ import area_forecast as AF  # noqa: E402
 def make(run_dir, cells_path, fire_path, levels_path, places_path=None, runs_dir=None):
     info = json.load(open(f"{run_dir}/run.json")); scores = pd.read_parquet(f"{run_dir}/scores.parquet"); levels = AF.load_levels(levels_path)
     places = pd.read_parquet(places_path) if places_path and os.path.exists(places_path) else None
+    names_path = os.path.join(os.path.dirname(__file__), "..", "data", "cell_names.json")       # protected area or forest each cell lies in (forecast/build_cell_names.py)
+    cell_names = json.load(open(names_path)) if os.path.exists(names_path) else None
     fd = pd.Timestamp(info["forecast_date"]); prev = None
     prev_path = f"{runs_dir or os.path.dirname(run_dir)}/{(fd - pd.Timedelta(days=2)).date()}/area_forecast.json"        # the run issued the day before: its forecast date is yesterday
     if os.path.exists(prev_path):
@@ -17,7 +19,7 @@ def make(run_dir, cells_path, fire_path, levels_path, places_path=None, runs_dir
         d = fire[(pd.to_datetime(fire.date).dt.normalize() == pd.Timestamp(prev["date"])) & (fire.forest.astype(bool))] if "forest" in fire else fire[pd.to_datetime(fire.date).dt.normalize() == pd.Timestamp(prev["date"])]
         if len(d): prev["outcome"] = AF.outcome_of(prev, cells, d.cell_id.values, levels["block_deg"])
     degraded = info.get("degraded") or []
-    out = AF.build(fd, scores, levels, places=places, previous=prev, mode=info.get("mode", "live"), model={"id": info["model_id"], "version": info["model_version"], "degraded": degraded}, issued_at=info["issued_at"])
+    out = AF.build(fd, scores, levels, places=places, cell_names=cell_names, previous=prev, mode=info.get("mode", "live"), model={"id": info["model_id"], "version": info["model_version"], "degraded": degraded}, issued_at=info["issued_at"])
     out["status"] = info.get("status"); out["coverage"] = info.get("coverage")
     json.dump(out, open(f"{run_dir}/area_forecast.json", "w"), separators=(",", ":")); return out
 

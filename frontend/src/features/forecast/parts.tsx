@@ -44,10 +44,10 @@ export function LookList({ area, limit = 5 }: { area: Area; limit?: number }) {
       <h3 className="text-sm font-bold">{tt('forecast.look', 'Where to look')}</h3>
       <ol className="mt-1 space-y-1 text-sm">{items.map((l, i) => (
         <li key={l.cell_id} className="flex flex-wrap items-baseline gap-x-2"><span className="font-bold tabular-nums">{i + 1}</span>
-          <span className="font-semibold">{l.place ? placeLine(l.place) : tt('forecast.no_place', 'Forest square at {{lat}}, {{lon}} (no named place nearby)', { lat: l.lat.toFixed(2), lon: l.lon.toFixed(2) })}</span>
+          <span className="font-semibold">{l.inside ? `${l.inside.name} (${l.inside.kind})${l.place ? ', ' + placeLine(l.place) : ''}` : l.place ? placeLine(l.place) : tt('forecast.no_place', 'Forest square at {{lat}}, {{lon}} (no named place nearby)', { lat: l.lat.toFixed(2), lon: l.lon.toFixed(2) })}</span>
           <span className="text-ink-muted">· {chanceWords(l.chance, tt)}</span>
           <a className="font-semibold underline" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lon}`}>{tt('forecast.directions', 'Directions')}</a></li>))}</ol>
-      <p className="mt-1 text-xs text-ink-muted">{tt('forecast.look_note', 'Each place is the nearest named village or locality to a forest cell of about 11 km. Names come from OpenStreetMap and are thin in some forests.')}</p>
+      <p className="mt-1 text-xs text-ink-muted">{tt('forecast.look_note', 'Each place is a forest cell of about 11 km: the protected area, or the forest range and division it lies in (WDPA and forest boundaries), then the nearest named village (OpenStreetMap, thin in some forests).')}</p>
     </div>
   );
 }
