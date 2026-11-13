@@ -42,6 +42,18 @@ jobs:
       - run: python -m pytest -q
         working-directory: backend
 
+  forecast-job:
+    name: forecast job tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      # The daily job's own tests. They fail the build if the job would crash on a pruned or odd state.
+      - run: pip install numpy pandas pyarrow scikit-learn pytest
+      - run: python -m pytest -q forecast/tests/test_verify_forecasts.py
+
   frontend:
     name: frontend checks
     runs-on: ubuntu-latest
