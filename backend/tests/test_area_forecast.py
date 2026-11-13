@@ -95,6 +95,13 @@ class AreaForecastTests(unittest.TestCase):
         r = c.get("/api/area-forecast/2025-03-14")
         self.assertEqual(r.status_code, 200); self.assertIn(r.json()["scope"], ("state", "community"))
 
+    def test_a_ranger_is_offered_only_the_demo_scenes_of_their_own_state(self):
+        with patch.object(area_forecast, "ranger_communities", return_value=[]), patch.object(area_forecast, "user_scopes", return_value={"OD"}):
+            scenes = self.client("field_crew").get("/api/area-forecast/archive/dates").json()["scenes"]
+        self.assertEqual({sc["state"] for sc in scenes}, {"OD"})
+        everyone = self.client("admin").get("/api/area-forecast/archive/dates").json()["scenes"]
+        self.assertGreater(len(everyone), len(scenes))
+
     def test_no_forecast_gives_a_plain_404(self):
         with tempfile.TemporaryDirectory() as empty, patch.dict(os.environ, {"FIRE_FORECAST_DIR": empty}):
             self.assertEqual(self.client().get("/api/area-forecast/latest").status_code, 404)

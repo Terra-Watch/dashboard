@@ -106,7 +106,7 @@ def main() -> int:
                 {"user_id": user_id},
             )
             if role != "citizen":
-                for state in (sorted(state_names()) if role == "control_room_operator" else STATES):   # the control room sees every state and union territory
+                for state in (sorted(state_names()) if role == "control_room_operator" else (home_state,) if role in ("field_crew", "range_officer") else STATES):   # the control room sees every state and union territory; a ranger belongs to one range, so one state
                     db.execute(
                         text("""INSERT INTO resq_user_scopes (user_id,state)
                             VALUES (:user_id,:state) ON CONFLICT DO NOTHING"""),

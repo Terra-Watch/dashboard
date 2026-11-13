@@ -152,7 +152,14 @@ def archive_dates(user: dict = Depends(require_risk_roles(*ROLES))):
         index = json.loads((_archive_root() / "index.json").read_text())
     except (OSError, ValueError):
         index = {}
-    return {**out, **{k: index[k] for k in ("scenes", "typical") if index.get(k)}}
+    scenes = index.get("scenes") or []
+    if user["role"] != "admin" and scenes:   # a ranger belongs to one range: offer only the scenes that have areas of theirs
+        days: dict[str, dict] = {}
+        def mine(sc: dict) -> bool:
+            body = days.setdefault(sc["date"], _scoped(_load(sc["date"], _archive_root()), user, archive=True))
+            return any(a["state"] == sc["state"] for a in body["areas"])
+        scenes = [sc for sc in scenes if mine(sc)]
+    return {**out, **{k: v for k, v in (("scenes", scenes), ("typical", index.get("typical"))) if v}}
 
 
 @router.get("/archive/{date}")
