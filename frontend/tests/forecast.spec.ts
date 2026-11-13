@@ -107,6 +107,20 @@ test.describe('Fire forecast: ranger card', () => {
     await expect(page.locator('details li').first()).toBeVisible();
   });
 
+  test('with no live forecast the card opens on the archive demo: scenes, what the forecast got right, and where a fire was detected', async ({ page }) => {
+    await signedInAs(page, 'field_crew', 'Ranger Das'); await mock(page);
+    await page.route('**/api/area-forecast/dates', r => r.fulfill(json({ detail: 'No forecast is available' }, 404)));   // nothing issued yet: the demo takes over
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto('/field/forecast');
+    await expect(page.getByRole('button', { name: 'Archive (demo)' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: /Odisha/ })).toBeVisible();
+    await expect(page.getByText(/41 areas were rated High or Extreme and 31 of them had a fire/)).toBeVisible();
+    await expect(page.getByText(/archived day from 2025/)).toBeVisible();
+    await expect(page.getByText(/fire was detected in this area that day/i).first()).toBeVisible();
+    await page.getByRole('button', { name: /Karnataka/ }).click();
+    await expect(page.getByRole('button', { name: /Karnataka/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('a quiet day says so, and the card page has no accessibility violations', async ({ page }) => {
     await signedInAs(page, 'range_officer', 'Ranger Das'); await mock(page, quiet);
     await page.goto('/field/forecast');

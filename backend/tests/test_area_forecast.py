@@ -89,6 +89,12 @@ class AreaForecastTests(unittest.TestCase):
             self.assertEqual(c.get(f"/api/area-forecast/{bad}").status_code, 404, bad)
         self.assertEqual(self.client("citizen").get("/api/area-forecast/latest").status_code, 403)
 
+    def test_field_crew_read_the_forecast_scoped_to_their_states(self):
+        c = self.client("field_crew")
+        self.assertEqual(c.get("/api/area-forecast/archive/dates").status_code in (200, 404), True)       # allowed: 404 only when no archive is shipped
+        r = c.get("/api/area-forecast/2025-03-14")
+        self.assertEqual(r.status_code, 200); self.assertIn(r.json()["scope"], ("state", "community"))
+
     def test_no_forecast_gives_a_plain_404(self):
         with tempfile.TemporaryDirectory() as empty, patch.dict(os.environ, {"FIRE_FORECAST_DIR": empty}):
             self.assertEqual(self.client().get("/api/area-forecast/latest").status_code, 404)

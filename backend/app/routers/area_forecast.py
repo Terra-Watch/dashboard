@@ -17,7 +17,7 @@ from ..core.security import require_risk_roles
 
 router = APIRouter(prefix="/api/area-forecast", tags=["area-forecast"])
 
-ROLES = ("range_officer", "control_room_operator", "incident_commander")
+ROLES = ("range_officer", "control_room_operator", "incident_commander", "field_crew")     # field crew read the forecast for their own area (scoped below), as the ranger card promises
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
