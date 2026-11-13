@@ -47,7 +47,7 @@ export function LookList({ area, limit = 5 }: { area: Area; limit?: number }) {
           <span className="font-semibold">{l.place ? placeLine(l.place) : tt('forecast.no_place', 'Forest square at {{lat}}, {{lon}} (no named place nearby)', { lat: l.lat.toFixed(2), lon: l.lon.toFixed(2) })}</span>
           <span className="text-ink-muted">· {chanceWords(l.chance, tt)}</span>
           <a className="font-semibold underline" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lon}`}>{tt('forecast.directions', 'Directions')}</a></li>))}</ol>
-      <p className="mt-1 text-xs text-ink-muted">{tt('forecast.look_note', 'Each place is the nearest named village or locality to a forest square of about 11 km. Names come from OpenStreetMap and are thin in some forests.')}</p>
+      <p className="mt-1 text-xs text-ink-muted">{tt('forecast.look_note', 'Each place is the nearest named village or locality to a forest cell of about 11 km. Names come from OpenStreetMap and are thin in some forests.')}</p>
     </div>
   );
 }

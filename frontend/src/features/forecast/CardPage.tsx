@@ -7,8 +7,8 @@ import { boundsOf, type MapPoint } from '../map/geojson';
 import { MapView } from '../map/MapView';
 import { useStations } from '../stations/api';
 import { byAttention, statementWords } from '../stations/model';
-import { useDates, useForecast, type Source } from './api';
-import { areaPolygons, burningWords, cardDates, chanceWords, dayWord, levelRank, shareText, type Action, type Area } from './model';
+import { useDates, useForecast, useForestShapes, type Source } from './api';
+import { areaForestPolygons, areaPolygons, burningWords, cardDates, chanceWords, dayWord, levelRank, shareText, type Action, type Area } from './model';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Ranger: tomorrow in my area. One card per area of the ranger's community, highest level first, with what to do, the places to check and a message to forward. */
@@ -73,6 +73,7 @@ function Card1({ area, date, actions, archived }: { area: Area; date: string; ac
     } catch { setShared(tt('forecast.share_failed', 'Could not share. Select and copy the places by hand.')); }
   }
   const points: MapPoint[] = (area.look ?? []).map((l, i) => ({ id: `l-${area.id}-${i}`, lat: l.lat, lon: l.lon, symbol: 'task', label: l.place?.name ?? String(i + 1) }));
+  const shapes = useForestShapes().data; const outline = useMemo(() => areaForestPolygons(area, shapes), [area, shapes]);
   const bounds = boundsOf([{ lat: area.bbox[1], lon: area.bbox[0] }, { lat: area.bbox[3], lon: area.bbox[2] }]);
   return (
     <article className="space-y-3 rounded-xl border border-line bg-surface p-4" aria-label={area.name}>
@@ -87,7 +88,7 @@ function Card1({ area, date, actions, archived }: { area: Area; date: string; ac
         <button type="button" aria-expanded={map} onClick={() => setMap(m => !m)} className="min-h-11 rounded-rq border border-control px-4 font-semibold">{map ? tt('forecast.hide_map', 'Hide map') : tt('forecast.show_map', 'Show map')}</button>
         {shared && <span role="status" className="text-sm text-ink-muted">{shared}</span>}
       </div>
-      {map && <MapView label={tt('forecast.map_of', 'Map of {{name}}', { name: area.name })} polygons={areaPolygons([area])} points={points} bounds={bounds} className="h-72" />}
+      {map && <MapView label={tt('forecast.map_of', 'Map of {{name}}', { name: area.name })} polygons={outline.length ? outline : areaPolygons([area])} points={points} bounds={bounds} className="h-72" />}
       <details className="rounded-rq border border-line p-2">
         <summary className="min-h-11 cursor-pointer text-sm font-semibold">{tt('forecast.why', 'Why this level')}</summary>
         <div className="mt-2 space-y-2"><Reasons area={area} /><WeakNote area={area} /></div>

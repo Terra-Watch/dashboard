@@ -192,21 +192,38 @@ export function forestName(step: number, t: T): string {
 /** One forest cell of the model's grid (about 11 km), as the risk replay serves it. */
 export type DayCell = { lat: number; lon: number; forest: number | null; state?: string };
 
-/** The forecast drawn where the model actually scored: every forest cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).
- *  Cells are on a grid of about 0.09 degrees, so a square of 0.09 degrees is drawn around each centre. */
-export function cellPolygons(cells: DayCell[], areas: Area[], minForest = 0, idPrefix = 'fc', side = 0.09): MapPolygon[] {
-  const byBlock = new Map(areas.map(a => [a.id, a] as const)); const h = side / 2;
+/** Each cell's forest land only: the cell square clipped to the forest boundaries, so towns, villages and fields inside the square are left out. Key "lat,lon" with one decimal. */
+export type ForestShapes = Record<string, Array<Array<[number, number]>>>;
+const cellKey = (lat: number, lon: number): string => `${lat.toFixed(1)},${lon.toFixed(1)}`;
+function cellRings(c: { lat: number; lon: number }, shapes: ForestShapes | undefined, side: number): Array<Array<[number, number]>> {
+  if (!shapes) { const h = side / 2; return [[[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]]]; }      // fallback: the square
+  return shapes[cellKey(c.lat, c.lon)] ?? [];
+}
+
+/** The forecast drawn where the model actually scored: the forest land of every scored cell, shaded by the level of the 55 km area it sits in (areas with no rating draw nothing).
+ *  With `shapes` the forest outline is drawn; without, a square of 0.09 degrees around each cell centre. */
+export function cellPolygons(cells: DayCell[], areas: Area[], minForest = 0, idPrefix = 'fc', shapes?: ForestShapes, side = 0.09): MapPolygon[] {
+  const byBlock = new Map(areas.map(a => [a.id, a] as const));
   return cells.flatMap((c, i) => {
     const a = byBlock.get(blockOf(c.lat, c.lon)); const tone = a ? toneOf(a) : null;
     if (!tone || (c.forest ?? 1) < minForest) return [];
-    return [{ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone }];
+    return cellRings(c, shapes, side).map((ring, k) => ({ id: `${idPrefix}-${i}-${k}`, ring, tone }));
   });
 }
 
 /** Every forest cell the model scores, on its own: no rating and no fire needed. */
-export function forestPolygons(cells: DayCell[], minForest = 0, state = '', idPrefix = 'fo', side = 0.09): MapPolygon[] {
-  const h = side / 2;
-  return cells.filter(c => (c.forest ?? 1) >= minForest && (!state || c.state === state)).map((c, i) => ({ id: `${idPrefix}-${i}`, ring: [[c.lon - h, c.lat - h], [c.lon + h, c.lat - h], [c.lon + h, c.lat + h], [c.lon - h, c.lat + h], [c.lon - h, c.lat - h]] as Array<[number, number]>, tone: 'forest' as const }));
+export function forestPolygons(cells: DayCell[], minForest = 0, state = '', idPrefix = 'fo', shapes?: ForestShapes, side = 0.09): MapPolygon[] {
+  return cells.filter(c => (c.forest ?? 1) >= minForest && (!state || c.state === state)).flatMap((c, i) => cellRings(c, shapes, side).map((ring, k) => ({ id: `${idPrefix}-${i}-${k}`, ring, tone: 'forest' as const })));
+}
+
+/** The forest land of one area, shaded with the area's level: what the ranger card shows instead of a 55 km box. Empty when the area has no rating or no shapes. */
+export function areaForestPolygons(a: Area, shapes: ForestShapes | undefined): MapPolygon[] {
+  const tone = toneOf(a); if (!tone || !shapes) return [];
+  const [w, s, e, n] = a.bbox;
+  return Object.entries(shapes).flatMap(([key, rings]) => {
+    const [lat, lon] = key.split(',').map(Number);
+    return lat >= s && lat < n && lon >= w && lon < e ? rings.map((ring, k) => ({ id: `af-${key}-${k}`, ring, tone })) : [];
+  });
 }
 
 /** A demo scene: one state on one archived day, small enough to read on a map. */

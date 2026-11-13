@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../app/http';
-import type { DayCell, Forecast, Scene, Typical } from './model';
+import type { DayCell, Forecast, ForestShapes, Scene, Typical } from './model';
 
 export type Dates = { dates: string[]; latest: string; mode: 'live' | 'replay'; typical?: Typical; scenes?: Scene[] };
 
@@ -18,4 +18,10 @@ export const useDayCells = (day: string | null, enabled: boolean) => useQuery({
     const g = await api<{ features: Array<{ geometry: { coordinates: [number, number] }; properties: { forest_frac?: number; state?: string } }> }>(`/api/risk/geojson?target=${day}`);
     return g.features.map(f => ({ lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], forest: f.properties.forest_frac ?? null, state: f.properties.state }));
   },
+});
+
+/** Forest outline of every scored cell (a static file, built by forecast/build_forest_shapes.py). The maps fall back to squares while it loads or if it is missing. */
+export const useForestShapes = () => useQuery({
+  queryKey: ['forest-shapes'], retry: false, staleTime: Infinity, gcTime: Infinity,
+  queryFn: async (): Promise<ForestShapes> => { const r = await fetch('/forecast/forest_cells.json'); if (!r.ok) throw new Error('forest shapes'); return r.json(); },
 });
