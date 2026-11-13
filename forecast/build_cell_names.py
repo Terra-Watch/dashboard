@@ -4,7 +4,7 @@ Usage: python forecast/build_cell_names.py --gdb <WDPA_..._IND.gdb> --cells ../t
 import argparse, json, os
 import numpy as np, pandas as pd, pyogrio, shapely
 from shapely.strtree import STRtree
-ap = argparse.ArgumentParser(); ap.add_argument("--gdb", required=True); ap.add_argument("--cells", required=True); ap.add_argument("--rfa", help="Bharatmaps_RFA.parquet: names the cells WDPA leaves out by forest, range and division"); ap.add_argument("--out", required=True); a = ap.parse_args()
+ap = argparse.ArgumentParser(); ap.add_argument("--gdb", required=True); ap.add_argument("--cells", required=True); ap.add_argument("--rfa", help="Bharatmaps_RFA.parquet: names the cells WDPA leaves out by forest, range and division"); ap.add_argument("--soi", help="SOI_Forests.parquet: named forest polygons"); ap.add_argument("--divisions", help="FSI_Divisions.parquet: forest division boundaries, the last resort"); ap.add_argument("--out", required=True); a = ap.parse_args()
 RANK = [("national park", 0), ("tiger reserve", 1), ("wildlife sanctuary", 1), ("sanctuary", 1), ("conservation reserve", 2), ("community reserve", 2), ("biosphere", 3), ("reserve forest", 4), ("reserved forest", 4), ("protected forest", 5)]
 def rank(d):
     d = str(d).lower(); return next((r for k, r in RANK if k in d), 6)
@@ -32,5 +32,19 @@ if a.rfa:       # second pass: the reserved-forest polygon under the cell centre
     for q, j in first.items():
         r = rest.iloc[q]; row = f.iloc[j]; div, rng = str(row.division).strip().title(), str(row.range).strip().title()
         if div or rng: out[f"{r.lat:.1f},{r.lon:.1f}"] = {"name": ", ".join(x + y for x, y in ((rng, " range"), (div, " division")) if x), "kind": "Reserved Forest"}
+def fill(path, cols, label):         # the polygon that covers most of the cell square, for cells still unnamed
+    import pyarrow.parquet as pq
+    f = pq.ParquetFile(path).read(columns=cols + ["geometry"]).to_pandas(); fg = shapely.make_valid(shapely.from_wkb(f.geometry.values)); ft = STRtree(fg)
+    for r in cells.itertuples():
+        key = f"{r.lat:.1f},{r.lon:.1f}"
+        if key in out: continue
+        b = shapely.box(r.lon - h, r.lat - h, r.lon + h, r.lat + h); idx = ft.query(b, predicate="intersects")
+        best = sorted(((fg[j].intersection(b).area, j) for j in idx), reverse=True)
+        for _, j in best:
+            nm, kd = label(f.iloc[j])
+            if nm: out[key] = {"name": nm, "kind": kd}; break
+clean = lambda x: str(x or "").replace(">", "").strip().title()
+if a.soi: fill(a.soi, ["name", "type"], lambda r: (clean(r["name"]), {"RESERVED": "Reserved Forest", "PROTECTED": "Protected Forest"}.get(str(r["type"]).strip(), "Forest")))
+if a.divisions: fill(a.divisions, ["Division"], lambda r: (clean(r.Division) + " forest division" if clean(r.Division) else "", "Forest division"))
 os.makedirs(os.path.dirname(a.out), exist_ok=True); json.dump(out, open(a.out, "w"), separators=(",", ":"), ensure_ascii=False)
 k = pd.Series([v["kind"] for v in out.values()]); print(len(out), "of", len(cells), "cells named"); print(k.value_counts().head(8))
