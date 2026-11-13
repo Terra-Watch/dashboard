@@ -96,6 +96,14 @@ def in_communities(ids: list[int], lat: float, lon: float) -> bool:
     return any(comms._km(lat, lon, r["latitude"], r["longitude"]) <= r["radius_km"] for r in rows)
 
 
+def touches_communities(ids: list[int], bbox: list[float] | tuple[float, ...]) -> bool:
+    """Does a forest community's circle reach into this box (west, south, east, north)? A ranger's forest is a few km wide and a forecast area is 55 km, so the area that contains the forest is the area to show."""
+    from ..services import communities as comms
+    with engine.connect() as db:
+        rows = db.execute(text("SELECT latitude,longitude,radius_km FROM resq_communities WHERE id = ANY(:ids)"), {"ids": list(ids)}).mappings().all()
+    return any(comms._km(min(max(r["latitude"], bbox[1]), bbox[3]), min(max(r["longitude"], bbox[0]), bbox[2]), r["latitude"], r["longitude"]) <= r["radius_km"] for r in rows)
+
+
 def _community_of(entity_type: str, entity_id: str) -> int | None:
     """The community of an incident, or of the incident an alert is about, when the entity id says which."""
     if not str(entity_id).isdigit():

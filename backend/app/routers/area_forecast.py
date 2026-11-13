@@ -12,7 +12,7 @@ from fastapi import APIRouter, Body, Depends, Header, HTTPException
 
 from .. import risk_settings
 
-from ..core.permissions import in_communities, ranger_communities, user_scopes
+from ..core.permissions import ranger_communities, touches_communities, user_scopes
 from ..core.security import require_risk_roles
 
 router = APIRouter(prefix="/api/area-forecast", tags=["area-forecast"])
@@ -56,7 +56,7 @@ def _scoped(body: dict, user: dict, archive: bool = False) -> dict:
     else:
         circles = ranger_communities(user)
         if circles:
-            scope, areas = "community", [a for a in body["areas"] if in_communities(circles, a["lat"], a["lon"])]
+            scope, areas = "community", [a for a in body["areas"] if touches_communities(circles, a["bbox"])]
         else:
             states = user_scopes(user["id"]); scope, areas = "state", [a for a in body["areas"] if a["state"] in states]
     levels = [lv["id"] for lv in body["levels"]]

@@ -20,7 +20,7 @@ LV = [{"id": "none", "min_chance": 0.0}, {"id": "moderate", "min_chance": 0.1}, 
 
 
 def day(date, mode="replay"):
-    areas = [{"id": 1, "state": "OD", "lat": 20.2, "lon": 85.2, "level": "high", "chance": 0.5}, {"id": 2, "state": "UK", "lat": 30.1, "lon": 78.1, "level": "none", "chance": 0.01}]
+    areas = [{"id": 1, "state": "OD", "lat": 20.2, "lon": 85.2, "bbox": [85.0, 20.0, 85.5, 20.5], "level": "high", "chance": 0.5}, {"id": 2, "state": "UK", "lat": 30.1, "lon": 78.1, "bbox": [78.0, 30.0, 78.5, 30.5], "level": "none", "chance": 0.01}]
     return {"date": date, "mode": mode, "levels": LV, "actions": [], "areas": areas, "summary": {"none": 1, "moderate": 0, "high": 1}, "areas_scored": 2, "outcome": {"areas_with_fire": 1}}
 
 
@@ -79,7 +79,7 @@ class AreaForecastTests(unittest.TestCase):
         self.assertEqual(([a["id"] for a in body["areas"]], body["scope"], body["summary"]), ([1], "state", {"none": 0, "moderate": 0, "high": 1}))
 
     def test_a_ranger_sees_the_areas_inside_the_community(self):
-        with patch.object(area_forecast, "ranger_communities", return_value=[7]), patch.object(area_forecast, "in_communities", side_effect=lambda ids, lat, lon: lat < 25):
+        with patch.object(area_forecast, "ranger_communities", return_value=[7]), patch.object(area_forecast, "touches_communities", side_effect=lambda ids, bbox: bbox[1] < 25):
             body = self.client("range_officer").get("/api/area-forecast/2025-03-14").json()
         self.assertEqual(([a["id"] for a in body["areas"]], body["scope"]), ([1], "community"))
 
