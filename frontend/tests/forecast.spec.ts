@@ -104,17 +104,18 @@ test.describe('Fire forecast: ranger card', () => {
     await page.waitForTimeout(2500);
     await page.screenshot(shot('card'));
     await page.getByText(/areas with no rating/).click();
-    await expect(page.locator('details li').first()).toBeVisible();
+    await expect(page.locator('details', { hasText: /areas with no rating/ }).locator('li').first()).toBeVisible();
   });
 
-  test('with no live forecast the card opens on the archive demo: scenes, what the forecast got right, and where a fire was detected', async ({ page }) => {
+  test('with no live forecast the card opens on the archive demo: demo days, the places to look, and whether a fire was detected there', async ({ page }) => {
     await signedInAs(page, 'field_crew', 'Ranger Das'); await mock(page);
     await page.route('**/api/area-forecast/dates', r => r.fulfill(json({ detail: 'No forecast is available' }, 404)));   // nothing issued yet: the demo takes over
     await page.setViewportSize({ width: 390, height: 900 });
     await page.goto('/field/forecast');
     await expect(page.getByRole('button', { name: 'Archive (demo)' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: /Odisha/ })).toBeVisible();
-    await expect(page.getByText(/41 areas were rated High or Extreme and 31 of them had a fire/)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Report what I find' }).first()).toBeVisible();
+    await expect(page.getByText(/areas were rated High or Extreme/)).toHaveCount(0);      // the control-room summary of what the forecast got right is not for a ranger
     await expect(page.getByText(/archived day from 2025/)).toBeVisible();
     await expect(page.getByText(/fire was detected in this area that day/i).first()).toBeVisible();
     await page.getByRole('button', { name: /Karnataka/ }).click();

@@ -8,7 +8,7 @@ import { MapView } from '../map/MapView';
 import { useStations } from '../stations/api';
 import { byAttention, statementWords } from '../stations/model';
 import { useDates, useForecast, type Source } from './api';
-import { areaPolygons, burningWords, cardDates, chanceWords, dayWord, levelRank, recordWords, sceneWords, shareText, type Action, type Area } from './model';
+import { areaPolygons, burningWords, cardDates, chanceWords, dayWord, levelRank, shareText, type Action, type Area } from './model';
 import { ActionList, LevelChip, LookList, Reasons, WeakNote, useTt } from './parts';
 
 /** Ranger: tomorrow in my area. One card per area of the ranger's community, highest level first, with what to do, the places to check and a message to forward. */
@@ -40,16 +40,14 @@ export function CardPage() {
       <PageTitle title={tt('forecast.card_title_day', '{{day}} in my area', { day: dayWord(f.date, tt) })} subtitle={tt('forecast.card_sub', 'Forecast for {{date}}, issued {{when}}.', { date: f.date, when: formatWhen(f.issued_at) })} />
       {switcher}
       {source === 'archive' && scenes.length > 0 && (
-        <div role="group" aria-label={tt('forecast.scene_pick', 'Scene')} className="flex flex-wrap gap-2">
+        <div role="group" aria-label={tt('forecast.scene_pick', 'Demo day')} className="flex flex-wrap gap-2">
           {scenes.map(x => <button key={x.id} type="button" aria-pressed={x.id === (scene?.id ?? '')} onClick={() => { setSceneId(x.id); setPicked(null); setShowNone(false); }} className={`min-h-11 rounded-rq border border-control px-3 text-sm font-semibold ${x.id === (scene?.id ?? '') ? 'bg-ink text-surface' : ''}`}>{x.label}</button>)}
         </div>)}
-      {source === 'archive' && scene && sceneWords(areas, scene.label, tt) && <Notice kind="success">{sceneWords(areas, scene.label, tt)}</Notice>}
       {source === 'live' && offered.length > 1 && (
         <div role="group" aria-label={tt('forecast.pick_day', 'Day')} className="inline-flex rounded-rq border border-control p-1">
           {offered.map(d => <button key={d} type="button" aria-pressed={d === f.date} onClick={() => { setPicked(d); setShowNone(false); }} className={`min-h-11 rounded-rq px-4 font-semibold ${d === f.date ? 'bg-ink text-surface' : ''}`}>{dayWord(d, tt)}</button>)}
         </div>)}
       {f.mode === 'replay' && <Notice kind="warning">{tt('forecast.replay', 'This is an archived day from 2025, shown as it would have been issued. It is not tomorrow\'s forecast.')}</Notice>}
-      {source === 'live' && recordWords(f.yesterday, tt) && <Notice kind="info">{recordWords(f.yesterday, tt)}</Notice>}
       {areas.length === 0 && <EmptyState title={tt('forecast.no_areas', 'No forecast areas are set for you yet')}>{tt('forecast.no_areas_hint', 'Ask the control room to give you a community.')}</EmptyState>}
       {areas.length > 0 && active.length === 0 && <Notice kind="info">{tt('forecast.quiet_day', 'No area is rated Moderate or above for this day. Nothing extra to do from the forecast.')}</Notice>}
       <ul className="space-y-3">{(showAll ? active : active.slice(0, 5)).map(a => <li key={a.id}><Card1 area={a} date={f.date} actions={f.actions} archived={source === 'archive'} /></li>)}</ul>
@@ -80,18 +78,20 @@ function Card1({ area, date, actions, archived }: { area: Area; date: string; ac
     <article className="space-y-3 rounded-xl border border-line bg-surface p-4" aria-label={area.name}>
       <header><p className="text-sm font-bold uppercase tracking-wide text-ink-muted">{area.state}</p><h2 className="text-xl font-bold">{area.name}</h2></header>
       <div className="flex flex-wrap items-center gap-3"><LevelChip level={area.level} big /><span className="font-semibold">{tt('forecast.card_chance', '{{chance}} chance of a fire in the area', { chance: chanceWords(area.chance, tt) })}</span></div>
-      <p className="text-sm">{tt('forecast.card_expected', 'About {{n}} fire spots expected.', { n: Math.round(area.expected_fires) })}</p>
       {archived && area.fire_detected !== undefined && <p role="status" className="rounded-rq bg-surface-2 px-3 py-2 text-sm font-semibold">{area.fire_detected ? tt('forecast.fire_seen', 'A fire was detected in this area that day.') : tt('forecast.fire_not_seen', 'No fire was detected in this area that day.')}</p>}
-      <Reasons area={area} />
-      <WeakNote area={area} />
-      <div><h3 className="text-sm font-bold">{tt('forecast.do_today', 'Do today')}</h3><ActionList area={area} actions={actions} /></div>
       <LookList area={area} limit={5} />
+      <div><h3 className="text-sm font-bold">{tt('forecast.do_today', 'Do today')}</h3><ActionList area={area} actions={actions} /></div>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => void share()} className="min-h-11 rounded-rq bg-action px-4 font-semibold text-on-action">{tt('forecast.share', 'Share on WhatsApp or SMS')}</button>
+        <Link to="/field/capture" className="inline-flex min-h-11 items-center rounded-rq bg-action px-4 font-semibold text-on-action">{tt('forecast.record_find', 'Report what I find')}</Link>
+        <button type="button" onClick={() => void share()} className="min-h-11 rounded-rq border border-control px-4 font-semibold">{tt('forecast.share', 'Share on WhatsApp or SMS')}</button>
         <button type="button" aria-expanded={map} onClick={() => setMap(m => !m)} className="min-h-11 rounded-rq border border-control px-4 font-semibold">{map ? tt('forecast.hide_map', 'Hide map') : tt('forecast.show_map', 'Show map')}</button>
         {shared && <span role="status" className="text-sm text-ink-muted">{shared}</span>}
       </div>
       {map && <MapView label={tt('forecast.map_of', 'Map of {{name}}', { name: area.name })} polygons={areaPolygons([area])} points={points} bounds={bounds} className="h-72" />}
+      <details className="rounded-rq border border-line p-2">
+        <summary className="min-h-11 cursor-pointer text-sm font-semibold">{tt('forecast.why', 'Why this level')}</summary>
+        <div className="mt-2 space-y-2"><Reasons area={area} /><WeakNote area={area} /></div>
+      </details>
     </article>
   );
 }
