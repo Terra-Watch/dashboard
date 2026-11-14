@@ -42,7 +42,7 @@ export async function signIn(email: string, password: string): Promise<SessionUs
   const { response, data } = await post('/api/auth/sign-in', { email: email.trim(), password });
   if (response.status === 429) throw new SignInError('locked', 'locked');
   if (response.status === 401) throw new SignInError('invalid', 'invalid');
-  if (!response.ok) throw new SignInError('other', typeof data.detail === 'string' ? data.detail : 'other');
+  if (!response.ok) throw new SignInError('other', typeof data.detail === 'string' ? data.detail : 'Something went wrong. Try again.');
   return remember(data);
 }
 
@@ -54,14 +54,14 @@ export async function registerCitizen(input: { name: string; email: string; pass
 
 export async function requestPasswordReset(email: string): Promise<'email' | 'unavailable'> {
   const { response, data } = await post('/api/auth/citizen/password-reset/request', { email: email.trim() });
-  if (!response.ok) throw new SignInError('other', 'other');
+  if (!response.ok) throw new SignInError('other', typeof data.detail === 'string' ? data.detail : 'Something went wrong. Try again.');
   return data.delivery === 'email' ? 'email' : 'unavailable';
 }
 
 export async function completePasswordReset(token: string, password: string): Promise<void> {
   const { response, data } = await post(`/api/auth/password-reset/${encodeURIComponent(token)}/complete`, { password });
   if (response.status === 400) throw new SignInError('invalid', 'invalid');
-  if (!response.ok) throw new SignInError('other', typeof data.detail === 'string' ? data.detail : 'other');
+  if (!response.ok) throw new SignInError('other', typeof data.detail === 'string' ? data.detail : 'Something went wrong. Try again.');
 }
 
 /** Ends the session on the server (best effort) and always clears it on this device. Saved offline work is kept. */

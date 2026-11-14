@@ -28,8 +28,8 @@ export function SignInPage() {
       const user = await signIn(email, password);
       navigate(safeNext(params.get('next'), productRole(user.role)), { replace: true });
     } catch (reason) {
-      const kind = reason instanceof SignInError ? reason.kind : 'other';
-      setProblem(kind === 'invalid' ? t('auth.invalid') : kind === 'locked' ? t('auth.locked') : kind === 'network' ? t('auth.network') : reason instanceof Error ? reason.message : t('auth.network'));
+      const kind = reason instanceof SignInError ? reason.kind : 'network';
+      setProblem(kind === 'invalid' ? t('auth.invalid') : kind === 'locked' ? t('auth.locked') : kind === 'network' ? t('auth.network') : t('auth.other'));
     } finally { setBusy(false); }
   }
 
