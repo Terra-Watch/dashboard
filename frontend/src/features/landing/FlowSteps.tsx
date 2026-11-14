@@ -3,7 +3,7 @@ import { ClipboardCheck, Flame, HardHat, MapPin, SatelliteDish, type LucideIcon 
 import { useTranslation } from 'react-i18next';
 
 const STEPS: Array<{ id: string; Icon: LucideIcon; title: string; question: string; gives: string }> = [
-  { id: 'forecast', Icon: Flame, title: 'Forecast', question: 'Where is a fire likely tomorrow?', gives: 'A level for each 55 km forest area, with the places to look first.' },
+  { id: 'forecast', Icon: Flame, title: 'Forecast', question: 'Where is a fire likely tomorrow?', gives: 'A level for each forest cell, with the places to look first.' },
   { id: 'satellite', Icon: SatelliteDish, title: 'Satellite', question: 'Is this detection a real fire?', gives: 'Every detection sorted into a group, with the reason in words.' },
   { id: 'fires', Icon: MapPin, title: 'Active fires', question: 'Which fires matter now?', gives: 'Fires built from detections, with size, growth and the nearest villages.' },
   { id: 'action', Icon: HardHat, title: 'Action', question: 'What do we do?', gives: 'A crew sent as a check, a notice written and approved by a second person, a village warned.' },

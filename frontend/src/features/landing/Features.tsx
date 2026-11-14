@@ -13,7 +13,7 @@ const GROUPS: Array<{ id: GroupId; items: Item[] }> = [
   { id: 'field', items: [{ id: 'tasks', Icon: ListTodo }, { id: 'offline', Icon: WifiOff }, { id: 'record', Icon: ClipboardList }] },
 ];
 const DEFAULTS: Record<string, string> = {
-  'fc.map': 'Forecast levels|Every forest cell of 17 states on the Control Room map, shaded by the level of its 55 km area. Shown on archived days of 2025, with the fires actually detected.',
+  'fc.map': 'Forecast levels|Every forest cell of 17 states on the Control Room map, shaded by its level. Shown on archived days of 2025, with the fires actually detected.',
   'fc.bands': 'Levels with a meaning|None, Moderate (10%), High (30%) and Extreme (60%) are calibrated chances that a satellite detects a fire in the area tomorrow. A level says where to look first. A person decides what to do.',
   'fc.inputs': 'Fresh data, with its age|NASA satellite detections and weather feed the forecast. Every data chip shows how old it is, and a stale source says so.',
   'fc.today': 'Forecast beside what was detected|Open a past day to see the forecast next to the fires actually detected: rated areas with a fire, fires rated lower, and rated areas with none.',

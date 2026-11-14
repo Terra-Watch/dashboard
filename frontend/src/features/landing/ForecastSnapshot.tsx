@@ -12,7 +12,7 @@ const LAYERS = [
 ] as const;
 const LEGEND = [[0, 'Extreme'], [1, 'High'], [2, 'Moderate'], [3, 'None']] as const;
 
-/** The archived forecast for one real day over the forest cells of every state in the bundle, each shaded by the level of its 55 km area. */
+/** The archived forecast for one real day over the forest cells of every state in the bundle, each shaded by its level. */
 export function ForecastSnapshot({ legend = true }: { legend?: boolean }) {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
