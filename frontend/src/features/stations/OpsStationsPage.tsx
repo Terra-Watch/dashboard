@@ -6,10 +6,10 @@ import { EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { MapView } from '../map/MapView';
 import { boundsOf, type MapPoint } from '../map/geojson';
 import { useStations, useUnknownNodes } from './api';
-import { byAttention, counts, fixWords, fmt, isHigh, maintenance, statementWords, symbolOf, type Station } from './model';
-import { SoundChip, StatusChip } from './parts';
+import { byAttention, counts, fixWords, maintenance, symbolOf, type Station } from './model';
+import { Headline, Readings, StatusChip } from './parts';
 
-/** All lookout stations in the person's area: a list with status first, and a map. Readings are from sensors, not people. */
+/** Control room: every lookout station, the ones needing a look first. A row leads with what the station is saying, not its raw numbers; selecting one opens a quick look beside the map without losing the list. Readings are from sensors, not people. */
 export function OpsStationsPage() {
   const { t } = useTranslation();
   const q = useStations();
@@ -22,6 +22,7 @@ export function OpsStationsPage() {
   const fixes = useMemo(() => byAttention(all).map(x => ({ s: x, fix: maintenance(x as Station & { reported?: { offset_km: number } | null }) })).filter(x => x.fix.length), [all]);
   const points: MapPoint[] = useMemo(() => items.map(s => ({ id: String(s.id), lat: s.latitude, lon: s.longitude, symbol: symbolOf(s), label: s.name })), [items]);
   const bounds = useMemo(() => boundsOf(points.length ? points.map(p => ({ lat: p.lat, lon: p.lon })) : [{ lat: 8, lon: 70 }, { lat: 35, lon: 97 }]), [points]);
+  const sel = all.find(s => String(s.id) === selected) ?? null;
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <PageTitle title={t('stations.title', 'Lookout stations')} subtitle={q.data?.label ?? t('stations.subtitle', 'Readings come from sensors, not people. A high reading is a prompt to check, not a fire.')} />
@@ -52,12 +53,15 @@ export function OpsStationsPage() {
       {q.isLoading && <Skeleton lines={4} />}
       {q.data && all.length === 0 && <EmptyState title={t('stations.none', 'No stations are registered in your area yet.')}>{t('stations.none_hint', 'An administrator registers a station under Admin, using the node number printed by its gateway.')}</EmptyState>}
       {all.length > 0 && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
           <ul className="space-y-2" aria-label={t('stations.list', 'Stations')}>
-            {items.map(s => <li key={s.id}><StationRow s={s} active={selected === String(s.id)} /></li>)}
+            {items.map(s => <li key={s.id}><StationRow s={s} active={selected === String(s.id)} onPick={() => setSelected(String(s.id))} /></li>)}
             {items.length === 0 && <li><Notice kind="info">{t('stations.no_match', 'No station matches these filters.')}</Notice></li>}
           </ul>
-          <MapView label={t('stations.map', 'Lookout stations')} points={points} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[60vh] min-h-80" />
+          <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+            <MapView label={t('stations.map', 'Lookout stations')} points={points} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[40vh] min-h-72 lg:h-[45vh]" />
+            {sel ? <StationQuickLook s={sel} onClose={() => setSelected(null)} /> : <p className="text-sm text-ink-muted">{t('stations.pick_hint', 'Select a station in the list or on the map for a quick look.')}</p>}
+          </div>
         </div>
       )}
       </>}
@@ -65,16 +69,29 @@ export function OpsStationsPage() {
   );
 }
 
-function StationRow({ s, active }: { s: Station; active: boolean }) {
+function StationRow({ s, active, onPick }: { s: Station; active: boolean; onPick: () => void }) {
   const { t } = useTranslation();
   return (
-    <Link to={`/ops/stations/${s.id}`} className={`block rounded-rq border p-3 hover:bg-surface-2 ${active ? 'border-action ring-2 ring-action' : 'border-line bg-surface'}`}>
+    <button type="button" onClick={onPick} aria-pressed={active} className={`block w-full rounded-rq border p-3 text-left hover:bg-surface-2 ${active ? 'border-action ring-2 ring-action' : 'border-line bg-surface'}`}>
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
-      {s.statement && <p className={`mt-1 text-sm ${s.statement.tone === 'check' ? 'font-semibold' : ''}`}>{s.statement.tone === 'check' ? '▲ ' : s.statement.tone === 'gap' ? '○ ' : ''}{statementWords(s, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
-      {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
-      <p className="mt-1 text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · PM10 {fmt(s.pm10)} · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}
-        {isHigh(s) && <span className="ml-2 rounded border border-warn bg-warn-tint px-1.5 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>
-      <p className="text-sm text-ink-muted">{s.state} · {t('stations.node', { n: s.node_id, defaultValue: 'node {{n}}' })}{s.rssi !== null ? ` · ${s.rssi} dBm` : ''}</p>
-    </Link>
+      <Headline s={s} />
+      <p className="mt-1 text-sm text-ink-muted">{s.state} · {t('stations.node', { n: s.node_id, defaultValue: 'node {{n}}' })}</p>
+    </button>
+  );
+}
+
+/** A quick look beside the map, without leaving the list: the statement, the readings, and a way to see the trend or raise a check. */
+function StationQuickLook({ s, onClose }: { s: Station; onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-label={t('map.selected', 'Selected')} className="rounded-panel border border-line bg-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div><h2 className="text-lg font-bold">{s.name}</h2><StatusChip s={s} /></div>
+        <button type="button" onClick={onClose} aria-label={t('map.close', 'Close')} className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none">×</button>
+      </div>
+      <Headline s={s} />
+      <div className="mt-3"><Readings s={s} /></div>
+      <Link to={`/ops/stations/${s.id}`} className="mt-3 inline-block font-semibold underline">{t('stations.open_full', 'Open full history and create a check')}</Link>
+    </section>
   );
 }

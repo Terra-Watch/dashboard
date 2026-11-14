@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ageLabel, fmt, soundName, type SoundEvent, type Station } from './model';
+import { ageLabel, fmt, isHigh, soundName, statementWords, type SoundEvent, type Station, type Tone } from './model';
 
 /** Status shown by an icon-like mark AND words, never by colour alone. */
 export function StatusChip({ s }: { s: Pick<Station, 'status' | 'age_s'> }) {
@@ -47,5 +47,22 @@ export function Sounds({ items }: { items: SoundEvent[] }) {
         {items.slice(0, 6).map(e => <li key={e.at + e.kind}><b>{t(`stations.sound_${e.kind}`, soundName(e.kind))}</b> · {e.confidence} % {t('stations.sure', 'sure')} · {new Date(e.at).toLocaleString()}</li>)}
       </ul>
     </section>
+  );
+}
+
+const TONE_MARK: Record<Tone, string> = { check: '▲', gap: '○', watch: '◐', ok: '' };
+const TONE_CLASS: Record<Tone, string> = { check: 'font-bold text-warn', gap: 'text-ink-muted', watch: 'font-semibold', ok: 'text-ink-muted' };
+
+/** What a person needs first: the plain statement (bold and marked only when it needs a look), the one reading worth seeing (only when it is actually high), and a sound heard. Shared by every station row and quick-look panel so a normal station stays quiet and an abnormal one stands out. */
+export function Headline({ s }: { s: Station }) {
+  const { t } = useTranslation();
+  const tt = (k: string, d: string, o?: Record<string, unknown>) => t(k, { defaultValue: d, ...o });
+  const tone = s.statement?.tone ?? 'ok';
+  return (
+    <div className="mt-1 space-y-1">
+      {s.statement && <p className={`text-sm ${TONE_CLASS[tone]}`}>{TONE_MARK[tone] ? <span aria-hidden="true">{TONE_MARK[tone]} </span> : null}{statementWords(s, tt)}</p>}
+      {s.last_sound && <SoundChip s={s} />}
+      {isHigh(s) && <span className="inline-block rounded border border-warn bg-warn-tint px-1.5 text-sm font-semibold">▲ {tt('stations.high', '{{x}}× normal', { x: s.pm25_vs_normal?.toFixed(1) })}</span>}
+    </div>
   );
 }

@@ -1361,6 +1361,8 @@
  "stations.network_ok": "अभी किसी जगह जाने की ज़रूरत नहीं है।",
  "stations.never": "कभी नहीं सुना",
  "stations.never_msg": "इससे अभी तक कुछ सुना नहीं गया।",
+ "stations.open_full": "पूरी जानकारी देखें और जाँच बनाएँ",
+ "stations.pick_hint": "स्टेशन सूची में या नक़्शे पर कोई केंद्र चुनें।",
  "stations.no_match": "इन फ़िल्टरों से कोई केंद्र नहीं मिला।",
  "stations.no_normal": "इस केंद्र का सामान्य अभी पता नहीं",
  "stations.node": "नोड {{n}}",

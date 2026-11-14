@@ -1,46 +1,61 @@
 import { ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { api } from '../../app/http';
 import { Notice } from '../../ui/Notice';
 import { Card, EmptyState, LoadError, PageTitle, Skeleton } from '../../ui/Page';
 import { LocateButton, usePosition } from '../field/Position';
+import { Legend } from '../map/Legend';
+import { MapView } from '../map/MapView';
+import { boundsOf, type MapPoint } from '../map/geojson';
 import { Chart } from './Chart';
 import { useStation, useStations } from './api';
-import { ageLabel, byAttention, fmt, isHigh, statementWords, type Station } from './model';
+import { ageLabel, byAttention, fmt, symbolOf, type Station } from './model';
 import { DEFAULT_ON, byGroup, groupCounts, groupName, groupOf, reasonWords, visible, type Group } from '../ops/satelliteGroups';
-import { Readings, SoundChip, Sounds, StatusChip } from './parts';
+import { Headline, Readings, Sounds, StatusChip } from './parts';
 
-/** Stations near the ranger, nearest first. Read-only. The position is taken only when the ranger taps. */
+/** Stations within reach of the ranger: a map for where they are, then a list with the nearest and the ones needing a look first. Read-only. Position is taken only when the ranger taps. */
 export function FieldStationsPage() {
   const { t } = useTranslation();
   const { position } = usePosition();
   const q = useStations(position);
+  const [selected, setSelected] = useState<string | null>(null);
   const items = q.data?.items ?? [];
+  const sorted = useMemo(() => (position ? items : byAttention(items)), [items, position]);
+  const points: MapPoint[] = useMemo(() => [
+    ...items.map(s => ({ id: String(s.id), lat: s.latitude, lon: s.longitude, symbol: symbolOf(s), label: s.name })),
+    ...(position ? [{ id: 'me', lat: position.lat, lon: position.lon, symbol: 'me' as const, label: t('field.me_pin', 'You') }] : []),
+  ], [items, position, t]);
+  const bounds = useMemo(() => boundsOf(points), [points]);
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle title={t('stations.title', 'Lookout stations')} subtitle={q.data?.label ?? t('stations.subtitle', 'Readings come from sensors, not people. A high reading is a prompt to check, not a fire.')} actions={<LocateButton />} />
-      {!position && <Notice kind="info">{t('stations.locate_hint', 'Tap "Use my position" to put the nearest stations first.')}</Notice>}
+      {!position && <Notice kind="info">{t('stations.locate_hint', 'Tap "Use my position" to put the nearest stations first and see them on the map.')}</Notice>}
       {q.isError && <LoadError message={t('stations.load_failed', 'The stations could not be loaded.')} onRetry={() => void q.refetch()} />}
       {q.isLoading && <Skeleton lines={4} />}
       {q.data && items.length === 0 && <EmptyState title={t('stations.none', 'No stations are registered in your area yet.')} />}
-      <ul className="space-y-2">{items.map(s => <li key={s.id}><Row s={s} /></li>)}</ul>
+      {items.length > 0 && <>
+        <MapView label={t('stations.map', 'Lookout stations')} points={points} selectedId={selected} onSelect={setSelected} bounds={bounds} className="h-[32vh] min-h-56" />
+        <Legend kinds={['station_ok', 'station_high', 'station_off', ...(position ? ['me' as const] : [])]} />
+        <ul className="space-y-2">{sorted.map(s => <li key={s.id}><Row s={s} active={selected === String(s.id)} /></li>)}</ul>
+      </>}
     </div>
   );
 }
 
-function Row({ s }: { s: Station }) {
+function Row({ s, active }: { s: Station; active: boolean }) {
   const { t } = useTranslation();
   return (
-    <Link to={`/field/stations/${s.id}`} className="block rounded-rq border border-line bg-surface p-3 active:bg-surface-2">
-      <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-bold">{s.name}</span><StatusChip s={s} /></div>
-      {s.statement && <p className="mt-1 text-sm">{statementWords(s, (k, d, o) => t(k, { defaultValue: d, ...o }))}</p>}
-      {s.last_sound && <p className="mt-1"><SoundChip s={s} /></p>}
-      {s.distance_km !== undefined && <p className="text-sm font-semibold">{s.distance_km} km {s.bearing}</p>}
-      <p className="text-sm tabular-nums">PM2.5 <b>{fmt(s.pm25)}</b> · {fmt(s.temp_c, 1, ' °C')} · {fmt(s.humidity_pct, 0, ' %')}{isHigh(s) && <span className="ml-2 font-semibold">▲ {t('stations.high', { x: s.pm25_vs_normal?.toFixed(1), defaultValue: '{{x}}× normal' })}</span>}</p>
-      {s.age_s !== null && <p className="text-sm text-ink-muted">{t('stations.heard_ago', { age: ageLabel(s.age_s), defaultValue: 'heard {{age}} ago' })}</p>}
+    <Link to={`/field/stations/${s.id}`} className={`block rounded-rq border p-3 active:bg-surface-2 ${active ? 'border-action ring-2 ring-action' : 'border-line bg-surface'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-bold">{s.name}</span>
+        {s.distance_km !== undefined ? <span className="text-sm font-bold">{s.distance_km} km {s.bearing}</span> : <StatusChip s={s} />}
+      </div>
+      {s.distance_km !== undefined && <div className="mt-0.5"><StatusChip s={s} /></div>}
+      <Headline s={s} />
+      {s.age_s !== null && s.status === 'online' && <p className="mt-1 text-sm text-ink-muted">{t('stations.heard_ago', { age: ageLabel(s.age_s), defaultValue: 'heard {{age}} ago' })}</p>}
     </Link>
   );
 }
